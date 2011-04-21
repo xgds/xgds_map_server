@@ -1,0 +1,9 @@
+recursive-include doc_src *
+recursive-include docs *
+
+recursive-include xgds_map_server/media *
+recursive-include xgds_map_server/templates *
+
+include LICENSE
+include README.rst
+include *.txt
