@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://earth.google.com/kml/2.0">
+
+<Document>
+<name>{{documentName}}</name>
+<visibility>1</visibility>
+
+{% for g in mapGroupList %}
+<Folder>
+  <name>{{g.name}}</name>
+
+  {% for m in g.mapList %}
+  <NetworkLink>
+    <name>{{m.name}}</name>
+    <visibility>{{m.visibility}}</visibility>
+    <Style>
+      <ListStyle>
+	<listItemType>{{m.listItemType}}</listItemType>
+      </ListStyle>
+    </Style>
+    <Url>
+      <href>{{m.url}}</href>
+      <refreshMode>onInterval</refreshMode>
+      <refreshInterval>14400</refreshInterval>
+    </Url>
+  </NetworkLink>
+  {% endfor %}
+</Folder>
+{% endfor %}
+
+</Document>
+
+</kml>

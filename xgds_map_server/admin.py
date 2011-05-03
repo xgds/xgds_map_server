@@ -4,4 +4,8 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
+import models
 from django.contrib import admin
+
+admin.site.register(models.Map)
+admin.site.register(models.MapGroup)

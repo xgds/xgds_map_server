@@ -1,0 +1,106 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+</head>
+<html>
+<head>
+  <title>Map List Page</title>
+
+  <style type="text/css">
+      .no-border { border: none; }
+      #irg-logo { float: right; }
+
+      #stats { padding-top: 10px }
+      #filter { padding-top: 10px }
+
+      table {
+        font-size: 14px;
+        border-collapse: collapse;
+      }
+      table th, table td { 
+        margin: 0px; 
+        padding: 0px; 
+      }
+      table thead th { 
+        padding: 4px 4px;
+        border-bottom: solid 2px #c0c0c0; 
+      }
+
+      table td {
+         border-bottom: solid 1px #c0c0c0;
+         border-left: solid 1px #e9e9e9;
+      }
+      table td:last-child {
+         border-right: solid 1px #e9e9e9;
+      }
+      table tbody td {
+        padding: 3px 4px;
+        padding-right: 10px;
+      }
+    body { 
+      background: #ffffff;
+      font-family: arial,helvetica,sans-serif;
+      font-size: 1.0em;
+    }
+    p.small {
+      margin-bottom: 4px;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+
+<body>
+<table width=100%>
+  <tr>
+    <td width="343"><img src="{{projectIconUrl}}"></td>
+    <td><center><font size=+4>Map Server</font></center></td>
+    <td width="343" align="right"><img src="{{xgdsIconUrl}}"></td>
+  </tr>
+</table>
+
+<h2>Map Feed</h2>
+This <a href="{{feedUrl}}">map feed</a> includes all of the maps
+served by this map server, and will be updated as new data becomes
+available. <br/>
+<br/>
+Open it once in Google Earth.  If the network link ever
+breaks (which will be indicated by a red folder icon in the Google
+Earth sidebar) right click on the link and select "refresh".
+
+<h2>Map List</h2>
+<!-- File URLs are: -->
+<!-- <a href="{{myHost}}{{kmlCommsPath}}/{{date}}/{{f}}">{{f}}</a> -->
+
+<center>
+<table width="80%">
+  <thead><th>Map Name</th><th>Map Group</th><th>Map Description</th><th>KML File</th><th>Openable?</th><th>Default visible?</th></thead>
+  <tbody>
+  {% for m in mapList %}
+    <tr>
+      <td align='center'>
+	{{m.name}}
+      </td>
+      <td>
+	{{m.groupname}}
+      </td>
+      <td>
+	{{m.description}}
+      </td>
+      <td>
+	<a href="{{m.url}}">{{m.kmlFile}}</a>
+      </td>
+      <td align='center'>
+	{{m.openable}}
+      </td>
+      <td align='center'>
+	{{m.visible}}
+     </td>    
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+<br/>
+<br/>
+</center>
+<!-- <hr> -->
+<address></address>
+</body>
+</html>

@@ -4,23 +4,13 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-"""
-This app may define some new parameters that can be modified in the
-Django settings module.  Let's say one such parameter is FOO.  The
-default value for FOO is defined in this file, like this:
+# Server URL settings:
+MAPSERVER_DATA_URL = 'data/mapserver/'
 
-  FOO = 'my default value'
+# Filesystem settings:
+XGDS_FILE_ROOT = '/Library/WebServer/Documents/xgdsPlrp/data'
+MAPSERVER_FILE_ROOT = '%s/mapserver' % XGDS_FILE_ROOT
 
-If the admin for the site doesn't like the default value, they can
-override it in the site-level settings module, like this:
-
-  FOO = 'a better value'
-
-Other modules can access the value of FOO like this:
-
-  from xgds_map_server import settings
-  print settings.FOO
-
-Don't try to get the value of FOO from django.conf.settings.  That
-settings object will not know about the default value!
-"""
+#PROJECT_LOGO_URL = 'icons/plrp-logo.jpg'
+PROJECT_LOGO_URL = 'icons/plrp-logo-small.gif'
+XGDS_LOGO_URL = 'icons/xgdsLogo.png'
