@@ -12,14 +12,18 @@ from xgds_map_server.views import *
 urlpatterns = patterns(
     '',
 
-    (r'^$', getMapListPage),
+    (r'^$', getMapListPage,
+     {'readOnly': True}),
     # Map server urls
     # HTML list of maps with description and links to individual maps, and a link to the kml feed
-    (r'^list/', getMapListPage),
+    (r'^list/', getMapListPage,
+     {'readOnly': True}),
     # This URL should receive a static files
     (r'^data/(?P<path>.*)$', 'django.views.static.serve',
      {'document_root' : settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR,
-      'show_indexes' : True}),
+      'show_indexes' : True,
+      'readOnly': True}),
     # By default if you just load the app you should see the list
-    (r'^feed/(?P<feedname>.*)', getMapFeed),
+    (r'^feed/(?P<feedname>.*)', getMapFeed,
+     {'readOnly': True}),
 )

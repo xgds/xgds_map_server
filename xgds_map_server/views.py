@@ -11,6 +11,7 @@ import re #Dave
 import os #Dave
 import urllib2
 import uuid
+import sys
 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect
@@ -33,9 +34,9 @@ def getMapListPage(request):
         if m.kmlFile.startswith('/'):
             url = m.kmlFile
         else:
-            url =reverse(staticServe,args=['mapserver/%s'%m.kmlFile])
+            url = settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + m.kmlFile
         m.url = request.build_absolute_uri(url)
-        print 'kmlFile=%s url=%s' % (m.kmlFile, m.url)
+        print >>sys.stderr, 'kmlFile=%s url=%s' % (m.kmlFile, m.url)
         if m.openable:
             m.openable = 'yes'
         else:
@@ -57,7 +58,7 @@ def setMapProperties(m):
     if m.kmlFile.startswith('/'):
         m.url = latestRequestG.build_absolute_uri(m.kmlFile)
     else:
-        m.url = settings.MEDIA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + m.kmlFile
+        m.url = latestRequestG.build_absolute_uri(settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + m.kmlFile)
     if m.openable:
         m.listItemType = 'check'
     else:
