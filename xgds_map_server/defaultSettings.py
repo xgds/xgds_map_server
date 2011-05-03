@@ -4,13 +4,8 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-# Server URL settings:
-MAPSERVER_DATA_URL = 'data/mapserver/'
+XGDS_MAP_SERVER_MEDIA_SUBDIR = 'xgds_map_server/'
+XGDS_MAP_SERVER_DATA_SUBDIR = 'xgds_map_server/'
 
-# Filesystem settings:
-XGDS_FILE_ROOT = '/Library/WebServer/Documents/xgdsPlrp/data'
-MAPSERVER_FILE_ROOT = '%s/mapserver' % XGDS_FILE_ROOT
-
-#PROJECT_LOGO_URL = 'icons/plrp-logo.jpg'
-PROJECT_LOGO_URL = 'icons/plrp-logo-small.gif'
+XGDS_PROJECT_LOGO_URL = 'icons/plrp-logo-small.gif'
 XGDS_LOGO_URL = 'icons/xgdsLogo.png'

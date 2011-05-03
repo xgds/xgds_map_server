@@ -25,8 +25,8 @@ from xgds_map_server.models import *
 
 # HTML list of maps with description and links to individual maps, and a link to the kml feed
 def getMapListPage(request):
-    projectIconUrl = request.build_absolute_uri(reverse(staticServe,args=[settings.PROJECT_LOGO_URL]))
-    xgdsIconUrl = request.build_absolute_uri(reverse(staticServe,args=[settings.XGDS_LOGO_URL]))
+    projectIconUrl = settings.MEDIA_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
+    xgdsIconUrl = settings.MEDIA_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
     mapList = Map.objects.all().order_by('name')
     groupList = MapGroup.objects.all().order_by('name')
     for m in mapList:
@@ -54,11 +54,10 @@ def getMapListPage(request):
                                'xgdsIconUrl':xgdsIconUrl})
 
 def setMapProperties(m):
-    #m.url = '/../../%s%s' % (settings.MAPSERVER_DATA_URL,m.kmlFile)
     if m.kmlFile.startswith('/'):
         m.url = latestRequestG.build_absolute_uri(m.kmlFile)
     else:
-        m.url = '../../%s%s' % (settings.MAPSERVER_DATA_URL,m.kmlFile)
+        m.url = settings.MEDIA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + m.kmlFile
     if m.openable:
         m.listItemType = 'check'
     else:
@@ -199,7 +198,7 @@ def getMapFeedAll(request):
 def getMapFileDeprecated(request,filename):
     if (filename == ''):
         return getMapFeedAll(request)
-    diskfile = '%s/%s' % (settings.MAPSERVER_FILE_ROOT,filename)
+    diskfile = settings.DATA_ROOT + settings.XGDS_MAP_SERVER_DATA_SUBDIR + filename
     url = '%s/%s' % ('static',filename)
     if os.path.exists(diskfile):
         print 'file %s exists' % diskfile

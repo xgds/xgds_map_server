@@ -18,7 +18,7 @@ urlpatterns = patterns(
     (r'^list/', getMapListPage),
     # This URL should receive a static files
     (r'^data/(?P<path>.*)$', 'django.views.static.serve',
-     {'document_root' : settings.MAPSERVER_FILE_ROOT,
+     {'document_root' : settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR,
       'show_indexes' : True}),
     # By default if you just load the app you should see the list
     (r'^feed/(?P<feedname>.*)', getMapFeed),
