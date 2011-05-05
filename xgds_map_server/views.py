@@ -52,7 +52,8 @@ def getMapListPage(request):
                               {'mapList':mapList,
                                'feedUrl':feedUrl,
                                'projectIconUrl':projectIconUrl,
-                               'xgdsIconUrl':xgdsIconUrl})
+                               'xgdsIconUrl':xgdsIconUrl},
+                              context_instance=RequestContext(request))
 
 def setMapProperties(m):
     if m.kmlFile.startswith('/'):
@@ -178,9 +179,10 @@ def getMapFeedTop(request):
     for m in mapList:
         print m.kmlFile
     resp = render_to_response('Maps.kml',
-                              {'documentName':'PLRP 2011 Map',
-                               'mapList':mapList},
-                              mimetype = 'application/vnd.google-earth.kml+xml')
+                              {'documentName': 'PLRP 2011 Map',
+                               'mapList': mapList},
+                              mimetype='application/vnd.google-earth.kml+xml',
+                              context_instance=RequestContext(request))
     resp['Content-Disposition'] = 'attachment; filename=PLRP2011MapFeed.kml'
     return resp
 

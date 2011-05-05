@@ -1,15 +1,7 @@
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
-</head>
-<html>
-<head>
-  <title>Map List Page</title>
-
+{% extends "MapServerSiteStyle.html" %}
+{% block headExtras %}
   <style type="text/css">
       .no-border { border: none; }
-      #irg-logo { float: right; }
-
-      #stats { padding-top: 10px }
-      #filter { padding-top: 10px }
 
       table {
         font-size: 14px;
@@ -35,35 +27,24 @@
         padding: 3px 4px;
         padding-right: 10px;
       }
-    body { 
-      background: #ffffff;
-      font-family: arial,helvetica,sans-serif;
-      font-size: 1.0em;
-    }
     p.small {
       margin-bottom: 4px;
       margin-top: 4px;
     }
   </style>
-</head>
+{% endblock %}
 
-<body>
-<table width=100%>
-  <tr>
-    <td width="343"><img src="{{projectIconUrl}}"></td>
-    <td><center><font size=+4>Map Server</font></center></td>
-    <td width="343" align="right"><img src="{{xgdsIconUrl}}"></td>
-  </tr>
-</table>
+{% block contents %}
 
 <h2>Map Feed</h2>
-This <a href="{{feedUrl}}">map feed</a> includes all of the maps
+
+<p>This <a href="{{feedUrl}}">map feed</a> includes all of the maps
 served by this map server, and will be updated as new data becomes
-available. <br/>
-<br/>
-Open it once in Google Earth.  If the network link ever
+available.</p>
+
+<p>Open it once in Google Earth.  If the network link ever
 breaks (which will be indicated by a red folder icon in the Google
-Earth sidebar) right click on the link and select "refresh".
+Earth sidebar) right click on the link and select "refresh".</p>
 
 <h2>Map List</h2>
 <!-- File URLs are: -->
@@ -102,5 +83,4 @@ Earth sidebar) right click on the link and select "refresh".
 </center>
 <!-- <hr> -->
 <address></address>
-</body>
-</html>
+{% endblock %}
