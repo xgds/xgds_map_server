@@ -1,27 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://earth.google.com/kml/2.0">
 
-<Document>
-<name>{{documentName}}</name>
-<visibility>1</visibility>
-
-{% for m in mapList %}
 <NetworkLink>
-  <name>{{m.name}}</name>
-  <visibility>{{m.visibility}}</visibility>
+  <name>{{ map.name }}</name>
+  <visibility>{{ map.visibility }}</visibility>
   <Style>
     <ListStyle>
-      <listItemType>{{m.listItemType}}</listItemType>
+      <listItemType>{{ map.listItemType }}</listItemType>
     </ListStyle>
   </Style>
   <Link>
-    <href>{{m.url}}</href>
+    <href>{{ map.url }}</href>
     <refreshMode>onInterval</refreshMode>
     <refreshInterval>14400</refreshInterval>
   </Link>
 </NetworkLink>
-{% endfor %}
-
-</Document>
 
 </kml>

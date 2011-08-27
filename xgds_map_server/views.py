@@ -174,14 +174,10 @@ def getMapFeedTop(request):
     m.url = request.build_absolute_uri(reverse(getMapFeed,kwargs={'feedname':'all.kml'}))
     m.visibility = 1
     m.listItemType = 'check'
-    mapList = []
-    mapList.append(m)
-    print 'serving %d maps to ' % len(mapList)
-    for m in mapList:
-        print m.kmlFile
+    print 'top level map kmlFile:', m.kmlFile
     resp = render_to_response('Maps.kml',
                               {'documentName': topLevel['name'],
-                               'mapList': mapList},
+                               'map': m},
                               mimetype='application/vnd.google-earth.kml+xml',
                               context_instance=RequestContext(request))
     resp['Content-Disposition'] = 'attachment; filename=%s' % topLevel['filename']
