@@ -161,8 +161,9 @@ def getMapFeed(request,feedname):
 # This URL should retrieve a top-level KML file with network link to the top-level feed
 def getMapFeedTop(request):
     m = Map()
-    m.name = 'PLRP 2011 Map'
-    m.description = 'Top level KML feed for all PLRP 2011 maps.'
+    topLevel = settings.XGDS_MAP_SERVER_TOP_LEVEL
+    m.name = topLevel['name']
+    m.description = topLevel['description']
     # This *has* to be a full URL.  The problem is that the KML file
     # returned by this request lands on the user's filesystem and
     # needs to be able to open up from anywhere and point to the
@@ -179,11 +180,11 @@ def getMapFeedTop(request):
     for m in mapList:
         print m.kmlFile
     resp = render_to_response('Maps.kml',
-                              {'documentName': 'PLRP 2011 Map',
+                              {'documentName': topLevel['name'],
                                'mapList': mapList},
                               mimetype='application/vnd.google-earth.kml+xml',
                               context_instance=RequestContext(request))
-    resp['Content-Disposition'] = 'attachment; filename=PLRP2011MapFeed.kml'
+    resp['Content-Disposition'] = 'attachment; filename=%s' % topLevel['filename']
     return resp
 
 # This URL should retrieve a top-level KML file with network links to all files

@@ -9,3 +9,9 @@ XGDS_MAP_SERVER_DATA_SUBDIR = 'xgds_map_server/'
 
 XGDS_PROJECT_LOGO_URL = 'icons/plrp-logo-small.gif'
 XGDS_LOGO_URL = 'icons/xgdsLogo.png'
+
+XGDS_MAP_SERVER_TOP_LEVEL = {
+    "name": "PLRP 2011 Map",
+    "description": "Top level KML feed for all PLRP 2011 maps.",
+    "filename": "PLRP2011MapFeed.kml"
+}

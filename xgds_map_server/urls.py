@@ -13,7 +13,8 @@ urlpatterns = patterns(
     '',
 
     (r'^$', getMapListPage,
-     {'readOnly': True}),
+     {'readOnly': True},
+     'xgds_map_server_index'),
     # Map server urls
     # HTML list of maps with description and links to individual maps, and a link to the kml feed
     (r'^list/', getMapListPage,
@@ -23,8 +24,10 @@ urlpatterns = patterns(
     (r'^data/(?P<path>.*)$', 'django.views.static.serve',
      {'document_root' : settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR,
       'show_indexes' : True,
-      'readOnly': True}),
+      'readOnly': True},
+     'xgds_map_server_static'),
     # By default if you just load the app you should see the list
     (r'^feed/(?P<feedname>.*)', getMapFeed,
-     {'readOnly': True}),
+     {'readOnly': True},
+     'xgds_map_server_feed'),
 )

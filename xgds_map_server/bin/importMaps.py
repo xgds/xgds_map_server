@@ -1,5 +1,17 @@
 #!/usr/bin/env python
 
+"""
+To use this script, cd into the map server data directory, then run it
+with args set to the names of directories or kml files (within that
+data directory!) you want to import into the map server db.
+
+Example:
+
+ cd ~/xgds_drats/data/xgds_map_server
+ ~/xgds_drats/apps/xgds_map_server/bin/importMaps.py opsMaps/ geologyMaps/
+
+"""
+
 import sys
 import os
 import stat
