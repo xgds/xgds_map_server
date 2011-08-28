@@ -80,30 +80,31 @@ def setMapProperties(m):
     print 'listItemType is %s' % m.listItemType
 
 def getMapTree():
-    root = getChildren()
-    return root
+    groups = MapGroup.objects.all()
+    maps = Map.objects.all()
 
-def getChildren(object=None):
-    print 'getting children for %s' % object
-    if object==None:
-        groupList = MapGroup.objects.filter(parentId=None).order_by('name')
-        object = groupList[0]
-        object.children = []
-        print 'root is %s' % object
-    myGroupList = MapGroup.objects.filter(parentId=object.id).order_by('name')
-    for g in myGroupList:
-        print 'child is %s' % g
-        g.children = []
-        g = getChildren(g)
-        object.children.append(g)
-    myMapList = Map.objects.filter(parentId=object.id).order_by('name')
-    for m in myMapList:
-        print 'child is %s' % m
-        setMapProperties(m)
-        m.children = []
-        object.children.append(m)
-        print '   now has %s children' % len(object.children)
-    return object
+    groupLookup = dict([(group.id, group) for group in groups])
+
+    for map in maps:
+        setMapProperties(map)
+
+    for group in groups:
+        group.subGroups = []
+        group.subMaps = []
+
+    for subGroup in groups:
+        if subGroup.parentId_id:
+            parent = groupLookup[subGroup.parentId_id]
+            parent.subGroups.append(subGroup)
+
+    for subMap in maps:
+        if subMap.parentId_id:
+            parent = groupLookup[subMap.parentId_id]
+            parent.subMaps.append(subMap)
+
+    rootMap = [g for g in groups if g.parentId_id == None][0]
+
+    return rootMap
 
 def printTree(out,node,level=0):
     indent = ''
@@ -112,9 +113,11 @@ def printTree(out,node,level=0):
     if hasattr(node, 'kmlFile'):
         print '%s - Map = %s' % (indent,node.name)
     else:
-        print '%s - Folder = %s (with %s children)' % (indent,node.name,len(node.children))
-    for c in node.children:
-        printNode(out,c,level=level+1)
+        print '%s - Folder = %s (with %s subGroups and %s subMaps)' % (indent,node.name,len(node.subGroups),len(node.subMaps))
+    for c in node.subGroups:
+        printGroup(out,c,level=level+1)
+    for c in node.subMaps:
+        printMap(out,c,level=level+1)
 
 def printTreeToKml(out, node):
     out.write("""<?xml version="1.0" encoding="UTF-8"?>
@@ -122,17 +125,27 @@ def printTreeToKml(out, node):
 <Document>
 <name>%(name)s</name>
 <visibility>1</visibility>
-""" % dict(name=node.name))
+""" % vars(node))
     level = 0
-    printNodeToKml(out,node,level)
+    printGroupToKml(out,node,level)
     out.write("""
 </Document>
 </kml>
 """)
 
-def printNodeToKml(out,node,level=0):
-    if hasattr(node, 'kmlFile'): # This is a map
-        out.write("""
+def printGroupToKml(out,node,level=0):
+    out.write("""
+<Folder>
+  <name>%(name)s</name>
+""" % vars(node))
+    for n in node.subGroups:
+        printGroupToKml(out,n,level+1)
+    for n in node.subMaps:
+        printMapToKml(out,n,level+1)
+    out.write('</Folder>\n')
+
+def printMapToKml(out,node,level=0):
+    out.write("""
 <NetworkLink>
   <name>%(name)s</name>
   <visibility>%(visibility)s</visibility>\n
@@ -148,14 +161,6 @@ def printNodeToKml(out,node,level=0):
   </Link>
 </NetworkLink>
 """ % vars(node))
-    else: # This is a folder
-        out.write("""
-<Folder>
-  <name>%(name)s</name>
-""" % vars(node))
-        for n in node.children:
-            printNodeToKml(out,n,level+1)
-        out.write('</Folder>\n')
 
 def getMapFeed(request,feedname):
     print 'called getMapFeed(%s)' % feedname
