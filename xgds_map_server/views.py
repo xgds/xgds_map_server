@@ -6,12 +6,15 @@
 
 # Create your views here.
 
-import datetime, time, itertools
+import datetime
+import time
+import itertools
 import re #Dave
 import os #Dave
 import urllib2
 import uuid
 import sys
+from cStringIO import StringIO
 
 from django.shortcuts import render_to_response, get_object_or_404
 from django.http import HttpResponse, HttpResponseRedirect
@@ -102,56 +105,57 @@ def getChildren(object=None):
         print '   now has %s children' % len(object.children)
     return object
 
-def printTree(node,level=0):
+def printTree(out,node,level=0):
     indent = ''
     for i in range(level):
         indent = indent + '    '
-    if 'kmlFile' in dir(node):
+    if hasattr(node, 'kmlFile'):
         print '%s - Map = %s' % (indent,node.name)
     else:
         print '%s - Folder = %s (with %s children)' % (indent,node.name,len(node.children))
     for c in node.children:
-        printNode(c,level=level+1)
+        printNode(out,c,level=level+1)
 
-def printTreeToKml(node):
-    str = ''
-    str = str + '<?xml version="1.0" encoding="UTF-8"?>\n'
-    str = str + '<kml xmlns="http://earth.google.com/kml/2.0">\n'
-    str = str + '<Document>\n'
-    str = str + '<name>%s</name>\n' % node.name
-    str = str + '<visibility>1</visibility>\n'
+def printTreeToKml(out, node):
+    out.write("""<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://earth.google.com/kml/2.0">
+<Document>
+<name>%(name)s</name>
+<visibility>1</visibility>
+""" % dict(name=node.name))
     level = 0
-    str = printNodeToKml(node,level,str)
-    str = str + '</Document>\n'
-    str = str + '</kml>\n'
-    return str
+    printNodeToKml(out,node,level)
+    out.write("""
+</Document>
+</kml>
+""")
 
-def printNodeToKml(node,level=0,str=''):
-    if 'kmlFile' in dir(node): # This is a map
-        str = str + '<NetworkLink>\n'
-        str = str + '  <name>%s</name>\n' % node.name
-        str = str + '  <visibility>%s</visibility>\n' % node.visibility
-        str = str + '  <Style>\n'
-        str = str + '    <ListStyle>\n'
-        str = str + '      <listItemType>%s</listItemType>\n' % node.listItemType
-        str = str + '    </ListStyle>\n'
-        str = str + '  </Style>\n'
-        str = str + '  <Link>\n'
-        #str = str + '  <Url>\n'
-        str = str + '    <href>%s</href>\n' % node.url
-        str = str + '    <refreshMode>onInterval</refreshMode>\n'
-        str = str + '    <refreshInterval>14400</refreshInterval>\n'
-        #str = str + '  </Url>\n'
-        str = str + '  </Link>\n'
-        str = str + '</NetworkLink>\n'
+def printNodeToKml(out,node,level=0):
+    if hasattr(node, 'kmlFile'): # This is a map
+        out.write("""
+<NetworkLink>
+  <name>%(name)s</name>
+  <visibility>%(visibility)s</visibility>\n
+  <Style>
+    <ListStyle>
+      <listItemType>%(listItemType)s</listItemType>
+    </ListStyle>
+  </Style>
+  <Link>
+    <href>%(url)s</href>
+    <refreshMode>onInterval</refreshMode>
+    <refreshInterval>14400</refreshInterval>
+  </Link>
+</NetworkLink>
+""" % vars(node))
     else: # This is a folder
-        str = str + '<Folder>\n'
-        str = str + '  <name>%s</name>\n' % node.name
+        out.write("""
+<Folder>
+  <name>%(name)s</name>
+""" % vars(node))
         for n in node.children:
-            str = printNodeToKml(n,level+1,str)
-        str = str + '</Folder>\n'
-    return str
-
+            printNodeToKml(out,n,level+1)
+        out.write('</Folder>\n')
 
 def getMapFeed(request,feedname):
     print 'called getMapFeed(%s)' % feedname
@@ -191,7 +195,9 @@ def getMapFeedAll(request):
     global latestRequestG
     latestRequestG = request
     root = getMapTree()
-    str = printTreeToKml(root)
+    out = StringIO()
+    printTreeToKml(out, root)
+    str = out.getvalue()
     resp = HttpResponse(content=str,
                         mimetype = 'application/vnd.google-earth.kml+xml')
     resp['Content-Disposition'] = 'attachment; filename=all.kml'
