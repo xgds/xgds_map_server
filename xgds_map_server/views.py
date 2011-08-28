@@ -45,7 +45,10 @@ def getMapListPage(request):
             m.visible = 'yes'
         else:
             m.visible = 'no'
-        m.groupname = m.parentId.name
+        if m.parentId == None:
+            m.groupname = ''
+        else:
+            m.groupname = m.parentId.name
     feedUrl = request.build_absolute_uri(reverse(getMapFeed,kwargs={'feedname':''}))
     print 'serving %d maps to MapList.html' % len(mapList)
     return render_to_response('MapList.html',
