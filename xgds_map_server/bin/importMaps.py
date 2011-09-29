@@ -32,7 +32,7 @@ def importMaps(parent, paths):
     elif parent == None:
         print 'no parent specified, fetching the root MapGroup to use as the parent'
         parent = MapGroup.objects.get(parentId=None)
-    mapDir = os.path.realpath(settings.DATA_ROOT + settings.XGDS_MAP_SERVER_DATA_SUBDIR)
+    mapDir = os.path.realpath(os.path.join(settings.DATA_ROOT, settings.XGDS_MAP_SERVER_DATA_SUBDIR))
     cwd = os.path.realpath(os.getcwd())
     if mapDir != cwd:
         print >>sys.stderr, 'error: you must cd to the map data dir first:'
