@@ -28,6 +28,7 @@ urlpatterns = patterns(
      'xgds_map_server_static'),
     # By default if you just load the app you should see the list
     (r'^feed/(?P<feedname>.*)', getMapFeed,
-     {'readOnly': True},
+     {'readOnly': True,
+      'challenge': settings.SECURITY_GOOGLE_EARTH_CHALLENGE},
      'xgds_map_server_feed'),
 )
