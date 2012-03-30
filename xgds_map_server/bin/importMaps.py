@@ -14,17 +14,18 @@ Example:
 
 import sys
 import os
-import stat
 import re
 
 from xgds_map_server.models import Map, MapGroup
 from xgds_map_server import settings
+
 
 def getName(path):
     path = os.path.basename(path)
     path = os.path.splitext(path)[0]
     path = re.sub('_', ' ', path)
     return path
+
 
 def importMaps(parent, paths):
     if isinstance(parent, str):
@@ -35,8 +36,8 @@ def importMaps(parent, paths):
     mapDir = os.path.realpath(os.path.join(settings.DATA_ROOT, settings.XGDS_MAP_SERVER_DATA_SUBDIR))
     cwd = os.path.realpath(os.getcwd())
     if mapDir != cwd:
-        print >>sys.stderr, 'error: you must cd to the map data dir first:'
-        print >>sys.stderr, '  cd %s' % mapDir
+        print >> sys.stderr, 'error: you must cd to the map data dir first:'
+        print >> sys.stderr, '  cd %s' % mapDir
         sys.exit()
     for path in paths:
         path = os.path.realpath(path)
@@ -59,21 +60,22 @@ def importMaps(parent, paths):
                 if ext not in ('.kml', '.kmz'):
                     print 'file %s is not a map, skipping' % path
                     continue
-                map, created = (Map.objects.get_or_create
-                                (name=name,
-                                 defaults=dict(description='-',
-                                               kmlFile=os.path.relpath(path),
-                                               openable=True,
-                                               visible=False,
-                                               parentId=parent)))
+                _map, created = (Map.objects.get_or_create
+                                 (name=name,
+                                  defaults=dict(description='-',
+                                                kmlFile=os.path.relpath(path),
+                                                openable=True,
+                                                visible=False,
+                                                parentId=parent)))
                 if created:
                     print 'add    Map %s -- parent %s' % (name, parent.name)
                 else:
                     print 'exists Map %s' % name
             else:
-                print >>sys.stderr, 'warning: path %s is not a dir or a file, skipping'
+                print >> sys.stderr, 'warning: path %s is not a dir or a file, skipping'
         else:
-            print >>sys.stderr, 'warning: path %s does not exist, skipping' % path
+            print >> sys.stderr, 'warning: path %s does not exist, skipping' % path
+
 
 def main():
     import optparse
