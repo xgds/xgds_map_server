@@ -1,0 +1,71 @@
+#!/usr/bin/env python
+
+"""
+Pull maps from some reference server to your local install.
+"""
+
+import os
+import sys
+import time
+
+DEFAULT_LOCATION = 'xserve2:xgds_isru'
+_up = os.path.dirname
+LOCAL_CHECKOUT = _up(_up(_up(_up(_up(os.path.realpath(__file__))))))
+DRY_RUN = False
+
+
+def dosys(cmd):
+    print cmd
+    if DRY_RUN:
+        ret = 0
+    else:
+        ret = os.system(cmd)
+    if ret != 0:
+        print >> sys.stderr, 'warning: command exited with non-zero return value %d' % ret
+    return ret
+
+
+def rsyncMaps(siteLocation):
+    server, path = siteLocation.split(':', 1)
+    uniq = int(time.time())
+    dumpPath = '/tmp/rsyncMaps-%d.json' % uniq
+
+    print '# rsyncing map kml files to local data directory'
+    dosys('rsync -rz %s:%s/data/xgds_map_server %s/data'
+          % (server, path, LOCAL_CHECKOUT))
+
+    print '# dumping map meta-data from remote db'
+    dosys('ssh %s "cd %s && source sourceme.sh && ./manage.py dumpdata xgds_map_server > %s"'
+          % (server, path, dumpPath))
+
+    print '# copying map meta-data to local host'
+    dosys('rsync %s:%s %s'
+          % (server, dumpPath, dumpPath))
+
+    print '# loading map meta-data into local db'
+    dosys('cd %s && ./manage.py loaddata %s'
+          % (LOCAL_CHECKOUT, dumpPath))
+
+
+def main():
+    import optparse
+    parser = optparse.OptionParser('usage: %prog [server:dir]')
+    parser.add_option('-d', '--dryRun',
+                      action='store_true', default=False,
+                      help='Dry run mode (print commands but do not execute them)')
+    opts, args = parser.parse_args()
+    if len(args) == 1:
+        siteLocation = args[0]
+    elif len(args) == 0:
+        siteLocation = DEFAULT_LOCATION
+    else:
+        parser.error('expected 0 or 1 args')
+
+    global DRY_RUN
+    DRY_RUN = opts.dryRun
+
+    rsyncMaps(siteLocation)
+
+
+if __name__ == '__main__':
+    main()
