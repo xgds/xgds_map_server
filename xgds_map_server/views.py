@@ -34,7 +34,8 @@ def getMapListPage(request):
     mapList = Map.objects.all().order_by('name')
     groupList = MapGroup.objects.all().order_by('name')
     for m in mapList:
-        if m.kmlFile.startswith('/'):
+        if (m.kmlFile.startswith('/') or m.kmlFile.startswith('http://') or
+            m.kmlFile.startswith('https://')):
             url = m.kmlFile
         else:
             url = settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + m.kmlFile
@@ -62,7 +63,8 @@ def getMapListPage(request):
                               context_instance=RequestContext(request))
 
 def setMapProperties(m):
-    if m.kmlFile.startswith('/'):
+    if (m.kmlFile.startswith('/') or m.kmlFile.startswith('http://') or
+        m.kmlFile.startswith('https://')):
         m.url = latestRequestG.build_absolute_uri(m.kmlFile)
     else:
         m.url = latestRequestG.build_absolute_uri(settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + m.kmlFile)
