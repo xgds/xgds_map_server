@@ -134,6 +134,8 @@ def printTreeToKml(out, node):
 """)
 
 def printGroupToKml(out,node,level=0):
+    if (0==len(node.subGroups)) and (0==len(node.subMaps)):
+        return
     out.write("""
 <Folder>
   <name>%(name)s</name>
