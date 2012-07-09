@@ -1,17 +1,31 @@
 {% extends "MapServerSiteStyle.html" %}
 {% block cssExtras %}
   <style type="text/css">
+  /*
+		  #page-content a, {
+		    color: #ffffff;  
+		    text-decoration: none;
+		}
+		
+		#page-content a:hover, #page-content a:focus, #page-content a:active {
+		    color: #ffffff;
+		}
+		*/
       .no-border { border: none; }
 
       table {
         font-size: 14px;
         border-collapse: collapse;
       }
+      table a:hover, table a:focus, table a:active {
+		    color: #000000;
+		}
       table th, table td { 
         margin: 0px; 
         padding: 0px; 
       }
       table thead th { 
+        background: #dddddd;
         padding: 4px 4px;
         border-bottom: solid 2px #c0c0c0; 
       }
@@ -32,41 +46,36 @@
       margin-top: 4px;
     }
 
-.bigbutton {
-  background-color: #f88;
-  border: 2px solid black;
-  font-size: 1.5em;
-  font-weight: bold;
-  text-decoration: none;
-  padding: 1em;
-  border-radius: 0.3em;
-  -moz-border-radius: 0.3em;
-}
-
   </style>
 {% endblock %}
 
+{% block sitemenu-content-secondary %}
+<div class="sitemenu-nav-secondary">
+    <ul>
+        <li class="currentPage">Master Map Feed</li>
+    </ul>
+</div>
+{% endblock %}
+
 {% block contents %}
-
-<h2>Map Feed</h2>
-
-<p>The map feed includes all of the maps served by this map server, and
-will be updated as new data becomes available.</p>
-
-<p>Open it once in Google Earth.  If the network link ever
-breaks (which will be indicated by a red folder icon in the Google
-Earth sidebar) right click on the link and select "refresh".</p>
-
-<br/><br/>
-<div><a href="{{ feedUrl }}" style="text-decoration: none;"><span class="bigbutton">Launch Master Map Feed in Google Earth</span></a></div>
-<br/><br/><br/>
-
+<h2>Master Map Feed&nbsp;&nbsp;<a href="{{ feedUrl }}" class="mybutton" >Download</a> </h2>
+<span style="font-size:85%">
+The Master Map Feed includes all of the maps provided by this map server.
+It will update automatically in Google Earth as new data becomes available.
+If the network link ever breaks (you see a red folder icon in the Google
+Earth sidebar) right click on the link in Google Earth and select "refresh".</p>
+Click the Download button to download the Master Map Feed.<br/>
+Double-click on the downloaded file, ISRU2012MapFeed.kml to open in Google Earth.<br/>
+You only have to download and open this file once.<br/>
+</span>
+<br/>
 <h2>Map List</h2>
+<p>The table below describes the contents of the Master Map Feed.</p>
 <!-- File URLs are: -->
 <!-- <a href="{{myHost}}{{kmlCommsPath}}/{{date}}/{{f}}">{{f}}</a> -->
 
 <center>
-<table width="80%">
+<table style='color:black'>
   <thead><th>Map Name</th><th>Map Group</th><th>Map Description</th><th>KML File</th><th>Openable?</th><th>Default visible?</th></thead>
   <tbody>
   {% for m in mapList %}
