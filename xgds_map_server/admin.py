@@ -8,6 +8,7 @@ from django.contrib import admin
 
 from xgds_map_server import models
 
+
 class MapAdmin(admin.ModelAdmin):
     list_display = ('id',
                     'name',
@@ -23,6 +24,7 @@ class MapAdmin(admin.ModelAdmin):
                      'description',
                      'kmlFile',
                      )
+
 
 class MapGroupAdmin(admin.ModelAdmin):
     list_display = ('id',

@@ -20,11 +20,10 @@ management/appCommands/prep.py command for each app (if it exists).
 
 from django.core.management.base import NoArgsCommand
 
-from geocamUtil.management import commandUtil
 
 class Command(NoArgsCommand):
     help = 'Prep xgds_map_server'
-    
+
     def handle_noargs(self, **options):
         # put your code here
         pass

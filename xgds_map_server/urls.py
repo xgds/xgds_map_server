@@ -4,30 +4,30 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-from django.conf.urls.defaults import *
+from django.conf.urls.defaults import *  # pylint: disable=W0401
 
 from xgds_map_server import settings
-from xgds_map_server.views import *
+from xgds_map_server import views
 
 urlpatterns = patterns(
     '',
 
-    (r'^$', getMapListPage,
+    (r'^$', views.getMapListPage,
      {'readOnly': True},
      'xgds_map_server_index'),
     # Map server urls
     # HTML list of maps with description and links to individual maps, and a link to the kml feed
-    (r'^list/', getMapListPage,
+    (r'^list/', views.getMapListPage,
      {'readOnly': True},
      'mapList'),
     # This URL should receive a static files
     (r'^data/(?P<path>.*)$', 'django.views.static.serve',
-     {'document_root' : settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR,
-      'show_indexes' : True,
+     {'document_root': settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR,
+      'show_indexes': True,
       'readOnly': True},
      'xgds_map_server_static'),
     # By default if you just load the app you should see the list
-    (r'^feed/(?P<feedname>.*)', getMapFeed,
+    (r'^feed/(?P<feedname>.*)', views.getMapFeed,
      {'readOnly': True, 'loginRequired': False},
      'xgds_map_server_feed'),
 )
