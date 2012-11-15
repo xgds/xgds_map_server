@@ -23,8 +23,8 @@ latestRequestG = None
 
 # HTML list of maps with description and links to individual maps, and a link to the kml feed
 def getMapListPage(request):
-    projectIconUrl = settings.MEDIA_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
-    xgdsIconUrl = settings.MEDIA_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
+    projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
+    xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
     mapList = Map.objects.all().order_by('name')
     for m in mapList:
         if (m.kmlFile.startswith('/') or m.kmlFile.startswith('http://') or
