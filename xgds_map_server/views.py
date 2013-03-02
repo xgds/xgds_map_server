@@ -78,7 +78,6 @@ def getMapTreeJSON(request):
     map_tree = getMapTree()
     map_tree_json = []
     addGroupToJSON(map_tree, map_tree_json)
-    map_tree_json[0]["state"] = "open"
     json_data = json.dumps(map_tree_json, indent=4)
     return HttpResponse(content=json_data,
                         mimetype="application/json")
@@ -90,7 +89,7 @@ def addGroupToJSON(group, map_tree):
         "data": group.name,
         "metadata": {"id":group.id, "description":group.description,
                      "parentId":None},
-        "state": "closed",
+        "state": "open",
         "icon": "folder"
         }
     if group.parentId is not None:
