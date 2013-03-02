@@ -1,0 +1,18 @@
+{% extends "MapServerSiteStyle.html" %}
+
+{% block scripts %}
+{{ block.super }}
+<script src="{{ MEDIA_URL }}external/js/jstree/jquery.jstree.js" type="text/javascript"></script>
+<script src="{{ MEDIA_URL }}xgds_map_server/js/MapTree.js" type="text/javascript"></script>
+{% endblock %}
+
+{% block contents %}
+<div id="treeDiv">
+  <!-- placeholder element for jstree -->
+</div>
+{% endblock %}
+
+{% block jsInit %}
+{{ block.super }}
+jsTreeMapTreeURL = "{{ JSONMapTreeURL }}";
+{% endblock %}

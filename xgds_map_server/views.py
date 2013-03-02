@@ -9,6 +9,7 @@
 import os
 import sys
 from cStringIO import StringIO
+import json
 
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
@@ -57,6 +58,60 @@ def getMapListPage(request):
                                'xgdsIconUrl': xgdsIconUrl},
                               context_instance=RequestContext(request))
 
+# HTML tree of maps using jstree
+def getMapTreePage(request):
+    projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
+    xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
+    jsonMapTreeUrl = (request.build_absolute_uri
+                      (reverse('mapListJSON')))
+    return render_to_response("MapTree.html",
+                              {'projectIconUrl': projectIconUrl,
+                               'xgdsIconUrl': xgdsIconUrl,
+                               'JSONMapTreeURL': jsonMapTreeUrl},
+                              context_instance=RequestContext(request))
+    
+# json tree of map groups
+# note that this does json for jstree
+def getMapTreeJSON(request):
+    global latestRequestG
+    latestRequestG = request
+    map_tree = getMapTree()
+    map_tree_json = []
+    addGroupToJSON(map_tree, map_tree_json)
+    map_tree_json[0]["state"] = "open"
+    json_data = json.dumps(map_tree_json, indent=4)
+    return HttpResponse(content=json_data,
+                        mimetype="application/json")
+
+# recursively adds group to json tree
+# in the style of jstree
+def addGroupToJSON(group, map_tree):
+    group_json = {
+        "data": group.name,
+        "metadata": {"id":group.id, "description":group.description,
+                     "parentId":None},
+        "state": "closed",
+        "icon": "folder"
+        }
+    if group.parentId is not None:
+        group_json['metadata']['parentId'] = group.parentId.id
+    if group.subGroups or group.subMaps:
+        group_json['children'] = []
+    for group in group.subGroups:
+        addGroupToJSON(group, group_json['children'])
+    for group_map in group.subMaps:
+        group_map_json = {
+            "data": group_map.name,
+            "metadata": {"id":group_map.id, "description":group_map.description,
+                         "kmlFile":group_map.kmlFile, "openable":group_map.openable,
+                         "visible":group_map.visible, "parentId":None},
+            "state": "leaf"}
+        if group_map.parentId is not None:
+            group_map_json['metadata']['parentId'] = group_map.parentId.id
+        group_json['children'].append(group_map_json)
+    if 'children' not in group_json:
+        group_json['state'] = 'leaf'
+    map_tree.append(group_json)
 
 def setMapProperties(m):
     if (m.kmlFile.startswith('/') or m.kmlFile.startswith('http://') or
