@@ -12,12 +12,13 @@ from cStringIO import StringIO
 import json
 
 from django.shortcuts import render_to_response
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404, HttpResponseServerError
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
 
 from xgds_map_server import settings
 from xgds_map_server.models import Map, MapGroup
+from xgds_map_server.forms import MapForm
 
 latestRequestG = None
 
@@ -69,6 +70,31 @@ def getMapTreePage(request):
                                'xgdsIconUrl': xgdsIconUrl,
                                'JSONMapTreeURL': jsonMapTreeUrl},
                               context_instance=RequestContext(request))
+
+# HTML Form of a map
+def getMapDetailPage(request, mapID):
+    projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
+    xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
+    mapDetailUrl = (request.build_absolute_uri
+                    (reverse('mapDetail',
+                             kwargs={'mapID':mapID})))
+    mapTreeUrl = (request.build_absolute_uri
+                  (reverse('mapTree')))
+    try:
+        map_obj = Map.objects.get(id=mapID)
+    except Map.DoesNotExist:
+        raise Http404
+    except Map.MultipleObjectsReturned:
+        # this really shouldn't happen, ever
+        return HttpResponseServerError()
+    map_form = MapForm(instance=map_obj)
+    return render_to_response("MapDetail.html",
+                              {"projectIconUrl": projectIconUrl,
+                               "xgdsIconUrl": xgdsIconUrl,
+                               "mapDetailUrl": mapDetailUrl,
+                               "mapTreeUrl": mapTreeUrl,
+                               "mapForm": map_form},
+                              context_instance=RequestContext(request))
     
 # json tree of map groups
 # note that this does json for jstree
@@ -77,14 +103,14 @@ def getMapTreeJSON(request):
     latestRequestG = request
     map_tree = getMapTree()
     map_tree_json = []
-    addGroupToJSON(map_tree, map_tree_json)
+    addGroupToJSON(map_tree, map_tree_json, request)
     json_data = json.dumps(map_tree_json, indent=4)
     return HttpResponse(content=json_data,
                         mimetype="application/json")
 
 # recursively adds group to json tree
 # in the style of jstree
-def addGroupToJSON(group, map_tree):
+def addGroupToJSON(group, map_tree, request):
     group_json = {
         "data": group.name,
         "metadata": {"id":group.id, "description":group.description,
@@ -97,10 +123,13 @@ def addGroupToJSON(group, map_tree):
     if group.subGroups or group.subMaps:
         group_json['children'] = []
     for group in group.subGroups:
-        addGroupToJSON(group, group_json['children'])
+        addGroupToJSON(group, group_json['children'], request)
     for group_map in group.subMaps:
         group_map_json = {
-            "data": group_map.name,
+            "data": {
+                "title": group_map.name,
+                "attr": {"href": request.build_absolute_uri(reverse('mapDetail', kwargs={'mapID':group_map.id}))}
+                },
             "metadata": {"id":group_map.id, "description":group_map.description,
                          "kmlFile":group_map.kmlFile, "openable":group_map.openable,
                          "visible":group_map.visible, "parentId":None},

@@ -28,6 +28,10 @@ urlpatterns = patterns(
     (r'^listjson/', views.getMapTreeJSON,
      {'readOnly': True},
      'mapListJSON'),
+    # HTML detail view of map
+    (r'^detail/(?P<mapID>\d+)/', views.getMapDetailPage,
+     {'readOnly': True},
+     'mapDetail'),
     # This URL should receive a static files
     (r'^data/(?P<path>.*)$', 'django.views.static.serve',
      {'document_root': settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR,
