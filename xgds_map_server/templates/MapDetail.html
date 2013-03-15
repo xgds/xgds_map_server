@@ -4,6 +4,6 @@
 {{ block.super }}
 <form action="#" method="post">{% csrf_token %}
 {{ mapForm.as_p }}
-<input type="submit" value="Submit" /><input type="button" onclick="document.location.href = '{{ mapTreeUrl }}'" value="Back" />
+<input type="submit" value="Save" /><input type="button" onclick="document.location.href = '{{ mapTreeUrl }}'" value="Back" />
 </form>
 {% endblock %}

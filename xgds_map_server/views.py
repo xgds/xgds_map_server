@@ -87,6 +87,20 @@ def getMapDetailPage(request, mapID):
     except Map.MultipleObjectsReturned:
         # this really shouldn't happen, ever
         return HttpResponseServerError()
+
+    # handle post data before loading everything
+    if request.method == 'POST':
+        map_form = MapForm(request.POST)
+        if map_form.is_valid():
+            map_obj.name = map_form.cleaned_data['name']
+            map_obj.description = map_form.cleaned_data['description']
+            map_obj.kmlFile = map_form.cleaned_data['kmlFile']
+            map_obj.openable = map_form.cleaned_data['openable']
+            map_obj.visible = map_form.cleaned_data['visible']
+            map_obj.parentId = map_form.cleaned_data['parentId']
+            map_obj.save()
+
+    # return form page with current form data
     map_form = MapForm(instance=map_obj)
     return render_to_response("MapDetail.html",
                               {"projectIconUrl": projectIconUrl,
