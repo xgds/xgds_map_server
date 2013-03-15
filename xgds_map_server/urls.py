@@ -13,20 +13,20 @@ urlpatterns = patterns(
     '',
 
     (r'^$', views.getMapListPage,
-     {'readOnly': True},
+     {'readOnly': True, 'securityTags': ['readOnly']},
      'xgds_map_server_index'),
     # Map server urls
     # HTML list of maps with description and links to individual maps, and a link to the kml feed
     (r'^list/', views.getMapListPage,
-     {'readOnly': True},
+     {'readOnly': True, 'securityTags': ['readOnly']},
      'mapList'),
     # HTML tree of maps
     (r'^listtree/', views.getMapTreePage,
-     {'readOnly': True},
+     {'readOnly': True, 'securityTags': ['readOnly']},
      'mapTree'),
     # JSON tree of maps, formatted for jstree
     (r'^listjson/', views.getMapTreeJSON,
-     {'readOnly': True},
+     {'readOnly': True, 'securityTags': ['readOnly']},
      'mapListJSON'),
     # HTML detail view of map
     (r'^detail/(?P<mapID>\d+)/', views.getMapDetailPage,
@@ -40,6 +40,6 @@ urlpatterns = patterns(
      'xgds_map_server_static'),
     # By default if you just load the app you should see the list
     (r'^feed/(?P<feedname>.*)', views.getMapFeed,
-     {'readOnly': True, 'loginRequired': False},
+     {'readOnly': True, 'loginRequired': False, 'securityTags': ['kml', 'readOnly']},
      'xgds_map_server_feed'),
 )
