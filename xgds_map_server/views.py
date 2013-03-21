@@ -80,6 +80,7 @@ def getMapDetailPage(request, mapID):
                              kwargs={'mapID':mapID})))
     mapTreeUrl = (request.build_absolute_uri
                   (reverse('mapTree')))
+    fromSave = "false";
     try:
         map_obj = Map.objects.get(id=mapID)
     except Map.DoesNotExist:
@@ -99,6 +100,7 @@ def getMapDetailPage(request, mapID):
             map_obj.visible = map_form.cleaned_data['visible']
             map_obj.parentId = map_form.cleaned_data['parentId']
             map_obj.save()
+        fromSave = "true";
 
     # return form page with current form data
     map_form = MapForm(instance=map_obj)
@@ -107,7 +109,8 @@ def getMapDetailPage(request, mapID):
                                "xgdsIconUrl": xgdsIconUrl,
                                "mapDetailUrl": mapDetailUrl,
                                "mapTreeUrl": mapTreeUrl,
-                               "mapForm": map_form},
+                               "mapForm": map_form,
+                               "fromSave": fromSave},
                               context_instance=RequestContext(request))
     
 # json tree of map groups
