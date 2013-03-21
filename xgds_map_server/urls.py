@@ -32,6 +32,14 @@ urlpatterns = patterns(
     (r'^detail/(?P<mapID>\d+)/', views.getMapDetailPage,
      {'readOnly': True},
      'mapDetail'),
+    # HTML view to add new map
+    (r'^add/', views.getAddMapPage,
+     {'readOnly': True},
+     'addMap'),
+    # HTML view to confirm deletion of view
+    (r'^delete/(?P<mapID>\d+)/', views.getDeleteMapPage,
+     {'readOnly': True},
+     'mapDelete'),
     # This URL should receive a static files
     (r'^data/(?P<path>.*)$', 'django.views.static.serve',
      {'document_root': settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR,

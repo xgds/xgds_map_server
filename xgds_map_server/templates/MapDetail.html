@@ -4,18 +4,13 @@
 {{ block.super }}
 <form action="#" method="post">{% csrf_token %}
 {{ mapForm.as_p }}
-<input type="submit" id="saveButton" value="Save" /><input type="button" onclick="document.location.href = '{{ mapTreeUrl }}'" value="Back" />
+<input type="submit" id="saveButton" value="{% if fromSave %}Success!{% else %}Save{% endif %}" /><input type="button" onclick="document.location.href = '{{ mapTreeUrl }}'" value="Back" /><input type="button" onclick="document.location.href = '{{ mapDeleteUrl }}'" value="Delete Map" />
 </form>
 {% endblock %}
 
 {% block jsInit %}
 {{ block.super }}
-fromSave = {{ fromSave }};
-
-$(document).ready(function(){
-    if (fromSave) {
-        $("#saveButton")[0].value = "Success!";
-        setTimeout(function(){$("#saveButton")[0].value="Save";}, 1500);
-    }
-});
+{% if fromSave %}
+$(document).ready(function(){setTimeout(function(){$("#saveButton")[0].value="Save";},1500);});
+{% endif %}
 {% endblock %}

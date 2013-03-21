@@ -1,0 +1,9 @@
+{% extends "MapServerSiteStyle.html" %}
+
+{% block contents %}
+{{ block.super }}
+<form action="#" method="post">{% csrf_token %}
+{{ mapForm.as_p }}
+<input type="submit" value="Create" /><input type="button" onclick="document.location.href = '{{ mapTreeUrl }}'" value="Back" />
+</form>
+{% endblock %}

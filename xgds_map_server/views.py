@@ -11,8 +11,12 @@ import sys
 from cStringIO import StringIO
 import json
 
+from django.views.decorators.csrf import csrf_protect
 from django.shortcuts import render_to_response
-from django.http import HttpResponse, Http404, HttpResponseServerError
+from django.http import HttpResponse, Http404
+from django.http import HttpResponseServerError
+from django.http import HttpResponseRedirect
+from django.http import HttpResponseNotAllowed
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
 
@@ -65,11 +69,76 @@ def getMapTreePage(request):
     xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
     jsonMapTreeUrl = (request.build_absolute_uri
                       (reverse('mapListJSON')))
+    addMapUrl = (request.build_absolute_uri
+                  (reverse('addMap')))
     return render_to_response("MapTree.html",
                               {'projectIconUrl': projectIconUrl,
                                'xgdsIconUrl': xgdsIconUrl,
-                               'JSONMapTreeURL': jsonMapTreeUrl},
+                               'JSONMapTreeURL': jsonMapTreeUrl,
+                               'addMapUrl': addMapUrl},
                               context_instance=RequestContext(request))
+
+# HTML view to create new map
+def getAddMapPage(request):
+    projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
+    xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
+    mapTreeUrl = (request.build_absolute_uri
+                  (reverse('mapTree')))
+
+    if request.method == 'POST':
+        map_form = MapForm(request.POST)
+        if map_form.is_valid():
+            map_obj = Map()
+            map_obj.name = map_form.cleaned_data['name']
+            map_obj.description = map_form.cleaned_data['description']
+            map_obj.kmlFile = map_form.cleaned_data['kmlFile']
+            map_obj.openable = map_form.cleaned_data['openable']
+            map_obj.visible = map_form.cleaned_data['visible']
+            map_obj.parentId = map_form.cleaned_data['parentId']
+            map_obj.save()
+        return HttpResponseRedirect(mapTreeUrl)
+
+    else:
+        map_form = MapForm()
+        return render_to_response("AddMap.html",
+                                  {'projectIconUrl': projectIconUrl,
+                                   'xgdsIconUrl': xgdsIconUrl,
+                                   'mapTreeUrl': mapTreeUrl,
+                                   'mapForm': map_form},
+                                  context_instance=RequestContext(request))
+
+# HTML view to delete map
+@csrf_protect
+def getDeleteMapPage(request, mapID):
+    projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
+    xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
+    mapDetailUrl = (request.build_absolute_uri
+                    (reverse('mapDetail',
+                             kwargs={'mapID':mapID})))
+    mapTreeUrl = (request.build_absolute_uri
+                  (reverse('mapTree')))
+
+    try:
+        map_obj = Map.objects.get(id=mapID)
+    except Map.DoesNotExist:
+        raise Http404
+    except Map.MultipleObjectsReturned:
+        # this really shouldn't happen, ever
+        return HttpResponseServerError()
+
+    if request.method == 'POST':
+        # csrf protection means this has to happen
+        # in a relatively intentional way
+        map_obj.delete()
+        return HttpResponseRedirect(mapTreeUrl)
+
+    else:
+        return render_to_response("MapDelete.html",
+                                  {'projectIconUrl': projectIconUrl,
+                                   'xgdsIconUrl': xgdsIconUrl,
+                                   'mapTreeUrl': mapTreeUrl,
+                                   'mapDetailUrl': mapDetailUrl},
+                                  context_instance=RequestContext(request))
 
 # HTML Form of a map
 def getMapDetailPage(request, mapID):
@@ -78,9 +147,12 @@ def getMapDetailPage(request, mapID):
     mapDetailUrl = (request.build_absolute_uri
                     (reverse('mapDetail',
                              kwargs={'mapID':mapID})))
+    mapDeleteUrl = (request.build_absolute_uri
+                    (reverse('mapDelete',
+                             kwargs={'mapID':mapID})))
     mapTreeUrl = (request.build_absolute_uri
                   (reverse('mapTree')))
-    fromSave = "false";
+    fromSave = False;
     try:
         map_obj = Map.objects.get(id=mapID)
     except Map.DoesNotExist:
@@ -100,7 +172,7 @@ def getMapDetailPage(request, mapID):
             map_obj.visible = map_form.cleaned_data['visible']
             map_obj.parentId = map_form.cleaned_data['parentId']
             map_obj.save()
-        fromSave = "true";
+            fromSave = True;
 
     # return form page with current form data
     map_form = MapForm(instance=map_obj)
@@ -110,7 +182,8 @@ def getMapDetailPage(request, mapID):
                                "mapDetailUrl": mapDetailUrl,
                                "mapTreeUrl": mapTreeUrl,
                                "mapForm": map_form,
-                               "fromSave": fromSave},
+                               "fromSave": fromSave,
+                               "mapDeleteUrl": mapDeleteUrl},
                               context_instance=RequestContext(request))
     
 # json tree of map groups
