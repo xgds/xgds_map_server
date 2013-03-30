@@ -19,6 +19,7 @@ from django.http import HttpResponseRedirect
 from django.http import HttpResponseNotAllowed
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
+from django.db import transaction
 
 from xgds_map_server import settings
 from xgds_map_server.models import Map, MapGroup
@@ -173,6 +174,7 @@ def getDeleteMapPage(request, mapID):
                                   context_instance=RequestContext(request))
 
 # HTML view to delete a folder
+@transaction.commit_manually
 @csrf_protect
 def getDeleteFolderPage(request, groupID):
     projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
@@ -194,11 +196,19 @@ def getDeleteFolderPage(request, groupID):
     if request.method == 'POST':
         # csrf protection means this has to happen
         # in a relatively intentional way
+        # deleting a group means deleting everything under it too
+        # this can be undone so it's ok to automatically do it
+        deleteGroup(map_group)
         map_group.deleted = True
         map_group.save()
+        # commit everything at once
+        transaction.commit()
         return HttpResponseRedirect(mapTreeUrl)
 
     else:
+        # either there's some transaction I'm not aware of happening,
+        # or transaction just expects a call regardless of any database activity
+        transaction.rollback()
         return render_to_response("FolderDelete.html",
                                   {'projectIconUrl': projectIconUrl,
                                    'xgdsIconUrl': xgdsIconUrl,
@@ -328,9 +338,9 @@ def addGroupToJSON(group, map_tree, request):
         group_json['metadata']['parentId'] = group.parentId.id
     if group.subGroups or group.subMaps:
         group_json['children'] = []
-    for group in group.subGroups:
-        if group.deleted: continue
-        addGroupToJSON(group, group_json['children'], request)
+    for map_group in group.subGroups:
+        if map_group.deleted: continue
+        addGroupToJSON(map_group, group_json['children'], request)
     for group_map in group.subMaps:
         if group_map.deleted: continue
         group_map_json = {
@@ -352,6 +362,15 @@ def addGroupToJSON(group, map_tree, request):
     if 'children' not in group_json or len(group_json['children']) == 0:
         group_json['state'] = 'leaf'
     map_tree.append(group_json)
+
+# recursively deletes maps and groups under a group
+# using manual commit control might be a good idea for this
+def deleteGroup(map_group):
+    for map_obj in Map.objects.filter(parentId=map_group.id):
+        map_obj.deleted = True
+        map_obj.save()
+    for group in MapGroup.objects.filter(parentId=map_group.id):
+        deleteGroup(group)
 
 def setMapProperties(m):
     if (m.kmlFile.startswith('/') or m.kmlFile.startswith('http://') or
