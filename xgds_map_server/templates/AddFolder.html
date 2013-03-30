@@ -3,7 +3,7 @@
 {% block contents %}
 {{ block.super }}
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
-{{ mapForm.as_p }}
+{{ groupForm.as_p }}
 <input type="submit" value="Create" /><input type="button" onclick="document.location.href = '{{ mapTreeUrl }}'" value="Back" />
 </form>
 {% endblock %}

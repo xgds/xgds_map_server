@@ -1,0 +1,9 @@
+{% extends "MapServerSiteStyle.html" %}
+
+{% block contents %}
+{{ block.super }}
+<form action="#" method="post">{% csrf_token %}
+<p>Are you sure you want to delete map group "{{ groupObj.name }}"?</p>
+<input type="submit" value="Delete" /><input type="button" onclick="document.location.href = '{{ folderDetailUrl }}'" value="Keep" />
+</form>
+{% endblock %}

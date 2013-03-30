@@ -22,7 +22,7 @@ from django.core.urlresolvers import reverse
 
 from xgds_map_server import settings
 from xgds_map_server.models import Map, MapGroup
-from xgds_map_server.forms import MapForm
+from xgds_map_server.forms import MapForm, MapGroupForm
 
 latestRequestG = None
 
@@ -71,11 +71,14 @@ def getMapTreePage(request):
                       (reverse('mapListJSON')))
     addMapUrl = (request.build_absolute_uri
                   (reverse('addMap')))
+    addFolderUrl = (request.build_absolute_uri
+                    (reverse('folderAdd')))
     return render_to_response("MapTree.html",
                               {'projectIconUrl': projectIconUrl,
                                'xgdsIconUrl': xgdsIconUrl,
                                'JSONMapTreeURL': jsonMapTreeUrl,
-                               'addMapUrl': addMapUrl},
+                               'addMapUrl': addMapUrl,
+                               'addFolderUrl': addFolderUrl},
                               context_instance=RequestContext(request))
 
 # HTML view to create new map
@@ -86,12 +89,13 @@ def getAddMapPage(request):
                   (reverse('mapTree')))
 
     if request.method == 'POST':
-        map_form = MapForm(request.POST)
+        map_form = MapForm(request.POST, request.FILES)
         if map_form.is_valid():
             map_obj = Map()
             map_obj.name = map_form.cleaned_data['name']
             map_obj.description = map_form.cleaned_data['description']
             map_obj.kmlFile = map_form.cleaned_data['kmlFile']
+            map_obj.localFile = request.FILES['localFile']
             map_obj.openable = map_form.cleaned_data['openable']
             map_obj.visible = map_form.cleaned_data['visible']
             map_obj.parentId = map_form.cleaned_data['parentId']
@@ -105,6 +109,32 @@ def getAddMapPage(request):
                                    'xgdsIconUrl': xgdsIconUrl,
                                    'mapTreeUrl': mapTreeUrl,
                                    'mapForm': map_form},
+                                  context_instance=RequestContext(request))
+
+# HTML view to create new folder (group)
+def getAddFolderPage(request):
+    projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
+    xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
+    mapTreeUrl = (request.build_absolute_uri
+                  (reverse('mapTree')))
+
+    if request.method == 'POST':
+        group_form = MapGroupForm(request.POST)
+        if group_form.is_valid():
+            map_group = MapGroup()
+            map_group.name = group_form.cleaned_data['name']
+            map_group.description = group_form.cleaned_data['description']
+            map_group.parentId = group_form.cleaned_data['parentId']
+            map_group.save()
+        return HttpResponseRedirect(mapTreeUrl)
+
+    else:
+        group_form = MapGroupForm()
+        return render_to_response("AddFolder.html",
+                                  {'projectIconUrl': projectIconUrl,
+                                   'xgdsIconUrl': xgdsIconUrl,
+                                   'mapTreeUrl': mapTreeUrl,
+                                   'groupForm': group_form},
                                   context_instance=RequestContext(request))
 
 # HTML view to delete map
@@ -129,7 +159,8 @@ def getDeleteMapPage(request, mapID):
     if request.method == 'POST':
         # csrf protection means this has to happen
         # in a relatively intentional way
-        map_obj.delete()
+        map_obj.deleted = True
+        map_obj.save()
         return HttpResponseRedirect(mapTreeUrl)
 
     else:
@@ -137,8 +168,88 @@ def getDeleteMapPage(request, mapID):
                                   {'projectIconUrl': projectIconUrl,
                                    'xgdsIconUrl': xgdsIconUrl,
                                    'mapTreeUrl': mapTreeUrl,
-                                   'mapDetailUrl': mapDetailUrl},
+                                   'mapDetailUrl': mapDetailUrl,
+                                   'mapObj': map_obj},
                                   context_instance=RequestContext(request))
+
+# HTML view to delete a folder
+@csrf_protect
+def getDeleteFolderPage(request, groupID):
+    projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
+    xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
+    folderDetailUrl = (request.build_absolute_uri
+                       (reverse('folderDetail',
+                                kwargs={'groupID':groupID})))
+    mapTreeUrl = (request.build_absolute_uri
+                  (reverse('mapTree')))
+
+    try:
+        map_group = MapGroup.objects.get(id=groupID)
+    except MapGroup.DoesNotExist:
+        raise Http404
+    except MapGroup.MultipleObjectsReturned:
+        # this really shouldn't happen, ever
+        return HttpResponseServerError()
+
+    if request.method == 'POST':
+        # csrf protection means this has to happen
+        # in a relatively intentional way
+        map_group.deleted = True
+        map_group.save()
+        return HttpResponseRedirect(mapTreeUrl)
+
+    else:
+        return render_to_response("FolderDelete.html",
+                                  {'projectIconUrl': projectIconUrl,
+                                   'xgdsIconUrl': xgdsIconUrl,
+                                   'mapTreeUrl': mapTreeUrl,
+                                   'folderDetailUrl': folderDetailUrl,
+                                   'groupObj': map_group},
+                                  context_instance=RequestContext(request))
+
+# HTML Form of a map group (folder)
+def getFolderDetailPage(request, groupID):
+    projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
+    xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
+    folderDetailUrl = (request.build_absolute_uri
+                       (reverse('folderDetail',
+                                kwargs={'groupID':groupID})))
+    folderDeleteUrl = (request.build_absolute_uri
+                       (reverse('folderDelete',
+                                kwargs={'groupID':groupID})))
+    mapTreeUrl = (request.build_absolute_uri
+                  (reverse('mapTree')))
+    fromSave = False;
+
+    try:
+        map_group = MapGroup.objects.get(id=groupID)
+    except MapGroup.DoesNotExist:
+        raise Http404
+    except Map.MultipleObjectsReturned:
+        # this really shouldn't happen, ever
+        return HttpResponseServerError()
+
+    # handle post data before loading everything
+    if request.method == 'POST':
+        group_form = MapGroupForm(request.POST)
+        if group_form.is_valid():
+            map_group.name = group_form.cleaned_data['name']
+            map_group.description = group_form.cleaned_data['description']
+            map_group.parentId = group_form.cleaned_data['parentId']
+            map_group.save()
+            fromSave = True
+
+    # return form page with current data
+    group_form = MapGroupForm(instance=map_group)
+    return render_to_response("FolderDetail.html",
+                              {"projectIconUrl": projectIconUrl,
+                               "xgdsIconUrl": xgdsIconUrl,
+                               "folderDetailUrl": folderDetailUrl,
+                               "mapTreeUrl": mapTreeUrl,
+                               "groupForm": group_form,
+                               "fromSave": fromSave,
+                               "folderDeleteUrl": folderDeleteUrl},
+                              context_instance=RequestContext(request))
 
 # HTML Form of a map
 def getMapDetailPage(request, mapID):
@@ -163,11 +274,13 @@ def getMapDetailPage(request, mapID):
 
     # handle post data before loading everything
     if request.method == 'POST':
-        map_form = MapForm(request.POST)
+        map_form = MapForm(request.POST, request.FILES)
         if map_form.is_valid():
             map_obj.name = map_form.cleaned_data['name']
             map_obj.description = map_form.cleaned_data['description']
             map_obj.kmlFile = map_form.cleaned_data['kmlFile']
+            if 'localFile' in request.FILES:
+                map_obj.localFile = request.FILES['localFile']
             map_obj.openable = map_form.cleaned_data['openable']
             map_obj.visible = map_form.cleaned_data['visible']
             map_obj.parentId = map_form.cleaned_data['parentId']
@@ -202,8 +315,11 @@ def getMapTreeJSON(request):
 # in the style of jstree
 def addGroupToJSON(group, map_tree, request):
     group_json = {
-        "data": group.name,
-        "metadata": {"id":group.id, "description":group.description,
+        "data": {
+            "title": group.name,
+            "attr": {"href": request.build_absolute_uri(reverse('folderDetail', kwargs={'groupID':group.id}))}
+        },
+    "metadata": {"id":group.id, "description":group.description,
                      "parentId":None},
         "state": "open",
         "icon": "folder"
@@ -213,8 +329,10 @@ def addGroupToJSON(group, map_tree, request):
     if group.subGroups or group.subMaps:
         group_json['children'] = []
     for group in group.subGroups:
+        if group.deleted: continue
         addGroupToJSON(group, group_json['children'], request)
     for group_map in group.subMaps:
+        if group_map.deleted: continue
         group_map_json = {
             "data": {
                 "title": group_map.name,
@@ -226,8 +344,12 @@ def addGroupToJSON(group, map_tree, request):
             "state": "leaf"}
         if group_map.parentId is not None:
             group_map_json['metadata']['parentId'] = group_map.parentId.id
+        try: # as far as I know, there is no better way to do this
+            group_map_json['metadata']['localFile'] = request.build_absolute_uri(group_map.localFile.url)
+        except ValueError: # this means there is no file associated with localFile
+            pass
         group_json['children'].append(group_map_json)
-    if 'children' not in group_json:
+    if 'children' not in group_json or len(group_json['children']) == 0:
         group_json['state'] = 'leaf'
     map_tree.append(group_json)
 

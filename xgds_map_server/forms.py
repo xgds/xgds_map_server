@@ -17,3 +17,14 @@ class MapForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'size':80}),
             'description': forms.Textarea(attrs={'cols':50, 'rows':7})
             }
+        exclude = ('deleted',)
+
+class MapGroupForm(forms.ModelForm):
+    class Meta:
+        model = MapGroup
+        widgets = {
+            # Same note as above
+            'name': forms.TextInput(attrs={'size':80}),
+            'description': forms.Textarea(attrs={'cols':50, 'rows':7})
+            }
+        exclude = ('deleted',)

@@ -32,6 +32,18 @@ urlpatterns = patterns(
     (r'^detail/(?P<mapID>\d+)/', views.getMapDetailPage,
      {'readOnly': True},
      'mapDetail'),
+    # HTML detail of a folder (group)
+    (r'^folderDetail/(?P<groupID>\d+)/', views.getFolderDetailPage,
+     {'readOnly': True},
+     'folderDetail'),
+    # HTML view to delete a folder (group)
+    (r'^folderDelete/(?P<groupID>\d+)/', views.getDeleteFolderPage,
+     {'readOnly': True},
+     'folderDelete'),
+    # HTML view to add a folder (group)
+    (r'^folderAdd/', views.getAddFolderPage,
+     {'readOnly': True},
+     'folderAdd'),
     # HTML view to add new map
     (r'^add/', views.getAddMapPage,
      {'readOnly': True},
