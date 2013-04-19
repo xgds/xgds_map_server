@@ -2,6 +2,7 @@
 
 {% block contents %}
 {{ block.super }}
+{% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
 {{ mapForm.as_p }}
 <input type="submit" id="saveButton" value="{% if fromSave %}Success!{% else %}Save{% endif %}" /><input type="button" onclick="document.location.href = '{{ mapTreeUrl }}'" value="Back" /><input type="button" onclick="document.location.href = '{{ mapDeleteUrl }}'" value="Delete Map" />

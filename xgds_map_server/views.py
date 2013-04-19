@@ -27,7 +27,6 @@ from xgds_map_server.forms import MapForm, MapGroupForm
 
 latestRequestG = None
 
-
 # HTML list of maps with description and links to individual maps, and a link to the kml feed
 def getMapListPage(request):
     projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
@@ -101,6 +100,15 @@ def getAddMapPage(request):
             map_obj.visible = map_form.cleaned_data['visible']
             map_obj.parentId = map_form.cleaned_data['parentId']
             map_obj.save()
+        else:
+            return render_to_response("AddMap.html",
+                                      {'projectIconUrl': projectIconUrl,
+                                       'xgdsIconUrl': xgdsIconUrl,
+                                       'mapTreeUrl': mapTreeUrl,
+                                       'mapForm': map_form,
+                                       'error': True,
+                                       'errorText': 'Invalid form entries'},
+                                      context_instance=RequestContext(request))
         return HttpResponseRedirect(mapTreeUrl)
 
     else:
@@ -127,6 +135,14 @@ def getAddFolderPage(request):
             map_group.description = group_form.cleaned_data['description']
             map_group.parentId = group_form.cleaned_data['parentId']
             map_group.save()
+        else:
+            return render_to_response("AddFolder.html",
+                                      {'projectIconUrl': projectIconUrl,
+                                       'xgdsIconUrl': xgdsIconUrl,
+                                       'groupForm': group_form,
+                                       'error': True,
+                                       'errorText': "Invalid form entries"},
+                                      context_instance=RequestContext(request))
         return HttpResponseRedirect(mapTreeUrl)
 
     else:
@@ -135,7 +151,8 @@ def getAddFolderPage(request):
                                   {'projectIconUrl': projectIconUrl,
                                    'xgdsIconUrl': xgdsIconUrl,
                                    'mapTreeUrl': mapTreeUrl,
-                                   'groupForm': group_form},
+                                   'groupForm': group_form,
+                                   'error': False},
                                   context_instance=RequestContext(request))
 
 # HTML view to delete map
@@ -248,6 +265,18 @@ def getFolderDetailPage(request, groupID):
             map_group.parentId = group_form.cleaned_data['parentId']
             map_group.save()
             fromSave = True
+        else:
+            return render_to_response("FolderDetail.html",
+                                      {"projectIconUrl": projectIconUrl,
+                                       "xgdsIconUrl": xgdsIconUrl,
+                                       "folderDetailUrl": folderDetailUrl,
+                                       "mapTreeUrl": mapTreeUrl,
+                                       "groupForm": group_form,
+                                       "fromSave": fromSave,
+                                       "folderDeleteUrl": folderDeleteUrl,
+                                       "error": True,
+                                       "errorText": "Invalid form entries"},
+                                      context_instance=RequestContext(request))
 
     # return form page with current data
     group_form = MapGroupForm(instance=map_group)
@@ -296,6 +325,18 @@ def getMapDetailPage(request, mapID):
             map_obj.parentId = map_form.cleaned_data['parentId']
             map_obj.save()
             fromSave = True;
+        else:
+            return render_to_response("MapDetail.html",
+                                      {"projectIconUrl": projectIconUrl,
+                                       "xgdsIconUrl": xgdsIconUrl,
+                                       "mapDetailUrl": mapDetailUrl,
+                                       "mapTreeUrl": mapTreeUrl,
+                                       "mapForm": map_form,
+                                       "fromSave": False,
+                                       "mapDeleteUrl": mapDeleteUrl,
+                                       "error": True,
+                                       "errorText": "Invalid form entries"},
+                                      context_instance=RequestContext(request))
 
     # return form page with current form data
     map_form = MapForm(instance=map_obj)
@@ -334,13 +375,17 @@ def addGroupToJSON(group, map_tree, request):
         "state": "open",
         "icon": "folder"
         }
+    sub_folders = []
+    sub_maps = []
+    if group.id == 1:
+        # ensure that we don't have conflicts with the base map
+        # for the detail page, and that nobody deletes every map
+        del group_json['data']['attr']['href']
     if group.parentId is not None:
         group_json['metadata']['parentId'] = group.parentId.id
-    if group.subGroups or group.subMaps:
-        group_json['children'] = []
     for map_group in group.subGroups:
         if map_group.deleted: continue
-        addGroupToJSON(map_group, group_json['children'], request)
+        addGroupToJSON(map_group, sub_folders, request)
     for group_map in group.subMaps:
         if group_map.deleted: continue
         group_map_json = {
@@ -358,9 +403,13 @@ def addGroupToJSON(group, map_tree, request):
             group_map_json['metadata']['localFile'] = request.build_absolute_uri(group_map.localFile.url)
         except ValueError: # this means there is no file associated with localFile
             pass
-        group_json['children'].append(group_map_json)
-    if 'children' not in group_json or len(group_json['children']) == 0:
+        sub_maps.append(group_map_json)
+    if len(sub_folders) == 0 and len(sub_maps) == 0:
         group_json['state'] = 'leaf'
+    else:
+        sub_folders.sort(key=lambda x: x['data']['title'].lower())
+        sub_maps.sort(key=lambda x: x['data']['title'].lower())
+        group_json['children'] = sub_folders + sub_maps
     map_tree.append(group_json)
 
 # recursively deletes maps and groups under a group
