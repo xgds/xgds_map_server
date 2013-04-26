@@ -52,6 +52,10 @@ urlpatterns = patterns(
     (r'^delete/(?P<mapID>\d+)/', views.getDeleteMapPage,
      {'readOnly': True},
      'mapDelete'),
+    # List of deleted maps that can be un-deleted
+    (r'^deleted/', views.getDeletedMapsPage,
+     {'readOnly': True},
+     'deletedMaps'),
     # This URL should receive a static files
     (r'^data/(?P<path>.*)$', 'django.views.static.serve',
      {'document_root': settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR,

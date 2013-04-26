@@ -414,7 +414,6 @@ def addGroupToJSON(group, map_tree, request):
     "metadata": {"id":group.id, "description":group.description,
                      "parentId":None},
         "state": "open",
-        "icon": "file"
         }
     sub_folders = []
     sub_maps = []

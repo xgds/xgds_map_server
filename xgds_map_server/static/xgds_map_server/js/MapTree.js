@@ -11,7 +11,7 @@ $(document).ready(function(){
 	"themes": {
 	    "theme": "default",
 	    "dots": true,
-	    "icons": false
+	    "icons": true,
 	},
 	"plugins": ["themes", "json_data"]
     });

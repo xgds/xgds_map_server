@@ -3,8 +3,8 @@
 {% block contents %}
 {{ block.super }}
 <form action="#" method="post">{% csrf_token %}
-<p>Are you sure you want to delete map group "{{ groupObj.name }}"?<br>
-Warning: this will also delete all maps/folders under this folder.</p>
-<input type="submit" value="Delete" /><input type="button" onclick="document.location.href = '{{ folderDetailUrl }}'" value="Keep" />
+<p>Are you sure you want to {% if groupObj.deleted %}undelete{% else %}delete{% endif %} map group "{{ groupObj.name }}"?<br>
+Warning: this will also {% if groupObj.deleted %}undelete{% else %}delete{% endif %} all maps/folders under this folder.</p>
+<input type="submit" value="{% if groupObj.deleted %}Undelete{% else %}Delete{% endif %}" /><input type="button" onclick="document.location.href = '{{ folderDetailUrl }}'" value="Cancel" />
 </form>
 {% endblock %}
