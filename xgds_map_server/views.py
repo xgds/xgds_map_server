@@ -414,7 +414,6 @@ def addGroupToJSON(group, map_tree, request):
     "metadata": {"id":group.id, "description":group.description,
                      "parentId":None},
         "state": "open",
-        "icon": "file"
         }
     sub_folders = []
     sub_maps = []
@@ -437,7 +436,9 @@ def addGroupToJSON(group, map_tree, request):
             "metadata": {"id":group_map.id, "description":group_map.description,
                          "kmlFile":group_map.kmlFile, "openable":group_map.openable,
                          "visible":group_map.visible, "parentId":None},
-            "state": "leaf"}
+            "state": "leaf",
+            "icon": settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + "icons/empty.png"
+            }
         if group_map.parentId is not None:
             group_map_json['metadata']['parentId'] = group_map.parentId.id
         try: # as far as I know, there is no better way to do this
