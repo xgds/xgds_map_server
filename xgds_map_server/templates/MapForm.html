@@ -1,0 +1,22 @@
+<!--<form action="http://some.url/" enctype="multipart/form-data" method="post">-->
+<!--requires a variable called "mapForm"-->
+{% if mapForm.non_field_errors %}<span style="color:red">{{ mapForm.non_field_errors }}</span>{% endif %}
+{% if mapForm.name.errors %}<span style="color:red">{{ mapForm.name.errors }}</span>{% endif %}
+<label for="id_name">Map Name:</label> {{ mapForm.name }}<br><br>
+{% if mapForm.description.errors %}<span style="color:red">{{ mapForm.description.errors }}</span>{% endif %}
+<label for="id_description">Description:</label> {{ mapForm.description }}<br><br>
+<label for="typeChooserDiv">Choose file type:</label>
+<input type="radio" value="kml" name="typeChooser" {% if kmlChecked %}checked{% endif %}>KML Url</input>
+<input type="radio" value="file" name="typeChooser" {% if not kmlChecked %}checked{% endif %}>File Upload</input><br><br>
+<div id="kmlFile_div">
+{% if mapForm.kmlFile.errors %}<span style="color:red">{{ mapForm.kmlFile.errors }}</span>{% endif %}
+<label for="id_kmlFile">KML File:</label> {{ mapForm.kmlFile }}<br><br>
+</div><div id="localFile_div">
+{% if mapForm.localFile.errors %}<span style="color:red">{{ mapForm.localFile.errors }}</span>{% endif %}
+<label for="id_localFile">Upload File:</label> {{ mapForm.localFile }}<br><br></div>
+{% if mapForm.openable.errors %}<span style="color:red">{{ mapForm.openable.errors }}</span>{% endif %}
+<label for="id_openable">Openable:</label> {{ mapForm.openable }}<br><br>
+{% if mapForm.visible.errors %}<span style="color:red">{{ mapForm.visible.errors }}</span>{% endif %}
+<label for="id_visible">Visible:</label> {{ mapForm.visible }}<br><br>
+{% if mapForm.parentId.errors %}<span style="color:red">{{ mapForm.parentId.errors }}</span>{% endif %}
+<label for="id_parentId">In Folder:</label> {{ mapForm.parentId }}<br><br>

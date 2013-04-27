@@ -1,10 +1,15 @@
 {% extends "MapServerSiteStyle.html" %}
 
+{% block scripts %}
+{{ block.super }}
+<script src="{{ STATIC_URL }}xgds_map_server/js/MapForm.js" type="text/javascript"></script>
+{% endblock %}
+
 {% block contents %}
 {{ block.super }}
-{% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
+<h3>Map Details</h3>
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
-{{ mapForm.as_p }}
+{% include "MapForm.html" %}
 <input type="submit" id="saveButton" value="{% if fromSave %}Success!{% else %}Save{% endif %}" /><input type="button" onclick="document.location.href = '{% if map_obj.deleted %}{{ deletedMapsUrl }}{% else %}{{ mapTreeUrl }}{% endif %}'" value="Back" /><input type="button" onclick="document.location.href = '{{ mapDeleteUrl }}'" value="{% if map_obj.deleted %}Undelete{% else %}Delete{% endif %} Map" />
 </form>
 {% endblock %}

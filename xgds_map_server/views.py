@@ -92,13 +92,18 @@ def getAddMapPage(request):
                   (reverse('mapTree')))
 
     if request.method == 'POST':
+        # quick and dirty hack to handle kmlFile field if user
+        # uploads file
+        if request.POST['typeChooser'] == 'file' and 'localFile' in request.FILES:
+            request.POST['kmlFile'] = request.FILES['localFile'].name
         map_form = MapForm(request.POST, request.FILES)
         if map_form.is_valid():
             map_obj = Map()
             map_obj.name = map_form.cleaned_data['name']
             map_obj.description = map_form.cleaned_data['description']
             map_obj.kmlFile = map_form.cleaned_data['kmlFile']
-            map_obj.localFile = request.FILES['localFile']
+            if 'localFile' in request.FILES and request.POST['typeChooser'] == 'file':
+                map_obj.localFile = request.FILES['localFile']
             map_obj.openable = map_form.cleaned_data['openable']
             map_obj.visible = map_form.cleaned_data['visible']
             map_obj.parentId = map_form.cleaned_data['parentId']
@@ -350,12 +355,15 @@ def getMapDetailPage(request, mapID):
 
     # handle post data before loading everything
     if request.method == 'POST':
-        map_form = MapForm(request.POST, request.FILES)
+        # quick and dirty hack to handle kmlFile field when uploading file
+        if request.POST['typeChooser'] == 'file' and 'localFile' in request.FILES:
+            request.POST['kmlFile'] = request.FILES['localFile'].name
+        map_form = MapForm(request.POST, request.FILES, auto_id="id_%s")
         if map_form.is_valid():
             map_obj.name = map_form.cleaned_data['name']
             map_obj.description = map_form.cleaned_data['description']
             map_obj.kmlFile = map_form.cleaned_data['kmlFile']
-            if 'localFile' in request.FILES:
+            if 'localFile' in request.FILES and request.POST['typeChooser'] == 'file':
                 map_obj.localFile = request.FILES['localFile']
             map_obj.openable = map_form.cleaned_data['openable']
             map_obj.visible = map_form.cleaned_data['visible']
@@ -363,6 +371,10 @@ def getMapDetailPage(request, mapID):
             map_obj.save()
             fromSave = True;
         else:
+            if map_obj.kmlFile and not map_obj.localFile:
+                kmlChecked = True
+            else:
+                kmlChecked = False
             return render_to_response("MapDetail.html",
                                       {"projectIconUrl": projectIconUrl,
                                        "xgdsIconUrl": xgdsIconUrl,
@@ -371,6 +383,7 @@ def getMapDetailPage(request, mapID):
                                        "deletedMapsUrl": deletedMapsUrl,
                                        "mapForm": map_form,
                                        "fromSave": False,
+                                       "kmlChecked": kmlChecked,
                                        "mapDeleteUrl": mapDeleteUrl,
                                        "error": True,
                                        "errorText": "Invalid form entries",
@@ -378,7 +391,11 @@ def getMapDetailPage(request, mapID):
                                       context_instance=RequestContext(request))
 
     # return form page with current form data
-    map_form = MapForm(instance=map_obj)
+    map_form = MapForm(instance=map_obj, auto_id="id_%s")
+    if map_obj.kmlFile and not map_obj.localFile:
+        kmlChecked = True
+    else:
+        kmlChecked = False
     return render_to_response("MapDetail.html",
                               {"projectIconUrl": projectIconUrl,
                                "xgdsIconUrl": xgdsIconUrl,
@@ -386,6 +403,7 @@ def getMapDetailPage(request, mapID):
                                "mapTreeUrl": mapTreeUrl,
                                "deletedMapsUrl": deletedMapsUrl,
                                "mapForm": map_form,
+                               "kmlChecked": kmlChecked,
                                "fromSave": fromSave,
                                "mapDeleteUrl": mapDeleteUrl,
                                "map_obj": map_obj},
