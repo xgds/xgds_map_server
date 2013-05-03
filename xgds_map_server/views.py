@@ -455,7 +455,7 @@ def addGroupToJSON(group, map_tree, request):
                          "kmlFile":group_map.kmlFile, "openable":group_map.openable,
                          "visible":group_map.visible, "parentId":None},
             "state": "leaf",
-            "icon": settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + "icons/empty.png"
+            "icon": settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + "icons/globe.png"
             }
         if group_map.parentId is not None:
             group_map_json['metadata']['parentId'] = group_map.parentId.id
