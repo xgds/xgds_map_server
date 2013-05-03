@@ -13,6 +13,14 @@ $(document).ready(function(){
 	    "dots": true,
 	    "icons": true,
 	},
-	"plugins": ["themes", "json_data"]
+	"dnd": {
+	    "drop_target": false,
+	    "drag_target": true,
+	    "drag_check": function (data) {
+		console.log(data);
+		return false;
+	    }
+	},
+	"plugins": ["themes", "json_data", "dnd"]
     });
 });
