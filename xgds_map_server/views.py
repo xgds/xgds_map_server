@@ -17,6 +17,8 @@ from django.http import HttpResponse, Http404
 from django.http import HttpResponseServerError
 from django.http import HttpResponseRedirect
 from django.http import HttpResponseNotAllowed
+from django.http import HttpResponseBadRequest
+from django.http import HttpResponseGone
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from django.db import transaction
@@ -75,14 +77,52 @@ def getMapTreePage(request):
                     (reverse('folderAdd')))
     deletedMapsUrl = (request.build_absolute_uri
                       (reverse('deletedMaps')))
+    jsonMoveUrl = (request.build_absolute_uri
+                   (reverse('jsonMove')))
     return render_to_response("MapTree.html",
                               {'projectIconUrl': projectIconUrl,
                                'xgdsIconUrl': xgdsIconUrl,
                                'JSONMapTreeURL': jsonMapTreeUrl,
                                'addMapUrl': addMapUrl,
                                'addFolderUrl': addFolderUrl,
-                               'deletedMapsUrl': deletedMapsUrl},
+                               'deletedMapsUrl': deletedMapsUrl,
+                               'JSONMoveURL': jsonMoveUrl},
                               context_instance=RequestContext(request))
+
+# JSON-accepting url that moves maps/folders around
+def handleJSONMove(request):
+    if 'move' not in request.REQUEST\
+            or 'move_type' not in request.REQUEST\
+            or 'to' not in request.REQUEST\
+            or 'to_type' not in request.REQUEST:
+        return HttpResponseBadRequest()
+
+    if request.REQUEST['move_type'] == 'map':
+        try:
+            move = Map.objects.get(id=request.REQUEST['move'])
+        except Map.DoesNotExist:
+            return HttpResponseGone()
+    elif request.REQUEST['move_type'] == 'folder':
+        try:
+            move = MapGroup.objects.get(id=request.REQUEST['move'])
+        except MapGroup.DoesNotExist:
+            return HttpResponseGone()
+    else:
+        print "move-type is not map or folder"
+        return HttpResponseBadRequest()
+
+    if request.REQUEST['to_type'] != 'folder':
+        print "To-type is not folder"
+        return HttpResponseBadRequest()
+
+    try:
+        to = MapGroup.objects.get(id=request.REQUEST['to'])
+    except MapGroup.DoesNotExist():
+        return HttpResponseGone()
+
+    move.parentId = to
+    move.save()
+    return HttpResponse() # empty response with 200 means success
 
 # HTML view to create new map
 def getAddMapPage(request):
@@ -430,7 +470,7 @@ def addGroupToJSON(group, map_tree, request):
             "attr": {"href": request.build_absolute_uri(reverse('folderDetail', kwargs={'groupID':group.id}))}
         },
     "metadata": {"id":group.id, "description":group.description,
-                     "parentId":None},
+                     "parentId":None, "type":"folder"},
         "state": "open",
         }
     sub_folders = []
@@ -453,7 +493,7 @@ def addGroupToJSON(group, map_tree, request):
                 },
             "metadata": {"id":group_map.id, "description":group_map.description,
                          "kmlFile":group_map.kmlFile, "openable":group_map.openable,
-                         "visible":group_map.visible, "parentId":None},
+                         "visible":group_map.visible, "parentId":None, "type":"map"},
             "state": "leaf",
             "icon": settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + "icons/globe.png"
             }
