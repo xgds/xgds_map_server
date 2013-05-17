@@ -5,11 +5,12 @@
 <p>Deleted Maps<br>
 <br>
 {% for map in maps %}
-<a href="{{ mapDetailUrl }}/{{ map.id }}/">{{ map.name }}</a><br>
+<a href="{{ mapDeleteUrl }}/{{ map.id }}/">{{ map.name }}</a><br>
 {% endfor %}
 <br>Deleted Folders<br>
+<br>
 {% for folder in folders %}
-<a href="{{ folderDetailUrl }}/{{ folder.id}}/">{{ folder.name }}</a><br>
-</p>
+<a href="{{ folderDeleteUrl }}/{{ folder.id}}/">{{ folder.name }}</a><br>
 {% endfor %}
+</p>
 {% endblock %}

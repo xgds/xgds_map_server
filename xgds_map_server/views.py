@@ -79,6 +79,8 @@ def getMapTreePage(request):
                       (reverse('deletedMaps')))
     jsonMoveUrl = (request.build_absolute_uri
                    (reverse('jsonMove')))
+    numDeletedMaps = len(Map.objects.filter(deleted=True)) +\
+        len(MapGroup.objects.filter(deleted=True))
     return render_to_response("MapTree.html",
                               {'projectIconUrl': projectIconUrl,
                                'xgdsIconUrl': xgdsIconUrl,
@@ -86,6 +88,7 @@ def getMapTreePage(request):
                                'addMapUrl': addMapUrl,
                                'addFolderUrl': addFolderUrl,
                                'deletedMapsUrl': deletedMapsUrl,
+                               'numDeletedMaps': numDeletedMaps,
                                'JSONMoveURL': jsonMoveUrl},
                               context_instance=RequestContext(request))
 
@@ -254,9 +257,9 @@ def getDeletedMapsPage(request):
     return render_to_response("DeletedMaps.html",
                               {'projectIconUrl': projectIconUrl,
                                'xgdsIconUrl': xgdsIconUrl,
-                               'mapDetailUrl': baseUrl+'detail',
+                               'mapDeleteUrl': baseUrl+'delete',
                                'mapTreeUrl': mapTreeUrl,
-                               'folderDetailUrl': baseUrl+'folderDetail',
+                               'folderDeleteUrl': baseUrl+'folderDelete',
                                'maps': maps,
                                'folders': folders},
                               context_instance=RequestContext(request))
