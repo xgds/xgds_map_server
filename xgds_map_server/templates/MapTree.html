@@ -9,10 +9,11 @@
 
 {% block contents %}
 <input type="button" value="Add Map" onClick="document.location.href='{{ addMapUrl }}'"><input type="button" value="Add Folder" onClick="document.location.href='{{ addFolderUrl }}'"><input type="button" value="Undelete Map or Folder" onClick="document.location.href='{{ deletedMapsUrl }}'"><br>
-{% if numDeletedMaps > 0 %}<a href="{{ deletedMapsUrl }}">{{ numDeletedMaps }} maps and folders available to be undeleted</a>{% endif %}
+<p>
 <div id="treeDiv">
   <!-- placeholder element for jstree -->
 </div>
+</p>
 {% endblock %}
 
 {% block jsInit %}
