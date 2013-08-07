@@ -33,7 +33,7 @@ latestRequestG = None
 def getMapListPage(request):
     projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
     xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
-    mapList = Map.objects.all().order_by('name')
+    mapList = Map.objects.all().select_related('parentId').order_by('name')
     for m in mapList:
         if (m.kmlFile.startswith('/') or m.kmlFile.startswith('http://') or
             m.kmlFile.startswith('https://')):
@@ -79,8 +79,8 @@ def getMapTreePage(request):
                       (reverse('deletedMaps')))
     jsonMoveUrl = (request.build_absolute_uri
                    (reverse('jsonMove')))
-    numDeletedMaps = len(Map.objects.filter(deleted=True)) +\
-        len(MapGroup.objects.filter(deleted=True))
+#     numDeletedMaps = len(Map.objects.filter(deleted=True)) +\
+#         len(MapGroup.objects.filter(deleted=True))
     return render_to_response("MapTree.html",
                               {'projectIconUrl': projectIconUrl,
                                'xgdsIconUrl': xgdsIconUrl,
@@ -88,7 +88,7 @@ def getMapTreePage(request):
                                'addMapUrl': addMapUrl,
                                'addFolderUrl': addFolderUrl,
                                'deletedMapsUrl': deletedMapsUrl,
-                               'numDeletedMaps': numDeletedMaps,
+#                                'numDeletedMaps': numDeletedMaps,
                                'JSONMoveURL': jsonMoveUrl},
                               context_instance=RequestContext(request))
 

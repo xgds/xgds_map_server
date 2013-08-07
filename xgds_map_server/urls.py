@@ -21,7 +21,7 @@ urlpatterns = patterns(
      {'readOnly': True, 'securityTags': ['readOnly']},
      'mapList'),
     # HTML tree of maps
-    (r'^listtree/', views.getMapTreePage,
+    (r'^maptree/', views.getMapTreePage,
      {'readOnly': True, 'securityTags': ['readOnly']},
      'mapTree'),
     # JSON tree of maps, formatted for jstree
