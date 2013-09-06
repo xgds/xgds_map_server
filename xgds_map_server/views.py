@@ -10,6 +10,7 @@ import os
 import sys
 from cStringIO import StringIO
 import json
+import re
 
 from django.views.decorators.csrf import csrf_protect
 from django.shortcuts import render_to_response
@@ -140,17 +141,29 @@ def getAddMapPage(request):
         if request.POST['typeChooser'] == 'file' and 'localFile' in request.FILES:
             request.POST['kmlFile'] = request.FILES['localFile'].name
         map_form = MapForm(request.POST, request.FILES)
+        haveLocalFile = False
         if map_form.is_valid():
             map_obj = Map()
             map_obj.name = map_form.cleaned_data['name']
             map_obj.description = map_form.cleaned_data['description']
-            map_obj.kmlFile = map_form.cleaned_data['kmlFile']
             if 'localFile' in request.FILES and request.POST['typeChooser'] == 'file':
                 map_obj.localFile = request.FILES['localFile']
+                map_obj.kmlFile = request.FILES['localFile'].name
+                haveLocalFile = True
+            else:
+                map_obj.kmlFile = map_form.cleaned_data['kmlFile']
             map_obj.openable = map_form.cleaned_data['openable']
             map_obj.visible = map_form.cleaned_data['visible']
             map_obj.parentId = map_form.cleaned_data['parentId']
             map_obj.save()
+            #
+            # The file field may have changed our file name at save time
+            #
+            if haveLocalFile:
+                justName = re.sub("^" + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR, "", map_obj.localFile.name)
+                if justName != map_obj.kmlFile:
+                    map_obj.kmlFile = justName
+                    map_obj.save()
         else:
             return render_to_response("AddMap.html",
                                       {'projectIconUrl': projectIconUrl,
