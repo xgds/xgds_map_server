@@ -539,10 +539,10 @@ def setMapProperties(m):
         m.visibility = 1
     else:
         m.visibility = 0
-    print 'kml file is %s' % m.kmlFile
-    print 'url is %s' % m.url
-    print 'visibility is %s' % m.visibility
-    print 'listItemType is %s' % m.listItemType
+#     print 'kml file is %s' % m.kmlFile
+#     print 'url is %s' % m.url
+#     print 'visibility is %s' % m.visibility
+#     print 'listItemType is %s' % m.listItemType
 
 
 def getMapTree():
