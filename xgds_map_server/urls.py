@@ -4,7 +4,7 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
-from django.conf.urls.defaults import *  # pylint: disable=W0401
+from django.conf.urls import *  # pylint: disable=W0401
 
 from xgds_map_server import settings
 from xgds_map_server import views
