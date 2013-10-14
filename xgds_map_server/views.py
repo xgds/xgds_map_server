@@ -464,7 +464,7 @@ def getMapDetailPage(request, mapID):
                                "mapDeleteUrl": mapDeleteUrl,
                                "map_obj": map_obj},
                               context_instance=RequestContext(request))
-    
+
 # json tree of map groups
 # note that this does json for jstree
 def getMapTreeJSON(request):
