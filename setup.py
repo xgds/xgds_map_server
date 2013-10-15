@@ -7,6 +7,7 @@
 import os
 from setuptools import setup, find_packages
 
+
 def read_file(filename):
     """Read a file into a string"""
     path = os.path.abspath(os.path.dirname(__file__))
@@ -20,17 +21,17 @@ def read_file(filename):
 DESC = " ".join(__import__('xgds_map_server').__doc__.splitlines()).strip()
 
 setup(
-    name = "xgds_map_server",
-    version = __import__('xgds_map_server').get_version().replace(' ', '-'),
-    url = '',
-    author = 'mdeans',
-    author_email = '',
-    description = DESC,
-    long_description = read_file('README'),
-    packages = find_packages(),
-    include_package_data = True,
+    name="xgds_map_server",
+    version=__import__('xgds_map_server').get_version().replace(' ', '-'),
+    url='',
+    author='mdeans',
+    author_email='',
+    description=DESC,
+    long_description=read_file('README'),
+    packages=find_packages(),
+    include_package_data=True,
     install_requires=read_file('requirements.txt'),
-    classifiers = [
+    classifiers=[
         'License :: OSI Approved :: NASA Open Source Agreement',
         'Framework :: Django',
     ],
