@@ -30,7 +30,7 @@ def getName(path):
 def importMaps(parent, paths):
     if isinstance(parent, str):
         parent = MapGroup.objects.get(parent)
-    elif parent == None:
+    elif parent is None:
         print 'no parent specified, fetching the root MapGroup to use as the parent'
         parent = MapGroup.objects.get(parentId=None)
     mapDir = os.path.realpath(os.path.join(settings.DATA_ROOT, settings.XGDS_MAP_SERVER_DATA_SUBDIR))

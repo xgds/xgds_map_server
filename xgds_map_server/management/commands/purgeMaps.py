@@ -8,6 +8,7 @@ from django.core.management.base import NoArgsCommand
 from django.db import transaction
 from xgds_map_server.models import Map, MapGroup
 
+
 class Command(NoArgsCommand):
     help = 'Purge all maps and map groups with the delete flag set'
     requires_model_validation = True
@@ -18,7 +19,8 @@ class Command(NoArgsCommand):
         for map_obj in Map.objects.all():
             if map_obj.deleted:
                 self.stdout.write("Deleting map \"%s\"\n" % map_obj.name)
-                if map_obj.localFile: map_obj.localFile.delete()
+                if map_obj.localFile:
+                    map_obj.localFile.delete()
                 map_obj.delete()
 
         self.stdout.write("Looking for map groups to delete...\n")

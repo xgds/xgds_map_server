@@ -17,7 +17,6 @@ from django.shortcuts import render_to_response
 from django.http import HttpResponse, Http404
 from django.http import HttpResponseServerError
 from django.http import HttpResponseRedirect
-from django.http import HttpResponseNotAllowed
 from django.http import HttpResponseBadRequest
 from django.http import HttpResponseGone
 from django.template import RequestContext
@@ -28,16 +27,23 @@ from xgds_map_server import settings
 from xgds_map_server.models import Map, MapGroup
 from xgds_map_server.forms import MapForm, MapGroupForm
 
+# pylint: disable=E1101,R0911
+
 latestRequestG = None
 
-# HTML list of maps with description and links to individual maps, and a link to the kml feed
+
 def getMapListPage(request):
+    """
+    HTML list of maps with description and links to individual maps,
+    and a link to the kml feed
+    """
     projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
     xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
     mapList = Map.objects.all().select_related('parentId').order_by('name')
     for m in mapList:
-        if (m.kmlFile.startswith('/') or m.kmlFile.startswith('http://') or
-            m.kmlFile.startswith('https://')):
+        if (m.kmlFile.startswith('/') or
+                m.kmlFile.startswith('http://') or
+                m.kmlFile.startswith('https://')):
             url = m.kmlFile
         else:
             url = settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + m.kmlFile
@@ -51,7 +57,7 @@ def getMapListPage(request):
             m.visible = 'yes'
         else:
             m.visible = 'no'
-        if m.parentId == None:
+        if m.parentId is None:
             m.groupname = ''
         else:
             m.groupname = m.parentId.name
@@ -66,22 +72,25 @@ def getMapListPage(request):
                                'xgdsIconUrl': xgdsIconUrl},
                               context_instance=RequestContext(request))
 
-# HTML tree of maps using jstree
+
 def getMapTreePage(request):
+    """
+    HTML tree of maps using jstree
+    """
     projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
     xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
     jsonMapTreeUrl = (request.build_absolute_uri
                       (reverse('mapListJSON')))
     addMapUrl = (request.build_absolute_uri
-                  (reverse('addMap')))
+                 (reverse('addMap')))
     addFolderUrl = (request.build_absolute_uri
                     (reverse('folderAdd')))
     deletedMapsUrl = (request.build_absolute_uri
                       (reverse('deletedMaps')))
     jsonMoveUrl = (request.build_absolute_uri
                    (reverse('jsonMove')))
-#     numDeletedMaps = len(Map.objects.filter(deleted=True)) +\
-#         len(MapGroup.objects.filter(deleted=True))
+    # numDeletedMaps = len(Map.objects.filter(deleted=True)) +\
+    # len(MapGroup.objects.filter(deleted=True))
     return render_to_response("MapTree.html",
                               {'projectIconUrl': projectIconUrl,
                                'xgdsIconUrl': xgdsIconUrl,
@@ -89,16 +98,19 @@ def getMapTreePage(request):
                                'addMapUrl': addMapUrl,
                                'addFolderUrl': addFolderUrl,
                                'deletedMapsUrl': deletedMapsUrl,
-#                                'numDeletedMaps': numDeletedMaps,
+                               # 'numDeletedMaps': numDeletedMaps,
                                'JSONMoveURL': jsonMoveUrl},
                               context_instance=RequestContext(request))
 
-# JSON-accepting url that moves maps/folders around
+
 def handleJSONMove(request):
-    if 'move' not in request.REQUEST\
-            or 'move_type' not in request.REQUEST\
-            or 'to' not in request.REQUEST\
-            or 'to_type' not in request.REQUEST:
+    """
+    JSON-accepting url that moves maps/folders around
+    """
+    if ('move' not in request.REQUEST or
+            'move_type' not in request.REQUEST or
+            'to' not in request.REQUEST or
+            'to_type' not in request.REQUEST):
         return HttpResponseBadRequest()
 
     if request.REQUEST['move_type'] == 'map':
@@ -126,10 +138,13 @@ def handleJSONMove(request):
 
     move.parentId = to
     move.save()
-    return HttpResponse() # empty response with 200 means success
+    return HttpResponse()  # empty response with 200 means success
 
-# HTML view to create new map
+
 def getAddMapPage(request):
+    """
+    HTML view to create new map
+    """
     projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
     xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
     mapTreeUrl = (request.build_absolute_uri
@@ -184,8 +199,11 @@ def getAddMapPage(request):
                                    'mapForm': map_form},
                                   context_instance=RequestContext(request))
 
-# HTML view to create new folder (group)
+
 def getAddFolderPage(request):
+    """
+    HTML view to create new folder (group)
+    """
     projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
     xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
     mapTreeUrl = (request.build_absolute_uri
@@ -219,14 +237,17 @@ def getAddFolderPage(request):
                                    'error': False},
                                   context_instance=RequestContext(request))
 
-# HTML view to delete map
+
 @csrf_protect
 def getDeleteMapPage(request, mapID):
+    """
+    HTML view to delete map
+    """
     projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
     xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
     mapDetailUrl = (request.build_absolute_uri
                     (reverse('mapDetail',
-                             kwargs={'mapID':mapID})))
+                             kwargs={'mapID': mapID})))
     mapTreeUrl = (request.build_absolute_uri
                   (reverse('mapTree')))
     deletedMapsUrl = (request.build_absolute_uri
@@ -258,8 +279,11 @@ def getDeleteMapPage(request, mapID):
                                    'mapObj': map_obj},
                                   context_instance=RequestContext(request))
 
-# HTML list of deleted maps that can be un-deleted
+
 def getDeletedMapsPage(request):
+    """
+    HTML list of deleted maps that can be un-deleted
+    """
     projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
     xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
     baseUrl = request.build_absolute_uri(reverse("xgds_map_server_index"))
@@ -270,22 +294,25 @@ def getDeletedMapsPage(request):
     return render_to_response("DeletedMaps.html",
                               {'projectIconUrl': projectIconUrl,
                                'xgdsIconUrl': xgdsIconUrl,
-                               'mapDeleteUrl': baseUrl+'delete',
+                               'mapDeleteUrl': baseUrl + 'delete',
                                'mapTreeUrl': mapTreeUrl,
-                               'folderDeleteUrl': baseUrl+'folderDelete',
+                               'folderDeleteUrl': baseUrl + 'folderDelete',
                                'maps': maps,
                                'folders': folders},
                               context_instance=RequestContext(request))
 
-# HTML view to delete a folder
+
 @transaction.commit_manually
 @csrf_protect
 def getDeleteFolderPage(request, groupID):
+    """
+    HTML view to delete a folder
+    """
     projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
     xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
     folderDetailUrl = (request.build_absolute_uri
                        (reverse('folderDetail',
-                                kwargs={'groupID':groupID})))
+                                kwargs={'groupID': groupID})))
     mapTreeUrl = (request.build_absolute_uri
                   (reverse('mapTree')))
     deletedMapsUrl = (request.build_absolute_uri
@@ -324,21 +351,24 @@ def getDeleteFolderPage(request, groupID):
                                    'deletedMapsUrl': deletedMapsUrl},
                                   context_instance=RequestContext(request))
 
-# HTML Form of a map group (folder)
+
 def getFolderDetailPage(request, groupID):
+    """
+    HTML Form of a map group (folder)
+    """
     projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
     xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
     folderDetailUrl = (request.build_absolute_uri
                        (reverse('folderDetail',
-                                kwargs={'groupID':groupID})))
+                                kwargs={'groupID': groupID})))
     folderDeleteUrl = (request.build_absolute_uri
                        (reverse('folderDelete',
-                                kwargs={'groupID':groupID})))
+                                kwargs={'groupID': groupID})))
     mapTreeUrl = (request.build_absolute_uri
                   (reverse('mapTree')))
     deletedMapsUrl = (request.build_absolute_uri
                       (reverse('deletedMaps')))
-    fromSave = False;
+    fromSave = False
 
     try:
         map_group = MapGroup.objects.get(id=groupID)
@@ -386,21 +416,24 @@ def getFolderDetailPage(request, groupID):
                                "folderDeleteUrl": folderDeleteUrl},
                               context_instance=RequestContext(request))
 
-# HTML Form of a map
+
 def getMapDetailPage(request, mapID):
+    """
+    HTML Form of a map
+    """
     projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
     xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
     mapDetailUrl = (request.build_absolute_uri
                     (reverse('mapDetail',
-                             kwargs={'mapID':mapID})))
+                             kwargs={'mapID': mapID})))
     mapDeleteUrl = (request.build_absolute_uri
                     (reverse('mapDelete',
-                             kwargs={'mapID':mapID})))
+                             kwargs={'mapID': mapID})))
     deletedMapsUrl = (request.build_absolute_uri
                       (reverse('deletedMaps')))
     mapTreeUrl = (request.build_absolute_uri
                   (reverse('mapTree')))
-    fromSave = False;
+    fromSave = False
     try:
         map_obj = Map.objects.get(id=mapID)
     except Map.DoesNotExist:
@@ -425,7 +458,7 @@ def getMapDetailPage(request, mapID):
             map_obj.visible = map_form.cleaned_data['visible']
             map_obj.parentId = map_form.cleaned_data['parentId']
             map_obj.save()
-            fromSave = True;
+            fromSave = True
         else:
             if map_obj.kmlFile and not map_obj.localFile:
                 kmlChecked = True
@@ -465,9 +498,12 @@ def getMapDetailPage(request, mapID):
                                "map_obj": map_obj},
                               context_instance=RequestContext(request))
 
-# json tree of map groups
-# note that this does json for jstree
+
 def getMapTreeJSON(request):
+    """
+    json tree of map groups
+    note that this does json for jstree
+    """
     global latestRequestG
     latestRequestG = request
     map_tree = getMapTree()
@@ -477,18 +513,27 @@ def getMapTreeJSON(request):
     return HttpResponse(content=json_data,
                         mimetype="application/json")
 
-# recursively adds group to json tree
-# in the style of jstree
+
 def addGroupToJSON(group, map_tree, request):
+    """
+    recursively adds group to json tree
+    in the style of jstree
+    """
     group_json = {
         "data": {
             "title": group.name,
-            "attr": {"href": request.build_absolute_uri(reverse('folderDetail', kwargs={'groupID':group.id}))}
+            "attr": {
+                "href": request.build_absolute_uri(reverse('folderDetail', kwargs={'groupID': group.id}))
+            }
         },
-    "metadata": {"id":group.id, "description":group.description,
-                     "parentId":None, "type":"folder"},
+        "metadata": {
+            "id": group.id,
+            "description": group.description,
+            "parentId": None,
+            "type": "folder"
+        },
         "state": "open",
-        }
+    }
     sub_folders = []
     sub_maps = []
     if group.id == 1:
@@ -498,26 +543,36 @@ def addGroupToJSON(group, map_tree, request):
     if group.parentId is not None:
         group_json['metadata']['parentId'] = group.parentId.id
     for map_group in group.subGroups:
-        if map_group.deleted: continue
+        if map_group.deleted:
+            continue
         addGroupToJSON(map_group, sub_folders, request)
     for group_map in group.subMaps:
-        if group_map.deleted: continue
+        if group_map.deleted:
+            continue
         group_map_json = {
             "data": {
                 "title": group_map.name,
-                "attr": {"href": request.build_absolute_uri(reverse('mapDetail', kwargs={'mapID':group_map.id}))}
-                },
-            "metadata": {"id":group_map.id, "description":group_map.description,
-                         "kmlFile":group_map.kmlFile, "openable":group_map.openable,
-                         "visible":group_map.visible, "parentId":None, "type":"map"},
+                "attr": {
+                    "href": request.build_absolute_uri(reverse('mapDetail', kwargs={'mapID': group_map.id}))
+                }
+            },
+            "metadata": {
+                "id": group_map.id,
+                "description": group_map.description,
+                "kmlFile": group_map.kmlFile,
+                "openable": group_map.openable,
+                "visible": group_map.visible,
+                "parentId": None,
+                "type": "map"
+            },
             "state": "leaf",
             "icon": settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + "icons/globe.png"
-            }
+        }
         if group_map.parentId is not None:
             group_map_json['metadata']['parentId'] = group_map.parentId.id
-        try: # as far as I know, there is no better way to do this
+        try:  # as far as I know, there is no better way to do this
             group_map_json['metadata']['localFile'] = request.build_absolute_uri(group_map.localFile.url)
-        except ValueError: # this means there is no file associated with localFile
+        except ValueError:  # this means there is no file associated with localFile
             pass
         sub_maps.append(group_map_json)
     if len(sub_folders) == 0 and len(sub_maps) == 0:
@@ -528,9 +583,12 @@ def addGroupToJSON(group, map_tree, request):
         group_json['children'] = sub_folders + sub_maps
     map_tree.append(group_json)
 
-# recursively deletes maps and groups under a group
-# using manual commit control might be a good idea for this
+
 def deleteGroup(map_group, state):
+    """
+    recursively deletes maps and groups under a group
+    using manual commit control might be a good idea for this
+    """
     for map_obj in Map.objects.filter(parentId=map_group.id):
         # this is to avoid deleting maps when undeleting
         map_obj.deleted = state
@@ -538,9 +596,11 @@ def deleteGroup(map_group, state):
     for group in MapGroup.objects.filter(parentId=map_group.id):
         deleteGroup(group, state)
 
+
 def setMapProperties(m):
-    if (m.kmlFile.startswith('/') or m.kmlFile.startswith('http://') or
-        m.kmlFile.startswith('https://')):
+    if (m.kmlFile.startswith('/') or
+            m.kmlFile.startswith('http://') or
+            m.kmlFile.startswith('https://')):
         m.url = latestRequestG.build_absolute_uri(m.kmlFile)
     else:
         m.url = latestRequestG.build_absolute_uri(settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + m.kmlFile)
@@ -581,7 +641,7 @@ def getMapTree():
             parent = groupLookup[subMap.parentId_id]
             parent.subMaps.append(subMap)
 
-    rootMap = [g for g in groups if g.parentId_id == None][0]
+    rootMap = [g for g in groups if g.parentId_id is None][0]
 
     return rootMap
 

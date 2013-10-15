@@ -5,7 +5,11 @@
 # __END_LICENSE__
 
 from django.db import models
+
 from xgds_map_server import settings
+
+# pylint: disable=C1001
+
 
 class MapGroup(models.Model):
     name = models.CharField('Name', max_length=80)
@@ -28,7 +32,7 @@ class Map(models.Model):
     description = models.CharField('Description', max_length=2000)
     kmlFile = models.CharField('KML File', max_length=200)
     localFile = models.FileField(upload_to=settings.XGDS_MAP_SERVER_MEDIA_SUBDIR, max_length=256,
-                                 null = True, blank=True)
+                                 null=True, blank=True)
     openable = models.BooleanField(default=True)
     visible = models.BooleanField(blank=False)
     parentId = models.ForeignKey(MapGroup, db_column='parentId',

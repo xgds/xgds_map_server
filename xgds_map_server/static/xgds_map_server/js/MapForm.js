@@ -1,4 +1,4 @@
-$(document).ready(function(){
+$(document).ready(function() {
     function toggleKMLocalFile() {
 	if ($("input[name='typeChooser'][value='kml']").is(":checked")) {
 	    $("#kmlFile_div").show();
