@@ -6,11 +6,10 @@
 
 # Create your views here.
 
-import os
-import sys
 from cStringIO import StringIO
 import json
 import re
+import logging
 
 from django.views.decorators.csrf import csrf_protect
 from django.shortcuts import render_to_response
@@ -18,7 +17,7 @@ from django.http import HttpResponse, Http404
 from django.http import HttpResponseServerError
 from django.http import HttpResponseRedirect
 from django.http import HttpResponseBadRequest
-from django.http import HttpResponseGone
+from django.http import HttpResponseNotFound
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from django.db import transaction
@@ -48,7 +47,7 @@ def getMapListPage(request):
         else:
             url = settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + m.kmlFile
         m.url = request.build_absolute_uri(url)
-        print >> sys.stderr, 'kmlFile=%s url=%s' % (m.kmlFile, m.url)
+        logging.debug('kmlFile=%s url=%s', m.kmlFile, m.url)
         if m.openable:
             m.openable = 'yes'
         else:
@@ -64,7 +63,7 @@ def getMapListPage(request):
     feedUrl = (request
                .build_absolute_uri
                (reverse(getMapFeed, kwargs={'feedname': ''})))
-    print 'serving %d maps to MapList.html' % len(mapList)
+    logging.debug('serving %d maps to MapList.html', len(mapList))
     return render_to_response('MapList.html',
                               {'mapList': mapList,
                                'feedUrl': feedUrl,
@@ -107,34 +106,36 @@ def handleJSONMove(request):
     """
     JSON-accepting url that moves maps/folders around
     """
+    # TODO check that http method is POST
     if ('move' not in request.REQUEST or
             'move_type' not in request.REQUEST or
             'to' not in request.REQUEST or
             'to_type' not in request.REQUEST):
-        return HttpResponseBadRequest()
+        return HttpResponseBadRequest("Request must have arguments 'move', 'move_type', 'to', and 'to_type'")
 
     if request.REQUEST['move_type'] == 'map':
+        mapId = request.REQUEST['move']
         try:
-            move = Map.objects.get(id=request.REQUEST['move'])
+            move = Map.objects.get(id=mapId)
         except Map.DoesNotExist:
-            return HttpResponseGone()
+            return HttpResponseNotFound('No Map with id "%s"' % mapId)
     elif request.REQUEST['move_type'] == 'folder':
+        folderId = request.REQUEST['move']
         try:
-            move = MapGroup.objects.get(id=request.REQUEST['move'])
+            move = MapGroup.objects.get(id=folderId)
         except MapGroup.DoesNotExist:
-            return HttpResponseGone()
+            return HttpResponseNotFound('No MapGroup with id "%s"' % folderId)
     else:
-        print "move-type is not map or folder"
-        return HttpResponseBadRequest()
+        return HttpResponseBadRequest("move_type must be 'map' or 'folder'")
 
     if request.REQUEST['to_type'] != 'folder':
-        print "To-type is not folder"
-        return HttpResponseBadRequest()
+        return HttpResponseBadRequest("to_type must be 'folder'")
 
+    toId = request.REQUEST['to']
     try:
-        to = MapGroup.objects.get(id=request.REQUEST['to'])
+        to = MapGroup.objects.get(id=toId)
     except MapGroup.DoesNotExist():
-        return HttpResponseGone()
+        return HttpResponseNotFound('No MapGroup with id "%s"')
 
     move.parentId = to
     move.save()
@@ -612,10 +613,10 @@ def setMapProperties(m):
         m.visibility = 1
     else:
         m.visibility = 0
-#     print 'kml file is %s' % m.kmlFile
-#     print 'url is %s' % m.url
-#     print 'visibility is %s' % m.visibility
-#     print 'listItemType is %s' % m.listItemType
+    # logging.debug('kml file is %s', m.kmlFile)
+    # logging.debug('url is %s', m.url)
+    # logging.debug('visibility is %s', m.visibility)
+    # logging.debug('listItemType is %s', m.listItemType)
 
 
 def getMapTree():
@@ -695,7 +696,7 @@ def printMapToKml(out, node, level=0):
 
 
 def getMapFeed(request, feedname):
-    print 'called getMapFeed(%s)' % feedname
+    logging.debug('called getMapFeed(%s)', feedname)
     if (feedname == ''):
         return getMapFeedTop(request)
     if ('all' in feedname):
@@ -722,7 +723,7 @@ def getMapFeedTop(request):
                       kwargs={'feedname': 'all.kml'})))
     m.visibility = 1
     m.listItemType = 'check'
-    print 'top level map kmlFile:', m.kmlFile
+    logging.debug('top level map kmlFile: %s', m.kmlFile)
     resp = render_to_response('Maps.kml',
                               {'documentName': topLevel['name'],
                                'map': m},
@@ -744,17 +745,3 @@ def getMapFeedAll(request):
                         mimetype='application/vnd.google-earth.kml+xml')
     resp['Content-Disposition'] = 'attachment; filename=all.kml'
     return resp
-
-
-# This URL should retrieve a file called <mapname>
-def getMapFileDeprecated(request, filename):
-    if (filename == ''):
-        return getMapFeedAll(request)
-    diskfile = settings.DATA_ROOT + settings.XGDS_MAP_SERVER_DATA_SUBDIR + filename
-    url = '%s/%s' % ('static', filename)
-    if os.path.exists(diskfile):
-        print 'file %s exists' % diskfile
-        print 'responding with url = %s' % url
-    else:
-        print 'file %s does not exist' % diskfile
-    return None

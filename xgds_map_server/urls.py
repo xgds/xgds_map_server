@@ -38,19 +38,19 @@ urlpatterns = patterns(
      'folderDetail'),
     # HTML view to delete a folder (group)
     (r'^folderDelete/(?P<groupID>\d+)/', views.getDeleteFolderPage,
-     {'readOnly': True},
+     {},
      'folderDelete'),
     # HTML view to add a folder (group)
     (r'^folderAdd/', views.getAddFolderPage,
-     {'readOnly': True},
+     {},
      'folderAdd'),
     # HTML view to add new map
     (r'^add/', views.getAddMapPage,
-     {'readOnly': True},
+     {},
      'addMap'),
     # HTML view to confirm deletion of view
     (r'^delete/(?P<mapID>\d+)/', views.getDeleteMapPage,
-     {'readOnly': True},
+     {},
      'mapDelete'),
     # List of deleted maps that can be un-deleted
     (r'^deleted/', views.getDeletedMapsPage,
@@ -58,14 +58,17 @@ urlpatterns = patterns(
      'deletedMaps'),
     # JSON-accepting url that moves maps/folders around
     (r'^move', views.handleJSONMove,
-     {'readOnly': True},
+     {},
      'jsonMove'),
+
+    # --- this url is deprecated, don't use it in new code ---
     # This URL should receive a static files
     (r'^data/(?P<path>.*)$', 'django.views.static.serve',
      {'document_root': settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR,
       'show_indexes': True,
       'readOnly': True},
      'xgds_map_server_static'),
+
     # By default if you just load the app you should see the list
     (r'^feed/(?P<feedname>.*)', views.getMapFeed,
      {'readOnly': True, 'loginRequired': False, 'securityTags': ['kml', 'readOnly']},
