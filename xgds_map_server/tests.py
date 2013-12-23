@@ -15,6 +15,7 @@ from django.core.urlresolvers import reverse
 class TestMaps(TestCase):
     fixtures = ['xgds_map_server_testing.json',
                 'xgds_map_server_auth.json']
+    urls = "xgds_map_server.testing_urls"
 
     def test_index(self):
         response = self.client.get(reverse('xgds_map_server_index'))
