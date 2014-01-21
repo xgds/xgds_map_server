@@ -522,6 +522,7 @@ def addGroupToJSON(group, map_tree, request):
     """
     group_json = {
         "data": {
+            "text": group.name,
             "title": group.name,
             "attr": {
                 "href": request.build_absolute_uri(reverse('folderDetail', kwargs={'groupID': group.id}))
@@ -552,6 +553,7 @@ def addGroupToJSON(group, map_tree, request):
             continue
         group_map_json = {
             "data": {
+                "text": group_map.name,
                 "title": group_map.name,
                 "attr": {
                     "href": request.build_absolute_uri(reverse('mapDetail', kwargs={'mapID': group_map.id}))
