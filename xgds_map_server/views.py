@@ -10,6 +10,7 @@ from cStringIO import StringIO
 import json
 import re
 import logging
+import urllib
 
 from django.views.decorators.csrf import csrf_protect
 from django.shortcuts import render_to_response
@@ -60,7 +61,7 @@ def getMapListPage(request):
             m.groupname = m.parentId.name
     feedUrl = (request
                .build_absolute_uri
-               (reverse(getMapFeed, kwargs={'feedname': ''})))
+               (reverse(getMapFeed, kwargs={'feedname': ''}))) + '?doc=0'
     logging.debug('serving %d maps to MapList.html', len(mapList))
     return render_to_response('MapList.html',
                               {'mapList': mapList,
@@ -605,22 +606,26 @@ def getMapTree():
     return rootMap
 
 
-def printTreeToKml(out, node):
+def printTreeToKml(out, opts, node):
+    # url params control whether a document wrapper is needed.
+    wrapDocument = opts['wrapDocument']
+
     out.write("""<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://earth.google.com/kml/2.0">
-<Document>
+""")
+    if wrapDocument:
+        out.write("""<Document>
 <name>%(name)s</name>
 <visibility>1</visibility>
 """ % vars(node))
     level = 0
-    printGroupToKml(out, node, level)
-    out.write("""
-</Document>
-</kml>
-""")
+    printGroupToKml(out, opts, node, level)
+    if wrapDocument:
+        out.write('</Document>\n')
+    out.write('</kml>\n')
 
 
-def printGroupToKml(out, node, level=0):
+def printGroupToKml(out, opts, node, level=0):
     if (0 == len(node.subGroups)) and (0 == len(node.subMaps)):
         return
     out.write("""
@@ -628,13 +633,17 @@ def printGroupToKml(out, node, level=0):
   <name>%(name)s</name>
 """ % vars(node))
     for n in node.subGroups:
-        printGroupToKml(out, n, level + 1)
+        printGroupToKml(out, opts, n, level + 1)
     for n in node.subMaps:
-        printMapToKml(out, n, level + 1)
+        printMapToKml(out, opts, n, level + 1)
     out.write('</Folder>\n')
 
 
-def printMapToKml(out, node, level=0):
+def printMapToKml(out, opts, node, level=0):
+    # turn logo visibility off, as requested in url params.
+    if not opts['logo'] and node.isLogo:
+        node.visibility = 0
+
     out.write("""
 <NetworkLink>
   <name>%(name)s</name>
@@ -662,8 +671,32 @@ def getMapFeed(request, feedname):
     return None
 
 
-# This URL should retrieve a top-level KML file with network link to the top-level feed
 def getMapFeedTop(request):
+    """
+    Returns a auto-refreshing KML NetworkLink to the top-level KML index.
+    (Basically a wrapper object that points to the result from getMapFeedAll().)
+
+    Options you can control with URL parameters:
+
+    doc: int, default=1
+
+       If 0, allow bare top-level KML NetworkLinks. Otherwise, wrap
+       top-level KML NetworkLinks in a KML Document. Some clients (such
+       as kmltree.js used in xgds_planner2) can't handle a bare
+       NetworkLink. But if the client *can* handle a bare NetworkLink
+       (such as the GE desktop client), it's nicer for the user to not
+       have to drill down so far to get to the actual content.
+
+    logo: int, default=1
+
+       If 0, force visibility=0 for Map objects that have the 'isLogo'
+       property set to True. This overrides their normal visibility
+       setting. This is so we can have logos on by default in the GE
+       desktop client, but off by default in the planner (which already
+       has logos at the top of the web page). Currently, the isLogo
+       property is controlled by settings.XGDS_MAP_SERVER_LOGO_PATTERNS.
+
+    """
     m = Map()
     topLevel = settings.XGDS_MAP_SERVER_TOP_LEVEL
     m.name = topLevel['name']
@@ -679,25 +712,44 @@ def getMapFeedTop(request):
              .build_absolute_uri
              (reverse(getMapFeed,
                       kwargs={'feedname': 'all.kml'})))
+
+    # pass on url parameters, if any
+    if request.GET:
+        m.url += '?' + urllib.urlencode(request.GET)
+
     m.visibility = 1
     m.listItemType = 'check'
     logging.debug('top level map kmlFile: %s', m.kmlFile)
+    wrapDocument = int(request.GET.get('doc', '1'))
     resp = render_to_response('Maps.kml',
                               {'documentName': topLevel['name'],
-                               'map': m},
+                               'map': m,
+                               'wrapDocument': wrapDocument},
                               mimetype='application/vnd.google-earth.kml+xml',
                               context_instance=RequestContext(request))
     resp['Content-Disposition'] = 'attachment; filename=%s' % topLevel['filename']
     return resp
 
 
-# This URL should retrieve a top-level KML file with network links to all files
 def getMapFeedAll(request):
+    """
+    Returns the top-level KML index: a folder with network links to all
+    active map layers.
+
+    See getMapFeedTop() for a list of URL parameters that affect the output.
+    The same parameters are available for getMapFeedAll().
+    """
     global latestRequestG
     latestRequestG = request
+
+    opts = {
+        'logo': int(request.GET.get('logo', '1')),
+        'wrapDocument': int(request.GET.get('doc', '1'))
+    }
+
     root = getMapTree()
     out = StringIO()
-    printTreeToKml(out, root)
+    printTreeToKml(out, opts, root)
     s = out.getvalue()
     resp = HttpResponse(content=s,
                         mimetype='application/vnd.google-earth.kml+xml')

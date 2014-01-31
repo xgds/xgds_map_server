@@ -12,3 +12,9 @@ XGDS_MAP_SERVER_TOP_LEVEL = {
     "description": "Top level KML feed for xGDS maps.",
     "filename": "xgds.kml"
 }
+
+# A list of regex strings. If the name of a Map object matches one of
+# the regexes (using re.search), the Map is considered to be a logo. (If
+# the map feed is requested with the URL parameter 'logo=0', logo Maps
+# have visibility turned off.)
+XGDS_MAP_SERVER_LOGO_PATTERNS = []

@@ -4,11 +4,15 @@
 # All Rights Reserved.
 # __END_LICENSE__
 
+import re
+
 from django.db import models
 
 from xgds_map_server import settings
 
 # pylint: disable=C1001
+
+LOGO_REGEXES = None
 
 
 class MapGroup(models.Model):
@@ -42,6 +46,15 @@ class Map(models.Model):
 
     class Meta:
         db_table = u'map'
+
+    @property
+    def isLogo(self):
+        global LOGO_REGEXES
+        if LOGO_REGEXES is None:
+            LOGO_REGEXES = [re.compile(pattern)
+                            for pattern in settings.XGDS_MAP_SERVER_LOGO_PATTERNS]
+        return any([r.search(self.name)
+                    for r in LOGO_REGEXES])
 
     def __unicode__(self):
         #return self.name + ' : ' + self.kmlFile + ' = ' + self.description + ' visibility = %s' % self.visible + ' openable = %s' % self.openable

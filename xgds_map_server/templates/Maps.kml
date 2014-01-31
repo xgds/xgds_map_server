@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://earth.google.com/kml/2.0">
+{% if wrapDocument %}
 <Document>
 <name>{{ map.name }}</name>
 <visibility>1</visibility>
+{% endif %}
 
 <NetworkLink>
   <name>{{ map.name }}</name>
@@ -19,5 +21,8 @@
   </Link>
 </NetworkLink>
 
+{% if wrapDocument %}
 </Document>
+{% endif %}
+
 </kml>
