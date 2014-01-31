@@ -62,10 +62,12 @@ def getMapListPage(request):
     feedUrl = (request
                .build_absolute_uri
                (reverse(getMapFeed, kwargs={'feedname': ''}))) + '?doc=0'
+    filename = settings.XGDS_MAP_SERVER_TOP_LEVEL['filename']
     logging.debug('serving %d maps to MapList.html', len(mapList))
     return render_to_response('MapList.html',
                               {'mapList': mapList,
-                               'feedUrl': feedUrl},
+                               'feedUrl': feedUrl,
+                               'filename': filename},
                               context_instance=RequestContext(request))
 
 
