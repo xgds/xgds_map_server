@@ -36,8 +36,6 @@ def getMapListPage(request):
     HTML list of maps with description and links to individual maps,
     and a link to the kml feed
     """
-    projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
-    xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
     mapList = Map.objects.all().select_related('parentId').order_by('name')
     for m in mapList:
         if (m.kmlFile.startswith('/') or
@@ -66,9 +64,7 @@ def getMapListPage(request):
     logging.debug('serving %d maps to MapList.html', len(mapList))
     return render_to_response('MapList.html',
                               {'mapList': mapList,
-                               'feedUrl': feedUrl,
-                               'projectIconUrl': projectIconUrl,
-                               'xgdsIconUrl': xgdsIconUrl},
+                               'feedUrl': feedUrl},
                               context_instance=RequestContext(request))
 
 
@@ -76,8 +72,6 @@ def getMapTreePage(request):
     """
     HTML tree of maps using jstree
     """
-    projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
-    xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
     jsonMapTreeUrl = (request.build_absolute_uri
                       (reverse('mapListJSON')))
     addMapUrl = (request.build_absolute_uri
@@ -91,9 +85,7 @@ def getMapTreePage(request):
     # numDeletedMaps = len(Map.objects.filter(deleted=True)) +\
     # len(MapGroup.objects.filter(deleted=True))
     return render_to_response("MapTree.html",
-                              {'projectIconUrl': projectIconUrl,
-                               'xgdsIconUrl': xgdsIconUrl,
-                               'JSONMapTreeURL': jsonMapTreeUrl,
+                              {'JSONMapTreeURL': jsonMapTreeUrl,
                                'addMapUrl': addMapUrl,
                                'addFolderUrl': addFolderUrl,
                                'deletedMapsUrl': deletedMapsUrl,
@@ -146,8 +138,6 @@ def getAddMapPage(request):
     """
     HTML view to create new map
     """
-    projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
-    xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
     mapTreeUrl = (request.build_absolute_uri
                   (reverse('mapTree')))
 
@@ -182,9 +172,7 @@ def getAddMapPage(request):
                     map_obj.save()
         else:
             return render_to_response("AddMap.html",
-                                      {'projectIconUrl': projectIconUrl,
-                                       'xgdsIconUrl': xgdsIconUrl,
-                                       'mapTreeUrl': mapTreeUrl,
+                                      {'mapTreeUrl': mapTreeUrl,
                                        'mapForm': map_form,
                                        'error': True,
                                        'errorText': 'Invalid form entries'},
@@ -194,9 +182,7 @@ def getAddMapPage(request):
     else:
         map_form = MapForm()
         return render_to_response("AddMap.html",
-                                  {'projectIconUrl': projectIconUrl,
-                                   'xgdsIconUrl': xgdsIconUrl,
-                                   'mapTreeUrl': mapTreeUrl,
+                                  {'mapTreeUrl': mapTreeUrl,
                                    'mapForm': map_form},
                                   context_instance=RequestContext(request))
 
@@ -205,8 +191,6 @@ def getAddFolderPage(request):
     """
     HTML view to create new folder (group)
     """
-    projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
-    xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
     mapTreeUrl = (request.build_absolute_uri
                   (reverse('mapTree')))
 
@@ -220,9 +204,7 @@ def getAddFolderPage(request):
             map_group.save()
         else:
             return render_to_response("AddFolder.html",
-                                      {'projectIconUrl': projectIconUrl,
-                                       'xgdsIconUrl': xgdsIconUrl,
-                                       'groupForm': group_form,
+                                      {'groupForm': group_form,
                                        'error': True,
                                        'errorText': "Invalid form entries"},
                                       context_instance=RequestContext(request))
@@ -231,9 +213,7 @@ def getAddFolderPage(request):
     else:
         group_form = MapGroupForm()
         return render_to_response("AddFolder.html",
-                                  {'projectIconUrl': projectIconUrl,
-                                   'xgdsIconUrl': xgdsIconUrl,
-                                   'mapTreeUrl': mapTreeUrl,
+                                  {'mapTreeUrl': mapTreeUrl,
                                    'groupForm': group_form,
                                    'error': False},
                                   context_instance=RequestContext(request))
@@ -244,8 +224,6 @@ def getDeleteMapPage(request, mapID):
     """
     HTML view to delete map
     """
-    projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
-    xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
     mapDetailUrl = (request.build_absolute_uri
                     (reverse('mapDetail',
                              kwargs={'mapID': mapID})))
@@ -272,9 +250,7 @@ def getDeleteMapPage(request, mapID):
 
     else:
         return render_to_response("MapDelete.html",
-                                  {'projectIconUrl': projectIconUrl,
-                                   'xgdsIconUrl': xgdsIconUrl,
-                                   'mapTreeUrl': mapTreeUrl,
+                                  {'mapTreeUrl': mapTreeUrl,
                                    'mapDetailUrl': mapDetailUrl,
                                    'deletedMapsUrl': deletedMapsUrl,
                                    'mapObj': map_obj},
@@ -285,17 +261,13 @@ def getDeletedMapsPage(request):
     """
     HTML list of deleted maps that can be un-deleted
     """
-    projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
-    xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
     baseUrl = request.build_absolute_uri(reverse("xgds_map_server_index"))
     mapTreeUrl = request.build_absolute_uri(reverse("mapTree"))
 
     maps = Map.objects.filter(deleted=True)
     folders = MapGroup.objects.filter(deleted=True)
     return render_to_response("DeletedMaps.html",
-                              {'projectIconUrl': projectIconUrl,
-                               'xgdsIconUrl': xgdsIconUrl,
-                               'mapDeleteUrl': baseUrl + 'delete',
+                              {'mapDeleteUrl': baseUrl + 'delete',
                                'mapTreeUrl': mapTreeUrl,
                                'folderDeleteUrl': baseUrl + 'folderDelete',
                                'maps': maps,
@@ -309,8 +281,6 @@ def getDeleteFolderPage(request, groupID):
     """
     HTML view to delete a folder
     """
-    projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
-    xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
     folderDetailUrl = (request.build_absolute_uri
                        (reverse('folderDetail',
                                 kwargs={'groupID': groupID})))
@@ -344,9 +314,7 @@ def getDeleteFolderPage(request, groupID):
         # or transaction just expects a call regardless of any database activity
         transaction.rollback()
         return render_to_response("FolderDelete.html",
-                                  {'projectIconUrl': projectIconUrl,
-                                   'xgdsIconUrl': xgdsIconUrl,
-                                   'mapTreeUrl': mapTreeUrl,
+                                  {'mapTreeUrl': mapTreeUrl,
                                    'folderDetailUrl': folderDetailUrl,
                                    'groupObj': map_group,
                                    'deletedMapsUrl': deletedMapsUrl},
@@ -357,8 +325,6 @@ def getFolderDetailPage(request, groupID):
     """
     HTML Form of a map group (folder)
     """
-    projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
-    xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
     folderDetailUrl = (request.build_absolute_uri
                        (reverse('folderDetail',
                                 kwargs={'groupID': groupID})))
@@ -390,9 +356,7 @@ def getFolderDetailPage(request, groupID):
             fromSave = True
         else:
             return render_to_response("FolderDetail.html",
-                                      {"projectIconUrl": projectIconUrl,
-                                       "xgdsIconUrl": xgdsIconUrl,
-                                       "folderDetailUrl": folderDetailUrl,
+                                      {"folderDetailUrl": folderDetailUrl,
                                        "mapTreeUrl": mapTreeUrl,
                                        "deletedMapsUrl": deletedMapsUrl,
                                        "groupForm": group_form,
@@ -406,9 +370,7 @@ def getFolderDetailPage(request, groupID):
     # return form page with current data
     group_form = MapGroupForm(instance=map_group)
     return render_to_response("FolderDetail.html",
-                              {"projectIconUrl": projectIconUrl,
-                               "xgdsIconUrl": xgdsIconUrl,
-                               "folderDetailUrl": folderDetailUrl,
+                              {"folderDetailUrl": folderDetailUrl,
                                "deletedMapsUrl": deletedMapsUrl,
                                "mapTreeUrl": mapTreeUrl,
                                "groupForm": group_form,
@@ -422,8 +384,6 @@ def getMapDetailPage(request, mapID):
     """
     HTML Form of a map
     """
-    projectIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_PROJECT_LOGO_URL
-    xgdsIconUrl = settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + settings.XGDS_LOGO_URL
     mapDetailUrl = (request.build_absolute_uri
                     (reverse('mapDetail',
                              kwargs={'mapID': mapID})))
@@ -466,9 +426,7 @@ def getMapDetailPage(request, mapID):
             else:
                 kmlChecked = False
             return render_to_response("MapDetail.html",
-                                      {"projectIconUrl": projectIconUrl,
-                                       "xgdsIconUrl": xgdsIconUrl,
-                                       "mapDetailUrl": mapDetailUrl,
+                                      {"mapDetailUrl": mapDetailUrl,
                                        "mapTreeUrl": mapTreeUrl,
                                        "deletedMapsUrl": deletedMapsUrl,
                                        "mapForm": map_form,
@@ -487,9 +445,7 @@ def getMapDetailPage(request, mapID):
     else:
         kmlChecked = False
     return render_to_response("MapDetail.html",
-                              {"projectIconUrl": projectIconUrl,
-                               "xgdsIconUrl": xgdsIconUrl,
-                               "mapDetailUrl": mapDetailUrl,
+                              {"mapDetailUrl": mapDetailUrl,
                                "mapTreeUrl": mapTreeUrl,
                                "deletedMapsUrl": deletedMapsUrl,
                                "mapForm": map_form,
