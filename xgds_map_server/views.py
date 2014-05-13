@@ -503,11 +503,11 @@ def addGroupToJSON(group, map_tree, request):
         del group_json['data']['attr']['href']
     if group.parentId is not None:
         group_json['metadata']['parentId'] = group.parentId.id
-    for map_group in group.subGroups:
+    for map_group in getattr(group, 'subGroups', []):
         if map_group.deleted:
             continue
         addGroupToJSON(map_group, sub_folders, request)
-    for group_map in group.subMaps:
+    for group_map in getattr(group, 'subMaps', []):
         if group_map.deleted:
             continue
         group_map_json = {
@@ -603,9 +603,11 @@ def getMapTree():
             parent = groupLookup[subMap.parentId_id]
             parent.subMaps.append(subMap)
 
-    rootMap = [g for g in groups if g.parentId_id is None][0]
-
-    return rootMap
+    rootMap = MapGroup.objects.filter(parentId_id=None)
+    if rootMap.exists():
+        return rootMap[0]
+    else:
+        return None
 
 
 def printTreeToKml(out, opts, node):
@@ -616,10 +618,8 @@ def printTreeToKml(out, opts, node):
 <kml xmlns="http://earth.google.com/kml/2.0">
 """)
     if wrapDocument:
-        out.write("""<Document>
-<name>%(name)s</name>
-<visibility>1</visibility>
-""" % vars(node))
+        out.write("<Document>\n<name>%ss</name>\n\
+        <visibility>1</visibility>" % getattr(node, 'name', ''))
     level = 0
     printGroupToKml(out, opts, node, level)
     if wrapDocument:
@@ -628,7 +628,8 @@ def printTreeToKml(out, opts, node):
 
 
 def printGroupToKml(out, opts, node, level=0):
-    if (0 == len(node.subGroups)) and (0 == len(node.subMaps)):
+    if (0 == len(getattr(node, 'subGroups', [])))\
+       and (0 == len(getattr(node, 'subMaps', []))):
         return
     out.write("""
 <Folder>
