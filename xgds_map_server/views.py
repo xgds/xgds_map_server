@@ -603,11 +603,12 @@ def getMapTree():
             parent = groupLookup[subMap.parentId_id]
             parent.subMaps.append(subMap)
 
-    rootMap = MapGroup.objects.filter(parentId_id=None)
-    if rootMap.exists():
-        return rootMap[0]
+    rootMapList = [g for g in groups if g.parentId_id is None]
+    if len(rootMapList) != 0:
+        rootMap = rootMapList[0]
     else:
-        return None
+        rootMap = None
+    return rootMap
 
 
 def printTreeToKml(out, opts, node):
@@ -630,6 +631,7 @@ def printTreeToKml(out, opts, node):
 def printGroupToKml(out, opts, node, level=0):
     if (0 == len(getattr(node, 'subGroups', [])))\
        and (0 == len(getattr(node, 'subMaps', []))):
+        print "Found no maps!!"
         return
     out.write("""
 <Folder>
