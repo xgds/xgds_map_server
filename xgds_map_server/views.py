@@ -32,7 +32,7 @@ from xgds_map_server.forms import MapForm, MapGroupForm
 latestRequestG = None
 
 
-def getMapListPage(request):
+def getMapServerIndexPage(request):
     """
     HTML list of maps with description and links to individual maps,
     and a link to the kml feed
@@ -62,11 +62,13 @@ def getMapListPage(request):
     feedUrl = (request
                .build_absolute_uri
                (reverse(getMapFeed, kwargs={'feedname': ''}))) + '?doc=0'
+    cmsUrl = request.build_absolute_uri(reverse('mapTree'))
     filename = settings.XGDS_MAP_SERVER_TOP_LEVEL['filename']
     logging.debug('serving %d maps to MapList.html', len(mapList))
-    return render_to_response('MapList.html',
+    return render_to_response('MapServerLandingPage.html',
                               {'mapList': mapList,
                                'feedUrl': feedUrl,
+                               'cmsUrl': cmsUrl,
                                'filename': filename},
                               context_instance=RequestContext(request))
 

@@ -12,7 +12,7 @@ from xgds_map_server import views
 urlpatterns = patterns(
     '',
 
-    (r'^$', views.getMapListPage,
+    (r'^$', views.getMapServerIndexPage,
      {'readOnly': True, 'securityTags': ['readOnly']},
      'xgds_map_server_index'),
     # Map server urls
