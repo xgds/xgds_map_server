@@ -481,6 +481,8 @@ def addGroupToJSON(group, map_tree, request):
     recursively adds group to json tree
     in the style of jstree
     """
+    if group is None:
+        return  # don't do anything if group is None
     group_json = {
         "data": {
             "text": group.name,
