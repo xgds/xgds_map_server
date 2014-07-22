@@ -8,7 +8,7 @@ from django import forms
 
 from xgds_map_server.models import Map, MapGroup
 
-# pylint: disable=C1001,R0924
+# pylint: disable=C1001
 
 
 class MapForm(forms.ModelForm):

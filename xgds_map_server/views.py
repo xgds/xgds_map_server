@@ -673,9 +673,9 @@ def printMapToKml(out, opts, node, level=0):
 
 def getMapFeed(request, feedname):
     logging.debug('called getMapFeed(%s)', feedname)
-    if (feedname == ''):
+    if feedname == '':
         return getMapFeedTop(request)
-    if ('all' in feedname):
+    if 'all' in feedname:
         return getMapFeedAll(request)
     return None
 

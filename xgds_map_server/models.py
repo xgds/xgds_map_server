@@ -27,7 +27,7 @@ class MapGroup(models.Model):
         db_table = u'mapgroup'
 
     def __unicode__(self):
-        #return '%s' % self.name + ' : ' + self.description + ' : ' + '%s' % self.parentId
+        # return '%s' % self.name + ' : ' + self.description + ' : ' + '%s' % self.parentId
         return self.name
 
 
@@ -57,5 +57,5 @@ class Map(models.Model):
                     for r in LOGO_REGEXES])
 
     def __unicode__(self):
-        #return self.name + ' : ' + self.kmlFile + ' = ' + self.description + ' visibility = %s' % self.visible + ' openable = %s' % self.openable
+        # return self.name + ' : ' + self.kmlFile + ' = ' + self.description + ' visibility = %s' % self.visible + ' openable = %s' % self.openable
         return self.name

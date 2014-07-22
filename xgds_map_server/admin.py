@@ -16,27 +16,23 @@ class MapAdmin(admin.ModelAdmin):
                     'openable',
                     'visible',
                     'kmlFile',
-                    'description',
-                    )
+                    'description')
     list_editable = list_display[1:]
     ordering = ('parentId', 'name')
     search_fields = ('name',
                      'description',
-                     'kmlFile',
-                     )
+                     'kmlFile')
 
 
 class MapGroupAdmin(admin.ModelAdmin):
     list_display = ('id',
                     'name',
                     'parentId',
-                    'description',
-                    )
+                    'description')
     list_editable = list_display[1:]
     ordering = ('parentId', 'name')
     search_fields = ('name',
-                     'description',
-                     )
+                     'description')
 
 admin.site.register(models.Map, MapAdmin)
 admin.site.register(models.MapGroup, MapGroupAdmin)

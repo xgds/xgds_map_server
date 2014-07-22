@@ -17,7 +17,7 @@ urlpatterns = patterns(
      'xgds_map_server_index'),
     # Map server urls
     # HTML list of maps with description and links to individual maps, and a link to the kml feed
-    #(r'^list/', views.getMapListPage,
+    # (r'^list/', views.getMapListPage,
     # {'readOnly': True, 'securityTags': ['readOnly']},
     # 'mapList'),
     # HTML tree of maps
