@@ -6,10 +6,11 @@
 
 # import logging
 
-#TODO: write tests that do more than check pages with GET requests.
+# TODO: write tests that do more than check pages with GET requests.
 
 from django.test import TestCase
 from django.core.urlresolvers import reverse
+from unittest import skip
 
 
 class TestMaps(TestCase):
@@ -21,10 +22,7 @@ class TestMaps(TestCase):
         response = self.client.get(reverse('xgds_map_server_index'))
         self.assertEqual(response.status_code, 200)
 
-    def test_list(self):
-        response = self.client.get(reverse('mapList'))
-        self.assertEqual(response.status_code, 200)
-
+    @skip('Url disabled in urls.py')
     def test_mapList(self):
         response = self.client.get(reverse('mapList'))
         self.assertEqual(response.status_code, 200)
@@ -69,9 +67,10 @@ class TestMaps(TestCase):
         response = self.client.get(reverse('deletedMaps'))
         self.assertEqual(response.status_code, 200)
 
-    # def test_jsonMove(self):
-    #     response = self.client.get(reverse('jsonMove'))
-    #     self.assertEqual(response.status_code, 200)
+    @skip('Test is broken')
+    def test_jsonMove(self):
+        response = self.client.get(reverse('jsonMove'))
+        self.assertEqual(response.status_code, 200)
 
     # The xgds_map_server_static function was a hack I think I (Jerome) created because
     # I didn't know how to work the static file settings. Indeed it isn't used.
