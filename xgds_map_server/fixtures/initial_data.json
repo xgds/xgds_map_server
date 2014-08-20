@@ -1,0 +1,4 @@
+[
+{"pk":0, "model":"xgds_map_server.Map", "fields":
+{"name":"Plans", "description":"All of the plans on the server", "kmlFile":"/xgds_planner2/planIndex.kml", "openable":1, "visible":0, "parentId": 1}}
+]
