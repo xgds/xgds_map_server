@@ -2,5 +2,5 @@
 {"pk":2, "model":"xgds_map_server.Map", "fields":
 {"name":"Plans", "description":"All of the plans on the server", "kmlFile":"/xgds_planner2/planIndex.kml", "openable":1, "visible":0, "parentId": 1}},
 {"pk":4, "model":"xgds_map_server.Map", "fields":
-{"name":"Notes: Today", "description":"Today's notes set to show on map", "kmlFile":"/notes/kml", "openable":1, "visible":0, "parentId": 1}}
+{"name":"Notes", "description":"Today's notes set to show on map", "kmlFile":"/notes/kml", "openable":1, "visible":0, "parentId": 1}}
 ]
