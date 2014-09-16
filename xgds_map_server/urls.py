@@ -26,11 +26,11 @@ urlpatterns = patterns(
      'mapTree'),
     # JSON tree of maps, formatted for jstree
     (r'^listjson/', views.getMapTreeJSON,
-     {'readOnly': True, 'securityTags': ['readOnly']},
+     {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']},
      'mapListJSON'),
     # HTML detail view of map
     (r'^detail/(?P<mapID>\d+)/', views.getMapDetailPage,
-     {'readOnly': True},
+     {'readOnly': True },
      'mapDetail'),
     # HTML detail of a folder (group)
     (r'^folderDetail/(?P<groupID>\d+)/', views.getFolderDetailPage,
