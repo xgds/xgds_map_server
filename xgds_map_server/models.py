@@ -17,7 +17,7 @@ LOGO_REGEXES = None
 
 class MapGroup(models.Model):
     name = models.CharField('Name', max_length=80)
-    description = models.CharField('Description', max_length=2000)
+    description = models.CharField('Description', max_length=2000, null=True, blank=True)
     parentId = models.ForeignKey('self', db_column='parentId',
                                  null=True, blank=True,
                                  verbose_name='parent group')
@@ -33,7 +33,7 @@ class MapGroup(models.Model):
 
 class Map(models.Model):
     name = models.CharField('Name', max_length=80)
-    description = models.CharField('Description', max_length=2000)
+    description = models.CharField('Description', max_length=2000, null=True, blank=True)
     kmlFile = models.CharField('KML File', max_length=200)
     localFile = models.FileField(upload_to=settings.XGDS_MAP_SERVER_MEDIA_SUBDIR, max_length=256,
                                  null=True, blank=True)
