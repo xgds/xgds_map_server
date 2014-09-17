@@ -22,6 +22,7 @@ from django.http import HttpResponseNotFound
 from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from django.db import transaction
+from django.views.decorators.cache import never_cache
 
 from xgds_map_server import settings
 from xgds_map_server.models import Map, MapGroup
@@ -461,6 +462,7 @@ def getMapDetailPage(request, mapID):
                               context_instance=RequestContext(request))
 
 
+@never_cache
 def getMapTreeJSON(request):
     """
     json tree of map groups
@@ -671,6 +673,7 @@ def printMapToKml(out, opts, node, level=0):
 """ % vars(node))
 
 
+@never_cache
 def getMapFeed(request, feedname):
     logging.debug('called getMapFeed(%s)', feedname)
     if feedname == '':
