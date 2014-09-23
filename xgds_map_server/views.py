@@ -587,8 +587,8 @@ def setMapProperties(m):
 
 
 def getMapTree():
-    groups = MapGroup.objects.all()
-    maps = Map.objects.all()
+    groups = MapGroup.objects.filter(deleted=0)
+    maps = Map.objects.filter(deleted=0)
 
     groupLookup = dict([(group.id, group) for group in groups])
 
