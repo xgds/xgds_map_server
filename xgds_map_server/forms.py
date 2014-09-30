@@ -19,7 +19,7 @@ class MapForm(forms.ModelForm):
         widgets = {
             # Note: no practical way to retrieve max lengths from Map model
             'name': forms.TextInput(attrs={'size': 80}),
-            'description': forms.Textarea(attrs={'cols': 50, 'rows': 7}),
+            'description': forms.Textarea(attrs={'cols': 50, 'rows': 7}, required=False),
         }
         exclude = ('deleted',)
 
@@ -34,6 +34,6 @@ class MapGroupForm(forms.ModelForm):
         widgets = {
             # Same note as above
             'name': forms.TextInput(attrs={'size': 80}),
-            'description': forms.Textarea(attrs={'cols': 50, 'rows': 7}),
+            'description': forms.Textarea(attrs={'cols': 50, 'rows': 7}, required=False),
         }
         exclude = ('deleted',)

@@ -1,14 +1,12 @@
-{% extends "MapServerSiteStyle.html" %}
+{% extends "MapBase.html" %}
 
 {% block contents %}
-<input type="button" onclick="document.location.href='{{ mapTreeUrl}}'" value="Back">
-<p>Deleted Maps<br>
-<br>
+<p>Click a map or folder to undelete it.</p>
+<h3>Deleted Maps</h3>
 {% for map in maps %}
 <a href="{{ mapDeleteUrl }}/{{ map.id }}/">{{ map.name }}</a><br>
 {% endfor %}
-<br>Deleted Folders<br>
-<br>
+<h3>Deleted Folders</h3>
 {% for folder in folders %}
 <a href="{{ folderDeleteUrl }}/{{ folder.id}}/">{{ folder.name }}</a><br>
 {% endfor %}

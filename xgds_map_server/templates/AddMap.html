@@ -1,4 +1,4 @@
-{% extends "MapServerSiteStyle.html" %}
+{% extends "MapBase.html" %}
 
 {% block scripts %}
 {{ block.super }}
@@ -7,7 +7,7 @@
 
 {% block contents %}
 {{ block.super }}
-<h3>New Map</h3>
+<h3>Add Map</h3>
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
 {% include "MapForm.html" %}
 <input type="submit" value="Create" /><input type="button" onclick="document.location.href = '{{ mapTreeUrl }}'" value="Back" />

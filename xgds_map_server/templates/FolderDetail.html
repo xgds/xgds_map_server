@@ -1,7 +1,9 @@
-{% extends "MapServerSiteStyle.html" %}
+{% extends "MapBase.html" %}
 
 {% block contents %}
 {{ block.super }}
+<h3>Folder Details</h3>
+
 {% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
 {{ groupForm.as_p }}

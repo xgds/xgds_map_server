@@ -17,6 +17,6 @@
 {% if mapForm.openable.errors %}<span style="color:red">{{ mapForm.openable.errors }}</span>{% endif %}
 <label for="id_openable">Openable:</label> {{ mapForm.openable }}<br><br>
 {% if mapForm.visible.errors %}<span style="color:red">{{ mapForm.visible.errors }}</span>{% endif %}
-<label for="id_visible">Visible:</label> {{ mapForm.visible }}<br><br>
+<label for="id_visible">Visible:</label> {{ mapForm.visible }}<span style="color: gray"> Checking visible will make this layer turned ON by default.</span><br><br>
 {% if mapForm.parentId.errors %}<span style="color:red">{{ mapForm.parentId.errors }}</span>{% endif %}
 <label for="id_parentId">In Folder:</label> {{ mapForm.parentId }}<br><br>

@@ -1,5 +1,4 @@
-{% extends "MapServerSiteStyle.html" %}
-
+{% extends "MapBase.html" %}
 {% block scripts %}
 <!-- no block.super because we need a different version of jquery -->
 <script src="{{ STATIC_URL }}external/js/jquery-1.9.1.js" type="text/javascript"></script>
@@ -8,7 +7,9 @@
 {% endblock %}
 
 {% block contents %}
-<input type="button" value="Add Map" onClick="document.location.href='{{ addMapUrl }}'"><input type="button" value="Add Folder" onClick="document.location.href='{{ addFolderUrl }}'"><input type="button" value="Undelete Map or Folder" onClick="document.location.href='{{ deletedMapsUrl }}'"><br>
+<input type="button" class="mybutton" value="Add Map" onClick="document.location.href='{{ addMapUrl }}'">
+<input type="button" class="mybutton" value="Add Folder" onClick="document.location.href='{{ addFolderUrl }}'">
+<input type="button" class="mybutton" value="Undelete Map or Folder" onClick="document.location.href='{{ deletedMapsUrl }}'"><br>
 <p>
 <div id="treeDiv">
   <!-- placeholder element for jstree -->
