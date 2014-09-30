@@ -12,14 +12,14 @@ from xgds_map_server.models import Map, MapGroup
 
 
 class MapForm(forms.ModelForm):
-    parentId = forms.ModelChoiceField(queryset=MapGroup.objects.filter(deleted=False), empty_label=None, label="Group")
+    parentId = forms.ModelChoiceField(queryset=MapGroup.objects.filter(deleted=False), empty_label=None, label="Parent Folder")
+    description = forms.CharField(required=False, widget=forms.Textarea(attrs={'cols': 50, 'rows': 7}))
 
     class Meta:
         model = Map
         widgets = {
             # Note: no practical way to retrieve max lengths from Map model
-            'name': forms.TextInput(attrs={'size': 80}),
-            'description': forms.Textarea(attrs={'cols': 50, 'rows': 7}, required=False),
+            'name': forms.TextInput(attrs={'size': 80})
         }
         exclude = ('deleted',)
 
@@ -27,13 +27,14 @@ class MapForm(forms.ModelForm):
 class MapGroupForm(forms.ModelForm):
     parentId = forms.ModelChoiceField(queryset=MapGroup.objects.filter(deleted=False),
                                       empty_label=None,
-                                      label="Group")
+                                      label="Parent Folder")
+    description = forms.CharField(required=False, widget=forms.Textarea(attrs={'cols': 50, 'rows': 7}))
+
 
     class Meta:
         model = MapGroup
         widgets = {
             # Same note as above
-            'name': forms.TextInput(attrs={'size': 80}),
-            'description': forms.Textarea(attrs={'cols': 50, 'rows': 7}, required=False),
+            'name': forms.TextInput(attrs={'size': 80})
         }
         exclude = ('deleted',)
