@@ -281,7 +281,6 @@ def getDeletedMapsPage(request):
                               context_instance=RequestContext(request))
 
 
-@transaction.commit_manually
 @csrf_protect
 def getDeleteFolderPage(request, groupID):
     """
@@ -308,11 +307,15 @@ def getDeleteFolderPage(request, groupID):
         # in a relatively intentional way
         # deleting a group means deleting everything under it too
         # this can be undone so it's ok to automatically do it
-        deleteGroup(map_group, not map_group.deleted)
-        map_group.deleted = not map_group.deleted
-        map_group.save()
-        # commit everything at once
-        transaction.commit()
+        transaction.set_autocommit(False)
+        try:
+            deleteGroup(map_group, not map_group.deleted)
+            map_group.deleted = not map_group.deleted
+            map_group.save()
+            # commit everything at once
+            transaction.commit()
+        finally:
+            transaction.set_autocommit(True)
         return HttpResponseRedirect(mapTreeUrl)
 
     else:
@@ -475,7 +478,7 @@ def getMapTreeJSON(request):
     addGroupToJSON(map_tree, map_tree_json, request)
     json_data = json.dumps(map_tree_json, indent=4)
     return HttpResponse(content=json_data,
-                        mimetype="application/json")
+                        content_type="application/json")
 
 
 def addGroupToJSON(group, map_tree, request):
@@ -737,7 +740,7 @@ def getMapFeedTop(request):
                               {'documentName': topLevel['name'],
                                'map': m,
                                'wrapDocument': wrapDocument},
-                              mimetype='application/vnd.google-earth.kml+xml',
+                              content_type='application/vnd.google-earth.kml+xml',
                               context_instance=RequestContext(request))
     resp['Content-Disposition'] = 'attachment; filename=%s' % topLevel['filename']
     return resp
@@ -764,6 +767,6 @@ def getMapFeedAll(request):
     printTreeToKml(out, opts, root)
     s = out.getvalue()
     resp = HttpResponse(content=s,
-                        mimetype='application/vnd.google-earth.kml+xml')
+                        content_type='application/vnd.google-earth.kml+xml')
     resp['Content-Disposition'] = 'attachment; filename=all.kml'
     return resp
