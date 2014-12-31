@@ -38,7 +38,7 @@ class Map(models.Model):
     localFile = models.FileField(upload_to=settings.XGDS_MAP_SERVER_MEDIA_SUBDIR, max_length=256,
                                  null=True, blank=True)
     openable = models.BooleanField(default=True)
-    visible = models.BooleanField(blank=False)
+    visible = models.BooleanField(blank=False, default=False)
     parentId = models.ForeignKey(MapGroup, db_column='parentId',
                                  null=True, blank=True,
                                  verbose_name='group')
