@@ -18,3 +18,9 @@ XGDS_MAP_SERVER_TOP_LEVEL = {
 # the map feed is requested with the URL parameter 'logo=0', logo Maps
 # have visibility turned off.)
 XGDS_MAP_SERVER_LOGO_PATTERNS = []
+
+# include this in your siteSettings.py BOWER_INSTALLED_APPS
+XGDS_MAP_SERVER_BOWER_INSTALLED_APPS = (
+    'jstree#3.0.0',
+    'jquery_1.9.1=jquery#1.9.1'
+)
