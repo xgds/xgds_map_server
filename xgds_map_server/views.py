@@ -555,6 +555,77 @@ def addGroupToJSON(group, map_tree, request):
     map_tree.append(group_json)
 
 
+@never_cache
+def getFancyTreeJSON(request):
+    """
+    json tree of map groups
+    note that this does json for fancytree
+    """
+    global latestRequestG
+    latestRequestG = request
+    map_tree = getMapTree()
+    map_tree_json = []
+    addGroupToFancyJSON(map_tree, map_tree_json, request, True)
+    json_data = json.dumps(map_tree_json, indent=4)
+    return HttpResponse(content=json_data,
+                        content_type="application/json")
+
+
+def addGroupToFancyJSON(group, map_tree, request, expanded=False):
+    """
+    recursively adds group to json tree
+    in the style of jstree
+    """
+    if group is None:
+        return  # don't do anything if group is None
+    group_json = {"title": group.name,
+                  "key": group.id,
+                  "folder": True,
+                  "tooltip": group.description,
+                  "expanded": expanded,
+                  "data": {"href": request.build_absolute_uri(reverse('folderDetail', kwargs={'groupID': group.id})),
+                           "parentId": None,
+                           },
+                  }
+    sub_folders = []
+    sub_maps = []
+    if group.id == 1:
+        # ensure that we don't have conflicts with the base map
+        # for the detail page, and that nobody deletes every map
+        del group_json['data']['href']
+    if group.parentId is not None:
+        group_json['data']['parentId'] = group.parentId.id
+    for map_group in getattr(group, 'subGroups', []):
+        if map_group.deleted:
+            continue
+        addGroupToFancyJSON(map_group, sub_folders, request)
+    for group_map in getattr(group, 'subMaps', []):
+        if group_map.deleted:
+            continue
+        group_map_json = {"title": group_map.name,
+                          "key": group_map.id,
+                          "selected": group_map.visible,
+                          "tooltip": group_map.description,
+                          "data": {"href": request.build_absolute_uri(reverse('mapDetail', kwargs={'mapID': group_map.id})),
+                                   "parentId": None,
+                                   "kmlFile": group_map.kmlFile,
+                                   "openable": group_map.openable,
+                                   },
+                          }
+        if group_map.parentId is not None:
+            group_map_json['data']['parentId'] = group_map.parentId.id
+        try:  # as far as I know, there is no better way to do this
+            group_map_json['data']['localFile'] = request.build_absolute_uri(group_map.localFile.url)
+        except ValueError:  # this means there is no file associated with localFile
+            pass
+        sub_maps.append(group_map_json)
+    if len(sub_folders) > 0 or len(sub_maps) > 0:
+        sub_folders.sort(key=lambda x: x['title'].lower())
+        sub_maps.sort(key=lambda x: x['title'].lower())
+        group_json['children'] = sub_folders + sub_maps
+    map_tree.append(group_json)
+
+
 def deleteGroup(map_group, state):
     """
     recursively deletes maps and groups under a group

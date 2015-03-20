@@ -28,6 +28,8 @@ urlpatterns = patterns(
     (r'^listjson/', views.getMapTreeJSON,
      {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']},
      'mapListJSON'),
+    (r'^treejson/', views.getFancyTreeJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']},
+     'mapTreeJSON'),
     # HTML detail view of map
     (r'^detail/(?P<mapID>\d+)/', views.getMapDetailPage,
      {'readOnly': True },
