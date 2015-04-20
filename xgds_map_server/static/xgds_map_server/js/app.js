@@ -125,8 +125,6 @@ var app = (function($, _, Backbone) {
         };
 
         this.action = function() {
-            //            console.log('\\\\\\\\\\Action called');
-            //console.log('Disable stack: ' + this._disableCount);
             if (this._inAction)
                 return;
             if (!this.enabled)
@@ -135,6 +133,7 @@ var app = (function($, _, Backbone) {
                 return;
             this.disable();
             this._enterAction();
+            /*
             var plan = app.currentPlan.toJSON();
             var planString = JSON.stringify(plan);
             if (this.currentState == planString) {
@@ -147,6 +146,7 @@ var app = (function($, _, Backbone) {
                 app.vent.trigger('redoEmpty');
                 app.vent.trigger('actionOcurred');
             }
+            */
             this._exitAction();
             this.enable();
         };
@@ -158,18 +158,18 @@ var app = (function($, _, Backbone) {
                 return;
             this.disable();
             this._enterAction();
-            var planString = this.undoStack.pop();
-            var plan = JSON.parse(planString);
-            if (plan == undefined) {
-                app.vent.trigger('undoEmpty');
-            } else {
-                this.redoStack.push(this.currentState);
-                this.currentState = planString;
-                app.updatePlan(plan);
-                app.vent.trigger('redoNotEmpty');
-                if (this.undoStack.length == 0)
-                    app.vent.trigger('undoEmpty');
-            }
+//            var planString = this.undoStack.pop();
+//            var plan = JSON.parse(planString);
+//            if (plan == undefined) {
+//                app.vent.trigger('undoEmpty');
+//            } else {
+//                this.redoStack.push(this.currentState);
+//                this.currentState = planString;
+//                app.updatePlan(plan);
+//                app.vent.trigger('redoNotEmpty');
+//                if (this.undoStack.length == 0)
+//                    app.vent.trigger('undoEmpty');
+//            }
             //console.log('-----------------------------------Undo finished');
             this._exitAction();
             this.enable();
@@ -182,18 +182,18 @@ var app = (function($, _, Backbone) {
                 return;
             this.disable();
             this._enterAction();
-            var planString = this.redoStack.pop();
-            var plan = JSON.parse(planString);
-            if (plan == undefined) {
-                app.vent.trigger('redoEmpty');
-            } else {
-                this.undoStack.push(this.currentState);
-                this.currentState = planString;
-                app.updatePlan(plan);
-                app.vent.trigger('undoNotEmpty');
-                if (this.redoStack.length == 0)
-                    app.vent.trigger('redoEmpty');
-            }
+//            var planString = this.redoStack.pop();
+//            var plan = JSON.parse(planString);
+//            if (plan == undefined) {
+//                app.vent.trigger('redoEmpty');
+//            } else {
+//                this.undoStack.push(this.currentState);
+//                this.currentState = planString;
+//                app.updatePlan(plan);
+//                app.vent.trigger('undoNotEmpty');
+//                if (this.redoStack.length == 0)
+//                    app.vent.trigger('redoEmpty');
+//            }
             this._exitAction();
             this.enable();
         };
@@ -224,7 +224,7 @@ var app = (function($, _, Backbone) {
                 this.options.mapRotationHandles = false;
             }
 
-            this.Simulator = this.options.simulator;
+//            this.Simulator = this.options.simulator;
             this.commandRenderers = this.options.commandRenderers;
 
             // rotation handles option
@@ -334,7 +334,7 @@ var app = (function($, _, Backbone) {
     });
 
     app.vent.on('all', function(eventname, args) {
-        console.log('event on app.vent: ' + eventname, args);
+//        console.log('event on app.vent: ' + eventname, args);
         //        console.log('current state:');
         //        console.log('Command Selected:', app.State.commandSelected);
         //        console.log('Station Selected:', app.State.stationSelected);
@@ -344,18 +344,18 @@ var app = (function($, _, Backbone) {
         //     var stack = new Error().stack;
         //     console.log(stack);
         // }
-        if (eventname == 'change:plan') {
-            app.Actions.action();
-        } else if (eventname == 'plan:reversing') {
-            app.Actions.disable();
-        } else if (eventname == 'plan:reverse') {
-            app.Actions.enable();
-            app.Actions.action();
-        } else if (eventname == 'actionOcurred') {
-            if (_.isUndefined(app.currentPlan))
-                return;
-            app.simulatePlan();
-        }
+//        if (eventname == 'change:plan') {
+//            app.Actions.action();
+//        } else if (eventname == 'plan:reversing') {
+//            app.Actions.disable();
+//        } else if (eventname == 'plan:reverse') {
+//            app.Actions.enable();
+//            app.Actions.action();
+//        } else if (eventname == 'actionOcurred') {
+//            if (_.isUndefined(app.currentPlan))
+//                return;
+//            app.simulatePlan();
+//        }
     });
 
     app.addInitializer(_.bind(Backbone.history.start, Backbone.history));

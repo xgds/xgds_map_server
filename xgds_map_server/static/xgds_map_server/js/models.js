@@ -324,9 +324,10 @@ app.models = app.models || {};
              * command.get('duration'); } }); return duration;
              */
             // actually use the simulator
-            if (this._simInfo == undefined) app.simulatePlan();
-            if (this._simInfo == undefined) return undefined;
-            return this._simInfo.deltaTimeSeconds / 60;
+//            if (this._simInfo == undefined) app.simulatePlan();
+//            if (this._simInfo == undefined) return undefined;
+//            return this._simInfo.deltaTimeSeconds / 60;
+        	return 0;
         },
 
         getCumulativeDuration: function(collection) {

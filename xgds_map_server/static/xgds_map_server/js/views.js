@@ -30,6 +30,7 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
 
     initialize: function() {
         this.listenTo(app.vent, 'mapmode', this.ensureToggle);
+        /*
         this.listenTo(app.vent, 'change:plan', function(model) {this.updateSaveStatus('change')});
         this.listenTo(app.currentPlan, 'sync', function(model) {this.updateSaveStatus('sync')});
         this.listenTo(app.currentPlan, 'error', function(model) {this.updateSaveStatus('error')});
@@ -42,6 +43,7 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
         this.listenTo(app.vent, 'undoNotEmpty', this.enableUndo);
         this.listenTo(app.vent, 'redoNotEmpty', this.enableRedo);
         this.listenTo(app.currentPlan, 'change:planVersion', this.handleVersionChange);
+        */
     },
 
     onShow: function() {
@@ -161,23 +163,23 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
         }
     },
 
-    handleVersionChange: function(model, response) {
-        // update the plan id in case the version has changed
-        var version = app.currentPlan.get('planVersion');
-        if (!_.isUndefined(version)){
-            app.currentPlan.set('planVersion', version.toUpperCase());
-        } else {
-            app.currentPlan.set('planVersion', 'A');
-        }
-        var planIdTemplate = app.planSchema.planIdFormat;
-        var context = {
-                plan: app.currentPlan.toJSON()
-        };
-        var planId = planIdTemplate.format(context);
-
-        app.currentPlan.set('id', planId);
-        app.currentPlan.get('sequence').resequence();
-    },
+//    handleVersionChange: function(model, response) {
+//        // update the plan id in case the version has changed
+//        var version = app.currentPlan.get('planVersion');
+//        if (!_.isUndefined(version)){
+//            app.currentPlan.set('planVersion', version.toUpperCase());
+//        } else {
+//            app.currentPlan.set('planVersion', 'A');
+//        }
+//        var planIdTemplate = app.planSchema.planIdFormat;
+//        var context = {
+//                plan: app.currentPlan.toJSON()
+//        };
+//        var planId = planIdTemplate.format(context);
+//
+//        app.currentPlan.set('id', planId);
+//        app.currentPlan.get('sequence').resequence();
+//    },
 
     showSaveAsDialog: function() {
         $('#saveAsName').val(app.currentPlan.attributes['name']);
@@ -202,12 +204,12 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
                     var newName = $('#saveAsName').val();
                     var newVersion = $('#saveAsVersion').val();
                     var newNotes = $('#saveAsNotes').val();
-                    app.currentPlan.set('planName', newName);
-                    app.currentPlan.set('planVersion', newVersion);
-                    app.currentPlan.set('name', newName);
-                    app.currentPlan.set('notes', newNotes);
-                    app.currentPlan.set('uuid', null);
-                    app.currentPlan.save();
+//                    app.currentPlan.set('planName', newName);
+//                    app.currentPlan.set('planVersion', newVersion);
+//                    app.currentPlan.set('name', newName);
+//                    app.currentPlan.set('notes', newNotes);
+//                    app.currentPlan.set('uuid', null);
+//                    app.currentPlan.save();
                     $(this).dialog('close');
                 }
             },
@@ -1088,21 +1090,21 @@ app.views.PropertiesForm = Backbone.Marionette.ItemView.extend(Backbone.Form.pro
 
         // Construct a schema compatible with backbone-forms
         // https://github.com/powmedia/backbone-forms#schema-definition
-        this.options.schema = this.options.schema || this.options.model.schema;
-        this.options.data = this.options.data || this.options.model.data;
+//        this.options.schema = this.options.schema || this.options.model.schema;
+//        this.options.data = this.options.data || this.options.model.data;
         this.Field = Backbone.Form.UnitField;
         this.template = Handlebars.compile($(this.template).html());
-        var schema = this.options.schema;
+//        var schema = this.options.schema;
 
-        if (readOnly) {
-            _.each(schema, function(field, key) {
-                field.editorAttrs = {
-                    readonly: true,
-                    disabled: true
-                };
-                schema[key] = field;
-            });
-        }
+//        if (readOnly) {
+//            _.each(schema, function(field, key) {
+//                field.editorAttrs = {
+//                    readonly: true,
+//                    disabled: true
+//                };
+//                schema[key] = field;
+//            });
+//        }
         Backbone.Form.prototype.initialize.call(this, this.options);
     },
 
@@ -1145,19 +1147,20 @@ app.views.CommandPresetsView = Backbone.Marionette.ItemView.extend({
         var presets;
         // Lists of command types that pertain to Stations and Segments are available in
         // planSchema.StationSequenceCommands and planSchema.SegmentSequenceCommands, respectively
-        var relevantCommandTypes = app.planSchema[this.model.get('type').toLowerCase() + 'SequenceCommands'];
-        if (_.isUndefined(relevantCommandTypes)) {
-            presets = app.planLibrary.commands;
-        } else {
-            presets = _.filter(app.planLibrary.commands, function(command) { return _.contains(relevantCommandTypes, command.type)});
-        }
-        // add timing info in HMS format
-        _.each(presets, function(command) {
-            if (_.has(command, 'duration')) {
-                command.timing = app.util.minutesToHMS(command.duration);
-            }
-        });
-        return presets;
+//        var relevantCommandTypes = app.planSchema[this.model.get('type').toLowerCase() + 'SequenceCommands'];
+//        if (_.isUndefined(relevantCommandTypes)) {
+//            presets = app.planLibrary.commands;
+//        } else {
+//            presets = _.filter(app.planLibrary.commands, function(command) { return _.contains(relevantCommandTypes, command.type)});
+//        }
+//        // add timing info in HMS format
+//        _.each(presets, function(command) {
+//            if (_.has(command, 'duration')) {
+//                command.timing = app.util.minutesToHMS(command.duration);
+//            }
+//        });
+//        return presets;
+        return null;
     }
 });
 

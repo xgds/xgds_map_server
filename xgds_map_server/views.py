@@ -130,11 +130,12 @@ def getMapTreePage(request):
 
 def getMapEditorPage(request):
     templates = get_handlebars_templates()
-    print "handlebar templates are: "
-    print templates
     return render_to_response("MapEditor.html",
-                              {},
-                              context_instance=RequestContext(request))
+        RequestContext(request, {
+            'templates': templates,
+            'settings': settings
+        }),
+    )
 
 def handleJSONMove(request):
     """
