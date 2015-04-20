@@ -17,7 +17,7 @@
 import re
 
 from django.db import models
-
+from django.contrib.gis.db import models
 from xgds_map_server import settings
 
 # pylint: disable=C1001
@@ -69,3 +69,94 @@ class Map(models.Model):
     def __unicode__(self):
         # return self.name + ' : ' + self.kmlFile + ' = ' + self.description + ' visibility = %s' % self.visible + ' openable = %s' % self.openable
         return self.name
+    
+    
+class MapLayer(models.Model):
+    creator = models.CharField('creator', max_length=200)
+    modifier = models.CharField('modifier', max_length=200, null=True, blank=True)
+    creation_time = models.DateTimeField(null=True, blank=True)
+    last_modified_time = models.DateTimeField(null=True, blank=True)
+    
+    def __unicode__(self):
+        return self.id
+
+    
+class Style(models.Model):
+    label = models.CharField('label', max_length=200, null=True, blank=True)
+    drawOrder = models.IntegerField('drawOrder', null=True, blank=True)
+
+    def __unicode__(self):
+        return self.id
+
+
+class PolygonStyle(Style):
+    def __unicode__(self):
+        return self.id
+
+
+class LineStyle(Style):
+    def __unicode__(self):
+        return self.id
+
+
+class PlacemarkStyle(Style):
+    def __unicode__(self):
+        return self.id
+
+
+class DrawingStyle(Style):
+    def __unicode__(self):
+        return self.id
+
+
+class OverlayStyle(Style):
+    def __unicode__(self):
+        return self.id
+
+
+class Feature(models.Model):
+    mapLayer = models.ForeignKey(MapLayer)
+    name = models.CharField('name', max_length=200)
+    description = models.CharField('description', max_length=1024, blank=True)
+    type = models.CharField('type', max_length=200)
+    visibility = models.BooleanField(default=True)
+    
+    def __unicode__(self):
+        return self.id
+
+
+class Polygon(Feature):
+    polygon = models.PolygonField()
+    style = models.ForeignKey(PolygonStyle)
+
+    def __unicode__(self):
+        return self.id
+
+
+class Line(Feature):
+    line = models.LineStringField()
+    style = models.ForeignKey(LineStyle)
+
+    def __unicode__(self):
+        return self.id
+
+
+class Placemark(Feature):
+    placemark = models.PointField()
+    style = models.ForeignKey(PlacemarkStyle)
+
+    def __unicode__(self):
+        return self.id
+
+
+class Drawing(Feature):
+    style = models.ForeignKey(DrawingStyle)
+    pass
+
+
+class Overlay(Feature):
+    style = models.ForeignKey(OverlayStyle)
+    pass
+
+
+

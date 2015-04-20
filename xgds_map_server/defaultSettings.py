@@ -16,6 +16,8 @@
 
 XGDS_MAP_SERVER_MEDIA_SUBDIR = 'xgds_map_server/'
 XGDS_MAP_SERVER_DATA_SUBDIR = 'xgds_map_server/'
+XGDS_MAP_SERVER_TEMPLATE_DEBUG = True  # If this is true, handlebars templates will not be cached.
+
 
 XGDS_MAP_SERVER_TOP_LEVEL = {
     "name": "xGDS Maps",

@@ -34,6 +34,10 @@ urlpatterns = patterns(
     (r'^maptree/', views.getMapTreePage,
      {'readOnly': True, 'securityTags': ['readOnly']},
      'mapTree'),
+    # Map Editor for creating features
+    (r'^mapeditor/$', views.getMapEditorPage,
+     {},#'readOnly': True, 'securityTags': ['readOnly']},
+     'mapEditor'),
     # JSON tree of maps, formatted for jstree
     (r'^listjson/', views.getMapTreeJSON,
      {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']},

@@ -19,8 +19,10 @@
 from cStringIO import StringIO
 import json
 import re
+import glob
 import logging
 import urllib
+import os
 
 from django.views.decorators.csrf import csrf_protect
 from django.shortcuts import render_to_response
@@ -41,6 +43,22 @@ from xgds_map_server.forms import MapForm, MapGroupForm
 # pylint: disable=E1101,R0911
 
 latestRequestG = None
+
+HANDLEBARS_TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), 'templates/handlebars')
+_template_cache = None
+
+
+def get_handlebars_templates(inp=HANDLEBARS_TEMPLATES_DIR):
+    global _template_cache
+    if settings.XGDS_MAP_SERVER_TEMPLATE_DEBUG or not _template_cache:
+        templates = {}
+        for template_file in glob.glob(os.path.join(inp, '*.handlebars')):
+            with open(template_file, 'r') as infile:
+                template_name = os.path.splitext(os.path.basename(template_file))[0]
+                templates[template_name] = infile.read()
+        _template_cache = templates
+    return _template_cache
+
 
 
 def getMapServerIndexPage(request):
@@ -109,6 +127,14 @@ def getMapTreePage(request):
                                'JSONMoveURL': jsonMoveUrl},
                               context_instance=RequestContext(request))
 
+
+def getMapEditorPage(request):
+    templates = get_handlebars_templates()
+    print "handlebar templates are: "
+    print templates
+    return render_to_response("MapEditor.html",
+                              {},
+                              context_instance=RequestContext(request))
 
 def handleJSONMove(request):
     """
