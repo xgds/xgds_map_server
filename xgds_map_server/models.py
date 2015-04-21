@@ -74,6 +74,8 @@ class Map(models.Model):
 
 class MapLayer(models.Model):
     uuid = UuidField(primary_key=True)
+    name = models.CharField('name', max_length=200)
+    description = models.CharField('description', max_length=1024, blank=True)
     creator = models.CharField('creator', max_length=200)
     modifier = models.CharField('modifier', max_length=200, null=True, blank=True)
     creation_time = models.DateTimeField(null=True, blank=True)
@@ -134,17 +136,17 @@ class AbstractFeature(models.Model):
 
 class Polygon(AbstractFeature):
     polygon = models.PolygonField()
-    style = models.ForeignKey(PolygonStyle)
+    style = models.ForeignKey(PolygonStyle, null=True)
 
 
 class Line(AbstractFeature):
     line = models.LineStringField()
-    style = models.ForeignKey(LineStyle)
+    style = models.ForeignKey(LineStyle, null=True)
 
 
 class Placemark(AbstractFeature):
     placemark = models.PointField()
-    style = models.ForeignKey(PlacemarkStyle)
+    style = models.ForeignKey(PlacemarkStyle, null=True)
 
 
 class Drawing(AbstractFeature):
@@ -152,7 +154,7 @@ class Drawing(AbstractFeature):
 
 
 class Overlay(AbstractFeature):
-    style = models.ForeignKey(OverlayStyle)
+    style = models.ForeignKey(OverlayStyle, null=True)
     image = models.ImageField(upload_to='MapOverlayImages', height_field='height',
                               width_field='width')
     height = models.IntegerField(null=True, blank=True)
