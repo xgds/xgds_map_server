@@ -38,7 +38,7 @@ from django.db import transaction
 from django.views.decorators.cache import never_cache
 
 from xgds_map_server import settings
-from xgds_map_server.models import Map, MapGroup
+from xgds_map_server.models import Map, MapGroup, MapLayer
 from xgds_map_server.forms import MapForm, MapGroupForm
 
 # pylint: disable=E1101,R0911
@@ -59,7 +59,6 @@ def get_handlebars_templates(inp=HANDLEBARS_TEMPLATES_DIR):
                 templates[template_name] = infile.read()
         _template_cache = templates
     return _template_cache
-
 
 
 def getMapServerIndexPage(request):
@@ -129,7 +128,8 @@ def getMapTreePage(request):
                               context_instance=RequestContext(request))
 
 
-def getMapEditorPage(request):
+def getMapEditorPage(request, layerID=None):
+    # TODO handle opening the editor on an existing layer
     templates = get_handlebars_templates()
     return render_to_response("MapEditor.html",
         RequestContext(request, {
@@ -150,6 +150,7 @@ def getMapEditorPage(request):
         }),
     )
     
+
 
 def handleJSONMove(request):
     """
@@ -640,6 +641,7 @@ def addGroupToFancyJSON(group, map_tree, request, expanded=False):
                   }
     sub_folders = []
     sub_maps = []
+    sub_layers = []
     if group.id == 1:
         # ensure that we don't have conflicts with the base map
         # for the detail page, and that nobody deletes every map
@@ -670,10 +672,25 @@ def addGroupToFancyJSON(group, map_tree, request, expanded=False):
         except ValueError:  # this means there is no file associated with localFile
             pass
         sub_maps.append(group_map_json)
-    if len(sub_folders) > 0 or len(sub_maps) > 0:
+    for group_layer in getattr(group, 'subLayers', []):
+        if group_layer.deleted:
+            continue
+        group_layer_json = {"title": group_layer.name,
+                            "key": group_layer.uuid,
+                            "selected": group_layer.visible,
+                            "tooltip": group_layer.description,
+                            "data": {"href": request.build_absolute_uri(reverse('editLayer', kwargs={'layerID': group_layer.uuid})),
+                                     "parentId": None,
+                                     },
+                            }
+        if group_layer.parentId is not None:
+            group_layer_json['data']['parentId'] = group_layer.parentId.id
+        sub_layers.append(group_layer_json)
+    if len(sub_folders) > 0 or len(sub_maps) > 0 or len(sub_layers) > 0:
         sub_folders.sort(key=lambda x: x['title'].lower())
         sub_maps.sort(key=lambda x: x['title'].lower())
-        group_json['children'] = sub_folders + sub_maps
+        sub_layers.sort(key=lambda x: x['title'].lower())
+        group_json['children'] = sub_folders + sub_maps + sub_layers
     map_tree.append(group_json)
 
 
@@ -714,6 +731,7 @@ def setMapProperties(m):
 def getMapTree():
     groups = MapGroup.objects.filter(deleted=0)
     maps = Map.objects.filter(deleted=0)
+    layers = MapLayer.objects.filter(deleted=0)
 
     groupLookup = dict([(group.id, group) for group in groups])
 
@@ -723,6 +741,7 @@ def getMapTree():
     for group in groups:
         group.subGroups = []
         group.subMaps = []
+        group.subLayers = []
 
     for subGroup in groups:
         if subGroup.parentId_id:
@@ -733,6 +752,11 @@ def getMapTree():
         if subMap.parentId_id:
             parent = groupLookup[subMap.parentId_id]
             parent.subMaps.append(subMap)
+
+    for subLayer in layers:
+        if subLayer.parentId_id:
+            parent = groupLookup[subLayer.parentId_id]
+            parent.subLayers.append(subLayer)
 
     rootMapList = [g for g in groups if g.parentId_id is None]
     if len(rootMapList) != 0:
