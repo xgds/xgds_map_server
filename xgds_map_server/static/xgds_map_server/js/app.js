@@ -37,18 +37,9 @@ var app = (function($, _, Backbone) {
 
     app.module('State', function(options) {
         this.addInitializer(function(options) {
-            this.commandSelected = undefined;
-            this.stationSelected = undefined;
-            this.segmentSelected = undefined;
             this.metaExpanded = undefined;
-            this.addCommandsExpanded = undefined;
             this.disableSimulate = false;
-            this.addStationOnMouseUp = false;
             this.mouseDownLocation = undefined;
-            this.addStationLocation = undefined;
-            this.addStationTime = undefined;
-            this.planLoaded = false;
-            this.disableAddStation = false;
             this.pageInnerWidth = undefined;
             this.tabsLeftMargin = undefined;
             this.pageContainer = undefined;
@@ -214,8 +205,8 @@ var app = (function($, _, Backbone) {
 
             this.options = options = _.defaults(options || {}, {
                 readOnly: false,
-                planLineWidth: 2,
-                plannerClampMode: undefined
+//                planLineWidth: 2,
+//                plannerClampMode: undefined
                 // This enum value has to be sniffed out of the Plugin once it's loaded.
             });
 
@@ -231,77 +222,7 @@ var app = (function($, _, Backbone) {
             this.mapRotationHandles = (_.isBoolean(this.options.mapRotationHandles)) ?
                 this.options.mapRotationHandles : true;
 
-            // temporarily define ge so that we don't get a reference error later
-//            window.ge = undefined;
 
-            /*
-             * Initialize the plan schema, and build easy-access indecies.
-             * The plan schema is global to the planner deployment
-             */
-/*
-            this.planSchema = JSON.parse($('#plan_schema_json').html());
-            this.planLibrary = JSON.parse($('#plan_library_json').html());
-            this.planIndex = JSON.parse($('#plan_index_json').html());
-            this.planLinks = JSON.parse($('#plan_links_json').html());
-
-            // Indexes to make command types easier to retrieve.
-            this.commandSpecs = this.util.indexBy(
-                this.planSchema.commandSpecs, 'id');
-            //this.commandPresetsByCode = this.util.indexBy( this.planLibrary.commands, 'presetCode' );
-            this.commandPresetsByName = this.util.indexBy(
-                this.planLibrary.commands, 'name');
-            _.extend(this.commandPresetsByName, this.util.indexBy(
-                this.planLibrary.commands, 'presetName'));
-            this.commandPresetsByType = this.util.groupBy(
-                this.planLibrary.commands, 'type');
-
-            // create lookup table for units, based on the unit spects
-            this.unitSpecs = this.util.indexBy(this.planSchema.unitSpecs,
-                                               'id');
-            this.units = {
-                // this object will be filled
-            };
-
-            // creates lookup table for which unitspec a unit is contained in
-            _.each(_.keys(this.unitSpecs), function(unitSpec) {
-                _.each(_.keys(this.unitSpecs[unitSpec].units), function(
-                    unit) {
-                    if (_.has(this.units, unit)) {
-                        throw 'Unit conflict: ' + unit +
-                            ' is defined in multiple unitSpecs';
-                    }
-                    this.units[unit] = unitSpec;
-                }, this);
-            }, this);
-
-            // Extract color from command specs
-            // The app.colors object holds a key --> color map for the whole application
-            this.colors = {};
-            _.each(this.planSchema.commandSpecs, function(commandSpec) {
-                this.colors[commandSpec.id] = commandSpec.color;
-            }, this);
-
-            this.updatePlan = function(planJSON) {
-                //console.log('Updating plan');
-                //console.log(planJSON);
-                if (!_.isUndefined(planJSON)) {
-                    app.currentPlan.set(planJSON);
-                }
-                app.simulatePlan();
-                if (!_.isUndefined(app.map.planView))
-                    app.map.planView.render();
-                app.vent.trigger('newPlan');
-                app.tabs.currentView.render();
-            };
-
-            this.planJson = JSON.parse($('#plan_json').html());
-            if (this.planJson) {
-                app.currentPlan = new app.models.Plan(this.planJson);
-                app.simulatePlan(); // do this before the change:plan event is mapped
-                app.currentPlan.get('sequence').resequence();
-                app.Actions.setInitial();
-            }
-*/
             app.selectedViews = []; // This array holds the views currently selected by checkboxes
             app.copiedCommands = []; // array of copied commands
 
@@ -319,10 +240,13 @@ var app = (function($, _, Backbone) {
 
     app.router = new Backbone.Router({
         routes: {
-            'meta' : 'meta',
-            'sequence' : 'sequence',
-            'layers' : 'layers',
-            'tools' : 'tools'
+        	'layers' : 'layers',
+        	'info' : 'info',
+        	'features': 'features'
+//            'meta' : 'meta',
+//            'sequence' : 'sequence',
+//            'layers' : 'layers',
+//            'tools' : 'tools'
         }
     });
 
@@ -334,28 +258,7 @@ var app = (function($, _, Backbone) {
     });
 
     app.vent.on('all', function(eventname, args) {
-//        console.log('event on app.vent: ' + eventname, args);
-        //        console.log('current state:');
-        //        console.log('Command Selected:', app.State.commandSelected);
-        //        console.log('Station Selected:', app.State.stationSelected);
-        //        console.log('Meta Expanded:', app.State.metaExpanded);
-        //        console.log('Presets Expanded:', app.State.addCommandsExpanded);
-        // if (eventname == 'change:plan') {
-        //     var stack = new Error().stack;
-        //     console.log(stack);
-        // }
-//        if (eventname == 'change:plan') {
-//            app.Actions.action();
-//        } else if (eventname == 'plan:reversing') {
-//            app.Actions.disable();
-//        } else if (eventname == 'plan:reverse') {
-//            app.Actions.enable();
-//            app.Actions.action();
-//        } else if (eventname == 'actionOcurred') {
-//            if (_.isUndefined(app.currentPlan))
-//                return;
-//            app.simulatePlan();
-//        }
+
     });
 
     app.addInitializer(_.bind(Backbone.history.start, Backbone.history));
