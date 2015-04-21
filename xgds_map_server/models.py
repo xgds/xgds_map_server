@@ -1,17 +1,17 @@
 # __BEGIN_LICENSE__
-#Copyright (c) 2015, United States Government, as represented by the 
-#Administrator of the National Aeronautics and Space Administration. 
-#All rights reserved.
+# Copyright (c) 2015, United States Government, as represented by the
+# Administrator of the National Aeronautics and Space Administration.
+# All rights reserved.
 #
-#The xGDS platform is licensed under the Apache License, Version 2.0 
-#(the "License"); you may not use this file except in compliance with the License. 
-#You may obtain a copy of the License at 
-#http://www.apache.org/licenses/LICENSE-2.0.
+# The xGDS platform is licensed under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# http://www.apache.org/licenses/LICENSE-2.0.
 #
-#Unless required by applicable law or agreed to in writing, software distributed 
-#under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR 
-#CONDITIONS OF ANY KIND, either express or implied. See the License for the 
-#specific language governing permissions and limitations under the License.
+# Unless required by applicable law or agreed to in writing, software distributed
+# under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+# CONDITIONS OF ANY KIND, either express or implied. See the License for the
+# specific language governing permissions and limitations under the License.
 # __END_LICENSE__
 
 import re
@@ -19,6 +19,7 @@ import re
 from django.db import models
 from django.contrib.gis.db import models
 from xgds_map_server import settings
+from geocamUtil.models.UuidField import UuidField
 
 # pylint: disable=C1001
 
@@ -69,94 +70,87 @@ class Map(models.Model):
     def __unicode__(self):
         # return self.name + ' : ' + self.kmlFile + ' = ' + self.description + ' visibility = %s' % self.visible + ' openable = %s' % self.openable
         return self.name
-    
-    
+
+
 class MapLayer(models.Model):
+    uuid = UuidField(primary_key=True)
     creator = models.CharField('creator', max_length=200)
     modifier = models.CharField('modifier', max_length=200, null=True, blank=True)
     creation_time = models.DateTimeField(null=True, blank=True)
-    last_modified_time = models.DateTimeField(null=True, blank=True)
-    
-    def __unicode__(self):
-        return self.id
+    modification_time = models.DateTimeField(null=True, blank=True)
+    locked = models.BooleanField(blank=True, default=False)
+    visible = models.BooleanField(blank=False, default=False)
+    parentId = models.ForeignKey(MapGroup, db_column='parentId',
+                                 null=True, blank=True,
+                                 verbose_name='group')
+    deleted = models.BooleanField(blank=True, default=False)
 
-    
+    def __unicode__(self):
+        return self.uuid
+
+
 class Style(models.Model):
+    uuid = UuidField(primary_key=True)
     label = models.CharField('label', max_length=200, null=True, blank=True)
     drawOrder = models.IntegerField('drawOrder', null=True, blank=True)
 
     def __unicode__(self):
-        return self.id
+        return self.uuid
 
 
 class PolygonStyle(Style):
-    def __unicode__(self):
-        return self.id
+    pass
 
 
 class LineStyle(Style):
-    def __unicode__(self):
-        return self.id
+    pass
 
 
 class PlacemarkStyle(Style):
-    def __unicode__(self):
-        return self.id
+    pass
 
 
 class DrawingStyle(Style):
-    def __unicode__(self):
-        return self.id
+    pass
 
 
 class OverlayStyle(Style):
-    def __unicode__(self):
-        return self.id
+    pass
 
 
 class Feature(models.Model):
+    uuid = UuidField(primary_key=True)
     mapLayer = models.ForeignKey(MapLayer)
     name = models.CharField('name', max_length=200)
     description = models.CharField('description', max_length=1024, blank=True)
-    type = models.CharField('type', max_length=200)
-    visibility = models.BooleanField(default=True)
-    
+    visible = models.BooleanField(default=True)
+
     def __unicode__(self):
-        return self.id
+        return self.uuid
 
 
 class Polygon(Feature):
     polygon = models.PolygonField()
     style = models.ForeignKey(PolygonStyle)
 
-    def __unicode__(self):
-        return self.id
-
 
 class Line(Feature):
     line = models.LineStringField()
     style = models.ForeignKey(LineStyle)
-
-    def __unicode__(self):
-        return self.id
 
 
 class Placemark(Feature):
     placemark = models.PointField()
     style = models.ForeignKey(PlacemarkStyle)
 
-    def __unicode__(self):
-        return self.id
-
 
 class Drawing(Feature):
     style = models.ForeignKey(DrawingStyle)
-    pass
 
 
 class Overlay(Feature):
     style = models.ForeignKey(OverlayStyle)
-    pass
-
-
-
+    image = models.ImageField(upload_to='MapOverlayImages', height_field='height',
+                              width_field='width')
+    height = models.IntegerField(null=True, blank=True)
+    width = models.IntegerField(null=True, blank=True)
