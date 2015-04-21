@@ -118,7 +118,7 @@ class OverlayStyle(Style):
     pass
 
 
-class Feature(models.Model):
+class AbstractFeature(models.Model):
     uuid = UuidField(primary_key=True)
     mapLayer = models.ForeignKey(MapLayer)
     name = models.CharField('name', max_length=200)
@@ -128,29 +128,33 @@ class Feature(models.Model):
     def __unicode__(self):
         return self.uuid
 
+    class Meta:
+        abstract = True
 
-class Polygon(Feature):
+
+class Polygon(AbstractFeature):
     polygon = models.PolygonField()
     style = models.ForeignKey(PolygonStyle)
 
 
-class Line(Feature):
+class Line(AbstractFeature):
     line = models.LineStringField()
     style = models.ForeignKey(LineStyle)
 
 
-class Placemark(Feature):
+class Placemark(AbstractFeature):
     placemark = models.PointField()
     style = models.ForeignKey(PlacemarkStyle)
 
 
-class Drawing(Feature):
+class Drawing(AbstractFeature):
     style = models.ForeignKey(DrawingStyle)
 
 
-class Overlay(Feature):
+class Overlay(AbstractFeature):
     style = models.ForeignKey(OverlayStyle)
     image = models.ImageField(upload_to='MapOverlayImages', height_field='height',
                               width_field='width')
     height = models.IntegerField(null=True, blank=True)
     width = models.IntegerField(null=True, blank=True)
+    polygon = models.PolygonField()
