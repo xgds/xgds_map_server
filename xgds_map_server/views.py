@@ -39,6 +39,8 @@ from django.views.decorators.cache import never_cache
 from xgds_map_server import settings
 from xgds_map_server.models import Map, MapGroup, MapLayer
 from xgds_map_server.forms import MapForm, MapGroupForm
+from geocamUtil.geoEncoder import GeoDjangoEncoder
+
 
 # pylint: disable=E1101,R0911
 
@@ -604,7 +606,7 @@ def getFancyTreeJSON(request):
     map_tree = getMapTree()
     map_tree_json = []
     addGroupToFancyJSON(map_tree, map_tree_json, request, True)
-    json_data = json.dumps(map_tree_json, indent=4)
+    json_data = json.dumps(map_tree_json, indent=4, cls=GeoDjangoEncoder)
     return HttpResponse(content=json_data,
                         content_type="application/json")
 
@@ -667,6 +669,7 @@ def addGroupToFancyJSON(group, map_tree, request, expanded=False):
                             "tooltip": group_layer.description,
                             "data": {"href": request.build_absolute_uri(reverse('editLayer', kwargs={'layerID': group_layer.uuid})),
                                      "parentId": None,
+                                     "layerData": group_layer.toJson()
                                      },
                             }
         if group_layer.parentId is not None:

@@ -15,12 +15,14 @@
 # __END_LICENSE__
 
 import re
+import json
 
 from django.db import models
 from django.contrib.gis.db import models
 from xgds_map_server import settings
 from geocamUtil.models.UuidField import UuidField
-
+from geocamUtil.models.managers import ModelCollectionManager
+from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
 # pylint: disable=C1001
 
 LOGO_REGEXES = None
@@ -87,36 +89,58 @@ class MapLayer(models.Model):
                                  verbose_name='group')
     deleted = models.BooleanField(blank=True, default=False)
 
+    def toJson(self):
+        result = modelToDict(self)
+        featuresJson = []
+        features = FEATURE_MANAGER.filter(mapLayer__pk=self.uuid)
+        for feature in features:
+            featuresJson.append(feature.toJson())
+        result['features'] = featuresJson
+        return result
+
     def __unicode__(self):
         return self.uuid
 
 
-class Style(models.Model):
+class AbstractStyle(models.Model):
+    """ TODO Grace: refer here for style options, we don't have to take all of them
+        http://wiki.openstreetmap.org/wiki/MapCSS/0.2
+        """
     uuid = UuidField(primary_key=True)
-    label = models.CharField('label', max_length=200, null=True, blank=True)
+    name = models.CharField(max_length=200, null=True, blank=True)
     drawOrder = models.IntegerField('drawOrder', null=True, blank=True)
 
+    def toJson(self):
+        return modelToDict(self)
+
     def __unicode__(self):
         return self.uuid
 
+    class Meta:
+        abstract = True
 
-class PolygonStyle(Style):
+
+class LabelStyle(AbstractStyle):
     pass
 
 
-class LineStyle(Style):
+class PolygonStyle(AbstractStyle):
     pass
 
 
-class PlacemarkStyle(Style):
+class LineStringStyle(AbstractStyle):
     pass
 
 
-class DrawingStyle(Style):
+class PointStyle(AbstractStyle):
     pass
 
 
-class OverlayStyle(Style):
+class DrawingStyle(AbstractStyle):
+    pass
+
+
+class GroundOverlayStyle(AbstractStyle):
     pass
 
 
@@ -126,9 +150,25 @@ class AbstractFeature(models.Model):
     name = models.CharField('name', max_length=200)
     description = models.CharField('description', max_length=1024, blank=True)
     visible = models.BooleanField(default=True)
+    popup = models.BooleanField(default=False)
+    showLabel = models.BooleanField(default=False)
+    labelStyle = models.ForeignKey(LabelStyle, null=True)
+    objects = models.GeoManager()
+
+    @property
+    def style(self):
+        pass
 
     def __unicode__(self):
         return self.uuid
+
+    def toJson(self):
+        result = modelToDict(self)
+        if self.style:
+            result['style'] = STYLE_MANAGER.get(uuid=self.style.uuid).toJson()
+        if self.labelStyle:
+            result['labelStyle'] = self.labelStyle.toJson()
+        return result
 
     class Meta:
         abstract = True
@@ -139,24 +179,39 @@ class Polygon(AbstractFeature):
     style = models.ForeignKey(PolygonStyle, null=True)
 
 
-class Line(AbstractFeature):
-    line = models.LineStringField()
-    style = models.ForeignKey(LineStyle, null=True)
+class LineString(AbstractFeature):
+    lineString = models.LineStringField()
+    style = models.ForeignKey(LineStringStyle, null=True)
 
 
-class Placemark(AbstractFeature):
-    placemark = models.PointField()
-    style = models.ForeignKey(PlacemarkStyle, null=True)
+class Point(AbstractFeature):
+    point = models.PointField()
+    style = models.ForeignKey(PointStyle, null=True)
 
 
 class Drawing(AbstractFeature):
     style = models.ForeignKey(DrawingStyle)
 
 
-class Overlay(AbstractFeature):
-    style = models.ForeignKey(OverlayStyle, null=True)
-    image = models.ImageField(upload_to='MapOverlayImages', height_field='height',
+class GroundOverlay(AbstractFeature):
+    style = models.ForeignKey(GroundOverlayStyle, null=True)
+    image = models.ImageField(upload_to=settings.XGDS_MAP_SERVER_OVERLAY_IMAGES_DIR, height_field='height',
                               width_field='width')
     height = models.IntegerField(null=True, blank=True)
     width = models.IntegerField(null=True, blank=True)
     polygon = models.PolygonField()
+
+
+""" IMPORTANT These have to be defined after the models they refer to are defined."""
+FEATURE_MANAGER = ModelCollectionManager(AbstractFeature,
+                                         [Polygon,
+                                          LineString,
+                                          Point,
+                                          Drawing,
+                                          GroundOverlay])
+STYLE_MANAGER = ModelCollectionManager(AbstractStyle,
+                                       [PolygonStyle,
+                                        LineStringStyle,
+                                        PointStyle,
+                                        DrawingStyle,
+                                        GroundOverlayStyle])
