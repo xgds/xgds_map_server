@@ -25,6 +25,7 @@ import urllib
 import os
 
 from django.views.decorators.csrf import csrf_protect
+from django.contrib.staticfiles.storage import staticfiles_storage
 from django.shortcuts import render_to_response
 from django.http import HttpResponse, Http404
 from django.http import HttpResponseServerError
@@ -135,9 +136,22 @@ def getMapEditorPage(request, layerID=None):
     return render_to_response("MapEditor.html",
         RequestContext(request, {
             'templates': templates,
-            'settings': settings
+            'settings': settings,
+            'placemark_circle_url': request.build_absolute_uri(
+                staticfiles_storage.url('xgds_planner2/images/placemark_circle.png')
+            ),
+            'placemark_circle_highlighted_url': request.build_absolute_uri(
+                staticfiles_storage.url('xgds_planner2/images/placemark_circle_highlighted.png')
+            ),
+            'placemark_directional_url': request.build_absolute_uri(
+                staticfiles_storage.url('xgds_planner2/images/placemark_directional.png')
+            ),
+            'placemark_selected_directional_url': request.build_absolute_uri(
+                staticfiles_storage.url('xgds_planner2/images/placemark_directional_highlighted.png')
+            ),
         }),
     )
+    
 
 
 def handleJSONMove(request):
