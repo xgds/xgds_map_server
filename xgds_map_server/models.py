@@ -72,7 +72,6 @@ class AbstractMap(AbstractMapNode):
                                  null=True, blank=True,
                                  verbose_name='group')
 
-
     class Meta:
         abstract = True
 
@@ -81,7 +80,7 @@ class KmlMap(AbstractMap):
     """
     A reference to an external or local KML file.  Note we can't render all KML features in all libraries
     """
-    kmlFile = models.CharField('KML File', max_length=200)
+    kmlFile = models.CharField('KML File', max_length=200)  # actual name of the kml file
     localFile = models.FileField(upload_to=settings.XGDS_MAP_SERVER_MEDIA_SUBDIR, max_length=256,
                                  null=True, blank=True)
     openable = models.BooleanField(default=True)
@@ -98,13 +97,13 @@ class KmlMap(AbstractMap):
 
 class MapLayer(AbstractMap):
     """ A map layer which will have a collection of features that have content in them. """
-    def toJson(self):
+    def toDict(self):
         result = modelToDict(self)
-        featuresJson = []
+        featuresList = []
         features = FEATURE_MANAGER.filter(mapLayer__pk=self.uuid)
         for feature in features:
-            featuresJson.append(feature.toJson())
-        result['features'] = featuresJson
+            featuresList.append(feature.toDict())
+        result['features'] = featuresList
         return result
 
 
@@ -117,7 +116,7 @@ class AbstractStyle(models.Model):
     name = models.CharField(max_length=200, null=True, blank=True)
     drawOrder = models.IntegerField('drawOrder', null=True, blank=True)
 
-    def toJson(self):
+    def toDict(self):
         return modelToDict(self)
 
     def __unicode__(self):
@@ -158,24 +157,25 @@ class AbstractFeature(models.Model):
     name = models.CharField('name', max_length=200)
     description = models.CharField('description', max_length=1024, blank=True)
     visible = models.BooleanField(default=True)
-    popup = models.BooleanField(default=False)
+    popup = models.BooleanField(default=False)  # true if the feature will have a popup when the user clicks on it
     showLabel = models.BooleanField(default=False)
     labelStyle = models.ForeignKey(LabelStyle, null=True)
     objects = models.GeoManager()
 
     @property
     def style(self):
+        """ You must define the specific style for the derived model """
         pass
 
     def __unicode__(self):
         return self.uuid
 
-    def toJson(self):
+    def toDict(self):
         result = modelToDict(self)
         if self.style:
-            result['style'] = STYLE_MANAGER.get(uuid=self.style.uuid).toJson()
+            result['style'] = modelToDict(STYLE_MANAGER.get(uuid=self.style.uuid))
         if self.labelStyle:
-            result['labelStyle'] = self.labelStyle.toJson()
+            result['labelStyle'] = modelToDict(self.labelStyle)
         return result
 
     class Meta:
@@ -217,6 +217,7 @@ FEATURE_MANAGER = ModelCollectionManager(AbstractFeature,
                                           Point,
                                           Drawing,
                                           GroundOverlay])
+
 STYLE_MANAGER = ModelCollectionManager(AbstractStyle,
                                        [PolygonStyle,
                                         LineStringStyle,

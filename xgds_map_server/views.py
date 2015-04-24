@@ -683,7 +683,7 @@ def addGroupToFancyJSON(group, map_tree, request, expanded=False):
                             "tooltip": group_layer.description,
                             "data": {"href": request.build_absolute_uri(reverse('editLayer', kwargs={'layerID': group_layer.uuid})),
                                      "parentId": None,
-                                     "layerData": group_layer.toJson()
+                                     "layerData": group_layer.toDict()
                                      },
                             }
         if group_layer.parentId is not None:
