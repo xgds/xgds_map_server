@@ -38,7 +38,7 @@ from django.db import transaction
 from django.views.decorators.cache import never_cache
 
 from xgds_map_server import settings
-from xgds_map_server.models import Map, MapGroup, MapLayer
+from xgds_map_server.models import KmlMap, MapGroup, MapLayer
 from xgds_map_server.forms import MapForm, MapGroupForm
 from geocamUtil.geoEncoder import GeoDjangoEncoder
 
@@ -68,7 +68,7 @@ def getMapServerIndexPage(request):
     HTML list of maps with description and links to individual maps,
     and a link to the kml feed
     """
-    mapList = Map.objects.all().select_related('parentId').order_by('name')
+    mapList = KmlMap.objects.all().select_related('parentId').order_by('name')
     for m in mapList:
         if (m.kmlFile.startswith('/') or
                 m.kmlFile.startswith('http://') or
@@ -118,7 +118,7 @@ def getMapTreePage(request):
                       (reverse('deletedMaps')))
     jsonMoveUrl = (request.build_absolute_uri
                    (reverse('jsonMove')))
-    # numDeletedMaps = len(Map.objects.filter(deleted=True)) +\
+    # numDeletedMaps = len(KmlMap.objects.filter(deleted=True)) +\
     # len(MapGroup.objects.filter(deleted=True))
     return render_to_response("MapTree.html",
                               {'JSONMapTreeURL': jsonMapTreeUrl,
@@ -168,9 +168,9 @@ def handleJSONMove(request):
     if request.REQUEST['move_type'] == 'map':
         mapId = request.REQUEST['move']
         try:
-            move = Map.objects.get(id=mapId)
-        except Map.DoesNotExist:
-            return HttpResponseNotFound('No Map with id "%s"' % mapId)
+            move = KmlMap.objects.get(id=mapId)
+        except KmlMap.DoesNotExist:
+            return HttpResponseNotFound('No KmlMap with id "%s"' % mapId)
     elif request.REQUEST['move_type'] == 'folder':
         folderId = request.REQUEST['move']
         try:
@@ -209,7 +209,7 @@ def getAddMapPage(request):
         map_form = MapForm(request.POST, request.FILES)
         haveLocalFile = False
         if map_form.is_valid():
-            map_obj = Map()
+            map_obj = KmlMap()
             map_obj.name = map_form.cleaned_data['name']
             map_obj.description = map_form.cleaned_data['description']
             if 'localFile' in request.FILES and request.POST['typeChooser'] == 'file':
@@ -293,10 +293,10 @@ def getDeleteMapPage(request, mapID):
                       (reverse('deletedMaps')))
 
     try:
-        map_obj = Map.objects.get(id=mapID)
-    except Map.DoesNotExist:
+        map_obj = KmlMap.objects.get(id=mapID)
+    except KmlMap.DoesNotExist:
         raise Http404
-    except Map.MultipleObjectsReturned:
+    except KmlMap.MultipleObjectsReturned:
         # this really shouldn't happen, ever
         return HttpResponseServerError()
 
@@ -324,7 +324,7 @@ def getDeletedMapsPage(request):
     baseUrl = request.build_absolute_uri(reverse("xgds_map_server_index"))
     mapTreeUrl = request.build_absolute_uri(reverse("mapTree"))
 
-    maps = Map.objects.filter(deleted=True)
+    maps = KmlMap.objects.filter(deleted=True)
     folders = MapGroup.objects.filter(deleted=True)
     return render_to_response("DeletedMaps.html",
                               {'mapDeleteUrl': baseUrl + 'delete',
@@ -404,7 +404,7 @@ def getFolderDetailPage(request, groupID):
         map_group = MapGroup.objects.get(id=groupID)
     except MapGroup.DoesNotExist:
         raise Http404
-    except Map.MultipleObjectsReturned:
+    except KmlMap.MultipleObjectsReturned:
         # this really shouldn't happen, ever
         return HttpResponseServerError()
 
@@ -459,10 +459,10 @@ def getMapDetailPage(request, mapID):
                   (reverse('mapTree')))
     fromSave = False
     try:
-        map_obj = Map.objects.get(id=mapID)
-    except Map.DoesNotExist:
+        map_obj = KmlMap.objects.get(id=mapID)
+    except KmlMap.DoesNotExist:
         raise Http404
-    except Map.MultipleObjectsReturned:
+    except KmlMap.MultipleObjectsReturned:
         # this really shouldn't happen, ever
         return HttpResponseServerError()
 
@@ -547,11 +547,11 @@ def addGroupToJSON(group, map_tree, request):
             "text": group.name,
             "title": group.name,
             "attr": {
-                "href": request.build_absolute_uri(reverse('folderDetail', kwargs={'groupID': group.id}))
+                "href": request.build_absolute_uri(reverse('folderDetail', kwargs={'groupID': group.uuid}))
             }
         },
         "metadata": {
-            "id": group.id,
+            "id": group.uuid,
             "description": group.description,
             "parentId": None,
             "type": "folder"
@@ -560,12 +560,12 @@ def addGroupToJSON(group, map_tree, request):
     }
     sub_folders = []
     sub_maps = []
-    if group.id == 1:
+    if group.uuid == 1:
         # ensure that we don't have conflicts with the base map
         # for the detail page, and that nobody deletes every map
         del group_json['data']['attr']['href']
     if group.parentId is not None:
-        group_json['metadata']['parentId'] = group.parentId.id
+        group_json['metadata']['parentId'] = group.parentId.uuid
     for map_group in getattr(group, 'subGroups', []):
         if map_group.deleted:
             continue
@@ -578,11 +578,11 @@ def addGroupToJSON(group, map_tree, request):
                 "text": group_map.name,
                 "title": group_map.name,
                 "attr": {
-                    "href": request.build_absolute_uri(reverse('mapDetail', kwargs={'mapID': group_map.id}))
+                    "href": request.build_absolute_uri(reverse('mapDetail', kwargs={'mapID': group_map.uuid}))
                 }
             },
             "metadata": {
-                "id": group_map.id,
+                "id": group_map.uuid,
                 "description": group_map.description,
                 "kmlFile": group_map.kmlFile,
                 "openable": group_map.openable,
@@ -594,7 +594,7 @@ def addGroupToJSON(group, map_tree, request):
             "icon": settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + "icons/globe.png"
         }
         if group_map.parentId is not None:
-            group_map_json['metadata']['parentId'] = group_map.parentId.id
+            group_map_json['metadata']['parentId'] = group_map.parentId.uuid
         try:  # as far as I know, there is no better way to do this
             group_map_json['metadata']['localFile'] = request.build_absolute_uri(group_map.localFile.url)
         except ValueError:  # this means there is no file associated with localFile
@@ -633,23 +633,23 @@ def addGroupToFancyJSON(group, map_tree, request, expanded=False):
     if group is None:
         return  # don't do anything if group is None
     group_json = {"title": group.name,
-                  "key": group.id,
+                  "key": group.uuid,
                   "folder": True,
                   "tooltip": group.description,
                   "expanded": expanded,
-                  "data": {"href": request.build_absolute_uri(reverse('folderDetail', kwargs={'groupID': group.id})),
+                  "data": {"href": request.build_absolute_uri(reverse('folderDetail', kwargs={'groupID': group.uuid})),
                            "parentId": None,
                            },
                   }
     sub_folders = []
     sub_maps = []
     sub_layers = []
-    if group.id == 1:
+    if group.uuid == 1:
         # ensure that we don't have conflicts with the base map
         # for the detail page, and that nobody deletes every map
         del group_json['data']['href']
     if group.parentId is not None:
-        group_json['data']['parentId'] = group.parentId.id
+        group_json['data']['parentId'] = group.parentId.uuid
     for map_group in getattr(group, 'subGroups', []):
         if map_group.deleted:
             continue
@@ -658,17 +658,17 @@ def addGroupToFancyJSON(group, map_tree, request, expanded=False):
         if group_map.deleted:
             continue
         group_map_json = {"title": group_map.name,
-                          "key": group_map.id,
+                          "key": group_map.uuid,
                           "selected": group_map.visible,
                           "tooltip": group_map.description,
-                          "data": {"href": request.build_absolute_uri(reverse('mapDetail', kwargs={'mapID': group_map.id})),
+                          "data": {"href": request.build_absolute_uri(reverse('mapDetail', kwargs={'mapID': group_map.uuid})),
                                    "parentId": None,
                                    "kmlFile": settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + group_map.kmlFile,
                                    "openable": group_map.openable,
                                    },
                           }
         if group_map.parentId is not None:
-            group_map_json['data']['parentId'] = group_map.parentId.id
+            group_map_json['data']['parentId'] = group_map.parentId.uuid
         try:  # as far as I know, there is no better way to do this
             group_map_json['data']['localFile'] = request.build_absolute_uri(group_map.localFile.url)
         except ValueError:  # this means there is no file associated with localFile
@@ -687,7 +687,7 @@ def addGroupToFancyJSON(group, map_tree, request, expanded=False):
                                      },
                             }
         if group_layer.parentId is not None:
-            group_layer_json['data']['parentId'] = group_layer.parentId.id
+            group_layer_json['data']['parentId'] = group_layer.parentId.uuid
         sub_layers.append(group_layer_json)
     if len(sub_folders) > 0 or len(sub_maps) > 0 or len(sub_layers) > 0:
         sub_folders.sort(key=lambda x: x['title'].lower())
@@ -702,11 +702,11 @@ def deleteGroup(map_group, state):
     recursively deletes maps and groups under a group
     using manual commit control might be a good idea for this
     """
-    for map_obj in Map.objects.filter(parentId=map_group.id):
+    for map_obj in KmlMap.objects.filter(parentId=map_group.uuid):
         # this is to avoid deleting maps when undeleting
         map_obj.deleted = state
         map_obj.save()
-    for group in MapGroup.objects.filter(parentId=map_group.id):
+    for group in MapGroup.objects.filter(parentId=map_group.uuid):
         deleteGroup(group, state)
 
 
@@ -733,10 +733,10 @@ def setMapProperties(m):
 
 def getMapTree():
     groups = MapGroup.objects.filter(deleted=0)
-    maps = Map.objects.filter(deleted=0)
+    maps = KmlMap.objects.filter(deleted=0)
     layers = MapLayer.objects.filter(deleted=0)
 
-    groupLookup = dict([(group.id, group) for group in groups])
+    groupLookup = dict([(group.uuid, group) for group in groups])
 
     for m in maps:
         setMapProperties(m)
@@ -861,7 +861,7 @@ def getMapFeedTop(request):
        property is controlled by settings.XGDS_MAP_SERVER_LOGO_PATTERNS.
 
     """
-    m = Map()
+    m = KmlMap()
     topLevel = settings.XGDS_MAP_SERVER_TOP_LEVEL
     m.name = topLevel['name']
     m.description = topLevel['description']

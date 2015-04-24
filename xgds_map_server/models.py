@@ -28,37 +28,63 @@ from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJ
 LOGO_REGEXES = None
 
 
-class MapGroup(models.Model):
-    name = models.CharField('Name', max_length=80)
-    description = models.CharField('Description', max_length=2000, null=True, blank=True)
+class AbstractMapNode(models.Model):
+    """
+    Abstract Map Node for an entry in the map tree, which can have a parent.
+    """
+    uuid = UuidField(primary_key=True)
+    name = models.CharField('name', max_length=200)
+    description = models.CharField('description', max_length=1024, blank=True)
+    creator = models.CharField('creator', max_length=200)
+    modifier = models.CharField('modifier', max_length=200, null=True, blank=True)
+    creation_time = models.DateTimeField(null=True, blank=True)
+    modification_time = models.DateTimeField(null=True, blank=True)
+    deleted = models.BooleanField(blank=True, default=False)
+
+    @property
+    def parentId(self):
+        """ child classes must define parentId"""
+        return None
+
+    def __unicode__(self):
+        return self.uuid
+
+    class Meta:
+        abstract = True
+
+
+class MapGroup(AbstractMapNode):
+    """
+    A Map Group, or folder in the map tree.
+    """
     parentId = models.ForeignKey('self', db_column='parentId',
                                  null=True, blank=True,
                                  verbose_name='parent group')
-    deleted = models.BooleanField(blank=True, default=False)
-
-    class Meta:
-        db_table = u'mapgroup'
-
-    def __unicode__(self):
-        # return '%s' % self.name + ' : ' + self.description + ' : ' + '%s' % self.parentId
-        return self.name
 
 
-class Map(models.Model):
-    name = models.CharField('Name', max_length=80)
-    description = models.CharField('Description', max_length=2000, null=True, blank=True)
-    kmlFile = models.CharField('KML File', max_length=200)
-    localFile = models.FileField(upload_to=settings.XGDS_MAP_SERVER_MEDIA_SUBDIR, max_length=256,
-                                 null=True, blank=True)
-    openable = models.BooleanField(default=True)
+class AbstractMap(AbstractMapNode):
+    """
+    Abstract Map for an entry in a MapGroup (which is not a group, but something we can render)
+    """
+    locked = models.BooleanField(blank=True, default=False)
     visible = models.BooleanField(blank=False, default=False)
     parentId = models.ForeignKey(MapGroup, db_column='parentId',
                                  null=True, blank=True,
                                  verbose_name='group')
-    deleted = models.BooleanField(blank=True, default=False)
+
 
     class Meta:
-        db_table = u'map'
+        abstract = True
+
+
+class KmlMap(AbstractMap):
+    """
+    A reference to an external or local KML file.  Note we can't render all KML features in all libraries
+    """
+    kmlFile = models.CharField('KML File', max_length=200)
+    localFile = models.FileField(upload_to=settings.XGDS_MAP_SERVER_MEDIA_SUBDIR, max_length=256,
+                                 null=True, blank=True)
+    openable = models.BooleanField(default=True)
 
     @property
     def isLogo(self):
@@ -69,26 +95,9 @@ class Map(models.Model):
         return any([r.search(self.name)
                     for r in LOGO_REGEXES])
 
-    def __unicode__(self):
-        # return self.name + ' : ' + self.kmlFile + ' = ' + self.description + ' visibility = %s' % self.visible + ' openable = %s' % self.openable
-        return self.name
 
-
-class MapLayer(models.Model):
-    uuid = UuidField(primary_key=True)
-    name = models.CharField('name', max_length=200)
-    description = models.CharField('description', max_length=1024, blank=True)
-    creator = models.CharField('creator', max_length=200)
-    modifier = models.CharField('modifier', max_length=200, null=True, blank=True)
-    creation_time = models.DateTimeField(null=True, blank=True)
-    modification_time = models.DateTimeField(null=True, blank=True)
-    locked = models.BooleanField(blank=True, default=False)
-    visible = models.BooleanField(blank=False, default=False)
-    parentId = models.ForeignKey(MapGroup, db_column='parentId',
-                                 null=True, blank=True,
-                                 verbose_name='group')
-    deleted = models.BooleanField(blank=True, default=False)
-
+class MapLayer(AbstractMap):
+    """ A map layer which will have a collection of features that have content in them. """
     def toJson(self):
         result = modelToDict(self)
         featuresJson = []
@@ -98,14 +107,12 @@ class MapLayer(models.Model):
         result['features'] = featuresJson
         return result
 
-    def __unicode__(self):
-        return self.uuid
-
 
 class AbstractStyle(models.Model):
     """ TODO Grace: refer here for style options, we don't have to take all of them
         http://wiki.openstreetmap.org/wiki/MapCSS/0.2
         """
+    """ An abstract style for rendering map features"""
     uuid = UuidField(primary_key=True)
     name = models.CharField(max_length=200, null=True, blank=True)
     drawOrder = models.IntegerField('drawOrder', null=True, blank=True)
@@ -145,6 +152,7 @@ class GroundOverlayStyle(AbstractStyle):
 
 
 class AbstractFeature(models.Model):
+    """ An abstract feature, which is part of a Map Layer """
     uuid = UuidField(primary_key=True)
     mapLayer = models.ForeignKey(MapLayer)
     name = models.CharField('name', max_length=200)

@@ -20,7 +20,7 @@ from xgds_map_server import models
 
 
 class MapAdmin(admin.ModelAdmin):
-    list_display = ('id',
+    list_display = ('uuid',
                     'name',
                     'parentId',
                     'openable',
@@ -35,7 +35,7 @@ class MapAdmin(admin.ModelAdmin):
 
 
 class MapGroupAdmin(admin.ModelAdmin):
-    list_display = ('id',
+    list_display = ('uuid',
                     'name',
                     'parentId',
                     'description')
@@ -44,5 +44,7 @@ class MapGroupAdmin(admin.ModelAdmin):
     search_fields = ('name',
                      'description')
 
-admin.site.register(models.Map, MapAdmin)
+admin.site.register(models.KmlMap, MapAdmin)
 admin.site.register(models.MapGroup, MapGroupAdmin)
+admin.site.register(models.MapLayer, MapGroupAdmin)
+#TODO register other map layer stuff

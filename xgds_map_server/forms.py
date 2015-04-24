@@ -16,7 +16,7 @@
 
 from django import forms
 
-from xgds_map_server.models import Map, MapGroup
+from xgds_map_server.models import KmlMap, MapGroup
 
 # pylint: disable=C1001
 
@@ -26,7 +26,7 @@ class MapForm(forms.ModelForm):
     description = forms.CharField(required=False, widget=forms.Textarea(attrs={'cols': 50, 'rows': 7}))
 
     class Meta:
-        model = Map
+        model = KmlMap
         widgets = {
             # Note: no practical way to retrieve max lengths from Map model
             'name': forms.TextInput(attrs={'size': 80})
@@ -39,7 +39,6 @@ class MapGroupForm(forms.ModelForm):
                                       empty_label=None,
                                       label="Parent Folder")
     description = forms.CharField(required=False, widget=forms.Textarea(attrs={'cols': 50, 'rows': 7}))
-
 
     class Meta:
         model = MapGroup
