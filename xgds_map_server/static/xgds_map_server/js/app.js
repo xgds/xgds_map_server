@@ -37,8 +37,8 @@ var app = (function($, _, Backbone) {
 
     app.module('State', function(options) {
         this.addInitializer(function(options) {
+        	this.featureSelected = undefined;
             this.metaExpanded = undefined;
-            this.disableSimulate = false;
             this.mouseDownLocation = undefined;
             this.pageInnerWidth = undefined;
             this.tabsLeftMargin = undefined;
