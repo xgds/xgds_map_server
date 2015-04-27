@@ -19,9 +19,6 @@ app.views = app.views || {};
 app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
     template: '#template-toolbar',
     events: {
-        'click #btn-navigate': function() { app.vent.trigger('mapmode', 'navigate'); this.updateTip('clear');},
-        'click #btn-reposition': function() { app.vent.trigger('mapmode', 'reposition'); this.updateTip('edit');},
-        'click #btn-addStations': function() { app.vent.trigger('mapmode', 'addStations'); this.updateTip('add');},
         'click #btn-save': function() { app.simulatePlan(); app.currentPlan.save() },
         'click #btn-saveas': function() { this.showSaveAsDialog(); },
         'click #btn-undo': function() { app.Actions.undo(); },
@@ -65,8 +62,6 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
     },
 
     disableForReadOnly: function() {
-        this.$('#btn-addStations').attr('disabled', 'true');
-        this.$('#btn-reposition').attr('disabled', 'true');
         this.$('#btn-save').attr('disabled', 'true');
     },
 
@@ -168,54 +163,84 @@ app.views.HideableRegion = Backbone.Marionette.Region.extend({
     }
 });
 
-//Grace
-app.views.InfoView = Backbone.Marionette.LayoutView.extend({
-	template: '#template-properties-form',
-    
+app.views.LayersView = Backbone.View.extend({
+	template: '#template-layers',
+	
 	events: {
-    	'change': 'commitCheck'
-    },
-    
-    modelEvents: {
-    	'change' : 'update'
-    },
-    
-    initialize: function(options) {
-        this.options = options || {};
-        var readOnly = this.options.readOnly || app.options.readOnly;
-        var visible = this.options.visible;
+		
+	},
+	
+	initialize: function() {
+		var source = $(this.template).html();
+		if(_.isUndefined(source))
+			this.template = function() {
+			return '';
+		};
+		else {
+			this.template = Handlebars.compile(source);
+		}
+		_.bindAll(this, 'render', 'afterRender');
+		var _this = this;
+		this.render = _.wrap(this.render, function(render) {
+			render();
+			_this.afterRender();
+			return _this;
+		});
+	},
+	
+	render: function() {
+		//TODO: values should be from current layer object.
+        this.$el.html(this.template({
+//            name: "dummy name",
+//            description: "dummy description",
+//            modifier: "dummy modifier",
+//            modified: "dummy date time",
+//            creator: "dummy creator",
+//            created: "dummy date time"
+        }));
+	},
+	
+	afterRender: function() {
+	}
+});
 
-        // Construct a schema compatible with backbone-forms
-        // https://github.com/powmedia/backbone-forms#schema-definition
-        this.options.schema = this.options.schema || this.options.model.schema;
-        this.options.data = this.options.data || this.options.model.data;
-        this.Field = Backbone.Form.UnitField;
-        this.template = Handlebars.compile($(this.template).html());
-        var schema = this.options.schema;
 
-        if (readOnly) {
-            _.each(schema, function(field, key) {
-                field.editorAttrs = {
-                    readonly: true,
-                    disabled: true
-                };
-                schema[key] = field;
-            });
-        }
-        Backbone.Form.prototype.initialize.call(this, this.options);
-    },
-    
-    commitCheck: function() {
-        Backbone.Form.prototype.commit.apply(this, arguments);
-    },
-    
-    update: function() {
-        var attrs = this.model.changedAttributes();
-        _.each(_.keys(attrs), function(k) {
-            var v = attrs[k];
-            this.setValue(k, v);
-        }, this);
-    }
+//TODO: rewrite this using a schema and backbone form!!
+app.views.LayerInfoTabView = Backbone.View.extend({
+	template: '#template-layer-info',
+	events: {
+		
+	},
+	initialize: function() {
+		var source = $(this.template).html();
+		if(_.isUndefined(source))
+			this.template = function() {
+			return '';
+		};
+		else {
+			this.template = Handlebars.compile(source);
+		}
+		_.bindAll(this, 'render', 'afterRender');
+		var _this = this;
+		this.render = _.wrap(this.render, function(render) {
+			render();
+			_this.afterRender();
+			return _this;
+		});
+	},
+	render: function() {
+		//TODO: values should be from current layer object.
+        this.$el.html(this.template({
+            name: "dummy name",
+            description: "dummy description",
+            modifier: "dummy modifier",
+            modified: "dummy date time",
+            creator: "dummy creator",
+            created: "dummy date time"
+        }));
+	},
+	afterRender: function() {
+	}
 });
 
 
@@ -223,9 +248,131 @@ app.views.FeaturesHeaderView = Backbone.Marionette.ItemView.extend({
     template: '#template-features-header'
 });
 
-//Grace
-app.views.FeaturesView = Backbone.Marionette.LayoutView.extend({
-	template: '#template-sequence-view',
+app.views.FeaturePropertiesHeaderView = Backbone.Marionette.ItemView.extend({
+    template: '#template-feature-properties-header'
+});
+
+app.views.NoFeaturesView = Backbone.Marionette.ItemView.extend({
+    template: '#template-no-features'
+});
+
+
+app.views.FeatureListItemView = Backbone.Marionette.ItemView.extend({
+    // The list item is a simple enough DOM subtree that we'll let the view build its own root element.
+    tagName: 'li',
+    initialize: function(options) {
+        this.options = options || {};
+        app.views.makeExpandable(this, this.options.expandClass);
+    },
+    template: function(data) {
+        //return '' + data.model.toString()+ ' <i/>';
+        return '{model.toString} <span class="duration">{timing}</span><i/>'.format(data);
+    },
+    serializeData: function() {
+        var data = Backbone.Marionette.ItemView.prototype.serializeData.call(this, arguments);
+        data.model = this.model; // give the serialized object a reference back to the model
+        data.view = this; // and view
+        return data;
+    },
+    attributes: function() {
+        return {
+            'data-item-id': this.model.cid,
+            'class': this.model.get('type').toLowerCase() + '-sequence-item'
+        };
+    },
+    events: {
+        click: function() {
+            this.expand();
+        }
+    },
+    modelEvents: {
+        'change': 'render'
+    }
+});
+
+
+app.views.FeatureElementItemView = app.views.FeatureListItemView.extend({
+    events: {
+        click: function() {
+//            app.State.metaExpanded = true;
+//            app.State.addCommandsExpanded = false;
+//            app.State.commandSelected = undefined;
+            this.expand();
+            var type = this.model.get('type'); //"feature"
+            app.vent.trigger('showItem:' + type.toLowerCase(), this.model);
+        }
+    },
+    onExpand: function() {
+
+
+    },
+    serializeData: function() {
+        var data = app.views.FeatureListItemView.prototype.serializeData.call(this, arguments);
+        return data;
+    }
+});
+
+
+//subview for features tab (1st col, features list)
+app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
+	className: 'feature-list',
+	childView: app.views.FeatureElementItemView,
+	childViewOptions: {
+		expandClass: 'col1'
+	},
+	emptyView: app.views.NoFeaturesView,
+	initialize: function(options) {
+		this.options = options || {};
+	},
+	onItemExpand: function(childView) {
+        app.State.featureSelected = childView.model;
+    },
+	
+    restoreExpanded: function() {
+        if (!_.isUndefined(app.State.featureSelected)) {
+            var childView = this.children.findByModel(app.State.featureSelected);
+            if (_.isUndefined(childView)) {
+                // try to find the child view by ID since models change on save
+                var childId = app.State.featureSelected.cid;
+                var childModel = this.collection.get(childId);
+                if (_.isUndefined(childModel)) {
+                    // can't find by id, so the view is gone
+                    app.State.featureSelected = undefined;
+                    app.vent.trigger('showNothing');
+                } else {
+                    childView = this.children.findByModel(childModel);
+                    if (_.isUndefined(childView)) {
+                        // the model isn't in our list, oh noes!
+                        app.vent.trigger('showNothing');
+                    } else {
+                        app.State.featureSelected = childModel;
+                        childView.expand();
+                        app.vent.trigger('showItem:' + childModel.get('type').toLowerCase(), childModel);
+                    }
+                }
+            } else {
+                // restore expanded state
+                childView.expand();
+                app.vent.trigger('showItem:' + childView.model.get('type').toLowerCase(), childView.model);
+            }
+        }
+    },
+
+    onRender: function() {
+        this.restoreExpanded();
+    },
+    
+    onClose: function() {
+        this.children.each(function(view) {
+            view.close();
+        });
+    }
+	
+});
+
+// view for features tab (2-columns)
+app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
+	template: '#template-features-view',
 	
     regions: {
         //Column Headings
@@ -241,7 +388,7 @@ app.views.FeaturesView = Backbone.Marionette.LayoutView.extend({
     },
 	
     initialize: function() {
-    	
+    	this.template = Handlebars.compile($(this.template).html());
     },
     
     onClose: function() {
@@ -256,11 +403,12 @@ app.views.FeaturesView = Backbone.Marionette.LayoutView.extend({
         } catch (err) { 
         	
         }
-    	
-        var headerView = new app.views.FeaturesHeaderView({
-        });
-        this.colhead1.show(headerView);
-        app.psv = this;
+    	var headerView = new app.views.FeaturesHeaderView({
+    	});
+    	this.colhead1.show(headerView);
+    	app.psv = this;
+    	//create a sub view that shows all features 
+    	//and show on col1 (this.col1.show(subview)) <-- see planner PlanSequenceView.
     },
 });
 
@@ -322,175 +470,6 @@ app.views.makeExpandable = function(view, expandClass) {
     view.on('expand', view._expand, view);
     view.on('render', view._restoreIcon, view);
 };
-
-app.views.SequenceListItemView = Backbone.Marionette.ItemView.extend({
-    // The list item is a simple enough DOM subtree that we'll let the view build its own root element.
-    tagName: 'li',
-    initialize: function(options) {
-        this.options = options || {};
-        app.views.makeExpandable(this, this.options.expandClass);
-    },
-    template: function(data) {
-        //return '' + data.model.toString()+ ' <i/>';
-        return '{model.toString} <span class="duration">{timing}</span><i/>'.format(data);
-    },
-    serializeData: function() {
-        var data = Backbone.Marionette.ItemView.prototype.serializeData.call(this, arguments);
-        data.model = this.model; // give the serialized object a reference back to the model
-        data.view = this; // and view
-        return data;
-    },
-    attributes: function() {
-        return {
-            'data-item-id': this.model.cid,
-            'class': this.model.get('type').toLowerCase() + '-sequence-item'
-        };
-    },
-    events: {
-        click: function() {
-            this.expand();
-        }
-    },
-    modelEvents: {
-        'change': 'render'
-    }
-});
-
-app.views.PathElementItemView = app.views.SequenceListItemView.extend({
-    events: {
-        click: function() {
-            app.State.metaExpanded = true;
-            app.State.addCommandsExpanded = false;
-            app.State.commandSelected = undefined;
-            this.expand();
-            var type = this.model.get('type'); // "Station" or "Segment"
-            app.vent.trigger('showItem:' + type.toLowerCase(), this.model);
-        }
-    },
-    onExpand: function() {
-
-
-    },
-    serializeData: function() {
-        var data = app.views.SequenceListItemView.prototype.serializeData.call(this, arguments);
-        if (this.model.get('type') == 'Station') {
-            data.timing = app.util.minutesToHMS(this.model.getCumulativeDuration());
-        } else {
-            data.timing = '+' + app.util.minutesToHMS(this.model.getDuration());
-        }
-        return data;
-    }
-});
-
-
-app.views.CommandItemView = app.views.SequenceListItemView.extend({
-    template: function(data) {
-        var displayName = data.name || data.presetName || data.presetCode;
-        var timing = app.util.minutesToHMS(data.duration);
-        return '<input class="select" type="checkbox" id="id_' + displayName + 
-        	'"/></i>&nbsp;<label style="display:inline-block;" for="id_' 
-        	+ displayName + '">' + displayName + '</label><span class="duration">' 
-        	+ timing + '</span><i/>';
-    },
-    events: function() {
-        return _.extend(app.views.SequenceListItemView.prototype.events, {
-            'click input.select': this.toggleSelect
-        });
-    },
-    initialize: function(options) {
-        this.options = options || {};
-        app.views.SequenceListItemView.prototype.initialize.call(this);
-    },
-    onRender: function() {
-        this.$el.css('background-color', app.request('getColor', this.model.get('type')));
-    },
-    onExpand: function() {
-        app.vent.trigger('showItem:command', this.model);
-    },
-    isSelected: function(evt) {
-        return this.$el.find('input.select').is(':checked');
-    },
-    setSelected: function() {
-        this.$el.find('input.select').prop('checked', true);
-    },
-    setUnselected: function() {
-        this.$el.find('input.select').prop('checked', false);
-    },
-    toggleSelect: function(evt) {
-        if (this.isSelected()) {
-            this.trigger('selected');
-        } else {
-            this.trigger('unselected');
-        }
-        evt.stopPropagation();
-    },
-    onClose: function() {
-        this.stopListening();
-    }
-});
-
-app.views.MiscItemView = app.views.SequenceListItemView.extend({
-    tagName: 'li',
-    initialize: function(options) {
-        this.options = options || {};
-        var options = this.options;
-        if (options.extraClass) {
-            this.className = this.className ? this.className + ' ' + options.extraClass : options.extraClass;
-        }
-        this.on('click', function() {this.trigger('expand', this, this.options.expandClass);}, this);
-        if (options.click) {
-            this.on('click', this.options.click, this);
-        }
-        app.views.makeExpandable(this, this.options.expandClass);
-    },
-    render: function() {
-        // override default render behavior with nothing, since contents can be pre-rendered in templates
-    }
-});
-
-
-app.views.CommandPresetsView = Backbone.Marionette.ItemView.extend({
-    template: '#template-command-presets',
-
-    serializeData: function() {
-        return {
-            presets: this.getRelevantPresets(),
-            station: this.model.toJSON()
-        };
-    },
-
-    events: {
-        'click .add-preset': function(evt) {
-            var station = this.model;
-            var target = $(evt.target);
-            var preset = app.commandPresetsByName[target.data('preset-name')];
-            app.Actions.disable();
-            station.appendCommandByPreset(preset);
-            app.Actions.enable();
-            app.vent.trigger('change:plan');
-        }
-    },
-
-    getRelevantPresets: function() {
-        var presets;
-        // Lists of command types that pertain to Stations and Segments are available in
-        // planSchema.StationSequenceCommands and planSchema.SegmentSequenceCommands, respectively
-//        var relevantCommandTypes = app.planSchema[this.model.get('type').toLowerCase() + 'SequenceCommands'];
-//        if (_.isUndefined(relevantCommandTypes)) {
-//            presets = app.planLibrary.commands;
-//        } else {
-//            presets = _.filter(app.planLibrary.commands, function(command) { return _.contains(relevantCommandTypes, command.type)});
-//        }
-//        // add timing info in HMS format
-//        _.each(presets, function(command) {
-//            if (_.has(command, 'duration')) {
-//                command.timing = app.util.minutesToHMS(command.duration);
-//            }
-//        });
-//        return presets;
-        return null;
-    }
-});
 
 
 app.views.FancyTreeView = Backbone.View.extend({
@@ -579,176 +558,6 @@ app.views.FancyTreeView = Backbone.View.extend({
 });
 
 
-app.views.PlanToolsView = Backbone.View.extend({
-    template: '#template-plan-tools',
-    events: {
-        'click #ok-button': 'okClicked',
-        'click #btn-reverse': 'reverseStations',
-    },
-    initialize: function() {
-        var source = $(this.template).html();
-        if (_.isUndefined(source))
-            this.template = function() {
-                return '';
-            };
-        else {
-            this.template = Handlebars.compile(source);
-        }
-        this.listenTo(app.vent, 'clearAppendTool', this.clearAppendTool);
-        this.listenTo(app.vent, 'setAppendError', this.setAppendError);
-        _.bindAll(this, 'render', 'afterRender'); 
-        var _this = this; 
-        this.render = _.wrap(this.render, function(render) { 
-            render(); 
-            _this.afterRender(); 
-            return _this; 
-        }); 
-    },
-    render: function() {
-        this.$el.html(this.template({
-            planIndex: app.planIndex
-        }));
-    },
-    afterRender: function() {
-        if (app.options.readOnly) {
-            this.disableForReadOnly();
-        }
-    },
-    okClicked: function() {
-        var selectPlan = parseInt(this.$('#plan-select').val());
-        var planUrl = undefined;
-        _.each(app.planIndex, function(plan) {
-            if (plan.id == selectPlan) {
-                planUrl = plan.url;
-            }
-        });
-        if (_.isUndefined(planUrl))
-            // no plan selected
-            return;
-        this.$('#ok-button').attr('disabled', 'true');
-        this.$('#append-error').empty();
-        app.reversePlanOnAppend = this.$('#reverse-plan').is(':checked');
-        app.prependPlanOnAppend = this.$('#prepend-plan').is(':checked');
-        $.getJSON(planUrl).done(this.appendPlan).error(this.failAppendPlan);
-    },
-    failAppendPlan: function() {
-        app.vent.trigger('clearAppendTool');
-        app.vent.trigger('setAppendError', 'Error gettting plan to append');
-    },
-    setAppendError: function(message) {
-        this.$('#append-error').empty().append(message);
-    },
-    clearAppendTool: function() {
-        this.$('#ok-button').removeAttr('disabled'); //('disabled','false');
-        this.$('#append-error').empty();
-        delete app.reversePlanOnAppend;
-        delete app.prependPlanOnAppend;
-    },
-    appendPlan: function(data) {
-        console.log(data);
-        if (data.sequence.length == 0) {
-            // no sequence to add
-            app.vent.trigger('clearAppendTool');
-            return;
-        }
-        if (app.reversePlanOnAppend)
-            data.sequence.reverse();
-        if (app.prependPlanOnAppend && !app.reversePlanOnAppend)
-            data.sequence.reverse(); // plan is pushed in reverse order when prepending
-        delete app.reversePlanOnAppend;
-        var method = undefined;
-        var sequence = app.currentPlan.get('sequence').models.slice();
-        console.log('number of items');
-        console.log(data.sequence.length);
-        if (app.prependPlanOnAppend) {
-            if (sequence.length > 0) {
-                console.log('adding connecting segment');
-                var segment = app.models.segmentFactory();
-                sequence.unshift(segment);
-            }
-            while (data.sequence.length > 0) {
-                console.log('pushing item');
-                console.log(data.sequence.length);
-                var item = data.sequence.shift();
-                var model = undefined;
-                if (item.type == 'Station') {
-                    model = app.models.stationFactory(item);
-                } else if (item.type == 'Segment') {
-                    model = app.models.segmentFactory(item);
-                } else {
-                    console.log('Error parsing sequence');
-                    break;
-                }
-                sequence.unshift(model);
-                console.log('pushed item');
-                console.log(data.sequence.length + ' items left');
-                console.log(data.sequence.length > 0);
-            }
-        } else {
-            if (sequence.length > 0) {
-                console.log('adding connecting segment');
-                var segment = app.models.segmentFactory();
-                sequence.push(segment);
-            }
-            while (data.sequence.length > 0) {
-                var item = data.sequence.shift();
-                var model = undefined;
-                if (item.type == 'Station') {
-                    model = app.models.stationFactory(item);
-                } else if (item.type == 'Segment') {
-                    model = app.models.segmentFactory(item);
-                } else {
-                    console.log('Error parsing sequence');
-                    break;
-                }
-                console.log('pushing item');
-                console.log(data.sequence.length);
-                sequence.push(model);
-                console.log('pushed item');
-                console.log(data.sequence.length + ' items left');
-                console.log(data.sequence.length > 0);
-            }
-        }
-        delete app.prependPlanOnAppend;
-        app.Actions.disable();
-        app.currentPlan.get('sequence').models = sequence;
-        app.currentPlan.get('sequence').resequence();
-        app.vent.trigger('clearAppendTool');
-        app.updatePlan(undefined);
-        app.Actions.enable();
-        app.vent.trigger('change:plan');
-    },
-    reverseStations: function() {
-        app.vent.trigger('plan:reversing');
-        app.currentPlan.get('sequence').models.reverse();
-        app.currentPlan.get('sequence').resequence();
-        app.vent.trigger('plan:reverse');
-    },
-    disableForReadOnly: function() {
-        this.$('#btn-reverse').attr('disabled', 'true');
-        this.$('#ok-button').attr('disabled', 'true');
-    }
-});
-
-app.views.PlanLinksView = Backbone.View.extend({
-    template: '#template-plan-links',
-    initialize: function() {
-        var source = $(this.template).html();
-        if (_.isUndefined(source)) {
-            this.template = function() {
-                return '';
-            };
-        } else {
-            this.template = Handlebars.compile(source);
-        }
-    },
-    render: function() {
-        this.$el.html(this.template({
-            planLinks: app.planLinks
-        }));
-    }
-});
-
 app.views.TabNavView = Backbone.Marionette.LayoutView.extend({
     template: '#template-tabnav',
     regions: {
@@ -760,9 +569,9 @@ app.views.TabNavView = Backbone.Marionette.LayoutView.extend({
     },
 
     viewMap: {
-    	'layers': app.views.FancyTreeView,
-    	'info': app.views.InfoView,
-    	'features': app.views.FeaturesView
+    	'layers': app.views.LayersView,
+    	'info': app.views.LayerInfoTabView,
+    	'features': app.views.FeaturesTabView
     },
 
     initialize: function() {
@@ -801,13 +610,14 @@ app.views.TabNavView = Backbone.Marionette.LayoutView.extend({
             }
         });
         var viewClass = this.viewMap[tabId];
-        if (! viewClass) { return undefined; }
-        var view = new viewClass({
-            model: app.currentPlan
-        });
+        if (! viewClass) {
+        	console.log("there is no view class found");
+        	return undefined; 
+        }
+
+        var view = new viewClass({ /* TODO: later set the view's model here.*/});
         this.tabContent.show(view);
 
         app.vent.trigger('tab:change', tabId);
     }
-
 });

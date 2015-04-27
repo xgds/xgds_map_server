@@ -57,29 +57,13 @@ app.models = app.models || {};
         // data object contains object defaults
         var data = {
         };
-
-        /*
-        if (modelType == 'Station') {
-            if (!_.isUndefined(app.planJson)){
-                if (_.has(app.planJson.site, 'alternateCrs') && !_.isNull(app.planJson.site.alternateCrs)) {
-                    var siteFrameLabel = _.has(app.planJson.site.alternateCrs.properties, 'label') ?
-                        app.planJson.site.alternateCrs.properties.label : 'Site Frame';
-                    schema._siteFrame = {type: 'Select', options: [{label: 'Lng, Lat', val: false},
-                                                                   {label: siteFrameLabel, val: true}],
-                                         title: 'Coordinate System'};
-                }
-            }
-            // TODO: Create a "Coordinates" editor that's geometry-schema-aware
+        
+        if (modelType == 'Info') {
+        	schema.creator = {type: 'Text', readonly: true,
+                    editorAttrs: { disabled: true }};
             schema.geometry = {type: 'Coordinates',
-                              title: 'Lon, Lat'};
+                    title: 'Lon, Lat'};
         }
-
-        if (modelType == 'Plan') {
-            schema.creator = {type: 'Text', readonly: true,
-                              editorAttrs: { disabled: true }};
-            schema.planVersion = {type: 'Text', title: 'Plan Version'};
-        }
-        */
 
         _.each(params, function(param) {
             var foundType;
@@ -181,272 +165,46 @@ app.models = app.models || {};
         return obj;
     };
 
-    models.Plan = Backbone.RelationalModel.extend({
-        url: function() {
-            return this.get('url');
-        },
-        isNew: function() {
-            /*
-             * The way we have things set up, plan models can never be new,
-             * since we create the on the server side before passing them to the
-             * app. Backbone uses this value on sync/save to determine whether
-             * to sent a POST request or a PUT request. Setting it to always be
-             * false forces a PUT. The default implementation is: "return
-             * this.id == null"
-             */
-            return _.isNull(app.currentPlan.get('uuid'));
-        },
-        relations: [
-            {
-                type: Backbone.HasMany,
-                relatedModel: 'app.models.PathElement',
-                key: 'sequence',
-                collectionType: 'app.models.PathSequenceCollection',
-                createModels: true,
-                reverseRelation: {
-                    key: 'plan',
-                    includeInJSON: false
-                }
-            }
-        ],
-
+    models.Info = Backbone.RelationalModel.extend({
+        idAttribute: '_id', // Doesn't exist, but allows us to change the "id"
+        
         initialize: function() {
-            var params = app.planSchema.planParams;
-            this.schema = {
-                // put static schema elements here
-            };
+        	//construct a schema compatible with backbone-forms
+        	this.schema = {
+        		// put static schema	
+        	};
             this.data = {
                 // put static data elements here
             };
-            var formsData = xpjsonToBackboneFormsSchema(params, 'Plan');
+            var params = []; //later add info params...
+            var formsData = xpjsonToBackboneFormsSchema(params, 'Info');
             _.extend(this.schema, formsData.schema);
             _.extend(this.data, formsData.data);
-            this.on('change', function() {
-                app.vent.trigger('change:plan');
-            });
-        },
-
-        toJSON: toJsonWithFilters
-        
-    });
-
-    /*
-     * * The PathElement model represents both Station and Sequence objects. *
-     * This is inconvenient, but it has to be this way until we invent * a
-     * Collection that can instantiate more than one model type.
-     */
-    models.PathElement = Backbone.RelationalModel.extend({
-        idAttribute: '_id', // Doesn't exist, but allows us to change the "id"
-        // attribute with impunity.
-        relations: [
-            {
-                type: Backbone.HasMany,
-                relatedModel: 'app.models.Command',
-                key: 'sequence',
-                collectionType: 'app.models.CommandCollection',
-                createModels: true,
-                reverseRelation: {
-                    key: 'pathElement'
-                }
-            }
-        ],
-
-        schema: {
-            // id: 'Text'
-            // tolerance: 'Number',
-            // headingDegrees: 'Number',
-            // headingToleranceDegrees: 'Number',
-        },
-
-        data: {
-        },
-
-        initialize: function() {
-            // javascript is a weird beast and requires re-definition of this
-            // variable,
-            // or else stuff is added to it
-            this.schema = {
-                // id: 'Text'
-                // tolerance: 'Number',
-                // headingDegrees: 'Number',
-                // headingToleranceDegrees: 'Number',
-            };
-            this.data = {
-            };
-//            var params = {
-//                'Station': app.planSchema.stationParams,
-//                'Segment': app.planSchema.segmentParams
-//            }[this.get('type')] || {};
-//            var formsData = xpjsonToBackboneFormsSchema(params, this.get('type'));
-//            _.extend(this.schema, formsData.schema);
-//            _.extend(this.data, formsData.data);
-            this.on('change', function() {
-                var changed = this.changedAttributes();
-                var previous = this.previousAttributes();
-                _.find(_.keys(changed), function(item) {
-                    if (!_.contains(models.paramBlackList, item) &&
-                        (_.has(previous, item) || !_.isEmpty(changed[item]))
-                       ) {
-//                        app.vent.trigger('change:plan');
-                        return true;
+            this.on('change', function() { /* app.vent.trigger('change:plan');*/ });
+            // all attributes in the schema need to be defined, else they won't
+            // be in the
+            // json and so won't change when undo/redo is hit
+            console.log("about to render the schema as a form");
+            _.each(_.keys(this.schema), function(attr) {
+                if (!this.has(attr)) {
+                    if (_.has(this.data, attr)) {
+                        this.set(attr, this.data[attr]);
                     }
-                });
-            });
-            // this model needs an id attribute b/c relational can't find old
-            // models
-            // and so creates infinite new ones
-            // furthermore, this id needs to be the same as cid. Oh
-            // relational...
+                }
+            }, this);
+            // the model needs an "id" attribute, else a memory leak occurs b/c
+            // relational can't find the model (it tries to use the id
+            // attribute)
+            // and so creates a new one, which is bad
             this.set(this.idAttribute, this.cid);
         },
-
-        toString: function() {
-            var repr;
-            switch (this.get('type')) {
-            case 'Station':
-                repr = this._sequenceLabel;
-                break;
-            case 'Segment':
-                repr = Math.round(this._segmentLength) + ' meters';
-                break;
-            }
-            return repr;
-        },
-
-        toJSON: toJsonWithFilters,
-
-        getDuration: function() {
-            /*
-             * var duration = 0.0; if ( this.get('speed') ) { // TODO: calculate
-             * distance and traverse time }
-             * this.get('sequence').each(function(command) { if
-             * (command.get('duration') != undefined) { duration = duration +
-             * command.get('duration'); } }); return duration;
-             */
-            // actually use the simulator
-//            if (this._simInfo == undefined) app.simulatePlan();
-//            if (this._simInfo == undefined) return undefined;
-//            return this._simInfo.deltaTimeSeconds / 60;
-        	return 0;
-        },
-
-        getCumulativeDuration: function(collection) {
-            /*
-             * // return the cumulative duration of all models in the collection
-             * up to and including this one. if ( collection === undefined ) {
-             * collection = app.currentPlan.get('sequence'); } var arr =
-             * collection.models; var idx = _.indexOf(arr, this); if (idx < 0) {
-             * throw 'Model {model} was not found in the collection
-             * {collection}'.format({model: this, collection: collection}); }
-             * var duration = 0.0; _.each(_.first(arr, idx + 1), function(model) {
-             * duration = duration + model.getDuration(); } ); return duration;
-             */
-//            if (this._simInfo == undefined) app.simulatePlan();
-            if (this._simInfo == undefined) return undefined;
-            var addme = 0;
-            if (this._simInfo.elapsedTimeSeconds > 0){
-                addme = this._simInfo.elapsedTimeSeconds / 60;
-            }
-            return addme + this.getDuration();
-        },
-
-        appendCommandByPreset: function(preset) {
-            var command = new models.Command(preset);
-            if (!_.isUndefined(preset.presetName)){
-                command.set('name', preset.presetName);
-            } else {
-                command.set('name', preset.name);
-            }
-            command.parent = this;
-            this.get('sequence').add(command);
-        },
-
-        appendCommandModel: function(model) {
-            model.parent = this;
-            this.get('sequence').add(model);
-        },
-        /*
-         * * Relevant to stations only... * A convenience mainly to keep details
-         * about the model's structure * out of the map drag handler.
-         */
-        setPoint: function(coords) {
-            var geom = this.get('geometry');
-            geom = _.extend({}, geom); // make a copy so it triggers the change
-            // event
-            if (! geom) { throw 'PathElement has no geometry'; }
-            geom.coordinates = [coords.lng, coords.lat];
-            this.set('geometry', geom);
-        }
-    });
-
-    models.PathSequenceCollection = Backbone.Collection.extend({
-        model: models.PathElement,
-
-        initialize: function() {
-            this.on('add remove', this.resequence, this);
-        },
-
-        /*
-         * * resequence supplies the stations with easier to read sequential
-         * numbers * for use in the map view. (Start, 1, 2...End) * It is also
-         * responsible for computing station and sequence ids from the templates
-         * in planSchema.
-         */
-        resequence: function() {
-            var stationCounter = 0;
-
-            if (!_.isUndefined(app.Actions) && !_.isUndefined(app.Actions.disable)) {
-                // prevent undo from capturing *every* change we make
-                app.Actions.disable();
-            }
-
-            // Natural station numbering.
-//            this.each(
-//                function(item, idx, list) {
-//                    var itemType = item.get('type');
-//                    if (itemType == 'Station') {
-//                        var sequenceLabel, length = list.length;
-//                        if (stationCounter === 0) {
-//                            sequenceLabel = 'Start';
-//                        } else if (idx == length - 1) {
-//                            sequenceLabel = 'End';
-//                        } else {
-//                            sequenceLabel = '' + stationCounter;
-//                        }
-//                        item._sequenceLabel = sequenceLabel;
-//                    }
-//
-//                    // Item ID template formatting
-////                    var template = {
-////                        'Station': app.planSchema.stationIdFormat,
-////                        'Segment': app.planSchema.segmentIdFormat
-////                    }[itemType];
-//
-////                    var context = {
-////                        plan: app.planJson, //.currentPlan.toJSON(),
-////                        stationIndex: stationCounter
-////                    };
-////                    context[itemType.toLowerCase()] = item;
-////
-////                    if (app.planJson){
-////                        var stationId = template.format(context);
-////                        item.set('id', stationId);
-////                        item.trigger('change')
-////                        
-////                    }
-////                    if (itemType == 'Station') {
-////                        stationCounter++;
-////                    }
-//                }
-//            );
-
-            if (!_.isUndefined(app.Actions) && !_.isUndefined(app.Actions.enable)) {
-                app.Actions.enable();
-            }
-
-//            app.vent.trigger('change:plan');
-        },
-
+        
+	    hasParam: function(paramName) {
+	        // return true if the given param name exists in this command's spec
+	        var params = app.commandSpecs[this.get('type')].params;
+	        var paramNames = _.pluck(params, 'id');
+	        return _.contains(paramNames, paramName);
+	    }
     });
 
 })(app.models);
