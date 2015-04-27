@@ -172,6 +172,7 @@ class AbstractFeature(models.Model):
 
     def toDict(self):
         result = modelToDict(self)
+        result['type'] = self.__class__.__name__
         if self.style:
             result['style'] = modelToDict(STYLE_MANAGER.get(uuid=self.style.uuid))
         if self.labelStyle:
