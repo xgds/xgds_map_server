@@ -4,7 +4,7 @@
 <div class="sitemenu-nav-secondary">
 	<ul>
 		<li{% currentnav xgds_map_server_index %}><a href="{% url 'xgds_map_server_index' %}">Master Feed</a></li>
-		<li {% currentnav map* folder* addMap deletedMaps %}><a href="{% url 'mapTree' %}">Manage Content</a></li>
+		<li {% currentnav map* folder* addKml addLayer deletedMaps %}><a href="{% url 'mapTree' %}">Manage Content</a></li>
   	</ul>
 </div>
 {% endblock %}

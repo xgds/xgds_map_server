@@ -106,23 +106,24 @@ def getMapServerIndexPage(request):
 
 def getMapTreePage(request):
     """
-    HTML tree of maps using jstree
+    HTML tree of maps using fancytree
     """
     jsonMapTreeUrl = (request.build_absolute_uri
-                      (reverse('mapListJSON')))
-    addMapUrl = (request.build_absolute_uri
-                 (reverse('addMap')))
+                      (reverse('mapTreeJSON')))
+    addLayerUrl = (request.build_absolute_uri
+                   (reverse('addLayer')))
+    addKmlUrl = (request.build_absolute_uri
+                 (reverse('addKml')))
     addFolderUrl = (request.build_absolute_uri
                     (reverse('folderAdd')))
     deletedMapsUrl = (request.build_absolute_uri
                       (reverse('deletedMaps')))
     jsonMoveUrl = (request.build_absolute_uri
                    (reverse('jsonMove')))
-    # numDeletedMaps = len(KmlMap.objects.filter(deleted=True)) +\
-    # len(MapGroup.objects.filter(deleted=True))
     return render_to_response("MapTree.html",
                               {'JSONMapTreeURL': jsonMapTreeUrl,
-                               'addMapUrl': addMapUrl,
+                               'addKmlUrl': addKmlUrl,
+                               'addLayerUrl': addLayerUrl,
                                'addFolderUrl': addFolderUrl,
                                'deletedMapsUrl': deletedMapsUrl,
                                # 'numDeletedMaps': numDeletedMaps,
@@ -194,7 +195,12 @@ def handleJSONMove(request):
     return HttpResponse()  # empty response with 200 means success
 
 
-def getAddMapPage(request):
+def getAddLayerPage(request):
+    """ TODO Grace Implement """
+    return HttpResponse()
+
+
+def getAddKmlPage(request):
     """
     HTML view to create new map
     """
@@ -231,7 +237,7 @@ def getAddMapPage(request):
                     map_obj.kmlFile = justName
                     map_obj.save()
         else:
-            return render_to_response("AddMap.html",
+            return render_to_response("AddKml.html",
                                       {'mapTreeUrl': mapTreeUrl,
                                        'mapForm': map_form,
                                        'error': True,
@@ -241,7 +247,7 @@ def getAddMapPage(request):
 
     else:
         map_form = MapForm()
-        return render_to_response("AddMap.html",
+        return render_to_response("AddKml.html",
                                   {'mapTreeUrl': mapTreeUrl,
                                    'mapForm': map_form},
                                   context_instance=RequestContext(request))
@@ -459,7 +465,7 @@ def getMapDetailPage(request, mapID):
                   (reverse('mapTree')))
     fromSave = False
     try:
-        map_obj = KmlMap.objects.get(id=mapID)
+        map_obj = KmlMap.objects.get(uuid=mapID)
     except KmlMap.DoesNotExist:
         raise Http404
     except KmlMap.MultipleObjectsReturned:

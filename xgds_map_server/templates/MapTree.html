@@ -1,28 +1,63 @@
 {% extends "MapBase.html" %}
 {% block scripts %}
-<!-- no block.super because we need a different version of jquery -->
-<script src="{{ STATIC_URL }}external/js/jquery-1.9.1.js" type="text/javascript"></script>
-<script src="{{ STATIC_URL }}external/js/jstree/jquery.jstree.js" type="text/javascript"></script>
-<!-- 
-<script src="{{ EXTERNAL_URL }}jquery_1.9.1/jquery.min.js" type="text/javascript"></script>
-<script src="{{ EXTERNAL_URL }}jstree/dist/jstree.min.js" type="text/javascript"></script>
--->
-<script src="{{ STATIC_URL }}xgds_map_server/js/MapTree.js" type="text/javascript"></script>
+{{ block.super }}
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-ui/jquery-ui.min.js'></script>
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}fancytree/dist/jquery.fancytree.js'></script>
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}lodash/lodash.min.js'></script>
+    
+<!-- 	<script src="{{ STATIC_URL }}xgds_map_server/js/MapTree.js" type="text/javascript"></script>
+ -->
 {% endblock %}
 
 {% block contents %}
-<input type="button" class="mybutton" value="Add Map" onClick="document.location.href='{{ addMapUrl }}'">
+<input type="button" class="mybutton" value="Add Layer" onClick="document.location.href='{{ addLayerUrl }}'">
+<input type="button" class="mybutton" value="Add Kml" onClick="document.location.href='{{ addKmlUrl }}'">
 <input type="button" class="mybutton" value="Add Folder" onClick="document.location.href='{{ addFolderUrl }}'">
 <input type="button" class="mybutton" value="Undelete" onClick="document.location.href='{{ deletedMapsUrl }}'"><br>
-<p>
-<div id="treeDiv">
-  <!-- placeholder element for jstree -->
-</div>
-</p>
+<style scoped>
+  @import url('{{EXTERNAL_URL}}jquery-ui/themes/base/jquery-ui.css');
+  @import url('{{ EXTERNAL_URL }}fancytree/dist/skin-lion/ui.fancytree.min.css');
+</style>
+<div id="layertreeContainer">
+	<i class="icon-arrows-ccw" alt="refresh" id="refreshTreeLink" onclick="javascript: refreshTree();"></i>
+	<div id="layertree" ></div> <!-- data-source="ajax" class="sampletree"></div> -->
+ </div>
 {% endblock %}
 
 {% block jsInit %}
 {{ block.super }}
-jsTreeMapTreeURL = "{{ JSONMapTreeURL }}";
-jsMoveURL = "{{ JSONMoveURL }}";
+   var layerFeedUrl =  "{{ JSONMapTreeURL }}"; // "{{ settings.XGDS_PLANNER2_LAYER_FEED_URL }}";
+   var layertreeNode = $("#layertree");
+   var theTree;
+   $.ajax({url: layerFeedUrl,
+           dataType: 'json',
+           success: $.proxy(function(data) {
+           		initializeTree(data);
+         	})
+         });
+         
+   var initializeTree = function(data) {
+    layertreeNode.fancytree({
+       source: data,
+       checkbox: true,
+       activate: function(event, data) {
+       		// open this node for editing
+       		window.location.href=data.node.data.href;
+         },
+       select: function(event, data) {
+       //TODO change default selection
+       }
+   		}); 
+   	 theTree = layertreeNode.fancytree("getTree");
+   };
+   
+   var refreshTree = function() {
+        if (!_.isUndefined(theTree)){
+            theTree.reload({
+                url: layerFeedUrl
+            });
+        }
+    }
+
+//jsMoveURL = "{{ JSONMoveURL }}";
 {% endblock %}
