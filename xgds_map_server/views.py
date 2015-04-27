@@ -169,13 +169,13 @@ def handleJSONMove(request):
     if request.REQUEST['move_type'] == 'map':
         mapId = request.REQUEST['move']
         try:
-            move = KmlMap.objects.get(id=mapId)
+            move = KmlMap.objects.get(uuid=mapId)
         except KmlMap.DoesNotExist:
             return HttpResponseNotFound('No KmlMap with id "%s"' % mapId)
     elif request.REQUEST['move_type'] == 'folder':
         folderId = request.REQUEST['move']
         try:
-            move = MapGroup.objects.get(id=folderId)
+            move = MapGroup.objects.get(uuid=folderId)
         except MapGroup.DoesNotExist:
             return HttpResponseNotFound('No MapGroup with id "%s"' % folderId)
     else:
@@ -186,7 +186,7 @@ def handleJSONMove(request):
 
     toId = request.REQUEST['to']
     try:
-        to = MapGroup.objects.get(id=toId)
+        to = MapGroup.objects.get(uuid=toId)
     except MapGroup.DoesNotExist():
         return HttpResponseNotFound('No MapGroup with id "%s"')
 
@@ -299,7 +299,7 @@ def getDeleteMapPage(request, mapID):
                       (reverse('deletedMaps')))
 
     try:
-        map_obj = KmlMap.objects.get(id=mapID)
+        map_obj = KmlMap.objects.get(uuid=mapID)
     except KmlMap.DoesNotExist:
         raise Http404
     except KmlMap.MultipleObjectsReturned:
@@ -355,7 +355,7 @@ def getDeleteFolderPage(request, groupID):
                       (reverse('deletedMaps')))
 
     try:
-        map_group = MapGroup.objects.get(id=groupID)
+        map_group = MapGroup.objects.get(uuid=groupID)
     except MapGroup.DoesNotExist:
         raise Http404
     except MapGroup.MultipleObjectsReturned:
@@ -407,7 +407,7 @@ def getFolderDetailPage(request, groupID):
     fromSave = False
 
     try:
-        map_group = MapGroup.objects.get(id=groupID)
+        map_group = MapGroup.objects.get(uuid=groupID)
     except MapGroup.DoesNotExist:
         raise Http404
     except KmlMap.MultipleObjectsReturned:
