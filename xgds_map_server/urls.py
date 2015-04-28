@@ -66,9 +66,12 @@ urlpatterns = patterns(
      {},
      'folderAdd'),
     # HTML view to add new map
-    (r'^add/', views.getAddMapPage,
+    (r'^add/', views.getAddKmlPage,
      {},
-     'addMap'),
+     'addKml'),
+    (r'^add/', views.getAddLayerPage,
+     {},
+     'addLayer'),
     # HTML view to confirm deletion of view
     (r'^delete/(?P<mapID>\d+)/', views.getDeleteMapPage,
      {},

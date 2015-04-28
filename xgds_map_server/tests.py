@@ -64,8 +64,8 @@ class TestMaps(TestCase):
         response = self.client.get(reverse('folderAdd'))
         self.assertEqual(response.status_code, 200)
 
-    def test_addMap(self):
-        response = self.client.get(reverse('addMap'))
+    def test_addKml(self):
+        response = self.client.get(reverse('addKml'))
         self.assertEqual(response.status_code, 200)
 
     def test_mapDelete(self):
