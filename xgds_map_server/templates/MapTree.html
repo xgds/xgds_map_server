@@ -4,12 +4,7 @@
     <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-ui/jquery-ui.min.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}fancytree/dist/jquery.fancytree.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}fancytree/dist/src/jquery.fancytree.dnd.js'></script>
-    <!-- <script type="text/javascript" src='{{ EXTERNAL_URL }}fancytree/dist/src/jquery.fancytree.edit.js'></script>
-     -->
      <script type="text/javascript" src='{{ EXTERNAL_URL }}lodash/lodash.min.js'></script>
-    
-<!-- 	<script src="{{ STATIC_URL }}xgds_map_server/js/MapTree.js" type="text/javascript"></script>
- -->
 {% endblock %}
 
 {% block contents %}
@@ -20,9 +15,14 @@
 <style scoped>
   @import url('{{EXTERNAL_URL}}jquery-ui/themes/base/jquery-ui.css');
   @import url('{{ EXTERNAL_URL }}fancytree/dist/skin-lion/ui.fancytree.min.css');
+  ul.fancytree-container {
+ 	 height: 400px;
+  	 width: 95%;
+  }
 </style>
 <div id="layertreeContainer">
 	<i class="icon-arrows-ccw" alt="refresh" id="refreshTreeLink" onclick="javascript: refreshTree();"></i>
+	Drag and drop to reorganize tree.  Double-click to edit.
 	<div id="layertree" ></div> <!-- data-source="ajax" class="sampletree"></div> -->
  </div>
 {% endblock %}
@@ -92,5 +92,6 @@
             });
         }
     }
+    
 
 {% endblock %}
