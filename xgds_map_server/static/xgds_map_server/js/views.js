@@ -163,83 +163,20 @@ app.views.HideableRegion = Backbone.Marionette.Region.extend({
     }
 });
 
-app.views.LayersView = Backbone.View.extend({
-	template: '#template-layers',
-	
-	events: {
-		
-	},
-	
-	initialize: function() {
-		var source = $(this.template).html();
-		if(_.isUndefined(source))
-			this.template = function() {
-			return '';
-		};
-		else {
-			this.template = Handlebars.compile(source);
-		}
-		_.bindAll(this, 'render', 'afterRender');
-		var _this = this;
-		this.render = _.wrap(this.render, function(render) {
-			render();
-			_this.afterRender();
-			return _this;
-		});
-	},
-	
-	render: function() {
-		//TODO: values should be from current layer object.
-        this.$el.html(this.template({
-//            name: "dummy name",
-//            description: "dummy description",
-//            modifier: "dummy modifier",
-//            modified: "dummy date time",
-//            creator: "dummy creator",
-//            created: "dummy date time"
-        }));
-	},
-	
-	afterRender: function() {
-	}
-});
 
-
-//TODO: rewrite this using a schema and backbone form!!
-app.views.LayerInfoTabView = Backbone.View.extend({
+app.views.LayerInfoTabView = Backbone.Marionette.ItemView.extend({
 	template: '#template-layer-info',
-	events: {
-		
-	},
 	initialize: function() {
-		var source = $(this.template).html();
-		if(_.isUndefined(source))
-			this.template = function() {
-			return '';
-		};
-		else {
-			this.template = Handlebars.compile(source);
-		}
-		_.bindAll(this, 'render', 'afterRender');
-		var _this = this;
-		this.render = _.wrap(this.render, function(render) {
-			render();
-			_this.afterRender();
-			return _this;
-		});
 	},
-	render: function() {
-		//TODO: values should be from current layer object.
-        this.$el.html(this.template({
-            name: "dummy name",
-            description: "dummy description",
-            modifier: "dummy modifier",
-            modified: "dummy date time",
-            creator: "dummy creator",
-            created: "dummy date time"
-        }));
-	},
-	afterRender: function() {
+	serializeData: function() {
+		var data = this.model.toJSON();
+		data.name = this.model._name;
+		data.description = this.model._description;
+		data.modifier = this.model._modifier;
+		data.modified = this.model._modified;
+		data.creator = this.model._creator;
+		data.created = this.model._created;
+		return data;
 	}
 });
 
@@ -384,7 +321,7 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
         col2: {
             selector: '#col2',
             regionType: app.views.HideableRegion
-        },
+        }
     },
 	
     initialize: function() {
@@ -409,7 +346,7 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
     	app.psv = this;
     	//create a sub view that shows all features 
     	//and show on col1 (this.col1.show(subview)) <-- see planner PlanSequenceView.
-    },
+    }
 });
 
 
@@ -557,6 +494,48 @@ app.views.FancyTreeView = Backbone.View.extend({
     
 });
 
+app.views.EditingToolsView = Backbone.Marionette.ItemView.extend({
+	template: '#template-editing-tools',
+	initialize: function() {
+		var map = app.map.map;
+		featureOverlay = new ol.FeatureOverlay({
+		  style: new ol.style.Style({
+		    fill: new ol.style.Fill({
+		      color: 'rgba(255, 255, 255, 0.2)'
+		    }),
+		    stroke: new ol.style.Stroke({
+		      color: '#ffcc33',
+		      width: 2
+		    }),
+		    image: new ol.style.Circle({
+		      radius: 7,
+		      fill: new ol.style.Fill({
+		        color: '#ffcc33'
+		      })
+		    })
+		  })
+		});
+		featureOverlay.setMap(map);
+
+		var modify = new ol.interaction.Modify({
+		  features: featureOverlay.getFeatures(),
+		  // the SHIFT key must be pressed to delete vertices, so
+		  // that new vertices can be drawn at the same position
+		  // of existing vertices
+		  deleteCondition: function(event) {
+		    return ol.events.condition.shiftKeyOnly(event) &&
+		        ol.events.condition.singleClick(event);
+		  }
+		});
+		
+		map.addInteraction(modify);
+	},
+	onRender: function(){
+
+	}
+
+});
+
 
 app.views.TabNavView = Backbone.Marionette.LayoutView.extend({
     template: '#template-tabnav',
@@ -569,7 +548,7 @@ app.views.TabNavView = Backbone.Marionette.LayoutView.extend({
     },
 
     viewMap: {
-    	'layers': app.views.LayersView,
+    	'layers': app.views.LayerCollectionTabView,
     	'info': app.views.LayerInfoTabView,
     	'features': app.views.FeaturesTabView
     },
@@ -583,7 +562,7 @@ app.views.TabNavView = Backbone.Marionette.LayoutView.extend({
 
     onRender: function() {
         if (! this.options.initialTab) {
-            this.options.initialTab = 'meta';
+            this.options.initialTab = 'layers';
         }
         if (!_.isUndefined(app.currentTab)) {
             this.trigger('tabSelected', app.currentTab);
@@ -610,12 +589,11 @@ app.views.TabNavView = Backbone.Marionette.LayoutView.extend({
             }
         });
         var viewClass = this.viewMap[tabId];
-        if (! viewClass) {
-        	console.log("there is no view class found");
-        	return undefined; 
-        }
+        if (! viewClass) { return undefined; }
 
-        var view = new viewClass({ /* TODO: later set the view's model here.*/});
+        var view = new viewClass({
+        	model: app.mapLayer
+        });
         this.tabContent.show(view);
 
         app.vent.trigger('tab:change', tabId);

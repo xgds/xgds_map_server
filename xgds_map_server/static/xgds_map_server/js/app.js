@@ -32,7 +32,8 @@ var app = (function($, _, Backbone) {
     app.dirty = false;
     app.addRegions({
         toolbar: '#toolbar',
-        'tabs' : '#tabs'
+        'tabs' : '#tabs',
+        'editingTools': '#editingTools'
     });
 
     app.module('State', function(options) {
@@ -203,50 +204,49 @@ var app = (function($, _, Backbone) {
 
     app.addInitializer(function(options) {
 
-            this.options = options = _.defaults(options || {}, {
-                readOnly: false,
+        this.options = options = _.defaults(options || {}, {
+            readOnly: false,
 //                planLineWidth: 2,
 //                plannerClampMode: undefined
-                // This enum value has to be sniffed out of the Plugin once it's loaded.
-            });
-
-            // no directional stations defaults rotation handles to false
-            if (!this.options.directionalStations) {
-                this.options.mapRotationHandles = false;
-            }
-
-//            this.Simulator = this.options.simulator;
-            this.commandRenderers = this.options.commandRenderers;
-
-            // rotation handles option
-            this.mapRotationHandles = (_.isBoolean(this.options.mapRotationHandles)) ?
-                this.options.mapRotationHandles : true;
-
-
-            app.selectedViews = []; // This array holds the views currently selected by checkboxes
-            app.copiedCommands = []; // array of copied commands
-
-            app.map = new app.views.OLView({
-                el: '#map'
-            });
-            app.toolbar.show(new app.views.ToolbarView());
-            app.tabs.show(new app.views.TabNavView());
-            
-            app.vent.trigger('clearSaveStatus');
-            if (this.options.readOnly == true){
-                app.vent.trigger('readOnly');
-            }
+            // This enum value has to be sniffed out of the Plugin once it's loaded.
         });
 
+        // no directional stations defaults rotation handles to false
+        if (!this.options.directionalStations) {
+            this.options.mapRotationHandles = false;
+        }
+
+//            this.Simulator = this.options.simulator;
+        this.commandRenderers = this.options.commandRenderers;
+
+        // rotation handles option
+        this.mapRotationHandles = (_.isBoolean(this.options.mapRotationHandles)) ?
+            this.options.mapRotationHandles : true;
+
+        app.mapLayer = new app.models.MapLayer();
+        
+        app.selectedViews = []; // This array holds the views currently selected by checkboxes
+        app.copiedCommands = []; // array of copied commands
+
+        app.map = new app.views.OLView({
+            el: '#map'
+        });
+        app.toolbar.show(new app.views.ToolbarView());
+        app.tabs.show(new app.views.TabNavView());
+        
+        app.editingTools.show(new app.views.EditingToolsView());
+		app.util.addDrawTypeSelectChangeCallBack();
+        app.vent.trigger('clearSaveStatus');
+        if (this.options.readOnly == true){
+            app.vent.trigger('readOnly');
+        }
+    });
+    
     app.router = new Backbone.Router({
         routes: {
         	'layers' : 'layers',
         	'info' : 'info',
         	'features': 'features'
-//            'meta' : 'meta',
-//            'sequence' : 'sequence',
-//            'layers' : 'layers',
-//            'tools' : 'tools'
         }
     });
 
@@ -295,6 +295,27 @@ var app = (function($, _, Backbone) {
     */
 
     app.util = {
+    	addInteraction: function(typeSelect) {
+    	  var map = app.map.map;
+		  draw = new ol.interaction.Draw({
+		    features: featureOverlay.getFeatures(),
+		    type: /** @type {ol.geom.GeometryType} */ (typeSelect.value)
+		  });
+		  map.addInteraction(draw);
+    	},
+    	addDrawTypeSelectChangeCallBack: function() {
+	    	var map = app.map.map;
+	    	var typeSelect = document.getElementById('type');
+			/**
+			 * Let user change the geometry type.
+			 * @param {Event} e Change event.
+			 */
+			typeSelect.onchange = function(e) {
+			  map.removeInteraction(draw);
+			  app.util.addInteraction(typeSelect);
+			};
+			app.util.addInteraction(typeSelect);
+	    },
         indexBy: function(list, keyProp) {
             // Return an object that indexes the objects in a list by their key property.
             // keyProp should be a string.
