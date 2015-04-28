@@ -76,10 +76,12 @@ $(function() {
                       this.kmlGroup
                     ],
                     view: new ol.View({
-                      center: ol.proj.transform([37.41, 8.82], 'EPSG:4326', 'EPSG:3857'),
-                      zoom: 6
+//                      center: ol.proj.transform([37.41, 8.82], 'EPSG:4326', 'EPSG:3857'),
+                    	center: [-11000000, 4600000],
+                    	zoom: 4
                     })
                   });
+                
                 this.buildStyles();
                 app.vent.on('layers:loaded', this.render);
                 app.vent.on('layers:loaded', this.initializeMapData);
