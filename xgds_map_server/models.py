@@ -42,12 +42,12 @@ class AbstractMapNode(models.Model):
     deleted = models.BooleanField(blank=True, default=False)
 
     @property
-    def parentId(self):
-        """ child classes must define parentId"""
+    def parent(self):
+        """ child classes must define parent"""
         return None
 
     def __unicode__(self):
-        return self.uuid
+        return self.name
 
     class Meta:
         abstract = True
@@ -57,9 +57,9 @@ class MapGroup(AbstractMapNode):
     """
     A Map Group, or folder in the map tree.
     """
-    parentId = models.ForeignKey('self', db_column='parentId',
-                                 null=True, blank=True,
-                                 verbose_name='parent group')
+    parent = models.ForeignKey('self', db_column='parentId',
+                               null=True, blank=True,
+                               verbose_name='parent group')
 
 
 class AbstractMap(AbstractMapNode):
@@ -68,9 +68,9 @@ class AbstractMap(AbstractMapNode):
     """
     locked = models.BooleanField(blank=True, default=False)
     visible = models.BooleanField(blank=False, default=False)
-    parentId = models.ForeignKey(MapGroup, db_column='parentId',
-                                 null=True, blank=True,
-                                 verbose_name='group')
+    parent = models.ForeignKey(MapGroup, db_column='parentId',
+                               null=True, blank=True,
+                               verbose_name='group')
 
     class Meta:
         abstract = True
@@ -225,3 +225,5 @@ STYLE_MANAGER = ModelCollectionManager(AbstractStyle,
                                         PointStyle,
                                         DrawingStyle,
                                         GroundOverlayStyle])
+
+MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap])

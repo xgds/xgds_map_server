@@ -19,32 +19,44 @@ from django.contrib import admin
 from xgds_map_server import models
 
 
-class MapAdmin(admin.ModelAdmin):
+class KmlMapAdmin(admin.ModelAdmin):
     list_display = ('uuid',
                     'name',
-                    'parentId',
+                    'parent',
                     'openable',
                     'visible',
                     'kmlFile',
                     'description')
     list_editable = list_display[1:]
-    ordering = ('parentId', 'name')
+    ordering = ('parent', 'name')
     search_fields = ('name',
                      'description',
                      'kmlFile')
 
 
-class MapGroupAdmin(admin.ModelAdmin):
+class MapLayerAdmin(admin.ModelAdmin):
     list_display = ('uuid',
                     'name',
-                    'parentId',
+                    'parent',
+                    'visible',
                     'description')
     list_editable = list_display[1:]
-    ordering = ('parentId', 'name')
+    ordering = ('parent', 'name')
     search_fields = ('name',
                      'description')
 
-admin.site.register(models.KmlMap, MapAdmin)
+
+class MapGroupAdmin(admin.ModelAdmin):
+    list_display = ('uuid',
+                    'name',
+                    'parent',
+                    'description')
+    list_editable = list_display[1:]
+    ordering = ('parent', 'name')
+    search_fields = ('name',
+                     'description')
+
+admin.site.register(models.KmlMap, KmlMapAdmin)
 admin.site.register(models.MapGroup, MapGroupAdmin)
-admin.site.register(models.MapLayer, MapGroupAdmin)
+admin.site.register(models.MapLayer, MapLayerAdmin)
 #TODO register other map layer stuff

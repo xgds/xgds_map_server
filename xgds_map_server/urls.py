@@ -39,7 +39,7 @@ urlpatterns = patterns(
      {},
      'mapEditor'),
     # Open Map Editor on a particular map layer
-    (r'^mapeditor/(?P<layerID>\d+)/', views.getMapEditorPage,
+    (r'^mapeditor/(?P<layerID>\w+)/', views.getMapEditorPage,
      {},
      'editLayer'),
 
@@ -50,15 +50,15 @@ urlpatterns = patterns(
     (r'^treejson/', views.getFancyTreeJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']},
      'mapTreeJSON'),
     # HTML detail view of map
-    (r'^detail/(?P<mapID>\d+)/', views.getMapDetailPage,
+    (r'^detail/(?P<mapID>\w+)/', views.getMapDetailPage,
      {'readOnly': True },
      'mapDetail'),
     # HTML detail of a folder (group)
-    (r'^folderDetail/(?P<groupID>\d+)/', views.getFolderDetailPage,
+    (r'^folderDetail/(?P<groupID>\w+)/', views.getFolderDetailPage,
      {'readOnly': True},
      'folderDetail'),
     # HTML view to delete a folder (group)
-    (r'^folderDelete/(?P<groupID>\d+)/', views.getDeleteFolderPage,
+    (r'^folderDelete/(?P<groupID>\w+)/', views.getDeleteFolderPage,
      {},
      'folderDelete'),
     # HTML view to add a folder (group)
@@ -73,7 +73,7 @@ urlpatterns = patterns(
      {},
      'addLayer'),
     # HTML view to confirm deletion of view
-    (r'^delete/(?P<mapID>\d+)/', views.getDeleteMapPage,
+    (r'^delete/(?P<mapID>\w+)/', views.getDeleteMapPage,
      {},
      'mapDelete'),
     # List of deleted maps that can be un-deleted
@@ -81,9 +81,8 @@ urlpatterns = patterns(
      {'readOnly': True},
      'deletedMaps'),
     # JSON-accepting url that moves maps/folders around
-    (r'^move', views.handleJSONMove,
-     {},
-     'jsonMove'),
+#     (r'^move', views.handleJSONMove, {}, 'jsonMove'),
+    (r'^moveNode', views.moveNode, {}, 'moveNode'),
 
     # --- this url is deprecated, don't use it in new code ---
     # This URL should receive a static files

@@ -47,7 +47,7 @@ def importMaps(parent, paths):
         parent = MapGroup.objects.get(parent)
     elif parent is None:
         print 'no parent specified, fetching the root MapGroup to use as the parent'
-        parent = MapGroup.objects.get(parentId=None)
+        parent = MapGroup.objects.get(parent=None)
     mapDir = os.path.realpath(os.path.join(settings.DATA_ROOT, settings.XGDS_MAP_SERVER_DATA_SUBDIR))
     cwd = os.path.realpath(os.getcwd())
     if mapDir != cwd:
@@ -62,7 +62,7 @@ def importMaps(parent, paths):
                 group, created = (MapGroup.objects.get_or_create
                                   (name=name,
                                    defaults=dict(description='-',
-                                                 parentId=parent)))
+                                                 parentId=parent.uuid)))
                 if created:
                     print 'add    MapGroup %s -- parent %s' % (name, parent.name)
                 else:
@@ -81,7 +81,7 @@ def importMaps(parent, paths):
                                                 kmlFile=os.path.relpath(path),
                                                 openable=True,
                                                 visible=False,
-                                                parentId=parent)))
+                                                parentId=parent.uuid)))
                 if created:
                     print 'add    Map %s -- parent %s' % (name, parent.name)
                 else:

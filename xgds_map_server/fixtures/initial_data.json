@@ -1,10 +1,23 @@
 [
-{"pk":1, "model":"xgds_map_server.MapGroup", "fields":
+{"pk":"mg1", "model":"xgds_map_server.MapGroup", "fields":
 	{"name":"xGDS Maps", 
 	"description":"Root for all of the maps on the xGDS server"}
 },
-{"pk":2, "model":"xgds_map_server.KmlMap", "fields":
-{"name":"Plans", "description":"All of the plans on the server", "kmlFile":"/xgds_planner2/planIndex.kml", "openable":1, "visible":0, "parentId": 1}},
-{"pk":4, "model":"xgds_map_server.KmlMap", "fields":
-{"name":"Notes", "description":"Today's notes set to show on map", "kmlFile":"/notes/kml", "openable":1, "visible":0, "parentId": 1}}
+{"pk":"kml2", "model":"xgds_map_server.KmlMap", "fields":
+	{"name":"Plans", "description":"All of the plans on the server", 
+	 "kmlFile":"/xgds_planner2/planIndex.kml", 
+	 "openable":1, 
+	 "visible":0,
+	"parent": "mg1"
+	}
+},
+{"pk":"kml4", "model":"xgds_map_server.KmlMap", "fields":
+	{"name":"Notes", 
+	 "description":"Today's notes set to show on map", 
+	 "kmlFile":"/notes/kml", 
+	 "openable":1, 
+	 "visible":0, 
+	 "parent": "mg1"
+	 }
+  }
 ]
