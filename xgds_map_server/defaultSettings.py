@@ -26,6 +26,10 @@ XGDS_MAP_SERVER_TOP_LEVEL = {
     "filename": "xgds.kml"
 }
 
+# kml root from xgds_map_server
+XGDS_MAP_SERVER_LAYER_FEED_URL = "/xgds_map_server/treejson/"
+
+
 # A list of regex strings. If the name of a Map object matches one of
 # the regexes (using re.search), the Map is considered to be a logo. (If
 # the map feed is requested with the URL parameter 'logo=0', logo Maps

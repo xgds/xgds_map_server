@@ -39,7 +39,7 @@ from django.views.decorators.cache import never_cache
 
 from xgds_map_server import settings
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MAP_NODE_MANAGER
-from xgds_map_server.forms import MapForm, MapGroupForm
+from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm
 from geocamUtil.geoEncoder import GeoDjangoEncoder
 
 
@@ -203,12 +203,6 @@ def moveNode(request):
 #     move.save()
 #     return HttpResponse()  # empty response with 200 means success
 
-
-def getAddLayerPage(request):
-    """ TODO Grace Implement """
-    return HttpResponse()
-
-
 def getAddKmlPage(request):
     """
     HTML view to create new map
@@ -260,6 +254,49 @@ def getAddKmlPage(request):
                                   {'mapTreeUrl': mapTreeUrl,
                                    'mapForm': map_form},
                                   context_instance=RequestContext(request))
+
+
+def getAddLayerPage(request):
+    """
+    HTML view to create a new layer
+    """
+    mapTreeUrl = (request.build_absolute_uri
+                  (reverse('mapTree')))
+    print "inside add layer page"
+    if request.method == 'POST':
+        layer_form = MapLayerForm(request.POST)
+        if layer_form.is_valid():
+            print "Layer form is valid"
+            map_layer = MapLayer()
+            map_layer.name = group_form.cleaned_data['name']
+            map_layer.description = group_form.cleaned_data['description']
+            map_layer.creator = group.form.cleaned_data['creator']
+            map_layer.modifier = group.form.cleaned_data['modifier']
+            map_layer.creation_time = group.form.cleaned_data['creation_time']
+            map_layer.modification_time = group.form.cleaned_data['modification_time']
+            map_layer.deleted = group.form.cleaned_data['deleted']
+            map_layer.locked = group.form.cleaned_data['locked']
+            map_layer.visible = group.form.cleaned_data['visible']
+            print "about to save map layer"
+            map_layer.save()
+            print "map layer saved"
+        else: 
+            print "layer form is not valid"
+            return render_to_response("AddLayer.html",
+                                  {'mapTreeUrl': mapTreeUrl,
+                                   'layerForm': layer_form,
+                                   'error': True},
+                                   context_instance=RequestContext(request))
+        return HttpResponseRedirect(mapTreeUrl)
+    else:
+        print "the request method was not POST"
+        print request.method
+        layer_form = MapLayerForm()
+        return render_to_response("AddLayer.html",
+                      {'mapTreeUrl': mapTreeUrl,
+                       'layerForm': layer_form,
+                       'error': False},
+                       context_instance=RequestContext(request))
 
 
 def getAddFolderPage(request):

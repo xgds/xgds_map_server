@@ -211,17 +211,17 @@ var app = (function($, _, Backbone) {
             // This enum value has to be sniffed out of the Plugin once it's loaded.
         });
 
-        // no directional stations defaults rotation handles to false
-        if (!this.options.directionalStations) {
-            this.options.mapRotationHandles = false;
-        }
-
-//            this.Simulator = this.options.simulator;
-        this.commandRenderers = this.options.commandRenderers;
-
-        // rotation handles option
-        this.mapRotationHandles = (_.isBoolean(this.options.mapRotationHandles)) ?
-            this.options.mapRotationHandles : true;
+//        // no directional stations defaults rotation handles to false
+//        if (!this.options.directionalStations) {
+//            this.options.mapRotationHandles = false;
+//        }
+//
+////            this.Simulator = this.options.simulator;
+//        this.commandRenderers = this.options.commandRenderers;
+//
+//        // rotation handles option
+//        this.mapRotationHandles = (_.isBoolean(this.options.mapRotationHandles)) ?
+//            this.options.mapRotationHandles : true;
 
         app.mapLayer = new app.models.MapLayer();
         

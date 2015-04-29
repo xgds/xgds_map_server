@@ -178,46 +178,5 @@ app.models = app.models || {};
 	  
 	  toJSON: toJsonWithFilters
   });
-//    models.Info = Backbone.RelationalModel.extend({
-//        idAttribute: '_id', // Doesn't exist, but allows us to change the "id"
-//        
-//        initialize: function() {
-//        	//construct a schema compatible with backbone-forms
-//        	this.schema = {
-//        		// put static schema	
-//        	};
-//            this.data = {
-//                // put static data elements here
-//            };
-//            var params = []; //later add info params...
-//            var formsData = xpjsonToBackboneFormsSchema(params, 'Info');
-//            _.extend(this.schema, formsData.schema);
-//            _.extend(this.data, formsData.data);
-//            this.on('change', function() { /* app.vent.trigger('change:plan');*/ });
-//            // all attributes in the schema need to be defined, else they won't
-//            // be in the
-//            // json and so won't change when undo/redo is hit
-//            console.log("about to render the schema as a form");
-//            _.each(_.keys(this.schema), function(attr) {
-//                if (!this.has(attr)) {
-//                    if (_.has(this.data, attr)) {
-//                        this.set(attr, this.data[attr]);
-//                    }
-//                }
-//            }, this);
-//            // the model needs an "id" attribute, else a memory leak occurs b/c
-//            // relational can't find the model (it tries to use the id
-//            // attribute)
-//            // and so creates a new one, which is bad
-//            this.set(this.idAttribute, this.cid);
-//        },
-//        
-//	    hasParam: function(paramName) {
-//	        // return true if the given param name exists in this command's spec
-//	        var params = app.commandSpecs[this.get('type')].params;
-//	        var paramNames = _.pluck(params, 'id');
-//	        return _.contains(paramNames, paramName);
-//	    }
-//    });
 
 })(app.models);
