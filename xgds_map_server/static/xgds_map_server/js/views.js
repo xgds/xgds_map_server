@@ -346,9 +346,9 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
 
     	//create a sub view that shows all features 
     	//and show on col1 (this.col1.show(subview)) <-- see planner PlanSequenceView.
-//    	var featureCollectionView = new app.views.FeatureCollectionView({
-//    			collection: app.mapLayer.get('feature')
-//    	});
+    	var featureCollectionView = new app.views.FeatureCollectionView({
+    			collection: app.mapLayer.get('feature')
+    	});
     }
 });
 

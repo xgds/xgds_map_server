@@ -111,8 +111,10 @@
         placemarkCircleHighlightedUrl: "{{ placemark_circle_highlighted_url }}",
         placemarkDirectionalUrl: "{{ placemark_directional_url }}",
         placemarkSelectedDirectionalUrl: "{{ placemark_selected_directional_url }}",
-        readOnly: {{ editable|yesno:"false,true" }}
+        readOnly: {{ editable|yesno:"false,true" }},
+        mapLayerDict: {{ mapLayerDict|safe }}
     };
+    
 	
 	$(function(){
 	    app.start(plannerAppOptions);

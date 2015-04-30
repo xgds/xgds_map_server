@@ -175,8 +175,26 @@ app.models = app.models || {};
 		  this._creator = "dummy creator";
 		  this._created = "dummy date";
 	  },
-	  
 	  toJSON: toJsonWithFilters
   });
+  
+  models.Polygon = Backbone.RelationalModel.extend({
+	 idAttribute: '_id',
+     relations: [
+         {
+             type: Backbone.HasMany,
+             relatedModel: 'app.models.MapLayer',
+             key: 'sequence',
+             collectionType: 'app.models.PolygonCollection',
+             createModels: true,
+             reverseRelation: {
+                 key: 'polygon',
+                 includeInJSON: false
+             }
+         }
+     ],
+	 toJSON: toJsonWithFilters
+  });
+  
 
 })(app.models);
