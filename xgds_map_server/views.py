@@ -265,18 +265,20 @@ def getAddLayerPage(request):
     print "inside add layer page"
     if request.method == 'POST':
         layer_form = MapLayerForm(request.POST)
+        print "Is layer form valid?"
+        print layer_form.is_valid()
         if layer_form.is_valid():
             print "Layer form is valid"
             map_layer = MapLayer()
-            map_layer.name = group_form.cleaned_data['name']
-            map_layer.description = group_form.cleaned_data['description']
-            map_layer.creator = group.form.cleaned_data['creator']
-            map_layer.modifier = group.form.cleaned_data['modifier']
-            map_layer.creation_time = group.form.cleaned_data['creation_time']
-            map_layer.modification_time = group.form.cleaned_data['modification_time']
-            map_layer.deleted = group.form.cleaned_data['deleted']
-            map_layer.locked = group.form.cleaned_data['locked']
-            map_layer.visible = group.form.cleaned_data['visible']
+            map_layer.name = layer_form.cleaned_data['name']
+            map_layer.description = layer_form.cleaned_data['description']
+            map_layer.creator = layer_form.cleaned_data['creator']
+            map_layer.modifier = layer_form.cleaned_data['modifier']
+            map_layer.creation_time = layer_form.cleaned_data['creation_time']
+            map_layer.modification_time = layer_form.cleaned_data['modification_time']
+            map_layer.deleted = layer_form.cleaned_data['deleted']
+            map_layer.locked = layer_form.cleaned_data['locked']
+            map_layer.visible = layer_form.cleaned_data['visible']
             print "about to save map layer"
             map_layer.save()
             print "map layer saved"
