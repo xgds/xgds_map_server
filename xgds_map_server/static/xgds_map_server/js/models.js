@@ -168,33 +168,51 @@ app.models = app.models || {};
   models.MapLayer = Backbone.RelationalModel.extend({
 	  idAttribute: '_id', //prevent clobbering mapLayer ID's
 	  initialize: function() {
-		  this._name = "dummy map layer name";
-		  this._description = "dummy description";
-		  this._modifier = "dummy map layer modifier";
-		  this._modified = "dummy date";
-		  this._creator = "dummy creator";
-		  this._created = "dummy date";
+		  this._name = app.options.mapLayerDict['name'];
+		  this._description = app.options.mapLayerDict['description'];
+		  this._modifier = app.options.mapLayerDict['modifier'];
+		  this._modified = app.options.mapLayerDict['modification_time'];
+		  this._creator = app.options.mapLayerDict['creator'];
+		  this._created = app.options.mapLayerDict['creation_time'];
 	  },
-	  toJSON: toJsonWithFilters
-  });
-  
-  models.Polygon = Backbone.RelationalModel.extend({
-	 idAttribute: '_id',
      relations: [
          {
              type: Backbone.HasMany,
-             relatedModel: 'app.models.MapLayer',
-             key: 'sequence',
-             collectionType: 'app.models.PolygonCollection',
+             relatedModel: 'app.models.Feature',
+             key: 'feature',
+             collectionType: 'app.models.FeatureCollection',
              createModels: true,
              reverseRelation: {
-                 key: 'polygon',
+                 key: 'belongsTo',
                  includeInJSON: false
              }
          }
      ],
+	  toJSON: toJsonWithFilters
+  });
+  
+  
+  /*
+   * The Feature model represents all feature objects (Polygons, Lines, etc).
+   * This is inconvenient, but it has to be this way until we invent 
+   * a Collection that can instantiate more than one model type.
+   */
+  models.Feature = Backbone.RelationalModel.extend({
+	 idAttribute: '_id',
+	 initialize: function() {
+		this._name = undefined;
+		this._description = undefined;
+		this._type = undefined;
+		this._visible = true;
+	 },
 	 toJSON: toJsonWithFilters
   });
   
-
+  models.FeatureCollection = Backbone.Collection.extend({
+	 model: models.Feature,
+	 initialize: function() {
+		 
+	 }
+  });
+  
 })(app.models);

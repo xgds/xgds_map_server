@@ -170,7 +170,6 @@ app.views.LayerInfoTabView = Backbone.Marionette.ItemView.extend({
 	},
 	serializeData: function() {
 		var data = this.model.toJSON();
-		console.log("data is", data);
 		data.name = this.model._name;
 		data.description = this.model._description;
 		data.modifier = this.model._modifier;

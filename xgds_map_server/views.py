@@ -23,6 +23,7 @@ import glob
 import logging
 import urllib
 import os
+import datetime
 
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.staticfiles.storage import staticfiles_storage
@@ -271,14 +272,17 @@ def getAddLayerPage(request):
         if layer_form.is_valid():
             map_layer = MapLayer()
             map_layer.name = layer_form.cleaned_data['name']
+            map_layer.uuid = 'ml102'  #TODO: hard coded for now. fix it later
             map_layer.description = layer_form.cleaned_data['description']
-            map_layer.creator = layer_form.cleaned_data['creator']
-            map_layer.modifier = layer_form.cleaned_data['modifier']
-            map_layer.creation_time = layer_form.cleaned_data['creation_time']
-            map_layer.modification_time = layer_form.cleaned_data['modification_time']
-            map_layer.deleted = layer_form.cleaned_data['deleted']
+            map_layer.creator = request.user.username
+            map_layer.modifier = request.user.username
+            map_layer.creation_time = datetime.datetime.now()
+            map_layer.modification_time = datetime.datetime.now()
+            map_layer.deleted = False
             map_layer.locked = layer_form.cleaned_data['locked']
             map_layer.visible = layer_form.cleaned_data['visible']
+            mapGroup = layer_form.cleaned_data['parent']  
+            map_layer.parent = MapGroup.objects.get(name=mapGroup)
             map_layer.save()
         else: 
             return render_to_response("AddLayer.html",
