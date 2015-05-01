@@ -231,9 +231,7 @@ app.views.FeatureListItemView = Backbone.Marionette.ItemView.extend({
 app.views.FeatureElementItemView = app.views.FeatureListItemView.extend({
     events: {
         click: function() {
-//            app.State.metaExpanded = true;
-//            app.State.addCommandsExpanded = false;
-//            app.State.commandSelected = undefined;
+            app.State.metaExpanded = true;
             this.expand();
             var type = this.model.get('type'); //"feature"
             app.vent.trigger('showItem:' + type.toLowerCase(), this.model);
@@ -250,8 +248,8 @@ app.views.FeatureElementItemView = app.views.FeatureListItemView.extend({
 });
 
 
-//subview for features tab (1st col, features list)
 app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
+	tagName: 'ul',
 	className: 'feature-list',
 	childView: app.views.FeatureElementItemView,
 	childViewOptions: {
@@ -346,8 +344,14 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
     	//create a sub view that shows all features 
     	//and show on col1 (this.col1.show(subview)) <-- see planner PlanSequenceView.
     	var featureCollectionView = new app.views.FeatureCollectionView({
-    			collection: app.mapLayer.get('feature')
+			collection: app.mapLayer.get('feature')
     	});
+    	
+    	try {
+    		this.col1.show(featureCollectionView);
+    	} catch (exception) {
+    		console.log(exception)
+    	}
     }
 });
 
