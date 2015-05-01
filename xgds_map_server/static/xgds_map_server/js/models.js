@@ -168,56 +168,51 @@ app.models = app.models || {};
   models.MapLayer = Backbone.RelationalModel.extend({
 	  idAttribute: '_id', //prevent clobbering mapLayer ID's
 	  initialize: function() {
-		  this._name = "dummy map layer name";
-		  this._description = "dummy description";
-		  this._modifier = "dummy map layer modifier";
-		  this._modified = "dummy date";
-		  this._creator = "dummy creator";
-		  this._created = "dummy date";
+		  this._name = app.options.mapLayerDict['name'];
+		  this._description = app.options.mapLayerDict['description'];
+		  this._modifier = app.options.mapLayerDict['modifier'];
+		  this._modified = app.options.mapLayerDict['modification_time'];
+		  this._creator = app.options.mapLayerDict['creator'];
+		  this._created = app.options.mapLayerDict['creation_time'];
 	  },
-	  
+     relations: [
+         {
+             type: Backbone.HasMany,
+             relatedModel: 'app.models.Feature',
+             key: 'feature',
+             collectionType: 'app.models.FeatureCollection',
+             createModels: true,
+             reverseRelation: {
+                 key: 'belongsTo',
+                 includeInJSON: false
+             }
+         }
+     ],
 	  toJSON: toJsonWithFilters
   });
-//    models.Info = Backbone.RelationalModel.extend({
-//        idAttribute: '_id', // Doesn't exist, but allows us to change the "id"
-//        
-//        initialize: function() {
-//        	//construct a schema compatible with backbone-forms
-//        	this.schema = {
-//        		// put static schema	
-//        	};
-//            this.data = {
-//                // put static data elements here
-//            };
-//            var params = []; //later add info params...
-//            var formsData = xpjsonToBackboneFormsSchema(params, 'Info');
-//            _.extend(this.schema, formsData.schema);
-//            _.extend(this.data, formsData.data);
-//            this.on('change', function() { /* app.vent.trigger('change:plan');*/ });
-//            // all attributes in the schema need to be defined, else they won't
-//            // be in the
-//            // json and so won't change when undo/redo is hit
-//            console.log("about to render the schema as a form");
-//            _.each(_.keys(this.schema), function(attr) {
-//                if (!this.has(attr)) {
-//                    if (_.has(this.data, attr)) {
-//                        this.set(attr, this.data[attr]);
-//                    }
-//                }
-//            }, this);
-//            // the model needs an "id" attribute, else a memory leak occurs b/c
-//            // relational can't find the model (it tries to use the id
-//            // attribute)
-//            // and so creates a new one, which is bad
-//            this.set(this.idAttribute, this.cid);
-//        },
-//        
-//	    hasParam: function(paramName) {
-//	        // return true if the given param name exists in this command's spec
-//	        var params = app.commandSpecs[this.get('type')].params;
-//	        var paramNames = _.pluck(params, 'id');
-//	        return _.contains(paramNames, paramName);
-//	    }
-//    });
-
+  
+  
+  /*
+   * The Feature model represents all feature objects (Polygons, Lines, etc).
+   * This is inconvenient, but it has to be this way until we invent 
+   * a Collection that can instantiate more than one model type.
+   */
+  models.Feature = Backbone.RelationalModel.extend({
+	 idAttribute: '_id',
+	 initialize: function() {
+		this._name = undefined;
+		this._description = undefined;
+		this._type = undefined;
+		this._visible = true;
+	 },
+	 toJSON: toJsonWithFilters
+  });
+  
+  models.FeatureCollection = Backbone.Collection.extend({
+	 model: models.Feature,
+	 initialize: function() {
+		 
+	 }
+  });
+  
 })(app.models);

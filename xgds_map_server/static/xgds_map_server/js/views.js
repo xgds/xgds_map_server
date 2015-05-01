@@ -307,7 +307,7 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
 	
 });
 
-// view for features tab (2-columns)
+
 app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
 	template: '#template-features-view',
 	
@@ -340,12 +340,14 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
         } catch (err) { 
         	
         }
-    	var headerView = new app.views.FeaturesHeaderView({
-    	});
+    	var headerView = new app.views.FeaturesHeaderView({});
     	this.colhead1.show(headerView);
-    	app.psv = this;
+
     	//create a sub view that shows all features 
     	//and show on col1 (this.col1.show(subview)) <-- see planner PlanSequenceView.
+    	var featureCollectionView = new app.views.FeatureCollectionView({
+    			collection: app.mapLayer.get('feature')
+    	});
     }
 });
 
@@ -454,21 +456,29 @@ app.views.FancyTreeView = Backbone.View.extend({
     },
     createTree: function() {
         if (_.isUndefined(app.tree)){
-            var layertreeNode = $("#layertree");
-//            layertreeNode.detach();
-//            $("#layertreeContainer").append(layertreeNode);
-//            layertreeNode = $("#layertree");
+            var layertreeNode = this.$el.find("#layertree");
             var mytree = layertreeNode.fancytree({
                 extensions: ["persist"],
                 source: app.treeData,
                 checkbox: true,
                 select: function(event, data) {
-                    if (_.isUndefined(data.node.kmlLayerView)) {
-                        // make a new one
-                        app.vent.trigger('kmlNode:create', data.node);
-                    } else {
-                        data.node.kmlLayerView.render();
+                    if (!_.isUndefined(data.node.data.kmlFile)){
+                        if (_.isUndefined(data.node.kmlLayerView)) {
+                            // make a new one
+                            app.vent.trigger('kmlNode:create', data.node);
+                        } else {
+                            data.node.kmlLayerView.render();
+                        }
+                    } else if (!_.isUndefined(data.node.data.layerData)){
+                        if (_.isUndefined(data.node.mapLayerView)) {
+                            // make a new one
+                            app.vent.trigger('mapLayerNode:create', data.node);
+                        } else {
+                            data.node.mapLayerView.render();
+                        }
                     }
+
+                   
                   },
                   persist: {
                       // Available options with their default:
@@ -548,9 +558,9 @@ app.views.TabNavView = Backbone.Marionette.LayoutView.extend({
     },
 
     viewMap: {
-    	'layers': app.views.LayerCollectionTabView,
     	'info': app.views.LayerInfoTabView,
-    	'features': app.views.FeaturesTabView
+    	'features': app.views.FeaturesTabView,
+    	'layers': app.views.FancyTreeView
     },
 
     initialize: function() {
@@ -562,7 +572,7 @@ app.views.TabNavView = Backbone.Marionette.LayoutView.extend({
 
     onRender: function() {
         if (! this.options.initialTab) {
-            this.options.initialTab = 'layers';
+            this.options.initialTab = 'info';
         }
         if (!_.isUndefined(app.currentTab)) {
             this.trigger('tabSelected', app.currentTab);

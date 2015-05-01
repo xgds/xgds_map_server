@@ -16,7 +16,7 @@
 
 from django import forms
 
-from xgds_map_server.models import KmlMap, MapGroup
+from xgds_map_server.models import KmlMap, MapGroup, MapLayer
 
 # pylint: disable=C1001
 
@@ -47,3 +47,13 @@ class MapGroupForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'size': 80})
         }
         exclude = ('deleted',)
+
+
+class MapLayerForm(forms.ModelForm):
+    
+    class Meta:
+        model = MapLayer
+        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted']
+        widgets = {
+           'name': forms.TextInput(attrs={'size': 80})
+       }

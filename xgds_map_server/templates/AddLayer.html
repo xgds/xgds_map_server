@@ -1,0 +1,11 @@
+{% extends "MapBase.html" %}
+
+{% block contents %}
+{{ block.super }}
+{% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
+<h2>Add Layer</h2>
+<form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
+{{ layerForm.as_p }}
+<input type="submit" value="Create" /><input type="button" onclick="document.location.href = '{{ mapTreeUrl }}'" value="Back" />
+</form>
+{% endblock %}

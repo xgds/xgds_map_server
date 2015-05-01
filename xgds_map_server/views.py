@@ -23,6 +23,7 @@ import glob
 import logging
 import urllib
 import os
+import datetime
 
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.staticfiles.storage import staticfiles_storage
@@ -39,9 +40,8 @@ from django.views.decorators.cache import never_cache
 
 from xgds_map_server import settings
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MAP_NODE_MANAGER
-from xgds_map_server.forms import MapForm, MapGroupForm
+from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm
 from geocamUtil.geoEncoder import GeoDjangoEncoder
-
 
 # pylint: disable=E1101,R0911
 
@@ -125,12 +125,17 @@ def getMapTreePage(request):
 
 
 def getMapEditorPage(request, layerID=None):
-    # TODO handle opening the editor on an existing layer
     templates = get_handlebars_templates()
+    if layerID != None:
+        mapLayer = MapLayer.objects.get(uuid=layerID)
+        mapLayerDict = mapLayer.toDict()
+    else: 
+        return HttpResponse(json.dumps({'error': 'Map layer is not valid'}), content_type='application/json')
     return render_to_response("MapEditor.html",
         RequestContext(request, {
             'templates': templates,
             'settings': settings,
+            'mapLayerDict': json.dumps(mapLayerDict, indent=4, cls=GeoDjangoEncoder),
             'placemark_circle_url': request.build_absolute_uri(
                 staticfiles_storage.url('xgds_planner2/images/placemark_circle.png')
             ),
@@ -203,12 +208,6 @@ def moveNode(request):
 #     move.save()
 #     return HttpResponse()  # empty response with 200 means success
 
-
-def getAddLayerPage(request):
-    """ TODO Grace Implement """
-    return HttpResponse()
-
-
 def getAddKmlPage(request):
     """
     HTML view to create new map
@@ -260,6 +259,45 @@ def getAddKmlPage(request):
                                   {'mapTreeUrl': mapTreeUrl,
                                    'mapForm': map_form},
                                   context_instance=RequestContext(request))
+
+
+def getAddLayerPage(request):
+    """
+    HTML view to create a new layer
+    """
+    mapTreeUrl = (request.build_absolute_uri
+                  (reverse('mapTree')))
+    if request.method == 'POST':
+        layer_form = MapLayerForm(request.POST)
+        if layer_form.is_valid():
+            map_layer = MapLayer()
+            map_layer.name = layer_form.cleaned_data['name']
+            map_layer.uuid = 'ml102'  #TODO: hard coded for now. fix it later
+            map_layer.description = layer_form.cleaned_data['description']
+            map_layer.creator = request.user.username
+            map_layer.modifier = request.user.username
+            map_layer.creation_time = datetime.datetime.now()
+            map_layer.modification_time = datetime.datetime.now()
+            map_layer.deleted = False
+            map_layer.locked = layer_form.cleaned_data['locked']
+            map_layer.visible = layer_form.cleaned_data['visible']
+            mapGroup = layer_form.cleaned_data['parent']  
+            map_layer.parent = MapGroup.objects.get(name=mapGroup)
+            map_layer.save()
+        else: 
+            return render_to_response("AddLayer.html",
+                                  {'mapTreeUrl': mapTreeUrl,
+                                   'layerForm': layer_form,
+                                   'error': True},
+                                   context_instance=RequestContext(request))
+        return HttpResponseRedirect(mapTreeUrl)
+    else:
+        layer_form = MapLayerForm()
+        return render_to_response("AddLayer.html",
+                      {'mapTreeUrl': mapTreeUrl,
+                       'layerForm': layer_form,
+                       'error': False},
+                       context_instance=RequestContext(request))
 
 
 def getAddFolderPage(request):
