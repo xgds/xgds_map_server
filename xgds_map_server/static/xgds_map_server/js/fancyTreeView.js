@@ -42,10 +42,8 @@ app.views.FancyTreeView = Backbone.View.extend({
     afterRender: function() {
         app.vent.trigger('layerView:onRender');
         if (!_.isUndefined(app.tree)) {
-            // only remove if it's there in the first place
             return;
         }
-        var layertreeNode = $("#layertree");
         this.createTree();
         return;
     },
@@ -82,8 +80,6 @@ app.views.FancyTreeView = Backbone.View.extend({
                             data.node.mapLayerView.render();
                         }
                     }
-
-                   
                   },
                   persist: {
                       // Available options with their default:
@@ -105,7 +101,19 @@ app.views.FancyTreeView = Backbone.View.extend({
             app.tree = layertreeNode.fancytree("getTree");
             app.vent.trigger('tree:loaded');
         }
+    },
+    onShow: function() {
+        //TODO flailing around nothing makes it show. sigh.
+        app.tree.$container.show();
+        
+        var layertreeContainer = this.$el.find("#layertreeContainer");
+        layertreeContainer.show();
+        var layertreeNode = this.$el.find("#layertree");
+        layertreeNode.show();
+        app.tree.$div.show();
+        app.tree.render();
     }
+
     
 });
 

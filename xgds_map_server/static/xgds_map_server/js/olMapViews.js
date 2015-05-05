@@ -59,8 +59,8 @@ $(function() {
                 app.State.pageInnerWidth = app.State.pageContainer.innerWidth();
                 var horizOrigin = this.$el.width();
                 
-                app.State.tabsContainer = $('#tabs');
-                app.State.tabsLeftMargin = parseFloat(app.State.tabsContainer.css('margin-left'));
+//                app.State.tabsContainer = $('#tabs');
+//                app.State.tabsLeftMargin = parseFloat(app.State.tabsContainer.css('margin-left'));
                 this.$el.bind('resize', this.handleResize);
                 // also bind to window to adjust on window size change
                 $(window).bind('resize', this.handleWindowResize);
