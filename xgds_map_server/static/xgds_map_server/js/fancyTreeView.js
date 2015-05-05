@@ -34,17 +34,26 @@ app.views.FancyTreeView = Backbone.View.extend({
             _this.afterRender(); 
             return _this; 
         }); 
+        this.storedParent = null;
     },
     template: '#template-layer-tree',
     render: function() {
-        this.$el.html(this.template());
+        if (!_.isUndefined(app.tree)){
+            // rerender existing tree
+            this.storedParent.append(this.$el);
+            this.$el.show();
+        } else {
+            this.$el.html(this.template());
+        }
     },
     afterRender: function() {
         app.vent.trigger('layerView:onRender');
         if (!_.isUndefined(app.tree)) {
+            // rerendering tree
             return;
         }
         this.createTree();
+        this.storedParent = this.$el.parent();
         return;
     },
     refreshTree: function() {
@@ -56,6 +65,14 @@ app.views.FancyTreeView = Backbone.View.extend({
                 app.vent.trigger('layerView:reloadKmlLayers');
             });
         }
+    },
+    destroy: function() {
+      // don't really destroy
+        this.$el.hide();
+    },
+    close: function() {
+      // we don't really want to close!
+        console.log('keep open');
     },
     createTree: function() {
         if (_.isUndefined(app.tree)){
@@ -101,7 +118,7 @@ app.views.FancyTreeView = Backbone.View.extend({
             app.tree = layertreeNode.fancytree("getTree");
             app.vent.trigger('tree:loaded');
         }
-    },
+/*    },
     onShow: function() {
         //TODO flailing around nothing makes it show. sigh.
         app.tree.$container.show();
@@ -111,7 +128,7 @@ app.views.FancyTreeView = Backbone.View.extend({
         var layertreeNode = this.$el.find("#layertree");
         layertreeNode.show();
         app.tree.$div.show();
-        app.tree.render();
+        app.tree.render();  */
     }
 
     
