@@ -199,6 +199,12 @@ app.models = app.models || {};
 		initialize: function() {
 			console.log('creating feature');
 		},
+		
+        toString: function() {
+        	var name = this.get('name');
+            return name;
+        },
+        
 		toJSON: toJsonWithFilters
 	});
 

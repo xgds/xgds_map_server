@@ -170,12 +170,17 @@ app.views.LayerInfoTabView = Backbone.Marionette.ItemView.extend({
 	},
 	serializeData: function() {
 		var data = this.model.toJSON();
-		data.name = this.model.attributes.name;
-		data.description = this.model.attributes.description;
-		data.modifier = this.model.attributes.modifier;
-		data.modified = this.model.attributes.modification_time;
-		data.creator = this.model.attributes.creator;
-		data.created = this.model.attributes.creation_time;
+		return data;
+	}
+});
+
+
+app.views.FeaturePropertiesForm = Backbone.Marionette.ItemView.extend({
+	template: '#template-feature-properties',
+	serializeData: function() {
+		var data = this.model.toJSON();
+		console.log("this.model is", this.model)
+		//TODO: add more later
 		return data;
 	}
 });
@@ -197,14 +202,12 @@ app.views.FeatureListItemView = Backbone.Marionette.ItemView.extend({
     // The list item is a simple enough DOM subtree that we'll let the view build its own root element.
     tagName: 'li',
     initialize: function(options) {
-    	console.log("initializing feature list item view");
         this.options = options || {};
         app.views.makeExpandable(this, this.options.expandClass);
     },
     template: function(data) {
         //return '' + data.model.toString()+ ' <i/>';
-        return "FEATURE IS RENDERING!!";
-    	//return '{model.toString} <span class="duration">{timing}</span><i/>'.format(data);
+    	return '{model.toString} <i/>'.format(data);
     },
     serializeData: function() {
         var data = Backbone.Marionette.ItemView.prototype.serializeData.call(this, arguments);
@@ -235,8 +238,7 @@ app.views.FeatureElementItemView = app.views.FeatureListItemView.extend({
             app.State.metaExpanded = true;
             app.State.featureSelected = undefined;
             this.expand();
-            var type = this.model.get('type'); // "Station" or "Segment"
-            app.vent.trigger('showItem:' + type.toLowerCase(), this.model);
+            app.vent.trigger('showFeature', this.model);
         }
     },
     onExpand: function() {
@@ -266,7 +268,6 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
 	emptyView: app.views.NoFeaturesView,
 	
 	initialize: function(options) {
-		console.log("creating the feature collection view");
 		this.options = options || {};
 		this.on('childview:expand', this.onItemExpand, this);
 	},
@@ -274,13 +275,12 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
 	onItemExpand: function(childView) {
         app.State.featureSelected = childView.model;
     },
-    
+        
     onClose: function() {
         this.children.each(function(view) {
             view.close();
         });
     }
-	
 });
 
 
@@ -301,7 +301,7 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
     },
 	
     initialize: function() {
-    	//this.template = Handlebars.compile($(this.template).html());
+    	this.listenTo(app.vent, 'showFeature', this.showFeature, this)
         this.listenTo(app.vent, 'showNothing', this.showNothing, this);
     },
     
@@ -331,6 +331,19 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
     	} catch (exception) {
     		console.log(exception)
     	}
+    },
+    
+    showFeature: function(itemModel) {
+    	console.log("inside show Feature")
+    	var headerView = new app.views.FeaturePropertiesHeaderView({});
+    	this.colhead2.show(headerView);
+    	try {
+    		this.col2.close();
+    	} catch (ex) {
+    	}
+    	var view = new app.views.FeaturePropertiesForm({model: itemModel, readonly: false });
+    	this.col2.show(view);
+    	
     },
     
     showNothing: function() {
