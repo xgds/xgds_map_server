@@ -19,7 +19,7 @@ app.views = app.views || {};
 app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
     template: '#template-toolbar',
     events: {
-        'click #btn-save': function() { app.simulatePlan(); app.currentPlan.save() },
+        'click #btn-save': function() { },
         'click #btn-saveas': function() { this.showSaveAsDialog(); },
         'click #btn-undo': function() { app.Actions.undo(); },
         'click #btn-redo': function() { app.Actions.redo(); }
@@ -170,12 +170,12 @@ app.views.LayerInfoTabView = Backbone.Marionette.ItemView.extend({
 	},
 	serializeData: function() {
 		var data = this.model.toJSON();
-		data.name = this.model._name;
-		data.description = this.model._description;
-		data.modifier = this.model._modifier;
-		data.modified = this.model._modified;
-		data.creator = this.model._creator;
-		data.created = this.model._created;
+		data.name = this.model.attributes.name;
+		data.description = this.model.attributes.description;
+		data.modifier = this.model.attributes.modifier;
+		data.modified = this.model.attributes.modification_time;
+		data.creator = this.model.attributes.creator;
+		data.created = this.model.attributes.creation_time;
 		return data;
 	}
 });
@@ -193,17 +193,18 @@ app.views.NoFeaturesView = Backbone.Marionette.ItemView.extend({
     template: '#template-no-features'
 });
 
-
 app.views.FeatureListItemView = Backbone.Marionette.ItemView.extend({
     // The list item is a simple enough DOM subtree that we'll let the view build its own root element.
     tagName: 'li',
     initialize: function(options) {
+    	console.log("initializing feature list item view");
         this.options = options || {};
         app.views.makeExpandable(this, this.options.expandClass);
     },
     template: function(data) {
         //return '' + data.model.toString()+ ' <i/>';
-        return '{model.toString} <span class="duration">{timing}</span><i/>'.format(data);
+        return "FEATURE IS RENDERING!!";
+    	//return '{model.toString} <span class="duration">{timing}</span><i/>'.format(data);
     },
     serializeData: function() {
         var data = Backbone.Marionette.ItemView.prototype.serializeData.call(this, arguments);
@@ -232,19 +233,25 @@ app.views.FeatureElementItemView = app.views.FeatureListItemView.extend({
     events: {
         click: function() {
             app.State.metaExpanded = true;
+            app.State.featureSelected = undefined;
             this.expand();
-            var type = this.model.get('type'); //"feature"
+            var type = this.model.get('type'); // "Station" or "Segment"
             app.vent.trigger('showItem:' + type.toLowerCase(), this.model);
         }
     },
     onExpand: function() {
 
-
     },
     serializeData: function() {
         var data = app.views.FeatureListItemView.prototype.serializeData.call(this, arguments);
+        if (this.model.get('type') == 'Station') {
+            data.timing = app.util.minutesToHMS("dummy duration");
+        } else {
+            data.timing = '+' + app.util.minutesToHMS("dummy duration");
+        }
         return data;
     }
+
 });
 
 
@@ -255,46 +262,17 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
 	childViewOptions: {
 		expandClass: 'col1'
 	},
+	
 	emptyView: app.views.NoFeaturesView,
+	
 	initialize: function(options) {
+		console.log("creating the feature collection view");
 		this.options = options || {};
+		this.on('childview:expand', this.onItemExpand, this);
 	},
+	
 	onItemExpand: function(childView) {
         app.State.featureSelected = childView.model;
-    },
-	
-    restoreExpanded: function() {
-        if (!_.isUndefined(app.State.featureSelected)) {
-            var childView = this.children.findByModel(app.State.featureSelected);
-            if (_.isUndefined(childView)) {
-                // try to find the child view by ID since models change on save
-                var childId = app.State.featureSelected.cid;
-                var childModel = this.collection.get(childId);
-                if (_.isUndefined(childModel)) {
-                    // can't find by id, so the view is gone
-                    app.State.featureSelected = undefined;
-                    app.vent.trigger('showNothing');
-                } else {
-                    childView = this.children.findByModel(childModel);
-                    if (_.isUndefined(childView)) {
-                        // the model isn't in our list, oh noes!
-                        app.vent.trigger('showNothing');
-                    } else {
-                        app.State.featureSelected = childModel;
-                        childView.expand();
-                        app.vent.trigger('showItem:' + childModel.get('type').toLowerCase(), childModel);
-                    }
-                }
-            } else {
-                // restore expanded state
-                childView.expand();
-                app.vent.trigger('showItem:' + childView.model.get('type').toLowerCase(), childView.model);
-            }
-        }
-    },
-
-    onRender: function() {
-        this.restoreExpanded();
     },
     
     onClose: function() {
@@ -323,7 +301,8 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
     },
 	
     initialize: function() {
-    	this.template = Handlebars.compile($(this.template).html());
+    	//this.template = Handlebars.compile($(this.template).html());
+        this.listenTo(app.vent, 'showNothing', this.showNothing, this);
     },
     
     onClose: function() {
@@ -343,7 +322,7 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
 
     	//create a sub view that shows all features 
     	//and show on col1 (this.col1.show(subview)) <-- see planner PlanSequenceView.
-    	var featureCollectionView = new app.views.FeatureCollectionView({
+    	var featureCollectionView = new app.views.FeatureCollectionView ({
 			collection: app.mapLayer.get('feature')
     	});
     	
@@ -352,6 +331,18 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
     	} catch (exception) {
     		console.log(exception)
     	}
+    },
+    
+    showNothing: function() {
+        // clear the columns
+        try {
+            this.col2.close();
+            this.col3.close();
+            this.colhead2.close();
+            this.colhead3.close();
+        } catch (ex) {
+            
+        }
     }
 });
 
@@ -363,10 +354,12 @@ app.views.makeExpandable = function(view, expandClass) {
      * the global 'viewExpanded' event.  On recieving a global 'viewExpoanded' event with an
      * expandClass that matches its own, the view will remove it's chevron.
      */
-    if (app.currentTab != 'sequence') {
+    if (app.currentTab != 'features') {
         // memory leak work around
         return;
     }
+    
+    console.log("inside make expandable");
     var expandable = {
         expand: function() {
             this.trigger('expand');
@@ -414,99 +407,6 @@ app.views.makeExpandable = function(view, expandClass) {
     view.on('render', view._restoreIcon, view);
 };
 
-
-app.views.FancyTreeView = Backbone.View.extend({
-    initialize: function() {
-        this.listenTo(app.vent, 'refreshTree', function() {this.refreshTree()});
-        var source = $(this.template).html();
-        if (_.isUndefined(source))
-            this.template = function() {
-                return '';
-            };
-        else {
-            this.template = Handlebars.compile(source);
-        }
-        _.bindAll(this, 'render', 'afterRender'); 
-        var _this = this; 
-        this.render = _.wrap(this.render, function(render) { 
-            render(); 
-            _this.afterRender(); 
-            return _this; 
-        }); 
-    },
-    template: '#template-layer-tree',
-    render: function() {
-        this.$el.html(this.template());
-    },
-    afterRender: function() {
-        app.vent.trigger('layerView:onRender');
-        if (!_.isUndefined(app.tree)) {
-            // only remove if it's there in the first place
-            return;
-        }
-        var layertreeNode = $("#layertree");
-        this.createTree();
-        return;
-    },
-    refreshTree: function() {
-        if (!_.isUndefined(app.tree)){
-            app.tree.reload({
-                url: app.options.layerFeedUrl
-            }).done(function(){
-                //TODO implement
-                app.vent.trigger('layerView:reloadKmlLayers');
-            });
-        }
-    },
-    createTree: function() {
-        if (_.isUndefined(app.tree)){
-            var layertreeNode = this.$el.find("#layertree");
-            var mytree = layertreeNode.fancytree({
-                extensions: ["persist"],
-                source: app.treeData,
-                checkbox: true,
-                select: function(event, data) {
-                    if (!_.isUndefined(data.node.data.kmlFile)){
-                        if (_.isUndefined(data.node.kmlLayerView)) {
-                            // make a new one
-                            app.vent.trigger('kmlNode:create', data.node);
-                        } else {
-                            data.node.kmlLayerView.render();
-                        }
-                    } else if (!_.isUndefined(data.node.data.layerData)){
-                        if (_.isUndefined(data.node.mapLayerView)) {
-                            // make a new one
-                            app.vent.trigger('mapLayerNode:create', data.node);
-                        } else {
-                            data.node.mapLayerView.render();
-                        }
-                    }
-
-                   
-                  },
-                  persist: {
-                      // Available options with their default:
-                      cookieDelimiter: "~",    // character used to join key strings
-                      cookiePrefix: undefined, // 'fancytree-<treeId>-' by default
-                      cookie: { // settings passed to jquery.cookie plugin
-                        raw: false,
-                        expires: "",
-                        path: "",
-                        domain: "",
-                        secure: false
-                      },
-                      expandLazy: false, // true: recursively expand and load lazy nodes
-                      overrideSource: true,  // true: cookie takes precedence over `source` data attributes.
-                      store: "auto",     // 'cookie': use cookie, 'local': use localStore, 'session': use sessionStore
-                      types: "active expanded focus selected"  // which status types to store
-                    }
-            });
-            app.tree = layertreeNode.fancytree("getTree");
-            app.vent.trigger('tree:loaded');
-        }
-    }
-    
-});
 
 app.views.EditingToolsView = Backbone.Marionette.ItemView.extend({
 	template: '#template-editing-tools',
@@ -572,6 +472,7 @@ app.views.TabNavView = Backbone.Marionette.LayoutView.extend({
         this.listenTo(app.vent, 'setTabRequested', function(tabId) {
             this.setTab(tabId);
         });
+        this.layersView = null;
     },
 
     onRender: function() {
@@ -591,8 +492,12 @@ app.views.TabNavView = Backbone.Marionette.LayoutView.extend({
     },
 
     setTab: function(tabId) {
-        var oldTab = app.currentTab;
-        app.currentTab = tabId;
+    	 var oldTab = app.currentTab;
+         app.currentTab = tabId;
+         if (oldTab == tabId){
+             return;
+         }
+    	
         var $tabList = this.$el.find('ul.tab-nav li');
         $tabList.each(function() {
             li = $(this);
@@ -604,12 +509,24 @@ app.views.TabNavView = Backbone.Marionette.LayoutView.extend({
         });
         var viewClass = this.viewMap[tabId];
         if (! viewClass) { return undefined; }
-
         var view = new viewClass({
-        	model: app.mapLayer
+            model: app.mapLayer
         });
-        this.tabContent.show(view);
-
+        if (oldTab == 'layers'){
+            this.tabContent.show(view, {preventClose: true});
+        } else {
+            if (tabId == 'layers'){
+                if (!_.isNull(this.layersView)){
+                    this.tabContent.show(this.layersView);
+                } else {
+                    this.layersView = view;
+                    this.tabContent.show(view);
+                }
+            } else {
+                this.tabContent.show(view);
+            }
+        }
+        
         app.vent.trigger('tab:change', tabId);
     }
 });

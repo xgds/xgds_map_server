@@ -272,7 +272,6 @@ def getAddLayerPage(request):
         if layer_form.is_valid():
             map_layer = MapLayer()
             map_layer.name = layer_form.cleaned_data['name']
-            map_layer.uuid = 'ml102'  #TODO: hard coded for now. fix it later
             map_layer.description = layer_form.cleaned_data['description']
             map_layer.creator = request.user.username
             map_layer.modifier = request.user.username

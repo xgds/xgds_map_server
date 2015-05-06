@@ -169,28 +169,18 @@ app.models = app.models || {};
 	models.MapLayer = Backbone.RelationalModel.extend({
 		idAttribute: '_id', //prevent clobbering mapLayer ID's
 		initialize: function() {
-			this._name = app.options.mapLayerDict['name'];
-			this._description = app.options.mapLayerDict['description'];
-			this._modifier = app.options.mapLayerDict['modifier'];
-			this._modified = app.options.mapLayerDict['modification_time'];
-			this._creator = app.options.mapLayerDict['creator'];
-			this._created = app.options.mapLayerDict['creation_time'];
-			this._features = app.options.mapLayerDict['features']; // this is the list of feature objects
 
-			// create feature objects using backbone model.
-			$.each(this._features, function(index, feature) {
-				models.featureFactory(feature, this._name);
-			});
 		},
 		relations: [  //MapLayer has many features
 		              {
 		            	  type: Backbone.HasMany,
 		            	  relatedModel: 'app.models.Feature',
 		            	  key: 'feature',
+		            	  autofetch: true,
 		            	  collectionType: 'app.models.FeatureCollection',
 		            	  createModels: true,
 		            	  reverseRelation: {
-		            		  key: 'belongsTo',
+		            		  key: 'mapLayer',
 		            		  includeInJSON: false
 		            	  }
 		              }
@@ -207,18 +197,7 @@ app.models = app.models || {};
 	models.Feature = Backbone.RelationalModel.extend({
 		idAttribute: '_id',
 		initialize: function() {
-			this._name = undefined;
-			this._description = undefined;
-			this._type = undefined;
-			this._visible = true;
-			this._labelStyle = undefined;
-			this._popup = false;
-			this._showLabel = false;
-			this._style = false;
-			this._polygon = undefined;
-			this._lineString = undefined;
-			this._point = undefined;
-
+			console.log('creating feature');
 		},
 		toJSON: toJsonWithFilters
 	});
@@ -229,31 +208,5 @@ app.models = app.models || {};
 
 		}
 	});
-
-	/*
-	 * given a type creates a features of that type.
-	 */
-	models.featureFactory = function(options, mapLayer) {
-		var feature = new models.Feature( { belongsTo: mapLayer } );
-		feature._name = options.name;
-		feature._description = options.description;
-		feature._type = options.type;
-		feature._visible = options.visible;
-		feature._labelStyle = options.labelStyle;
-		feature._popup = options.popup;
-		feature._showLabel = options.showLabel;
-		feature._style = options.style;
-		if (feature._type == 'Polygon') {
-			feature._polygon = options.polygon;
-		} else if (feature._type == 'LineString') {
-			feature._lineString = options.lineString;
-		} else if (feature._type == 'Point'){
-			feature._point = options.point; 
-		} else {
-			console.log("cannot define feature with no type");
-			return null;
-		}
-		return feature;
-	};
 
 })(app.models);

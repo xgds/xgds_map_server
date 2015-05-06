@@ -35,7 +35,7 @@ urlpatterns = patterns(
      {'readOnly': True, 'securityTags': ['readOnly']},
      'mapTree'),
     # Open Map Editor on a particular map layer
-    (r'^mapeditor/(?P<layerID>\w+)/', views.getMapEditorPage,
+    (r'^mapeditor/(?P<layerID>[\w-]+)/', views.getMapEditorPage,
      {},
      'editLayer'),
     # JSON tree of maps, formatted for jstree
