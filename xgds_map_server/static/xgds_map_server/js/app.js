@@ -206,29 +206,23 @@ var app = (function($, _, Backbone) {
 
         this.options = options = _.defaults(options || {}, {
             readOnly: false,
-//                planLineWidth: 2,
-//                plannerClampMode: undefined
-            // This enum value has to be sniffed out of the Plugin once it's loaded.
         });
 
-//        // no directional stations defaults rotation handles to false
-//        if (!this.options.directionalStations) {
-//            this.options.mapRotationHandles = false;
-//        }
-//
-////            this.Simulator = this.options.simulator;
-//        this.commandRenderers = this.options.commandRenderers;
-//
-//        // rotation handles option
-//        this.mapRotationHandles = (_.isBoolean(this.options.mapRotationHandles)) ?
-//            this.options.mapRotationHandles : true;
-
-        app.mapLayer = new app.models.MapLayer();
-        
+        // create the map layer from map layer obj passed in from server as json
+        app.mapLayer = new app.models.MapLayer(app.options.mapLayerDict);
+		
+        // create feature objects
+		app.features = [];
+		$.each(app.mapLayer.attributes.features, function(index, feature) {
+			var featureObj = new app.models.Feature(feature);
+			featureObj.set('mapLayer', app.mapLayer); // set up the relationship.
+			app.features.push(featureObj);
+		});
+		
         app.selectedViews = []; // This array holds the views currently selected by checkboxes
         app.copiedCommands = []; // array of copied commands
 
-        app.map = new app.views.OLView({
+        app.map = new app.views.OLMapView({
             el: '#map'
         });
         app.toolbar.show(new app.views.ToolbarView());

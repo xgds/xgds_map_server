@@ -59,7 +59,7 @@ $(function() {
                 app.State.pageContainer = this.$el.parent();
                 app.State.pageInnerWidth = app.State.pageContainer.innerWidth();
                 var horizOrigin = this.$el.width();
-                
+
                 this.$el.bind('resize', this.handleResize);
                 // also bind to window to adjust on window size change
                 $(window).bind('resize', this.handleWindowResize);
@@ -71,7 +71,6 @@ $(function() {
                     target: 'map',
                     layers: [
                       new ol.layer.Tile({
-//                          source: new ol.source.MapQuest({layer: 'sat'})
                           source: new ol.source.MapQuest({layer: 'osm'})
                       }),
                       this.kmlGroup,
