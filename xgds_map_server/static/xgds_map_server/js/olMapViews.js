@@ -16,6 +16,7 @@
 
 var DEG2RAD = Math.PI / 180.0;
 
+// transform lat long
 function transform(coords){
     return ol.proj.transform(coords, 'EPSG:4326',   'EPSG:3857');    
 }
@@ -48,19 +49,17 @@ $(function() {
     app.views = app.views || {};
 
     app.views.OLMapView = Backbone.View.extend({
-            el: 'div',
-
+            el: "#map",
             initialize: function(options) {
                 this.options = options || {};
                 _.bindAll(this);
+                
                 this.$el.resizable();
                 // pre-set certain variables to speed up this code
                 app.State.pageContainer = this.$el.parent();
                 app.State.pageInnerWidth = app.State.pageContainer.innerWidth();
                 var horizOrigin = this.$el.width();
                 
-//                app.State.tabsContainer = $('#tabs');
-//                app.State.tabsLeftMargin = parseFloat(app.State.tabsContainer.css('margin-left'));
                 this.$el.bind('resize', this.handleResize);
                 // also bind to window to adjust on window size change
                 $(window).bind('resize', this.handleWindowResize);
@@ -80,9 +79,10 @@ $(function() {
                     ],
                     view: new ol.View({
                         // we will center the view later
-                        zoom: 6
+                        zoom: 15
                     })
                   });
+                this.updateBbox();
                 this.buildStyles();
                 this.setupPopups();
                 app.vent.on('layers:loaded', this.render);
@@ -98,20 +98,33 @@ $(function() {
             },
             
             handleResize: function() {
-                if (app.State.mapResized == false && app.map.$el.width() != horizOrigin) {
-                    app.State.mapResized = true;
-                } else {
-                    // only change element widths if the horizontal width has changed at least once
-                    return;
-                }
+                app.map.map.updateSize();
             },
             
             handleWindowResize: function() {
              // window size changed, so variables need to be reset
                 if (!app.State.mapResized) {return false;} // until the element is resized once, resizing happens automatically
                 app.State.pageInnerWidth = app.State.pageContainer.innerWidth();
+                app.map.map.updateSize();
                 return true;
             },
+            
+            updateBbox: function() {
+                // move to bounding box site settings
+                var siteFrame = app.options.siteFrame;
+                if (siteFrame != undefined) {
+                    proj4.defs('siteFrame', '+proj=utm +zone=' + siteFrame.zone + ' +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
+                    var coords = ol.proj.transform([siteFrame.east0, siteFrame.north0], 'siteFrame',   'EPSG:3857');
+                    var view = this.map.getView();
+                    view.setCenter(coords);
+                }
+//                       var bbox = site.bbox;
+//                   if (bbox != undefined) {
+//                       var extent = [bbox[1], bbox[0], bbox[3], bbox[2]];
+//                       extent = ol.extent.applyTransform(extent, ol.proj.getTransform("EPSG:4326", "EPSG:3857"));
+//                       this.map.getView().fitExtent(extent, this.map.getSize());
+//                   }
+               },
             
             // load map tree ahead of time to load layers into map
             initializeMapData: function() {
@@ -123,6 +136,7 @@ $(function() {
                         // temporary hashmaps
                         app.kmlMap = {}; 
                         app.mapLayerMap = {};
+                        app.vent.trigger('treeData:loaded');
                         this.initializeMapLayers(app.treeData[0]);
                     }, this)
                   });
@@ -241,7 +255,6 @@ $(function() {
                         }),
                         offsetY: -20
                 };
-
             },
 
             render: function() {

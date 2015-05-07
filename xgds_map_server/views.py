@@ -63,6 +63,15 @@ def get_handlebars_templates(inp=HANDLEBARS_TEMPLATES_DIR):
     return _template_cache
 
 
+def get_map_tree_templates(inp=HANDLEBARS_TEMPLATES_DIR):
+    fullCache = get_handlebars_templates()
+    filenames = ['layer-tree']
+    reducedCache = {}
+    for template_file in filenames:
+        reducedCache[template_file] = fullCache[template_file]
+    return reducedCache
+
+
 def getMapServerIndexPage(request):
     """
     HTML list of maps with description and links to individual maps,
@@ -90,17 +99,15 @@ def getMapServerIndexPage(request):
             m.groupname = ''
         else:
             m.groupname = m.parent.name
-    feedUrl = (request
-               .build_absolute_uri
-               (reverse(getMapFeed, kwargs={'feedname': ''}))) + '?doc=0'
-    cmsUrl = request.build_absolute_uri(reverse('mapTree'))
+    feedUrl = (request.build_absolute_uri(reverse(getMapFeed, kwargs={'feedname': ''}))) + '?doc=0'
     filename = settings.XGDS_MAP_SERVER_TOP_LEVEL['filename']
-    logging.debug('serving %d maps to MapList.html', len(mapList))
+    templates = get_map_tree_templates()
     return render_to_response('MapServerLandingPage.html',
                               {'mapList': mapList,
                                'feedUrl': feedUrl,
-                               'cmsUrl': cmsUrl,
-                               'filename': filename},
+                               'filename': filename,
+                               'settings': settings,
+                               'templates': templates},
                               context_instance=RequestContext(request))
 
 
@@ -126,30 +133,17 @@ def getMapTreePage(request):
 
 def getMapEditorPage(request, layerID=None):
     templates = get_handlebars_templates()
-    if layerID != None:
+    if layerID:
         mapLayer = MapLayer.objects.get(uuid=layerID)
         mapLayerDict = mapLayer.toDict()
-    else: 
+    else:
         return HttpResponse(json.dumps({'error': 'Map layer is not valid'}), content_type='application/json')
     return render_to_response("MapEditor.html",
-        RequestContext(request, {
-            'templates': templates,
-            'settings': settings,
-            'mapLayerDict': json.dumps(mapLayerDict, indent=4, cls=GeoDjangoEncoder),
-            'placemark_circle_url': request.build_absolute_uri(
-                staticfiles_storage.url('xgds_planner2/images/placemark_circle.png')
-            ),
-            'placemark_circle_highlighted_url': request.build_absolute_uri(
-                staticfiles_storage.url('xgds_planner2/images/placemark_circle_highlighted.png')
-            ),
-            'placemark_directional_url': request.build_absolute_uri(
-                staticfiles_storage.url('xgds_planner2/images/placemark_directional.png')
-            ),
-            'placemark_selected_directional_url': request.build_absolute_uri(
-                staticfiles_storage.url('xgds_planner2/images/placemark_directional_highlighted.png')
-            ),
-        }),
-    )
+                              RequestContext(request, {'templates': templates,
+                                                       'settings': settings,
+                                                       'mapLayerDict': json.dumps(mapLayerDict, indent=4, cls=GeoDjangoEncoder)
+                                                       }),
+                              )
 
 
 def moveNode(request):
@@ -161,9 +155,7 @@ def moveNode(request):
             node = MAP_NODE_MANAGER.get(uuid=nodeUuid)
             node.parent = parent
             node.save()
-#             return HttpResponse()  # empty response with 200 means success
             return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
-
         except:
             return HttpResponse(json.dumps({'error': 'Move Failed'}), content_type='application/json')
     return HttpResponse(json.dumps({'failed': 'Must be a POST'}), content_type='application/json')
