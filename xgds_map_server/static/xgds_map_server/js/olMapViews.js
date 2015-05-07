@@ -117,12 +117,6 @@ $(function() {
                     var view = this.map.getView();
                     view.setCenter(coords);
                 }
-//                       var bbox = site.bbox;
-//                   if (bbox != undefined) {
-//                       var extent = [bbox[1], bbox[0], bbox[3], bbox[2]];
-//                       extent = ol.extent.applyTransform(extent, ol.proj.getTransform("EPSG:4326", "EPSG:3857"));
-//                       this.map.getView().fitExtent(extent, this.map.getSize());
-//                   }
                },
             
             // load map tree ahead of time to load layers into map

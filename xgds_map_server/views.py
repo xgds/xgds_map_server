@@ -176,44 +176,6 @@ def setNodeVisibility(request):
             return HttpResponse(json.dumps({'error': 'Set Visibility Failed'}), content_type='application/json')
     return HttpResponse(json.dumps({'failed': 'Must be a POST'}), content_type='application/json')
 
-# def handleJSONMove(request):
-#     """
-#     JSON-accepting url that moves maps/folders around
-#     """
-#     # TODO check that http method is POST
-#     if ('move' not in request.REQUEST or
-#             'move_type' not in request.REQUEST or
-#             'to' not in request.REQUEST or
-#             'to_type' not in request.REQUEST):
-#         return HttpResponseBadRequest("Request must have arguments 'move', 'move_type', 'to', and 'to_type'")
-# 
-#     if request.REQUEST['move_type'] == 'map':
-#         mapId = request.REQUEST['move']
-#         try:
-#             move = KmlMap.objects.get(uuid=mapId)
-#         except KmlMap.DoesNotExist:
-#             return HttpResponseNotFound('No KmlMap with id "%s"' % mapId)
-#     elif request.REQUEST['move_type'] == 'folder':
-#         folderId = request.REQUEST['move']
-#         try:
-#             move = MapGroup.objects.get(uuid=folderId)
-#         except MapGroup.DoesNotExist:
-#             return HttpResponseNotFound('No MapGroup with id "%s"' % folderId)
-#     else:
-#         return HttpResponseBadRequest("move_type must be 'map' or 'folder'")
-# 
-#     if request.REQUEST['to_type'] != 'folder':
-#         return HttpResponseBadRequest("to_type must be 'folder'")
-# 
-#     toId = request.REQUEST['to']
-#     try:
-#         to = MapGroup.objects.get(uuid=toId)
-#     except MapGroup.DoesNotExist():
-#         return HttpResponseNotFound('No MapGroup with id "%s"')
-# 
-#     move.parentId = to
-#     move.save()
-#     return HttpResponse()  # empty response with 200 means success
 
 def getAddKmlPage(request):
     """
@@ -241,7 +203,7 @@ def getAddKmlPage(request):
                 map_obj.kmlFile = map_form.cleaned_data['kmlFile']
             map_obj.openable = map_form.cleaned_data['openable']
             map_obj.visible = map_form.cleaned_data['visible']
-            map_obj.parent = map_form.cleaned_data['parentId']
+            map_obj.parent = map_form.cleaned_data['parent']
             map_obj.save()
             #
             # The file field may have changed our file name at save time
@@ -319,7 +281,7 @@ def getAddFolderPage(request):
             map_group = MapGroup()
             map_group.name = group_form.cleaned_data['name']
             map_group.description = group_form.cleaned_data['description']
-            map_group.parent = group_form.cleaned_data['parentId']
+            map_group.parent = group_form.cleaned_data['parent']
             map_group.save()
         else:
             return render_to_response("AddFolder.html",
@@ -343,13 +305,9 @@ def getDeleteMapPage(request, mapID):
     """
     HTML view to delete map
     """
-    mapDetailUrl = (request.build_absolute_uri
-                    (reverse('mapDetail',
-                             kwargs={'mapID': mapID})))
-    mapTreeUrl = (request.build_absolute_uri
-                  (reverse('mapTree')))
-    deletedMapsUrl = (request.build_absolute_uri
-                      (reverse('deletedMaps')))
+    mapDetailUrl = (request.build_absolute_uri(reverse('mapDetail', kwargs={'mapID': mapID})))
+    mapTreeUrl = (request.build_absolute_uri(reverse('mapTree')))
+    deletedMapsUrl = (request.build_absolute_uri(reverse('deletedMaps')))
 
     try:
         map_obj = KmlMap.objects.get(uuid=mapID)
@@ -473,7 +431,7 @@ def getFolderDetailPage(request, groupID):
         if group_form.is_valid():
             map_group.name = group_form.cleaned_data['name']
             map_group.description = group_form.cleaned_data['description']
-            map_group.parent = group_form.cleaned_data['parentId']
+            map_group.parent = group_form.cleaned_data['parent']
             map_group.save()
             fromSave = True
         else:
@@ -506,16 +464,10 @@ def getMapDetailPage(request, mapID):
     """
     HTML Form of a map
     """
-    mapDetailUrl = (request.build_absolute_uri
-                    (reverse('mapDetail',
-                             kwargs={'mapID': mapID})))
-    mapDeleteUrl = (request.build_absolute_uri
-                    (reverse('mapDelete',
-                             kwargs={'mapID': mapID})))
-    deletedMapsUrl = (request.build_absolute_uri
-                      (reverse('deletedMaps')))
-    mapTreeUrl = (request.build_absolute_uri
-                  (reverse('mapTree')))
+    mapDetailUrl = (request.build_absolute_uri(reverse('mapDetail', kwargs={'mapID': mapID})))
+    mapDeleteUrl = (request.build_absolute_uri(reverse('mapDelete', kwargs={'mapID': mapID})))
+    deletedMapsUrl = (request.build_absolute_uri(reverse('deletedMaps')))
+    mapTreeUrl = (request.build_absolute_uri(reverse('mapTree')))
     fromSave = False
     try:
         map_obj = KmlMap.objects.get(uuid=mapID)
@@ -539,7 +491,7 @@ def getMapDetailPage(request, mapID):
                 map_obj.localFile = request.FILES['localFile']
             map_obj.openable = map_form.cleaned_data['openable']
             map_obj.visible = map_form.cleaned_data['visible']
-            map_obj.parent = map_form.cleaned_data['parentId']
+            map_obj.parent = map_form.cleaned_data['parent']
             map_obj.save()
             fromSave = True
         else:
