@@ -1,17 +1,16 @@
 {% extends "MapBase.html" %}
 {% block contents %}
-<h2>Master Map Feed&nbsp;&nbsp;<a href="{{ feedUrl }}" class="mybutton" title="Open the map feed in Google Earth on your desktop.  Maps are managed by the server and automatically updated as new information becomes available.">Open</a> </h2>
+<h2><a href="{{ feedUrl }}" class="mybutton" title="Open the map feed in Google Earth on your desktop.  Maps are managed by the server and automatically updated as new information becomes available.">Open in Google Earth</a> </h2>
 <span style="font-size:85%">
 <p>
 The Master Map Feed includes all of the maps provided by this map server.
 It will update automatically in Google Earth as new data becomes available.<br/>
 <b>You only have to download and open this file once.</b><br/>
-</p>
-<p>
-Click the Open button to open the Master Map Feed in <a href="http://www.google.com/earth/download/ge/" target="new">Google Earth</a>.  If it does not automatically open,
+If it does not automatically open,
 double-click on the downloaded file <code>{{ filename }}</code> to open it.<br/>
 If the network link ever breaks (you see a red folder icon in the Google
-Earth sidebar) right click on the link in Google Earth and select "refresh".
+Earth sidebar) right click on the link in Google Earth and select "refresh".<br/>
+Get <a href="http://www.google.com/earth/download/ge/" target="new">Google Earth</a>.  
 <p>
 </span>
 <div id="application">

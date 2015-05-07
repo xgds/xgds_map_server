@@ -63,7 +63,7 @@ app.views.FancyTreeView = Backbone.View.extend({
                 url: app.options.layerFeedUrl
             }).done(function(){
                 //TODO implement
-                app.vent.trigger('layerView:reloadKmlLayers');
+                app.vent.trigger('layerView:reloadLayers');
             });
         }
     },

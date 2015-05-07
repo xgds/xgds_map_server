@@ -22,13 +22,14 @@
 </style>
 <div id="layertreeContainer">
 	<i class="icon-arrows-ccw" alt="refresh" id="refreshTreeLink" onclick="javascript: refreshTree();"></i>
-	Drag and drop to reorganize tree.  Double-click to edit.
+	Drag and drop to reorganize tree.  Double-click to edit.  Checked = layer is turned on by default.
 	<div id="layertree" ></div> <!-- data-source="ajax" class="sampletree"></div> -->
  </div>
 {% endblock %}
 
 {% block jsInit %}
 {{ block.super }}
+   var setVisibilityURL = "{{ setVisibilityURL }}";
    var moveNodeURL = "{{ moveNodeURL }}";
    var layerFeedUrl =  "{{ JSONMapTreeURL }}"; // "{{ settings.XGDS_PLANNER2_LAYER_FEED_URL }}";
    var layertreeNode = $("#layertree");
@@ -51,36 +52,46 @@
          	window.location.href=data.node.data.href;
        },
        select: function(event, data) {
-       //TODO change default selection
-       },
-        dnd: {
-        autoExpandMS: 400,
-        focusOnClick: true,
-        preventVoidMoves: true, // Prevent dropping nodes 'before self', etc.
-        preventRecursiveMoves: true, // Prevent dropping nodes on own descendants
-        dragStart: function(node, data) {
-          return true;
-        },
-        dragEnter: function(node, data) {
-        	// we only support dropping onto a folder, we don't do reordering
-	        if (!_.isUndefined(data.node.folder) && (data.node.folder == true)) {
-    	    	return 'over';
-        	}
-        	return false;
-        },
-        dragDrop: function(node, data) {
-        	var params = { 'nodeUuid': data.otherNode.key, 'parentUuid': data.node.key};
-        	$.ajax({url: moveNodeURL,
+	       // toggle default visibility
+	       var params = { 'nodeUuid': data.node.key, 'visible': data.node.isSelected()};
+        	$.ajax({url: setVisibilityURL,
   					type: 'POST',
   					dataType: 'json',
   					data: params,
 				}).success(function() {
-					data.otherNode.moveTo(node, data.hitMode);
 				}).error(function() {
-					alert("Problem moving node, try again.");
+					data.node.setSelected(!data.node.isSelected());
+					alert("Problem changing visibility for " + data.node.label);
 				});
-        	}
-      	},
+        },
+        dnd: {
+	        autoExpandMS: 400,
+	        focusOnClick: true,
+	        preventVoidMoves: true, // Prevent dropping nodes 'before self', etc.
+	        preventRecursiveMoves: true, // Prevent dropping nodes on own descendants
+	        dragStart: function(node, data) {
+	          return true;
+	        },
+	        dragEnter: function(node, data) {
+	        	// we only support dropping onto a folder, we don't do reordering
+		        if (!_.isUndefined(data.node.folder) && (data.node.folder == true)) {
+	    	    	return 'over';
+	        	}
+	        	return false;
+	        },
+	        dragDrop: function(node, data) {
+	        	var params = { 'nodeUuid': data.otherNode.key, 'parentUuid': data.node.key};
+	        	$.ajax({url: moveNodeURL,
+	  					type: 'POST',
+	  					dataType: 'json',
+	  					data: params,
+					}).success(function() {
+						data.otherNode.moveTo(node, data.hitMode);
+					}).error(function() {
+						alert("Problem moving node, try again.");
+					});
+	        	}
+	      	},
    		}); 
    	 theTree = layertreeNode.fancytree("getTree");
    };

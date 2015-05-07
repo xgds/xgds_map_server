@@ -121,13 +121,15 @@ def getMapTreePage(request):
     addFolderUrl = (request.build_absolute_uri(reverse('folderAdd')))
     deletedMapsUrl = (request.build_absolute_uri(reverse('deletedMaps')))
     moveNodeURL = (request.build_absolute_uri(reverse('moveNode')))
+    setVisibilityURL = (request.build_absolute_uri(reverse('setNodeVisibility')))
     return render_to_response("MapTree.html",
                               {'JSONMapTreeURL': jsonMapTreeUrl,
                                'addKmlUrl': addKmlUrl,
                                'addLayerUrl': addLayerUrl,
                                'addFolderUrl': addFolderUrl,
                                'deletedMapsUrl': deletedMapsUrl,
-                               'moveNodeURL': moveNodeURL},
+                               'moveNodeURL': moveNodeURL,
+                               'setVisibilityURL': setVisibilityURL},
                               context_instance=RequestContext(request))
 
 
@@ -160,6 +162,19 @@ def moveNode(request):
             return HttpResponse(json.dumps({'error': 'Move Failed'}), content_type='application/json')
     return HttpResponse(json.dumps({'failed': 'Must be a POST'}), content_type='application/json')
 
+
+def setNodeVisibility(request):
+    if request.method == 'POST':
+        try:
+            nodeUuid = request.POST['nodeUuid']
+            visible = request.POST['visible']
+            node = MAP_NODE_MANAGER.get(uuid=nodeUuid)
+            node.visible = visible
+            node.save()
+            return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
+        except:
+            return HttpResponse(json.dumps({'error': 'Set Visibility Failed'}), content_type='application/json')
+    return HttpResponse(json.dumps({'failed': 'Must be a POST'}), content_type='application/json')
 
 # def handleJSONMove(request):
 #     """
