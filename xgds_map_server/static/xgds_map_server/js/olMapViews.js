@@ -223,6 +223,16 @@ $(function() {
                 if (_.isUndefined(app.styles)){
                     app.styles = new Object();
                 }
+//                styles['#msn_ylw-pushpin2'] = new ol.style.Style({
+//                    image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+//                        anchor: [0.5, 46],
+//                        anchorXUnits: 'fraction',
+//                        anchorYUnits: 'pixels',
+//                        opacity: 0.75,
+//                        scale: 0.5,
+//                        src: '/static/xgds_map_server/icons/ylw-pushpin.png'
+//                      }))
+//                    });
              // hardcode some styles for now
                 app.styles['point'] =  new ol.style.Style({
                     image: new ol.style.Circle({
