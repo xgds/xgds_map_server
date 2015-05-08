@@ -31,7 +31,7 @@ var app = (function($, _, Backbone) {
 
     app.dirty = false;
     app.addRegions({
-        toolbar: '#toolbar',
+        'toolbar': '#toolbar',
         'tabs' : '#tabs',
         'editingTools': '#editingTools'
     });

@@ -79,8 +79,9 @@ urlpatterns = patterns(
      {'readOnly': True},
      'deletedMaps'),
     # JSON-accepting url that moves maps/folders around
-#     (r'^move', views.handleJSONMove, {}, 'jsonMove'),
     (r'^moveNode', views.moveNode, {}, 'moveNode'),
+    # JSON-accepting url that changes visibility for a node
+    (r'^setNodeVisibility', views.setNodeVisibility, {}, 'setNodeVisibility'),
 
     # --- this url is deprecated, don't use it in new code ---
     # This URL should receive a static files

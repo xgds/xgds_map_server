@@ -22,7 +22,7 @@ from xgds_map_server.models import KmlMap, MapGroup, MapLayer
 
 
 class MapForm(forms.ModelForm):
-    parentId = forms.ModelChoiceField(queryset=MapGroup.objects.filter(deleted=False), empty_label=None, label="Parent Folder")
+    parent = forms.ModelChoiceField(queryset=MapGroup.objects.filter(deleted=False), empty_label=None, label="Parent Folder")
     description = forms.CharField(required=False, widget=forms.Textarea(attrs={'cols': 50, 'rows': 7}))
 
     class Meta:
@@ -35,7 +35,7 @@ class MapForm(forms.ModelForm):
 
 
 class MapGroupForm(forms.ModelForm):
-    parentId = forms.ModelChoiceField(queryset=MapGroup.objects.filter(deleted=False),
+    parent = forms.ModelChoiceField(queryset=MapGroup.objects.filter(deleted=False),
                                       empty_label=None,
                                       label="Parent Folder")
     description = forms.CharField(required=False, widget=forms.Textarea(attrs={'cols': 50, 'rows': 7}))
@@ -50,10 +50,9 @@ class MapGroupForm(forms.ModelForm):
 
 
 class MapLayerForm(forms.ModelForm):
-    
+
     class Meta:
         model = MapLayer
         exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted']
-        widgets = {
-           'name': forms.TextInput(attrs={'size': 80})
-       }
+        widgets = {'name': forms.TextInput(attrs={'size': 80})
+                   }

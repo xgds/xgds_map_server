@@ -17,8 +17,11 @@
 app.views = app.views || {};
 
 app.views.FancyTreeView = Backbone.View.extend({
+    template: '#template-layer-tree',
     initialize: function() {
         this.listenTo(app.vent, 'refreshTree', function() {this.refreshTree()});
+        this.listenTo(app.vent, 'treeData:loaded', function() {this.createTree()});
+        
         var source = $(this.template).html();
         if (_.isUndefined(source))
             this.template = function() {
@@ -36,7 +39,6 @@ app.views.FancyTreeView = Backbone.View.extend({
         }); 
         this.storedParent = null;
     },
-    template: '#template-layer-tree',
     render: function() {
         if (!_.isUndefined(app.tree) && !_.isNull(this.storedParent)){
             // rerender existing tree
@@ -61,7 +63,7 @@ app.views.FancyTreeView = Backbone.View.extend({
                 url: app.options.layerFeedUrl
             }).done(function(){
                 //TODO implement
-                app.vent.trigger('layerView:reloadKmlLayers');
+                app.vent.trigger('layerView:reloadLayers');
             });
         }
     },
@@ -73,7 +75,7 @@ app.views.FancyTreeView = Backbone.View.extend({
       // we don't really want to close!
     },
     createTree: function() {
-        if (_.isUndefined(app.tree)){
+        if (_.isUndefined(app.tree) && !_.isUndefined(app.treeData)){
             var layertreeNode = this.$el.find("#layertree");
             var mytree = layertreeNode.fancytree({
                 extensions: ["persist"],

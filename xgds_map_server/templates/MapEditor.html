@@ -105,23 +105,18 @@
 {% endblock scripts %}
 
 {% block jsInit %}
-    plannerAppOptions = {
+    appOptions = {
         offline: {{ settings.XGDS_PLANNER_OFFLINE|yesno:"true,false" }},
-        planLineWidthPixels: {{ settings.XGDS_PLANNER2_LINE_WIDTH_PIXELS|default:"2" }},
         layerFeedUrl: "{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}",
         dataUrl: "{{ settings.DATA_URL }}",
-        placemarkCircleUrl: "{{ placemark_circle_url }}",
-        placemarkCircleHighlightedUrl: "{{ placemark_circle_highlighted_url }}",
-        placemarkDirectionalUrl: "{{ placemark_directional_url }}",
-        placemarkSelectedDirectionalUrl: "{{ placemark_selected_directional_url }}",
         readOnly: {{ editable|yesno:"false,true" }},
-        mapLayerDict: {{ mapLayerDict|safe }}, 
-        saveUrl: "{{ saveUrl }}"
+        mapLayerDict: {{ mapLayerDict|safe }},
+        siteFrame: {{ settings.XGDS_CURRENT_SITEFRAME|safe }},
+        saveUrl: {{ saveUrl }}
     };
-    
 	
 	$(function(){
-	    app.start(plannerAppOptions);
+	    app.start(appOptions);
 	})
 	
 	$(window).bind('beforeunload', function() {

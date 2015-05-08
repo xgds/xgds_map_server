@@ -67,6 +67,15 @@ def get_handlebars_templates(inp=HANDLEBARS_TEMPLATES_DIR):
     return _template_cache
 
 
+def get_map_tree_templates(inp=HANDLEBARS_TEMPLATES_DIR):
+    fullCache = get_handlebars_templates()
+    filenames = ['layer-tree']
+    reducedCache = {}
+    for template_file in filenames:
+        reducedCache[template_file] = fullCache[template_file]
+    return reducedCache
+
+
 def getMapServerIndexPage(request):
     """
     HTML list of maps with description and links to individual maps,
@@ -94,17 +103,15 @@ def getMapServerIndexPage(request):
             m.groupname = ''
         else:
             m.groupname = m.parent.name
-    feedUrl = (request
-               .build_absolute_uri
-               (reverse(getMapFeed, kwargs={'feedname': ''}))) + '?doc=0'
-    cmsUrl = request.build_absolute_uri(reverse('mapTree'))
+    feedUrl = (request.build_absolute_uri(reverse(getMapFeed, kwargs={'feedname': ''}))) + '?doc=0'
     filename = settings.XGDS_MAP_SERVER_TOP_LEVEL['filename']
-    logging.debug('serving %d maps to MapList.html', len(mapList))
+    templates = get_map_tree_templates()
     return render_to_response('MapServerLandingPage.html',
                               {'mapList': mapList,
                                'feedUrl': feedUrl,
-                               'cmsUrl': cmsUrl,
-                               'filename': filename},
+                               'filename': filename,
+                               'settings': settings,
+                               'templates': templates},
                               context_instance=RequestContext(request))
 
 
@@ -118,43 +125,32 @@ def getMapTreePage(request):
     addFolderUrl = (request.build_absolute_uri(reverse('folderAdd')))
     deletedMapsUrl = (request.build_absolute_uri(reverse('deletedMaps')))
     moveNodeURL = (request.build_absolute_uri(reverse('moveNode')))
+    setVisibilityURL = (request.build_absolute_uri(reverse('setNodeVisibility')))
     return render_to_response("MapTree.html",
                               {'JSONMapTreeURL': jsonMapTreeUrl,
                                'addKmlUrl': addKmlUrl,
                                'addLayerUrl': addLayerUrl,
                                'addFolderUrl': addFolderUrl,
                                'deletedMapsUrl': deletedMapsUrl,
-                               'moveNodeURL': moveNodeURL},
+                               'moveNodeURL': moveNodeURL,
+                               'setVisibilityURL': setVisibilityURL},
                               context_instance=RequestContext(request))
 
 
 def getMapEditorPage(request, layerID=None):
     templates = get_handlebars_templates()
-    if layerID != None:
+    if layerID:
         mapLayer = MapLayer.objects.get(uuid=layerID)
         mapLayerDict = mapLayer.toDict()
-    else: 
+    else:
         return HttpResponse(json.dumps({'error': 'Map layer is not valid'}), content_type='application/json')
     return render_to_response("MapEditor.html",
-        RequestContext(request, {
-            'templates': templates,
-            'settings': settings,
-            'saveUrl': reverse('featureJsonToDB'),
-            'mapLayerDict': json.dumps(mapLayerDict, indent=4, cls=GeoDjangoEncoder),
-            'placemark_circle_url': request.build_absolute_uri(
-                staticfiles_storage.url('xgds_planner2/images/placemark_circle.png')
-            ),
-            'placemark_circle_highlighted_url': request.build_absolute_uri(
-                staticfiles_storage.url('xgds_planner2/images/placemark_circle_highlighted.png')
-            ),
-            'placemark_directional_url': request.build_absolute_uri(
-                staticfiles_storage.url('xgds_planner2/images/placemark_directional.png')
-            ),
-            'placemark_selected_directional_url': request.build_absolute_uri(
-                staticfiles_storage.url('xgds_planner2/images/placemark_directional_highlighted.png')
-            ),
-        }),
-    )
+        RequestContext(request, {'templates': templates,
+                                 'settings': settings,
+                                 'saveUrl': reverse('featureJsonToDB'),
+                                 'mapLayerDict': json.dumps(mapLayerDict, indent=4, cls=GeoDjangoEncoder)
+                                 }),
+        )
 
 
 def createGeosObjectFromCoords(data, type):
@@ -219,52 +215,25 @@ def moveNode(request):
             node = MAP_NODE_MANAGER.get(uuid=nodeUuid)
             node.parent = parent
             node.save()
-#             return HttpResponse()  # empty response with 200 means success
             return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
-
         except:
             return HttpResponse(json.dumps({'error': 'Move Failed'}), content_type='application/json')
     return HttpResponse(json.dumps({'failed': 'Must be a POST'}), content_type='application/json')
 
 
-# def handleJSONMove(request):
-#     """
-#     JSON-accepting url that moves maps/folders around
-#     """
-#     # TODO check that http method is POST
-#     if ('move' not in request.REQUEST or
-#             'move_type' not in request.REQUEST or
-#             'to' not in request.REQUEST or
-#             'to_type' not in request.REQUEST):
-#         return HttpResponseBadRequest("Request must have arguments 'move', 'move_type', 'to', and 'to_type'")
-# 
-#     if request.REQUEST['move_type'] == 'map':
-#         mapId = request.REQUEST['move']
-#         try:
-#             move = KmlMap.objects.get(uuid=mapId)
-#         except KmlMap.DoesNotExist:
-#             return HttpResponseNotFound('No KmlMap with id "%s"' % mapId)
-#     elif request.REQUEST['move_type'] == 'folder':
-#         folderId = request.REQUEST['move']
-#         try:
-#             move = MapGroup.objects.get(uuid=folderId)
-#         except MapGroup.DoesNotExist:
-#             return HttpResponseNotFound('No MapGroup with id "%s"' % folderId)
-#     else:
-#         return HttpResponseBadRequest("move_type must be 'map' or 'folder'")
-# 
-#     if request.REQUEST['to_type'] != 'folder':
-#         return HttpResponseBadRequest("to_type must be 'folder'")
-# 
-#     toId = request.REQUEST['to']
-#     try:
-#         to = MapGroup.objects.get(uuid=toId)
-#     except MapGroup.DoesNotExist():
-#         return HttpResponseNotFound('No MapGroup with id "%s"')
-# 
-#     move.parentId = to
-#     move.save()
-#     return HttpResponse()  # empty response with 200 means success
+def setNodeVisibility(request):
+    if request.method == 'POST':
+        try:
+            nodeUuid = request.POST['nodeUuid']
+            visible = request.POST['visible']
+            node = MAP_NODE_MANAGER.get(uuid=nodeUuid)
+            node.visible = visible
+            node.save()
+            return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
+        except:
+            return HttpResponse(json.dumps({'error': 'Set Visibility Failed'}), content_type='application/json')
+    return HttpResponse(json.dumps({'failed': 'Must be a POST'}), content_type='application/json')
+
 
 def getAddKmlPage(request):
     """
@@ -292,7 +261,7 @@ def getAddKmlPage(request):
                 map_obj.kmlFile = map_form.cleaned_data['kmlFile']
             map_obj.openable = map_form.cleaned_data['openable']
             map_obj.visible = map_form.cleaned_data['visible']
-            map_obj.parent = map_form.cleaned_data['parentId']
+            map_obj.parent = map_form.cleaned_data['parent']
             map_obj.save()
             #
             # The file field may have changed our file name at save time
@@ -370,7 +339,7 @@ def getAddFolderPage(request):
             map_group = MapGroup()
             map_group.name = group_form.cleaned_data['name']
             map_group.description = group_form.cleaned_data['description']
-            map_group.parent = group_form.cleaned_data['parentId']
+            map_group.parent = group_form.cleaned_data['parent']
             map_group.save()
         else:
             return render_to_response("AddFolder.html",
@@ -394,13 +363,9 @@ def getDeleteMapPage(request, mapID):
     """
     HTML view to delete map
     """
-    mapDetailUrl = (request.build_absolute_uri
-                    (reverse('mapDetail',
-                             kwargs={'mapID': mapID})))
-    mapTreeUrl = (request.build_absolute_uri
-                  (reverse('mapTree')))
-    deletedMapsUrl = (request.build_absolute_uri
-                      (reverse('deletedMaps')))
+    mapDetailUrl = (request.build_absolute_uri(reverse('mapDetail', kwargs={'mapID': mapID})))
+    mapTreeUrl = (request.build_absolute_uri(reverse('mapTree')))
+    deletedMapsUrl = (request.build_absolute_uri(reverse('deletedMaps')))
 
     try:
         map_obj = KmlMap.objects.get(uuid=mapID)
@@ -524,7 +489,7 @@ def getFolderDetailPage(request, groupID):
         if group_form.is_valid():
             map_group.name = group_form.cleaned_data['name']
             map_group.description = group_form.cleaned_data['description']
-            map_group.parent = group_form.cleaned_data['parentId']
+            map_group.parent = group_form.cleaned_data['parent']
             map_group.save()
             fromSave = True
         else:
@@ -557,16 +522,10 @@ def getMapDetailPage(request, mapID):
     """
     HTML Form of a map
     """
-    mapDetailUrl = (request.build_absolute_uri
-                    (reverse('mapDetail',
-                             kwargs={'mapID': mapID})))
-    mapDeleteUrl = (request.build_absolute_uri
-                    (reverse('mapDelete',
-                             kwargs={'mapID': mapID})))
-    deletedMapsUrl = (request.build_absolute_uri
-                      (reverse('deletedMaps')))
-    mapTreeUrl = (request.build_absolute_uri
-                  (reverse('mapTree')))
+    mapDetailUrl = (request.build_absolute_uri(reverse('mapDetail', kwargs={'mapID': mapID})))
+    mapDeleteUrl = (request.build_absolute_uri(reverse('mapDelete', kwargs={'mapID': mapID})))
+    deletedMapsUrl = (request.build_absolute_uri(reverse('deletedMaps')))
+    mapTreeUrl = (request.build_absolute_uri(reverse('mapTree')))
     fromSave = False
     try:
         map_obj = KmlMap.objects.get(uuid=mapID)
@@ -590,7 +549,7 @@ def getMapDetailPage(request, mapID):
                 map_obj.localFile = request.FILES['localFile']
             map_obj.openable = map_form.cleaned_data['openable']
             map_obj.visible = map_form.cleaned_data['visible']
-            map_obj.parent = map_form.cleaned_data['parentId']
+            map_obj.parent = map_form.cleaned_data['parent']
             map_obj.save()
             fromSave = True
         else:
@@ -771,6 +730,7 @@ def addGroupToFancyJSON(group, map_tree, request, expanded=False):
                           "key": group_map.uuid,
                           "selected": group_map.visible,
                           "tooltip": group_map.description,
+                          "extraClasses": "kmlFile",
                           "data": {"href": request.build_absolute_uri(reverse('mapDetail', kwargs={'mapID': group_map.uuid})),
                                    "parentId": None,
                                    "kmlFile": settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + group_map.kmlFile,
