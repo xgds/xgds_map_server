@@ -537,7 +537,7 @@ $(function() {
                 feature['popup'] = popup;
             }
         },
-        constructFeature() {
+        constructFeature: function() {
             // override this in derived class
             return null;
         },

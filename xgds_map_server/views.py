@@ -154,10 +154,10 @@ def getMapEditorPage(request, layerID=None):
 
 
 def createGeosObjectFromCoords(data, type):
-"""
-Reference: http://stackoverflow.com/questions/1504288/adding-a-polygon-directly-in-geodjango-postgis
-
-"""
+    """
+    Reference: http://stackoverflow.com/questions/1504288/adding-a-polygon-directly-in-geodjango-postgis
+    
+    """
     feature = None
     if type == 'Point':
         feature = Point()
