@@ -212,11 +212,10 @@ var app = (function($, _, Backbone) {
         app.mapLayer = new app.models.MapLayer(app.options.mapLayerDict);
 		
         // create feature objects
-		app.features = [];
 		$.each(app.mapLayer.attributes.features, function(index, feature) {
 			var featureObj = new app.models.Feature(feature);
 			featureObj.set('mapLayer', app.mapLayer); // set up the relationship.
-			app.features.push(featureObj);
+			featureObj.set('mapLayerId', feature.mapLayer);
 		});
 		
         app.selectedViews = []; // This array holds the views currently selected by checkboxes
@@ -230,7 +229,8 @@ var app = (function($, _, Backbone) {
         
         app.editingTools.show(new app.views.EditingToolsView());
 		app.util.addDrawTypeSelectChangeCallBack();
-        app.vent.trigger('clearSaveStatus');
+		
+		app.vent.trigger('clearSaveStatus');
         if (this.options.readOnly == true){
             app.vent.trigger('readOnly');
         }
@@ -289,6 +289,7 @@ var app = (function($, _, Backbone) {
     */
 
     app.util = {
+    	// add draw interaction to the map.
     	addInteraction: function(typeSelect) {
     	  var map = app.map.map;
 		  draw = new ol.interaction.Draw({
@@ -296,7 +297,22 @@ var app = (function($, _, Backbone) {
 		    type: /** @type {ol.geom.GeometryType} */ (typeSelect.value)
 		  });
 		  map.addInteraction(draw);
+		  //when user draws a feature, save it as a backbone obj
+		  draw.on('drawend', function(event) {
+			  // finished drawing this feature
+			  var feature = event.feature;
+			  var geom = feature.getGeometry()
+			  var type = geom.getType();
+			  var coords = geom.getCoordinates();
+			  //create a new back bone feature obj
+			  var featureObj = new app.models.Feature();
+			  featureObj.set('mapLayer', app.mapLayer);
+			  featureObj.set('type', type);
+			  featureObj.set('coordinates', coords);
+			  featureObj.set('name', type);
+		  });
     	},
+    	// draw type selection change 
     	addDrawTypeSelectChangeCallBack: function() {
 	    	var map = app.map.map;
 	    	var typeSelect = document.getElementById('type');

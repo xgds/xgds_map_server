@@ -115,7 +115,8 @@
         placemarkDirectionalUrl: "{{ placemark_directional_url }}",
         placemarkSelectedDirectionalUrl: "{{ placemark_selected_directional_url }}",
         readOnly: {{ editable|yesno:"false,true" }},
-        mapLayerDict: {{ mapLayerDict|safe }}
+        mapLayerDict: {{ mapLayerDict|safe }}, 
+        saveUrl: "{{ saveUrl }}"
     };
     
 	

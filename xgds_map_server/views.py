@@ -37,9 +37,13 @@ from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from django.db import transaction
 from django.views.decorators.cache import never_cache
+from django.contrib.gis.geos import Point as geosPoint
+from django.contrib.gis.geos import LineString as geosLineString
+from django.contrib.gis.geos import Polygon as geosPolygon
 
 from xgds_map_server import settings
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MAP_NODE_MANAGER
+from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay
 from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm
 from geocamUtil.geoEncoder import GeoDjangoEncoder
 
@@ -135,6 +139,7 @@ def getMapEditorPage(request, layerID=None):
         RequestContext(request, {
             'templates': templates,
             'settings': settings,
+            'saveUrl': reverse('featureJsonToDB'),
             'mapLayerDict': json.dumps(mapLayerDict, indent=4, cls=GeoDjangoEncoder),
             'placemark_circle_url': request.build_absolute_uri(
                 staticfiles_storage.url('xgds_planner2/images/placemark_circle.png')
@@ -150,6 +155,59 @@ def getMapEditorPage(request, layerID=None):
             ),
         }),
     )
+
+
+def createGeosObjectFromCoords(data, type):
+"""
+Reference: http://stackoverflow.com/questions/1504288/adding-a-polygon-directly-in-geodjango-postgis
+
+"""
+    feature = None
+    if type == 'Point':
+        feature = Point()
+        feature.point = geosPoint(data['point'])
+    elif type == 'Polygon':
+        feature = Polygon()
+        feature.polygon = geosPolygon(['polygon'])
+    elif type == 'LineString':
+        feature = LineString()
+        feature.lineString = geosLineString(['lineString'])
+    elif type == 'Drawing':
+        feature = Drawing()
+    elif type == 'GroundOverlay':
+        feature = GroundOverlay()
+    else:
+        print "invalid feature type specified in json"
+
+
+def saveFeatureJsonToDB(request):
+    """
+    Read and write feature JSON.
+    jsonFeatureId is ignored. It's for human-readability in the URL
+    
+    Side note: to initialize a GeoDjango polygon object
+        Coordinate dimensions are separated by spaces
+        Coordinate pairs (or tuples) are separated by commas
+        Coordinate ordering is (x, y) -- that is (lon, lat)
+    """
+    if request.method == "POST":
+        data = json.loads(request.body)
+        print "request"
+        print request
+        print "request.body"
+        print request.body
+        # use the data to create a feature object.
+        type = data['type']
+        feature = createGeosObjectFromCoords(data, type)
+        feature.mapLayer = data['mapLayerId']
+        feature.name = data['name']
+        feature.popup = data['popup']
+        feature.visible = data['visible']
+        feature.showLabel = data['showLabel']
+        feature.description = data['description']
+        feature.save() 
+        return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
+    return HttpResponse(json.dumps({'failed': 'Must be a POST but got %s instead' % request.method }), content_type='application/json')
 
 
 def moveNode(request):

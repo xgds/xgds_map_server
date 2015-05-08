@@ -82,6 +82,7 @@ $(function() {
                   });
                 this.buildStyles();
                 this.setupPopups();
+                //events
                 app.vent.on('layers:loaded', this.render);
                 app.vent.on('layers:loaded', this.initializeMapData);
                 app.vent.on('tree:loaded', this.updateMapLayers);
