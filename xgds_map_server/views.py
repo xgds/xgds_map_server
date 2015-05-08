@@ -672,6 +672,7 @@ def addGroupToFancyJSON(group, map_tree, request, expanded=False):
                           "key": group_map.uuid,
                           "selected": group_map.visible,
                           "tooltip": group_map.description,
+                          "extraClasses": "kmlFile",
                           "data": {"href": request.build_absolute_uri(reverse('mapDetail', kwargs={'mapID': group_map.uuid})),
                                    "parentId": None,
                                    "kmlFile": settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + group_map.kmlFile,

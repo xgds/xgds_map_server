@@ -66,6 +66,7 @@ $(function() {
                 
                 this.kmlGroup = new ol.layer.Group();
                 this.mapLayerGroup = new ol.layer.Group();
+                this.layersInitialized = false;
                 
                 this.map = new ol.Map({
                     target: 'map',
@@ -121,6 +122,7 @@ $(function() {
             
             // load map tree ahead of time to load layers into map
             initializeMapData: function() {
+                if (!this.layersInitialized){
                 $.ajax({
                     url: app.options.layerFeedUrl,
                     dataType: 'json',
@@ -129,10 +131,12 @@ $(function() {
                         // temporary hashmaps
                         app.kmlMap = {}; 
                         app.mapLayerMap = {};
+                        this.layersInitialized = true;
                         app.vent.trigger('treeData:loaded');
                         this.initializeMapLayers(app.treeData[0]);
                     }, this)
                   });
+                }
             },
             
             // read through the json data and turn on layers that should be on
@@ -141,10 +145,20 @@ $(function() {
                    // create the kml layer view and store the layer in a map so we can get it later
                     if (!_.isUndefined(node.data.kmlFile)){
                         if (!endsWith(node.data.kmlFile, "kmz")) {
-                            app.kmlMap[node.key] = this.createKmlLayerView(node);
+                            if (_.isUndefined(app.kmlMap[node.key])){
+                                app.kmlMap[node.key] = this.createKmlLayerView(node);
+                            } else {
+                                var foundKml = app.kmlMap[node.key];
+                                foundKml.render();
+                            }
                         }
                     } else if (!_.isUndefined(node.data.layerData)){
-                        app.mapLayerMap[node.key] = this.createMapLayerView(node);
+                        if (_.isUndefined(app.mapLayerMap[node.key])){
+                            app.mapLayerMap[node.key] = this.createMapLayerView(node);
+                        } else {
+                            var foundLayer = app.mapLayerMap[node.key];
+                            foundLayer.render();
+                        }
                     }
                 }
                 if (!_.isUndefined(node.children)){
@@ -189,7 +203,7 @@ $(function() {
                                     kmlLayerView.node = node;
                                     node.kmlLayerView = kmlLayerView;
                                 } else {
-                                    this.createKmlLayerView(node);
+                                    app.kmlMap[node.key] = this.createKmlLayerView(node);
                                 }
                             }
                         } else if (!_.isUndefined(node.data.layerData) && _.isUndefined(node.mapLayerView)){
@@ -198,7 +212,7 @@ $(function() {
                                 mapLayerView.node = node;
                                 node.mapLayerView = mapLayerView;
                             } else {
-                                this.createMapLayerView(node);
+                                app.mapLayerMap[node.key] = this.createMapLayerView(node);
                             }
                         }
                     }, this);
@@ -288,6 +302,7 @@ $(function() {
             this.kmlGroup = this.options.kmlGroup;
             this.kmlFile = this.options.kmlFile;
             this.node = this.options.node; // may be undefined
+            this.visible = false;
             
             if (!options.kmlGroup && !options.kmlFile) {
                 throw 'Missing a required option!';
@@ -307,13 +322,26 @@ $(function() {
         },
         render: function() {
             if (_.isUndefined(this.node)){
-                this.kmlGroup.getLayers().push(this.kmlVector);
+                this.show();
             } else if (this.node.selected){
-                this.kmlGroup.getLayers().push(this.kmlVector);                
+                this.show();    
             } else {
+                this.hide();
+            }
+        },
+        show: function() {
+            if (!this.visible){
+                this.kmlGroup.getLayers().push(this.kmlVector);
+                this.visible = true;
+            }
+        },
+        hide: function() {
+            if (this.visible){
                 this.kmlGroup.getLayers().remove(this.kmlVector);
+                this.visible = false;
             }
         }
+        
     });
     
     var MapLayerView = Backbone.View.extend({
@@ -322,6 +350,7 @@ $(function() {
             if (!options.mapLayerGroup && !options.mapLayerJson) {
                 throw 'Missing a required option!';
             }
+            this.visible = false;
             this.mapLayerGroup = this.options.mapLayerGroup;
             this.mapLayerJson = this.options.mapLayerJson;
             this.node = this.options.node; // may be undefined
@@ -376,19 +405,27 @@ $(function() {
         },
         render: function() {
             if (_.isUndefined(this.node)){
+                this.show();
+            } else if (this.node.selected){
+                this.show();            
+            } else {
+                this.hide();
+            }
+        },
+        show: function() {
+            if (!this.visible){
                 if (this.drawBelow){
                     this.mapLayerGroup.getLayers().insertAt(0,this.layerGroup);
                 } else {
                     this.mapLayerGroup.getLayers().push(this.layerGroup);
                 }
-            } else if (this.node.selected){
-                if (this.drawBelow){
-                    this.mapLayerGroup.getLayers().insertAt(0,this.layerGroup);
-                } else {
-                    this.mapLayerGroup.getLayers().push(this.layerGroup);
-                }              
-            } else {
+                this.visible = true;
+            }
+        },
+        hide: function() {
+            if (this.visible){
                 this.mapLayerGroup.getLayers().remove(this.layerGroup);
+                this.visible = false;
             }
         }
     });
