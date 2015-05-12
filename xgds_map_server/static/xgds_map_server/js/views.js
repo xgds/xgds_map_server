@@ -152,7 +152,9 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
     	// get the features from the map layer.
     	var features = app.mapLayer.get('feature').models;
     	$.each(features, function(index, feature) {
-    		feature.save();
+    		feature.save(null, {
+    			  type: 'POST'
+    		});
     	});
     },
     

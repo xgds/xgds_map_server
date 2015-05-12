@@ -211,11 +211,11 @@ var app = (function($, _, Backbone) {
         // create the map layer from map layer obj passed in from server as json
         app.mapLayer = new app.models.MapLayer(app.options.mapLayerDict);
 		
-        // create feature objects
+        // create backbone feature objects already existing in mapLayer's attributes
 		$.each(app.mapLayer.attributes.features, function(index, feature) {
 			var featureObj = new app.models.Feature(feature);
 			featureObj.set('mapLayer', app.mapLayer); // set up the relationship.
-			featureObj.set('mapLayerId', feature.mapLayer);
+	    	featureObj.set('mapLayerName', app.mapLayer.get('name'));
 		});
 		
         app.selectedViews = []; // This array holds the views currently selected by checkboxes
@@ -298,18 +298,13 @@ var app = (function($, _, Backbone) {
 		  });
 		  map.addInteraction(draw);
 		  //when user draws a feature, save it as a backbone obj
-		  draw.on('drawend', function(event) {
-			  // finished drawing this feature
+		  draw.on('drawend', function(event) { // finished drawing this feature
 			  var feature = event.feature;
 			  var geom = feature.getGeometry()
 			  var type = geom.getType();
 			  var coords = geom.getCoordinates();
-			  //create a new back bone feature obj
-			  var featureObj = new app.models.Feature();
-			  featureObj.set('mapLayer', app.mapLayer);
-			  featureObj.set('type', type);
-			  featureObj.set('coordinates', coords);
-			  featureObj.set('name', type);
+			  //create a new backbone feature obj
+			  app.util.createBackboneFeaturObjFromMapDrawing(type, coords);
 		  });
     	},
     	// draw type selection change 
@@ -326,6 +321,15 @@ var app = (function($, _, Backbone) {
 			};
 			app.util.addInteraction(typeSelect);
 	    },
+	    createBackboneFeaturObjFromMapDrawing: function(type, coords) {
+	    	// create a new backbone feature object from the user drawings on map.
+	    	var featureObj = new app.models.Feature();
+	    	featureObj.set('mapLayer', app.mapLayer);
+	    	featureObj.set('mapLayerName', app.mapLayer.get('name'));
+	    	featureObj.set('type', type);
+	    	app.util.setCoordinates(type, featureObj, coords);
+	    	featureObj.set('name', type + app.util.getRandomInt());
+	    },
         indexBy: function(list, keyProp) {
             // Return an object that indexes the objects in a list by their key property.
             // keyProp should be a string.
@@ -334,6 +338,10 @@ var app = (function($, _, Backbone) {
                 obj[item[keyProp]] = item;
             });
             return obj;
+        },
+        getRandomInt: function() {
+        	// returns random integer btw 0 and 100
+        	return Math.floor((Math.random() * 100) + 1);
         },
         groupBy: function(list, keyProp) {
             obj = {};
@@ -436,6 +444,16 @@ var app = (function($, _, Backbone) {
             return (c);
         },
 
+        setCoordinates: function(type, feature, coordinates) {
+    		if (type == "Polygon") {
+    			feature.set("polygon", coordinates);
+    		} else if (type == "LineString") {
+    			feature.set("lineString", coordinates);
+    		} else if (type == "Point") {
+    			feature.set("point", coordinates);
+    		}
+    	},
+        
         toSiteFrame: function(coords, alternateCrs) {
             if (alternateCrs.type == 'roversw' &&
                 alternateCrs.properties.projection == 'utm') {

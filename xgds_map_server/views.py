@@ -156,30 +156,36 @@ def getMapEditorPage(request, layerID=None):
 def createGeosObjectFromCoords(data, type):
     """
     Reference: http://stackoverflow.com/questions/1504288/adding-a-polygon-directly-in-geodjango-postgis
-    
     """
     feature = None
     if type == 'Point':
         feature = Point()
-        feature.point = geosPoint(data['point'])
+        print "inside point"
+        feature.point = geosPoint(data.get('point', None))
     elif type == 'Polygon':
+        # u'polygon': [[-121.727085, 50.8567483], [-121.7267249, 50.8566619], [-121.726615, 50.8569117], [-121.727085, 50.8567483]]
         feature = Polygon()
-        feature.polygon = geosPolygon(['polygon'])
+        print "inside polygon"
+        feature.polygon = geosPolygon(data.get('polygon', None))
     elif type == 'LineString':
+        # "lineString":[[-121.7271437,50.8565416],[-121.7271169,50.8563689],[-121.7268487,50.8563384],[-121.7266341,50.8564366]],
         feature = LineString()
-        feature.lineString = geosLineString(['lineString'])
+        print "inside linestring"
+        feature.lineString = geosLineString(data.get('lineString', None))
     elif type == 'Drawing':
         feature = Drawing()
+        print "inside drawing"
     elif type == 'GroundOverlay':
         feature = GroundOverlay()
+        print "inside ground overlay"
     else:
         print "invalid feature type specified in json"
+    return feature
 
 
 def saveFeatureJsonToDB(request):
     """
     Read and write feature JSON.
-    jsonFeatureId is ignored. It's for human-readability in the URL
     
     Side note: to initialize a GeoDjango polygon object
         Coordinate dimensions are separated by spaces
@@ -188,19 +194,25 @@ def saveFeatureJsonToDB(request):
     """
     if request.method == "POST":
         data = json.loads(request.body)
-        print "request"
-        print request
-        print "request.body"
-        print request.body
         # use the data to create a feature object.
-        type = data['type']
+        type = data.get('type', None)
         feature = createGeosObjectFromCoords(data, type)
-        feature.mapLayer = data['mapLayerId']
-        feature.name = data['name']
-        feature.popup = data['popup']
-        feature.visible = data['visible']
-        feature.showLabel = data['showLabel']
-        feature.description = data['description']
+        mapLayerName = data.get('mapLayerName', None)
+        try:
+            mapLayer = MapLayer.objects.get(name = mapLayerName)
+        except:
+            print "mapLayer with name %s cannot be found" % mapLayerName
+        feature.mapLayer = mapLayer
+        if data.get('name', None) is not None:
+            feature.name = data.get('name', None)
+        if data.get('popup', None) is not None:
+            feature.popup = data.get('popup', None)
+        if data.get('visible', None) is not None:
+            feature.visible = data.get('visible', None)
+        if data.get('showLabel', None) is not None:
+            feature.showLabel = data.get('showLabel', None)
+        if data.get('description', None) is not None:
+            feature.description = data.get('description', None)
         feature.save() 
         return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
     return HttpResponse(json.dumps({'failed': 'Must be a POST but got %s instead' % request.method }), content_type='application/json')
