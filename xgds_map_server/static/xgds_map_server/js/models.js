@@ -196,15 +196,13 @@ app.models = app.models || {};
 	 */
 	models.Feature = Backbone.RelationalModel.extend({
 		idAttribute: '_id',
-		initialize: function() {
-			console.log('creating feature');
+		url: function() {
+			return app.options.saveUrl;
 		},
-		
         toString: function() {
         	var name = this.get('name');
             return name;
         },
-        
 		toJSON: toJsonWithFilters
 	});
 

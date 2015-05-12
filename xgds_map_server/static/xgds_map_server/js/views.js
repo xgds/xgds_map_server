@@ -19,7 +19,7 @@ app.views = app.views || {};
 app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
     template: '#template-toolbar',
     events: {
-        'click #btn-save': function() { },
+        'click #btn-save': function() { this.saveFeaturesToDB(); },
         'click #btn-saveas': function() { this.showSaveAsDialog(); },
         'click #btn-undo': function() { app.Actions.undo(); },
         'click #btn-redo': function() { app.Actions.redo(); }
@@ -144,6 +144,19 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
         }
     },
 
+    getFeatureModelUrl: function(feature) {
+    	console.log("feature to be used for url is ", feature);
+    },
+    
+    saveFeaturesToDB: function() {
+    	// get the features from the map layer.
+    	var features = app.mapLayer.get('feature').models;
+    	$.each(features, function(index, feature) {
+    		feature.save(null, {
+    			  type: 'POST'
+    		});
+    	});
+    },
     
     showSaveAsDialog: function() {
     }
@@ -218,7 +231,7 @@ app.views.FeatureListItemView = Backbone.Marionette.ItemView.extend({
     attributes: function() {
         return {
             'data-item-id': this.model.cid,
-            'class': this.model.get('type').toLowerCase() + '-sequence-item'
+            'class': '-sequence-item' //only for css style purposes.
         };
     },
     events: {
@@ -423,6 +436,7 @@ app.views.makeExpandable = function(view, expandClass) {
 
 app.views.EditingToolsView = Backbone.Marionette.ItemView.extend({
 	template: '#template-editing-tools',
+		
 	initialize: function() {
 		var map = app.map.map;
 		featureOverlay = new ol.FeatureOverlay({
@@ -453,14 +467,9 @@ app.views.EditingToolsView = Backbone.Marionette.ItemView.extend({
 		    return ol.events.condition.shiftKeyOnly(event) &&
 		        ol.events.condition.singleClick(event);
 		  }
-		});
-		
+		});		
 		map.addInteraction(modify);
-	},
-	onRender: function(){
-
 	}
-
 });
 
 

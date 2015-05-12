@@ -37,9 +37,13 @@ from django.template import RequestContext
 from django.core.urlresolvers import reverse
 from django.db import transaction
 from django.views.decorators.cache import never_cache
+from django.contrib.gis.geos import Point as geosPoint
+from django.contrib.gis.geos import LineString as geosLineString
+from django.contrib.gis.geos import Polygon as geosPolygon
 
 from xgds_map_server import settings
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MAP_NODE_MANAGER
+from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay
 from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm
 from geocamUtil.geoEncoder import GeoDjangoEncoder
 
@@ -141,11 +145,77 @@ def getMapEditorPage(request, layerID=None):
     else:
         return HttpResponse(json.dumps({'error': 'Map layer is not valid'}), content_type='application/json')
     return render_to_response("MapEditor.html",
-                              RequestContext(request, {'templates': templates,
-                                                       'settings': settings,
-                                                       'mapLayerDict': json.dumps(mapLayerDict, indent=4, cls=GeoDjangoEncoder)
-                                                       }),
-                              )
+        RequestContext(request, {'templates': templates,
+                                 'settings': settings,
+                                 'saveUrl': reverse('featureJsonToDB'),
+                                 'mapLayerDict': json.dumps(mapLayerDict, indent=4, cls=GeoDjangoEncoder)
+                                 }),
+        )
+
+
+def createGeosObjectFromCoords(data, type):
+    """
+    Reference: http://stackoverflow.com/questions/1504288/adding-a-polygon-directly-in-geodjango-postgis
+    """
+    feature = None
+    if type == 'Point':
+        feature = Point()
+        print "inside point"
+        feature.point = geosPoint(data.get('point', None))
+    elif type == 'Polygon':
+        # u'polygon': [[-121.727085, 50.8567483], [-121.7267249, 50.8566619], [-121.726615, 50.8569117], [-121.727085, 50.8567483]]
+        feature = Polygon()
+        print "inside polygon"
+        feature.polygon = geosPolygon(data.get('polygon', None))
+    elif type == 'LineString':
+        # "lineString":[[-121.7271437,50.8565416],[-121.7271169,50.8563689],[-121.7268487,50.8563384],[-121.7266341,50.8564366]],
+        feature = LineString()
+        print "inside linestring"
+        feature.lineString = geosLineString(data.get('lineString', None))
+    elif type == 'Drawing':
+        feature = Drawing()
+        print "inside drawing"
+    elif type == 'GroundOverlay':
+        feature = GroundOverlay()
+        print "inside ground overlay"
+    else:
+        print "invalid feature type specified in json"
+    return feature
+
+
+def saveFeatureJsonToDB(request):
+    """
+    Read and write feature JSON.
+    
+    Side note: to initialize a GeoDjango polygon object
+        Coordinate dimensions are separated by spaces
+        Coordinate pairs (or tuples) are separated by commas
+        Coordinate ordering is (x, y) -- that is (lon, lat)
+    """
+    if request.method == "POST":
+        data = json.loads(request.body)
+        # use the data to create a feature object.
+        type = data.get('type', None)
+        feature = createGeosObjectFromCoords(data, type)
+        mapLayerName = data.get('mapLayerName', None)
+        try:
+            mapLayer = MapLayer.objects.get(name = mapLayerName)
+        except:
+            print "mapLayer with name %s cannot be found" % mapLayerName
+        feature.mapLayer = mapLayer
+        if data.get('name', None) is not None:
+            feature.name = data.get('name', None)
+        if data.get('popup', None) is not None:
+            feature.popup = data.get('popup', None)
+        if data.get('visible', None) is not None:
+            feature.visible = data.get('visible', None)
+        if data.get('showLabel', None) is not None:
+            feature.showLabel = data.get('showLabel', None)
+        if data.get('description', None) is not None:
+            feature.description = data.get('description', None)
+        feature.save() 
+        return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
+    return HttpResponse(json.dumps({'failed': 'Must be a POST but got %s instead' % request.method }), content_type='application/json')
 
 
 def moveNode(request):

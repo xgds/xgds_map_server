@@ -111,7 +111,8 @@
         dataUrl: "{{ settings.DATA_URL }}",
         readOnly: {{ editable|yesno:"false,true" }},
         mapLayerDict: {{ mapLayerDict|safe }},
-        siteFrame: {{ settings.XGDS_CURRENT_SITEFRAME|safe }}
+        siteFrame: {{ settings.XGDS_CURRENT_SITEFRAME|safe }},
+        saveUrl: "{{ saveUrl }}"
     };
 	
 	$(function(){
