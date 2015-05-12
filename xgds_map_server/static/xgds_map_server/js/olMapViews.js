@@ -323,11 +323,17 @@ $(function() {
         },
         constructVector: function() {
             if (_.isUndefined(this.kmlVector)){
+                
                 this.kmlVector = new ol.layer.Vector({
                     source: new ol.source.KML({
                         projection: KML_PROJECTION,
                         url: this.kmlFile
                     })
+                    /* when we have ol 3.5.0 change to this
+                    source: new ol.source.Vector({
+                        url: this.kmlFile,
+                        format: new ol.format.KML()
+                    }) */
                 });
             }
         },
