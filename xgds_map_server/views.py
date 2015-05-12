@@ -40,6 +40,8 @@ from django.views.decorators.cache import never_cache
 from django.contrib.gis.geos import Point as geosPoint
 from django.contrib.gis.geos import LineString as geosLineString
 from django.contrib.gis.geos import Polygon as geosPolygon
+from django.contrib.gis.geos import LinearRing as geosLinearRing
+
 
 from xgds_map_server import settings
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MAP_NODE_MANAGER
@@ -160,24 +162,20 @@ def createGeosObjectFromCoords(data, type):
     feature = None
     if type == 'Point':
         feature = Point()
-        print "inside point"
         feature.point = geosPoint(data.get('point', None))
     elif type == 'Polygon':
-        # u'polygon': [[-121.727085, 50.8567483], [-121.7267249, 50.8566619], [-121.726615, 50.8569117], [-121.727085, 50.8567483]]
         feature = Polygon()
-        print "inside polygon"
-        feature.polygon = geosPolygon(data.get('polygon', None))
+        coords = data.get('polygon', None)[0]
+        internalCoords = geosLinearRing(coords)
+        externalCoords = geosLinearRing(coords)
+        feature.polygon = geosPolygon(internalCoords, externalCoords)
     elif type == 'LineString':
-        # "lineString":[[-121.7271437,50.8565416],[-121.7271169,50.8563689],[-121.7268487,50.8563384],[-121.7266341,50.8564366]],
         feature = LineString()
-        print "inside linestring"
         feature.lineString = geosLineString(data.get('lineString', None))
     elif type == 'Drawing':
         feature = Drawing()
-        print "inside drawing"
     elif type == 'GroundOverlay':
         feature = GroundOverlay()
-        print "inside ground overlay"
     else:
         print "invalid feature type specified in json"
     return feature
@@ -197,6 +195,9 @@ def saveFeatureJsonToDB(request):
         # use the data to create a feature object.
         type = data.get('type', None)
         feature = createGeosObjectFromCoords(data, type)
+        # don't create the feature if there is one of same type and same coordinates...
+        
+        
         mapLayerName = data.get('mapLayerName', None)
         try:
             mapLayer = MapLayer.objects.get(name = mapLayerName)

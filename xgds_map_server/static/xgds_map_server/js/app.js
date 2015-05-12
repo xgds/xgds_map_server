@@ -214,8 +214,9 @@ var app = (function($, _, Backbone) {
         // create backbone feature objects already existing in mapLayer's attributes
 		$.each(app.mapLayer.attributes.features, function(index, feature) {
 			var featureObj = new app.models.Feature(feature);
-			featureObj.set('mapLayer', app.mapLayer); // set up the relationship.
+			featureObj.set('mapLayer', app.mapLayer);  // set up the relationship.
 	    	featureObj.set('mapLayerName', app.mapLayer.get('name'));
+	    	featureObj.set('saveToDB', false);  // already in the db so no need to save.
 		});
 		
         app.selectedViews = []; // This array holds the views currently selected by checkboxes
@@ -300,11 +301,12 @@ var app = (function($, _, Backbone) {
 		  //when user draws a feature, save it as a backbone obj
 		  draw.on('drawend', function(event) { // finished drawing this feature
 			  var feature = event.feature;
-			  var geom = feature.getGeometry()
+			  var geom = feature.getGeometry();
 			  var type = geom.getType();
 			  var coords = geom.getCoordinates();
+			  var saveToDB = true; //features needs to be saved to db
 			  //create a new backbone feature obj
-			  app.util.createBackboneFeaturObjFromMapDrawing(type, coords);
+			  app.util.createBackboneFeaturObjFromMapDrawing(type, coords, saveToDB);
 		  });
     	},
     	// draw type selection change 
@@ -321,7 +323,7 @@ var app = (function($, _, Backbone) {
 			};
 			app.util.addInteraction(typeSelect);
 	    },
-	    createBackboneFeaturObjFromMapDrawing: function(type, coords) {
+	    createBackboneFeaturObjFromMapDrawing: function(type, coords, saveToDB) {
 	    	// create a new backbone feature object from the user drawings on map.
 	    	var featureObj = new app.models.Feature();
 	    	featureObj.set('mapLayer', app.mapLayer);
@@ -329,6 +331,7 @@ var app = (function($, _, Backbone) {
 	    	featureObj.set('type', type);
 	    	app.util.setCoordinates(type, featureObj, coords);
 	    	featureObj.set('name', type + app.util.getRandomInt());
+	    	featureObj.set('saveToDB', saveToDB);
 	    },
         indexBy: function(list, keyProp) {
             // Return an object that indexes the objects in a list by their key property.
