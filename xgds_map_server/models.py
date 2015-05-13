@@ -23,6 +23,10 @@ from xgds_map_server import settings
 from geocamUtil.models.UuidField import UuidField
 from geocamUtil.models.managers import ModelCollectionManager
 from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
+# from Carbon.TextEdit import WIDTHHook
+# from aetypes import Boolean
+# from Carbon.QuickDraw import underline
+from cookielib import offset_from_tz_string
 # pylint: disable=C1001
 
 LOGO_REGEXES = None
@@ -108,9 +112,6 @@ class MapLayer(AbstractMap):
 
 
 class AbstractStyle(models.Model):
-    """ TODO Grace: refer here for style options, we don't have to take all of them
-        http://wiki.openstreetmap.org/wiki/MapCSS/0.2
-        """
     """ An abstract style for rendering map features"""
     uuid = UuidField(primary_key=True)
     name = models.CharField(max_length=200, null=True, blank=True)
@@ -127,23 +128,64 @@ class AbstractStyle(models.Model):
 
 
 class LabelStyle(AbstractStyle):
-    pass
+    fontFamily = models.CharField(max_length=32, null=True, blank=True, 
+                                  help_text='name of font to use')
+    bold = models.BooleanField(default=False)
+    italic = models.BooleanField(default=False)
+    underline = models.BooleanField(default=False)
+    textColor = models.CharField(max_length=32, null=True, blank=True, 
+                                 default='Black', 
+                                 help_text='hex value or CSS color name')
+    textOpacity = models.FloatField(null=True, blank=True, default=1,
+                                    help_text='between 0 and 1')
+    textOffsetY = models.IntegerField(null=True, blank=True, default=0)
+    text = models.CharField(max_length=100, null=True, blank=True)    
 
 
 class PolygonStyle(AbstractStyle):
-    pass
+    strokeColor = models.CharField(max_length=32, null=True, blank=True, 
+                                 default='Black', 
+                                 help_text='hex value or CSS color name')
+    fillColor = models.CharField(max_length=32, null=True, blank=True, 
+                                 help_text='hex value or CSS color name')
+    fillOpacity = models.FloatField(null=True, blank=True, default=1,
+                                    help_text='between 0 and 1')
+    fillImage = models.ImageField(upload_to='featureImages', height_field='height',
+                              width_field='width')
 
 
 class LineStringStyle(AbstractStyle):
-    pass
+    width = models.FloatField(null=True, blank=True)
+    color = models.CharField(max_length=32, null=True, blank=True, 
+                                 default='Black', 
+                                 help_text='hex value or CSS color name')
+    opacity = models.FloatField(null=True, blank=True, default=1,
+                                    help_text='between 0 and 1')
+    dashes = models.BooleanField(default=False)
+    casingWidth = models.IntegerField(null=True, blank=True, 
+                                      help_text='line border width')
+    casingColor = models.CharField(max_length=32, null=True, blank=True, 
+                                 help_text='hex value or CSS color name')
 
 
 class PointStyle(AbstractStyle):
-    pass
+    radius = models.IntegerField('radius', default=5)
+    color = models.CharField(max_length=32, null=True, blank=True, 
+                                 default='Blue', 
+                                 help_text='hex value or CSS color name')
+    iconImage = models.ImageField(upload_to='featureImages', height_field='height',
+                              width_field='width')
+    iconWidth = models.CharField(max_length=5, null=True, blank=True, 
+                                 help_text='a scaling factor in %')
+    iconHeight = models.CharField(max_length=5, null=True, blank=True, 
+                                 help_text='a scaling factor in %')
+    iconOpacity = models.FloatField(null=True, blank=True, default=1,
+                                    help_text='between 0 and 1')
 
 
 class DrawingStyle(AbstractStyle):
-    pass
+    strokeColor = models.CharField(max_length=32, null=True, blank=True, 
+                                 help_text='hex value or CSS color name')
 
 
 class GroundOverlayStyle(AbstractStyle):

@@ -4,6 +4,8 @@
 {{ block.super }}
 {% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
 <h2>Add Layer</h2>
+Here you can create a new map layer. You can add new features, overlays, and drawings to the new
+map layers in the map editor view. 
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
 {{ layerForm.as_p }}
 <input type="submit" value="Create" /><input type="button" onclick="document.location.href = '{{ mapTreeUrl }}'" value="Back" />
