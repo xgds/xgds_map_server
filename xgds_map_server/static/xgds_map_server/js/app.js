@@ -125,20 +125,6 @@ var app = (function($, _, Backbone) {
                 return;
             this.disable();
             this._enterAction();
-            /*
-            var plan = app.currentPlan.toJSON();
-            var planString = JSON.stringify(plan);
-            if (this.currentState == planString) {
-                // plan unchanged from current state
-            } else {
-                this.undoStack.push(this.currentState);
-                this.currentState = planString;
-                this.redoStack = new Array();
-                app.vent.trigger('undoNotEmpty');
-                app.vent.trigger('redoEmpty');
-                app.vent.trigger('actionOcurred');
-            }
-            */
             this._exitAction();
             this.enable();
         };
@@ -150,19 +136,6 @@ var app = (function($, _, Backbone) {
                 return;
             this.disable();
             this._enterAction();
-//            var planString = this.undoStack.pop();
-//            var plan = JSON.parse(planString);
-//            if (plan == undefined) {
-//                app.vent.trigger('undoEmpty');
-//            } else {
-//                this.redoStack.push(this.currentState);
-//                this.currentState = planString;
-//                app.updatePlan(plan);
-//                app.vent.trigger('redoNotEmpty');
-//                if (this.undoStack.length == 0)
-//                    app.vent.trigger('undoEmpty');
-//            }
-            //console.log('-----------------------------------Undo finished');
             this._exitAction();
             this.enable();
         };
@@ -174,18 +147,6 @@ var app = (function($, _, Backbone) {
                 return;
             this.disable();
             this._enterAction();
-//            var planString = this.redoStack.pop();
-//            var plan = JSON.parse(planString);
-//            if (plan == undefined) {
-//                app.vent.trigger('redoEmpty');
-//            } else {
-//                this.undoStack.push(this.currentState);
-//                this.currentState = planString;
-//                app.updatePlan(plan);
-//                app.vent.trigger('undoNotEmpty');
-//                if (this.redoStack.length == 0)
-//                    app.vent.trigger('redoEmpty');
-//            }
             this._exitAction();
             this.enable();
         };
@@ -227,6 +188,8 @@ var app = (function($, _, Backbone) {
         });
         app.toolbar.show(new app.views.ToolbarView());
         app.tabs.show(new app.views.TabNavView());
+        //create a mapEditorView which displays existing features on the map
+        app.map.createMapEditorView();
         
         app.editingTools.show(new app.views.EditingToolsView());
 		app.util.addDrawTypeSelectChangeCallBack();
@@ -253,7 +216,7 @@ var app = (function($, _, Backbone) {
     });
 
     app.vent.on('all', function(eventname, args) {
-
+    	
     });
 
     app.addInitializer(_.bind(Backbone.history.start, Backbone.history));
@@ -288,7 +251,6 @@ var app = (function($, _, Backbone) {
     /*
     ** Global utility functions
     */
-
     app.util = {
     	// add draw interaction to the map.
     	addInteraction: function(typeSelect) {
@@ -304,9 +266,10 @@ var app = (function($, _, Backbone) {
 			  var geom = feature.getGeometry();
 			  var type = geom.getType();
 			  var coords = geom.getCoordinates();
+			  console.log("when feature is drawn, the coordinates I save look like this: ", coords);
 			  var saveToDB = true; //features needs to be saved to db
 			  //create a new backbone feature obj
-			  app.util.createBackboneFeaturObjFromMapDrawing(type, coords, saveToDB);
+			  app.util.createBackboneObjFromFeature(type, coords, saveToDB);
 		  });
     	},
     	// draw type selection change 
@@ -323,13 +286,13 @@ var app = (function($, _, Backbone) {
 			};
 			app.util.addInteraction(typeSelect);
 	    },
-	    createBackboneFeaturObjFromMapDrawing: function(type, coords, saveToDB) {
+	    createBackboneObjFromFeature: function(type, coords, saveToDB) {
 	    	// create a new backbone feature object from the user drawings on map.
 	    	var featureObj = new app.models.Feature();
 	    	featureObj.set('mapLayer', app.mapLayer);
 	    	featureObj.set('mapLayerName', app.mapLayer.get('name'));
 	    	featureObj.set('type', type);
-	    	app.util.setCoordinates(type, featureObj, coords);
+	    	app.util.transformAndSetCoordinates(type, featureObj, coords);
 	    	featureObj.set('name', type + app.util.getRandomInt());
 	    	featureObj.set('saveToDB', saveToDB);
 	    },
@@ -447,13 +410,24 @@ var app = (function($, _, Backbone) {
             return (c);
         },
 
-        setCoordinates: function(type, feature, coordinates) {
-    		if (type == "Polygon") {
-    			feature.set("polygon", coordinates);
+        transformAndSetCoordinates: function(type, feature, coordinates) {
+        	// transform user drawn coordinates from spherical mercator to lon lat
+        	var tCoords = null;
+        	if (type == "Point") {
+    			tCoords = ol.proj.transform(coordinates, 'EPSG:3857', 'EPSG:4326');  
+    			feature.set("point", tCoords);
+    		} else if (type == "Polygon") {
+    			tCoords = [];
+        		$.each(coordinates[0], function(index, coord) {
+        			tCoords.push(ol.proj.transform(coord, 'EPSG:3857', 'EPSG:4326'));  
+        		});
+    			feature.set("polygon", [tCoords]);
     		} else if (type == "LineString") {
-    			feature.set("lineString", coordinates);
-    		} else if (type == "Point") {
-    			feature.set("point", coordinates);
+    			tCoords = [];
+        		$.each(coordinates, function(index, coord) {
+        			tCoords.push(ol.proj.transform(coord, 'EPSG:3857', 'EPSG:4326'));  
+        		});
+    			feature.set("lineString", tCoords);
     		}
     	},
         

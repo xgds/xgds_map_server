@@ -195,7 +195,6 @@ app.views.FeaturePropertiesForm = Backbone.Marionette.ItemView.extend({
 	template: '#template-feature-properties',
 	serializeData: function() {
 		var data = this.model.toJSON();
-		console.log("this.model is", this.model)
 		//TODO: add more later
 		return data;
 	}
@@ -206,13 +205,16 @@ app.views.FeaturesHeaderView = Backbone.Marionette.ItemView.extend({
     template: '#template-features-header'
 });
 
+
 app.views.FeaturePropertiesHeaderView = Backbone.Marionette.ItemView.extend({
     template: '#template-feature-properties-header'
 });
 
+
 app.views.NoFeaturesView = Backbone.Marionette.ItemView.extend({
     template: '#template-no-features'
 });
+
 
 app.views.FeatureListItemView = Backbone.Marionette.ItemView.extend({
     // The list item is a simple enough DOM subtree that we'll let the view build its own root element.
@@ -359,7 +361,6 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
     	}
     	var view = new app.views.FeaturePropertiesForm({model: itemModel, readonly: false });
     	this.col2.show(view);
-    	
     },
     
     showNothing: function() {
@@ -442,6 +443,8 @@ app.views.EditingToolsView = Backbone.Marionette.ItemView.extend({
 		
 	initialize: function() {
 		var map = app.map.map;
+		// featureOverlay is a global layer where all features get
+		// added to.
 		featureOverlay = new ol.FeatureOverlay({
 		  style: new ol.style.Style({
 		    fill: new ol.style.Fill({

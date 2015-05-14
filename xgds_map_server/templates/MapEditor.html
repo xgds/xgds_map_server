@@ -81,19 +81,20 @@
     <script type="text/javascript" src='{{ EXTERNAL_URL }}string-format/string-format.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}usng/usng.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}proj4/dist/proj4.js'></script>
+
+ 	<script src="{{EXTERNAL_URL}}ol3/build/ol-debug.js" type="text/javascript"></script>
+   	<script src="{{EXTERNAL_URL}}ol3-layerswitcher/src/ol3-layerswitcher.js" type="text/javascript"></script>
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}ol3-popup/src/ol3-popup.js'></script>
     
     <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/handlebars-helpers.js'></script>
     <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/app.js'></script>    
    	<script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/fancyTreeView.js'></script>
+   	<script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/olMapViews.js'></script>
     <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/geo.js'></script>
     <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/forms.js'></script>
     <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/models.js'></script>
     <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/views.js'></script>
 
- 	<script src="{{EXTERNAL_URL}}ol3/build/ol-debug.js" type="text/javascript"></script>
-   	<script src="{{EXTERNAL_URL}}ol3-layerswitcher/src/ol3-layerswitcher.js" type="text/javascript"></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}ol3-popup/src/ol3-popup.js'></script>
-   	<script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/olMapViews.js'></script>
     
    	
     {% for template_name, template in templates.items %}

@@ -146,12 +146,12 @@ class PolygonStyle(AbstractStyle):
     strokeColor = models.CharField(max_length=32, null=True, blank=True, 
                                  default='Black', 
                                  help_text='hex value or CSS color name')
+    strokeWidth = models.IntegerField(null=True, blank=True, 
+                                      help_text='polygon border width')
     fillColor = models.CharField(max_length=32, null=True, blank=True, 
                                  help_text='hex value or CSS color name')
     fillOpacity = models.FloatField(null=True, blank=True, default=1,
                                     help_text='between 0 and 1')
-    fillImage = models.ImageField(upload_to='featureImages', height_field='height',
-                              width_field='width')
 
 
 class LineStringStyle(AbstractStyle):
@@ -162,17 +162,33 @@ class LineStringStyle(AbstractStyle):
     opacity = models.FloatField(null=True, blank=True, default=1,
                                     help_text='between 0 and 1')
     dashes = models.BooleanField(default=False)
-    casingWidth = models.IntegerField(null=True, blank=True, 
+    dashLineSize = models.IntegerField(null=True, blank=True, 
+                                      help_text='stroke dash size')
+    dashSpaceSize = models.IntegerField(null=True, blank=True, 
+                                      help_text='stroke dash space size')
+    borderWidth = models.IntegerField(null=True, blank=True, 
                                       help_text='line border width')
-    casingColor = models.CharField(max_length=32, null=True, blank=True, 
+    borderColor = models.CharField(max_length=32, null=True, blank=True, 
                                  help_text='hex value or CSS color name')
 
 
 class PointStyle(AbstractStyle):
     radius = models.IntegerField('radius', default=5)
-    color = models.CharField(max_length=32, null=True, blank=True, 
-                                 default='Blue', 
+    strokeColor = models.CharField(max_length=32, null=True, blank=True, 
+                                 default='Black', 
                                  help_text='hex value or CSS color name')
+    strokeOpacity = models.FloatField(null=True, blank=True, default=1,
+                                    help_text='between 0 and 1')
+    strokeWidth = models.IntegerField(null=True, blank=True, 
+                                      help_text='line border width')
+    fillColor = models.CharField(max_length=32, null=True, blank=True, 
+                                 help_text='hex value or CSS color name')
+    fillOpacity = models.FloatField(null=True, blank=True, default=1,
+                                    help_text='between 0 and 1')
+ 
+    
+    
+class Icon(models.Model):
     iconImage = models.ImageField(upload_to='featureImages', height_field='height',
                               width_field='width')
     iconWidth = models.CharField(max_length=5, null=True, blank=True, 
@@ -181,6 +197,10 @@ class PointStyle(AbstractStyle):
                                  help_text='a scaling factor in %')
     iconOpacity = models.FloatField(null=True, blank=True, default=1,
                                     help_text='between 0 and 1')
+    offsetX = models.IntegerField(null=True, blank=True, 
+                                      help_text='pixel offset in x from center of icon')
+    offsetY = models.IntegerField(null=True, blank=True, 
+                                      help_text='pixel offset in y from center of icon')
 
 
 class DrawingStyle(AbstractStyle):
@@ -238,6 +258,7 @@ class LineString(AbstractFeature):
 class Point(AbstractFeature):
     point = models.PointField()
     style = models.ForeignKey(PointStyle, null=True)
+    icon = models.ForeignKey(Icon, null=True)
 
 
 class Drawing(AbstractFeature):

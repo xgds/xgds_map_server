@@ -66,6 +66,7 @@ $(function() {
                 
                 this.kmlGroup = new ol.layer.Group();
                 this.mapLayerGroup = new ol.layer.Group();
+                this.mapEditorGroup = new ol.layer.Group();
                 this.layersInitialized = false;
                 
                 this.map = new ol.Map({
@@ -75,7 +76,8 @@ $(function() {
                           source: new ol.source.MapQuest({layer: 'osm'})
                       }),
                       this.kmlGroup,
-                      this.mapLayerGroup
+                      this.mapLayerGroup,
+                      this.mapEditorGroup
                     ],
                     view: new ol.View({
                         // we will center the view later
@@ -85,9 +87,11 @@ $(function() {
                 this.updateBbox();
                 this.buildStyles();
                 this.setupPopups();
+                
                 //events
                 app.vent.on('layers:loaded', this.render);
                 app.vent.on('layers:loaded', this.initializeMapData);
+                app.vent.on('layers:loaded', this.initializeMapEditor);
                 app.vent.on('tree:loaded', this.updateMapLayers);
                 app.vent.trigger('layers:loaded');
                 app.vent.on('kmlNode:create', function(node) {
@@ -139,10 +143,9 @@ $(function() {
                   });
                 }
             },
-            
             // read through the json data and turn on layers that should be on
-            initializeMapLayers: function(node, index, collection) {
-                if (node.selected){
+            initializeMapLayers: function(node, index, collection) {               
+            	if (node.selected){
                    // create the kml layer view and store the layer in a map so we can get it later
                     if (!_.isUndefined(node.data.kmlFile)){
                         if (!endsWith(node.data.kmlFile, "kmz")) {
@@ -181,7 +184,6 @@ $(function() {
                 node.kmlLayerView = kmlLayerView;
                 return kmlLayerView;
             },
-            
             createMapLayerView: function(node) {
                 //  create the map layer view
                 var mapLayerView = new MapLayerView({
@@ -192,7 +194,13 @@ $(function() {
                 node.mapLayerView = mapLayerView;
                 return mapLayerView;
             },
-            
+            createMapEditorView: function() {
+            	var mapEditorView = new MapEditorView({
+            		mapLayerJson: {},
+            		mapLayerGroup: this.mapEditorGroup
+            	});
+            	return mapEditorView;
+            }, 
             updateMapLayers: function() {
                 if (!_.isUndefined(app.tree)){
                     var selectedNodes = app.tree.getSelectedNodes();
@@ -369,7 +377,7 @@ $(function() {
             }
             this.visible = false;
             this.mapLayerGroup = this.options.mapLayerGroup;
-            this.mapLayerJson = this.options.mapLayerJson;
+            this.mapLayerJson = this.getFeatures();
             this.node = this.options.node; // may be undefined
             this.drawBelow = false;
             this.features = [];
@@ -415,10 +423,12 @@ $(function() {
                 });
                 break;
             } 
-            
             if (!_.isUndefined(newFeature)){
                 this.features.push(newFeature);
             }
+        },
+        getFeatures: function() {
+        	return this.options.mapLayerJson;
         },
         render: function() {
             if (_.isUndefined(this.node)){
@@ -445,7 +455,8 @@ $(function() {
                 this.visible = false;
             }
         }
-    });
+    });    
+
     
     var LayerFeatureView = Backbone.View.extend({
         initialize: function(options) {
@@ -454,7 +465,7 @@ $(function() {
                 throw 'Missing a required option!';
             }
             this.layerGroup = this.options.layerGroup;
-            this.featureJson = this.options.featureJson;
+            this.featureJson = this.options.featureJson; 
             this.constructContent();
             this.render();
         },
@@ -560,11 +571,14 @@ $(function() {
     
     var PolygonView = VectorView.extend({
         constructFeature: function() {
+        	console.log("feature in json: ", this.featureJson);
             var coords = this.featureJson.polygon;
             this.polygonFeature = new ol.Feature({
                 name: this.featureJson.name,
-                geometry: new ol.geom.Polygon([this.featureJson.polygon]).transform('EPSG:4326', 'EPSG:3857')
+                geometry: new ol.geom.Polygon([coords]).transform('EPSG:4326', 'EPSG:3857')
             });
+            console.log("the json polygon Feature ", this.featureJson.polygon);
+            console.log("polygonFeature I am tryign to draw: ", this.polygonFeature);
             return this.polygonFeature;
         }, 
         getStyle: function() {
@@ -597,6 +611,86 @@ $(function() {
             return app.styles['lineString'];
         }
     
+    });
+    
+    /*
+     * Views for MapEditor
+     * 
+     */
+
+    var MapEditorView = MapLayerView.extend({
+    	getFeatures: function() {
+    		var mapLayer = app.mapLayer;
+    		var featuresJSON = []
+    		if (app.mapLayer && app.mapLayer.get('feature')) {
+    			var features = app.mapLayer.get('feature');
+    			$.each(features.models, function(index, feature){
+    				featuresJSON.push(feature.toJSON());
+    			});
+    		}
+    		return featuresJSON;
+    	},
+    	constructFeatures: function() {
+            if (_.isUndefined(this.layerGroup)){
+                this.layerGroup = new ol.layer.Group({name: this.mapLayerJson.name});
+            };
+    		var mlview = this;
+            $.each(mlview.mapLayerJson, function(index, value) {
+                    mlview.createFeature(value);
+            });
+        },
+        createFeature: function(featureJson){
+            var newFeature;
+            switch (featureJson['type']){
+            case 'GroundOverlay':
+                newFeature = new GroundOverlayEditView({
+                    layerGroup: this.layerGroup,
+                    featureJson: featureJson
+                });
+                this.drawBelow = true;
+                break;
+            case 'Polygon':
+                newFeature = new PolygonEditView({
+                    layerGroup: this.layerGroup,
+                    featureJson: featureJson
+                });
+                break;
+            case 'Point':
+                newFeature = new PointEditView({
+                    layerGroup: this.layerGroup,
+                    featureJson: featureJson
+                });
+                break;
+            case 'LineString':
+                newFeature = new LineStringEditView({
+                    layerGroup: this.layerGroup,
+                    featureJson: featureJson
+                });
+                break;
+            } 
+            if (!_.isUndefined(newFeature)){
+                this.features.push(newFeature);
+            }
+        },
+        render: function() {
+        	this.show();
+        } 
+    });
+
+    var PolygonEditView = PolygonView.extend({
+
+    });
+
+    var PointEditView = PointView.extend({
+
+    });
+
+    var LineStringEditView = LineStringView.extend({
+
+    });
+
+    var GroundOverlayEditView = GroundOverlayView.extend({
+        
     });
     
 });
