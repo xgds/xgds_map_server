@@ -183,13 +183,11 @@ var app = (function($, _, Backbone) {
         app.selectedViews = []; // This array holds the views currently selected by checkboxes
         app.copiedCommands = []; // array of copied commands
 
-        app.map = new app.views.OLMapView({
+        app.map = new app.views.OLEditMapView({
             el: '#map'
         });
         app.toolbar.show(new app.views.ToolbarView());
         app.tabs.show(new app.views.TabNavView());
-        //create a mapEditorView which displays existing features on the map
-        app.map.createMapEditorView();
         
         app.editingTools.show(new app.views.EditingToolsView());
 		app.util.addDrawTypeSelectChangeCallBack();
