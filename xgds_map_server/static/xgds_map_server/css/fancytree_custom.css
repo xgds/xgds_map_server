@@ -2,3 +2,8 @@ span.fancytree-node.kmlFile > span.fancytree-icon {
   background-image: url(/static/xgds_map_server/icons/gearth.png);
   background-position: 0 5;
 }
+
+ul.fancytree-container {
+ 	 height: 400px;
+  	 width: 95%;
+  }

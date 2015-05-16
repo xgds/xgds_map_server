@@ -1,7 +1,7 @@
 {% extends "MapBase.html" %}
 {% block contents %}
 <h2><a href="{{ feedUrl }}" class="mybutton" title="Open the map feed in Google Earth on your desktop.  Maps are managed by the server and automatically updated as new information becomes available.">Open in Google Earth</a> </h2>
-<span style="font-size:85%">
+<span class="small">
 <p>
 The Master Map Feed includes all of the maps provided by this map server.
 It will update automatically in Google Earth as new data becomes available.<br/>
@@ -17,9 +17,7 @@ Get <a href="http://www.google.com/earth/download/ge/" target="new">Google Earth
 	<div id="toolbar" class="row">
     </div>
 	<div class="row">
-        <div id="mapDiv" class="six columns">
-        	<div id="map"></div>
-        </div>
+        <div id="map" class="six columns"></div>
         <div id="layers" class="six columns"></div>
     </div>
 </div>
@@ -31,6 +29,10 @@ Get <a href="http://www.google.com/earth/download/ge/" target="new">Google Earth
   @import url('{{EXTERNAL_URL}}ol3-popup/src/ol3-popup.css');
   @import url('{{ EXTERNAL_URL }}fancytree/dist/skin-lion/ui.fancytree.min.css');
   @import url('{{ STATIC_URL }}xgds_map_server/css/fancytree_custom.css');
+  #map {
+  	 margin-top: 25px;
+ 	 height: 400px;
+  }
 </style>
 {% endblock cssExtras %}
 

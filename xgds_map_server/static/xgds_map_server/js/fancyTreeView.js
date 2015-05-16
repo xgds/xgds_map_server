@@ -81,6 +81,9 @@ app.views.FancyTreeView = Backbone.View.extend({
                 extensions: ["persist"],
                 source: app.treeData,
                 checkbox: true,
+                dblclick: function(event, data) {
+                    var win = window.open(data.node.data.href, '_edit');
+                },
                 select: function(event, data) {
                     if (!_.isUndefined(data.node.data.kmlFile)){
                         if (_.isUndefined(data.node.kmlLayerView)) {
