@@ -19,6 +19,9 @@ app.views = app.views || {};
 app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
     template: '#template-toolbar',
     events: {
+        'click #btn-navigate': function() { app.vent.trigger('mapmode', 'navigate'); this.updateTip('clear');},
+        'click #btn-reposition': function() { app.vent.trigger('mapmode', 'reposition'); this.updateTip('edit'); },
+        'click #btn-addFeatures': function() { app.vent.trigger('mapmode', 'addFeatures'); this.updateTip('add');},
         'click #btn-save': function() { this.saveFeaturesToDB(); },
         'click #btn-saveas': function() { this.showSaveAsDialog(); },
         'click #btn-undo': function() { app.Actions.undo(); },
@@ -129,8 +132,8 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
 
     updateTip: function(eventName) {
         var msgMap = {
-            'edit': 'Shift click to delete stations, click & drag the blue dot to edit.',
-            'add': 'Click to add stations to end.  Double-click last station.',
+            'edit': 'Click and drag blue dot on the feature to edit.',
+            'add': 'Click to add a new feature. Double click to complete feature creation.',
             'clear': 'Click and drag to pan map.'
         };
         var msg = msgMap[eventName];
@@ -264,9 +267,24 @@ app.views.FeatureCoordinatesView = Backbone.Marionette.ItemView.extend({
 	}, 
 });
 
+
 app.views.FeatureCoordinatesHeader = Backbone.Marionette.ItemView.extend({
-	template: '#template-feature-coordinates-header'
+	template: '#template-feature-coordinates-header',
+	serializeData: function() {
+		var data = this.model.toJSON();
+		return {type: data.type};
+	}
 });
+
+
+app.views.FeatureStyleHeader = Backbone.Marionette.ItemView.extend({
+	template: '#template-feature-style-header',
+	serializeData: function() {
+		var data = this.model.toJSON();
+		return {type: data.type};
+	}
+});
+
 
 app.views.FeaturePropertiesView = Backbone.Marionette.CompositeView.extend({
 	template: '#template-feature-properties',
@@ -287,7 +305,11 @@ app.views.FeaturesHeaderView = Backbone.Marionette.ItemView.extend({
 
 
 app.views.FeaturePropertiesHeaderView = Backbone.Marionette.ItemView.extend({
-    template: '#template-feature-properties-header'
+    template: '#template-feature-properties-header',
+	serializeData: function() {
+		var data = this.model.toJSON();
+		return {type: data.type};
+	}
 });
 
 
@@ -363,22 +385,32 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
 	childViewOptions: {
 		expandClass: 'col1'
 	},
-	
 	emptyView: app.views.NoFeaturesView,
-	
+	events: {
+        'click #btn-copy': 'copySelectedFeatures',
+        'click #btn-paste': 'pasteFeatures',
+        'click #btn-cut': 'cutSelectedFeatures',
+        'click #btn-delete': 'deleteSelectedFeatures',
+	},
 	initialize: function(options) {
 		this.options = options || {};
 		this.on('childview:expand', this.onItemExpand, this);
 	},
-	
 	onItemExpand: function(childView) {
         app.State.featureSelected = childView.model;
-    },
-        
+    },   
     onClose: function() {
         this.children.each(function(view) {
             view.close();
         });
+    },
+    copySelectedFeatures: function() {
+    },
+    pasteFeatures: function() {
+    }, 
+    cutSelectedFeatures: function() {
+    }, 
+    deleteSelectedCommands: function(){
     }
 });
 
@@ -461,6 +493,8 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
     		this.colhead3.close();
     	} catch (ex) {
     	}
+    	var headerView = new app.views.FeatureStyleHeader({model: model});
+    	this.colhead3.show(headerView);
     	if (model.get('type') == 'Polygon') {
     		var view = new app.views.FeaturePolygonStyleForm({model: model});
     	} else if (model.get('type') == 'Point') {
@@ -479,7 +513,7 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
     		this.colhead3.close();
     	} catch (ex) {
     	}
-    	var headerView = new app.views.FeatureCoordinatesHeader();
+    	var headerView = new app.views.FeatureCoordinatesHeader({model: model});
     	this.colhead3.show(headerView);
 		var view = new app.views.FeatureCoordinatesView({model: model});
     	this.col3.show(view);

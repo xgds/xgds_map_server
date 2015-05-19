@@ -376,7 +376,6 @@ $(function() {
             this.node = this.options.node; // may be undefined
             this.drawBelow = false;
             this.features = [];
-            
             this.constructFeatures();
             this.render();
         },

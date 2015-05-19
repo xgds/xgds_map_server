@@ -59,6 +59,9 @@ $(function() {
      */
 
     app.views.MapEditorView = app.views.MapLayerView.extend({
+    	initialize: function(options) {
+    		app.views.MapLayerView.prototype.initialize.call(this);
+    	},
         getFeatures: function() {
             var mapLayer = app.mapLayer;
             var featuresJSON = []
@@ -114,7 +117,42 @@ $(function() {
         },
         render: function() {
             this.show();
-        } 
+            if (this.currentMode) {
+            	this.resetMode();
+            }
+        },
+        //clean up, then re-enter the mode. Useful for redraws
+        resetMode: function() {
+        	if (this.currentMode) {
+        		var mode = this.currentMode;
+        		mode.exit.call(this);
+        		mode.enter.call(this);
+        	}
+        },
+        setMode: function(modeName) {
+            var modeMap = {
+                'addFeatures' : 'addFeaturesMode',
+                'navigate' : 'navigateMode',
+                'reposition' : 'repositionMode'
+            };
+
+            if (this.currentMode) {
+                this.currentMode.exit.call(this);
+            }
+            var mode = _.isObject(modeName) ? modeName : this[modeMap[modeName]];
+            mode.enter.call(this);
+            this.currentMode = mode;
+            this.currentModeName = modeName;
+        },
+        addFeaturesMode: {
+        	//
+        },
+        navigateMode: {
+        	
+        },
+        repositionMode: {
+        	
+        }
     });
 
     app.views.PolygonEditView = app.views.PolygonView.extend({
