@@ -264,7 +264,6 @@ var app = (function($, _, Backbone) {
 			  var geom = feature.getGeometry();
 			  var type = geom.getType();
 			  var coords = geom.getCoordinates();
-			  console.log("when feature is drawn, the coordinates I save look like this: ", coords);
 			  var saveToDB = true; //features needs to be saved to db
 			  //create a new backbone feature obj
 			  app.util.createBackboneObjFromFeature(type, coords, saveToDB);

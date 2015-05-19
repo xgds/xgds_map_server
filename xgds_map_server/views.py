@@ -196,8 +196,6 @@ def saveFeatureJsonToDB(request):
         type = data.get('type', None)
         feature = createGeosObjectFromCoords(data, type)
         # don't create the feature if there is one of same type and same coordinates...
-        
-        
         mapLayerName = data.get('mapLayerName', None)
         try:
             mapLayer = MapLayer.objects.get(name = mapLayerName)

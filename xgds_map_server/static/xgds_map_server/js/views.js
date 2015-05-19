@@ -27,6 +27,13 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
 
     initialize: function() {
         this.listenTo(app.vent, 'mapmode', this.ensureToggle);
+        this.listenTo(app.vent, 'undoEmpty', this.disableUndo);
+        this.listenTo(app.vent, 'redoEmpty', this.disableRedo);
+        this.listenTo(app.vent, 'undoNotEmpty', this.enableUndo);
+        this.listenTo(app.vent, 'redoNotEmpty', this.enableRedo);
+        this.listenTo(app.mapLayer, 'sync', function(model) {this.updateSaveStatus('sync')});
+        this.listenTo(app.mapLayer, 'error', function(model) {this.updateSaveStatus('error')});
+
     },
 
     onShow: function() {
@@ -97,10 +104,10 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
     updateSaveStatus: function(eventName) {
         var msgMap = {
             'change': 'Unsaved changes.',
-            'sync': 'Plan saved.',
+            'sync': 'Map layer saved.',
             'error': 'Save error.',
             'clear': '',
-            'readOnly': 'Plan is LOCKED.'
+            'readOnly': 'Map layer is LOCKED.'
         };
         if (app.options.readOnly) {
             eventName = 'readOnly';
@@ -162,6 +169,31 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
     },
     
     showSaveAsDialog: function() {
+    	$('#saveAsName').val(app.mapLayer.attributes['name']);
+    	$('#saveAsDialog').dialog({
+    		dialogClass: 'no-close',
+    		modal: false,
+    		resizable: true,
+    		closeOnEscape: true,
+    		buttons: {
+    			'Cancel': function() {
+    				$(this).dialog('close');
+    			},
+    			'Save': function() {
+    				var newName = $('#saveAsName').val()
+    				app.mapLayer.set('name', newName);
+    				app.mapLayer.set('uuid', null);
+    				app.mapLayer.save();
+    				$(this).dialog('close');
+    			}
+    		},
+            position: {
+                my: 'right top',
+                at: 'right bottom',
+                of: '#tab-buttons'
+            },
+            dialogClass: 'saveAs'
+    	});
     }
 
 });
@@ -191,12 +223,60 @@ app.views.LayerInfoTabView = Backbone.Marionette.ItemView.extend({
 });
 
 
-app.views.FeaturePropertiesForm = Backbone.Marionette.ItemView.extend({
-	template: '#template-feature-properties',
+app.views.FeatureStyleForm = Backbone.Marionette.ItemView.extend({
+	template: '#template-feature-polygon-style-properties',
 	serializeData: function() {
 		var data = this.model.toJSON();
 		//TODO: add more later
 		return data;
+	}
+});
+
+
+app.views.FeaturePolygonStyleForm = app.views.FeatureStyleForm.extend({
+	template: '#template-feature-polygon-style-properties'
+});
+
+
+app.views.FeatureLinestringStyleForm = app.views.FeatureStyleForm.extend({
+	template: '#template-feature-linestring-style-properties'
+});
+
+
+app.views.FeaturePointStyleForm = app.views.FeatureStyleForm.extend({
+	template: '#template-feature-point-style-properties'
+});
+
+
+app.views.FeatureCoordinatesView = Backbone.Marionette.ItemView.extend({
+	template: '#template-feature-coordinates',
+	serializeData: function() {
+		var data = this.model.toJSON();
+		var coordinates = null;
+		if (data.type == 'Polygon') {
+			coordinates = data.polygon;
+		} else if (data.type == 'LineString') {
+			coordinates = data.lineString;
+		} else if (data.type == 'Point') {
+			coordinates = [data.point];
+		}
+		return {coords: coordinates};
+	}, 
+});
+
+app.views.FeatureCoordinatesHeader = Backbone.Marionette.ItemView.extend({
+	template: '#template-feature-coordinates-header'
+});
+
+app.views.FeaturePropertiesView = Backbone.Marionette.CompositeView.extend({
+	template: '#template-feature-properties',
+	events: {
+		'click .feature-style': function(evt) {
+			app.vent.trigger('showStyle', this.model);
+		}, 
+		'click .feature-coordinates': function(evt) {
+			app.vent.trigger('showCoordinates', this.model);
+		}
 	}
 });
 
@@ -225,7 +305,8 @@ app.views.FeatureListItemView = Backbone.Marionette.ItemView.extend({
     },
     template: function(data) {
         //return '' + data.model.toString()+ ' <i/>';
-    	return '{model.toString} <i/>'.format(data);
+    	var displayName = data.model.toString();
+        return '<input class="select" type="checkbox" id="id_' + displayName + '"/></i>&nbsp;<label style="display:inline-block;" for="id_' + displayName + '">' + displayName + '</label><i/>';
     },
     serializeData: function() {
         var data = Backbone.Marionette.ItemView.prototype.serializeData.call(this, arguments);
@@ -309,18 +390,25 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
         //Column Headings
         colhead1: '#colhead1',
         colhead2: '#colhead2',
-
+        colhead3: '#colhead3',
+        
         //Column content
         col1: '#col1',
         col2: {
             selector: '#col2',
             regionType: app.views.HideableRegion
-        }
+        },
+		col3: {
+		    selector: '#col3',
+		    regionType: app.views.HideableRegion
+		}
     },
 	
     initialize: function() {
-    	this.listenTo(app.vent, 'showFeature', this.showFeature, this)
+    	this.listenTo(app.vent, 'showFeature', this.showFeature, this);
         this.listenTo(app.vent, 'showNothing', this.showNothing, this);
+        this.listenTo(app.vent, 'showStyle', this.showStyle, this);
+        this.listenTo(app.vent, 'showCoordinates', this.showCoordinates, this);
     },
     
     onClose: function() {
@@ -352,17 +440,54 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
     },
     
     showFeature: function(itemModel) {
-    	console.log("inside show Feature")
-    	var headerView = new app.views.FeaturePropertiesHeaderView({});
+    	try{
+    		this.col3.close();
+    		this.colhead2.close();
+    	} catch (ex) {
+    	}
+    	var headerView = new app.views.FeaturePropertiesHeaderView({
+    		model: itemModel
+    	});
     	this.colhead2.show(headerView);
     	try {
     		this.col2.close();
-    	} catch (ex) {
+    	} catch(ex) {
     	}
-    	var view = new app.views.FeaturePropertiesForm({model: itemModel, readonly: false });
+    	var view = new app.views.FeaturePropertiesView({model: itemModel});
     	this.col2.show(view);
     },
-    
+    showStyle: function(model){
+    	try {
+    		this.colhead3.close();
+    	} catch (ex) {
+    	}
+    	if (model.get('type') == 'Polygon') {
+    		var view = new app.views.FeaturePolygonStyleForm({model: model});
+    	} else if (model.get('type') == 'Point') {
+    		var view = new app.views.FeaturePointStyleForm({model: model});
+    	} else if (model.get('type') == 'LineString') {
+    		var view = new app.views.FeatureLinestringStyleForm({model: model});
+    	} 	
+    	this.col3.show(view);
+        try {
+            this.col3.close();
+        } catch (ex) {
+        }
+    }, 
+    showCoordinates: function(model){
+    	try {
+    		this.colhead3.close();
+    	} catch (ex) {
+    	}
+    	var headerView = new app.views.FeatureCoordinatesHeader();
+    	this.colhead3.show(headerView);
+		var view = new app.views.FeatureCoordinatesView({model: model});
+    	this.col3.show(view);
+        try {
+            this.col3.close();
+        } catch (ex) {
+        }
+    },
     showNothing: function() {
         // clear the columns
         try {
