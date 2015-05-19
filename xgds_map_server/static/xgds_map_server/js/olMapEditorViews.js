@@ -35,7 +35,8 @@ $(function() {
         createMapEditorView: function() {
             var mapEditorView = new app.views.MapEditorView({
                 mapLayerJson: {},
-                mapLayerGroup: this.mapEditorGroup
+                mapLayerGroup: this.mapEditorGroup,
+                map: this.map
             });
             return mapEditorView;
         }, 
@@ -57,10 +58,17 @@ $(function() {
      * Views for MapEditor
      * 
      */
-
     app.views.MapEditorView = app.views.MapLayerView.extend({
     	initialize: function(options) {
     		app.views.MapLayerView.prototype.initialize.call(this, options);
+    		app.vent.on('mapmode', this.setMode, this);
+    		app.vent.trigger('mapmode', 'navigate');
+    		this.map = this.options.map;
+    		
+    		this.featureOverlay = new ol.FeatureOverlay({
+      		  style: app.util.getDefaultStyle()
+      		});
+      		this.featureOverlay.setMap(this.map);
     	},
         getFeatures: function() {
             var mapLayer = app.mapLayer;
@@ -144,19 +152,104 @@ $(function() {
             this.currentMode = mode;
             this.currentModeName = modeName;
         },
+        
+//        app.util.addDrawTypeSelectChangeCallBack();
+        
+//     // add draw interaction to the map.
+//    	addInteraction: function(typeSelect) {
+//    	  var map = app.map.map;
+//		  draw = new ol.interaction.Draw({
+//		    features: featureOverlay.getFeatures(),
+//		    type: /** @type {ol.geom.GeometryType} */ (typeSelect.value)
+//		  });
+//		  map.addInteraction(draw);
+//		  //when user draws a feature, save it as a backbone and db obj.
+//		  draw.on('drawend', function(event) { // finished drawing this feature
+//			  var feature = event.feature;
+//			  var geom = feature.getGeometry();
+//			  var type = geom.getType();
+//			  var coords = geom.getCoordinates();
+//			  //create a new backbone feature obj
+//			  var featureObj = app.util.createBackboneFeatureObj(type, coords);
+//			  //save to DB
+//			  featureObj.save(null, {
+//				  type: 'POST'
+//			  });
+//		  });
+//    	},
+//    	// draw type selection change 
+//    	addDrawTypeSelectChangeCallBack: function() {
+//	    	var map = app.map.map;
+//	    	var typeSelect = document.getElementById('type');
+//			/**
+//			 * Let user change the geometry type.
+//			 * @param {Event} e Change event.
+//			 */
+//			typeSelect.onchange = function(e) {
+//			  map.removeInteraction(draw);
+//			  app.util.addInteraction(typeSelect);
+//			};
+//			app.util.addInteraction(typeSelect);
+//	    },
+        addInteraction(typeSelect) {
+			this.featureAdder = new ol.interaction.Draw({
+				features: this.featureOverlay.getFeatures(),
+				type:  /** @type {ol.geom.GeometryType} */ (typeSelect.value)
+			}, this);
+			this.featureAdder.on('drawend', function(event) { // finished drawing this feature
+				var feature = event.feature;
+				var geom = feature.getGeometry();
+				var type = geom.getType();
+				var coords = geom.getCoordinates();
+				//create a new backbone feature obj
+				var featureObj = app.util.createBackboneFeatureObj(type, coords);
+				//save to DB
+				featureObj.save(null, {
+					type: 'POST'
+				});
+			});
+			this.map.addInteraction(this.featureAdder);
+        },
         addFeaturesMode: {
-        	//
+        	// in this mode, user can add features (all other features are locked)
+        	enter: function() {
+        		app.State.disableAddFeature = false;
+        		var typeSelect = document.getElementById('type');
+    			typeSelect.onchange = function(e) {
+    				this.map.removeInteraction(this.featureAdder);
+    				this.addInteraction(typeSelect);
+    			};
+
+    			if (_.isUndefined(this.featureAdder)){
+        			this.addInteraction(typeSelect);
+        		}
+        	}, 
+        	exit: function() {
+        		this.map.removeInteraction(this.featureAdder);
+        	}
         },
         navigateMode: {
-        	
+        	// in this mode, user can only navigate around the map (all features are locked)
+        	enter: function() {
+
+        	}, 
+        	exit: function() {
+
+        	}
         },
         repositionMode: {
-        	
+        	// in this mode, user can edit any existing features but cannot add a new feature.
+        	enter: function() {
+
+        	}, 
+        	exit: function() {
+
+        	}
         }
     });
 
     app.views.PolygonEditView = app.views.PolygonView.extend({
-
+    	
     });
 
     app.views.PointEditView = app.views.PointView.extend({
@@ -181,46 +274,6 @@ $(function() {
             Backbone.Marionette.Region.prototype.show.call(this, view);
             this.$el.show();
         }
-    });
-
-    app.views.EditingToolsView = Backbone.Marionette.ItemView.extend({
-    	template: '#template-editing-tools',
-    		
-    	initialize: function() {
-    		var map = app.map.map;
-    		// featureOverlay is a global layer where all features get
-    		// added to.
-    		featureOverlay = new ol.FeatureOverlay({
-    		  style: new ol.style.Style({
-    		    fill: new ol.style.Fill({
-    		      color: 'rgba(255, 255, 255, 0.2)'
-    		    }),
-    		    stroke: new ol.style.Stroke({
-    		      color: '#ffcc33',
-    		      width: 2
-    		    }),
-    		    image: new ol.style.Circle({
-    		      radius: 7,
-    		      fill: new ol.style.Fill({
-    		        color: '#ffcc33'
-    		      })
-    		    })
-    		  })
-    		});
-    		featureOverlay.setMap(map);
-    
-    		var modify = new ol.interaction.Modify({
-    		  features: featureOverlay.getFeatures(),
-    		  // the SHIFT key must be pressed to delete vertices, so
-    		  // that new vertices can be drawn at the same position
-    		  // of existing vertices
-    		  deleteCondition: function(event) {
-    		    return ol.events.condition.shiftKeyOnly(event) &&
-    		        ol.events.condition.singleClick(event);
-    		  }
-    		});		
-    		map.addInteraction(modify);
-    	}
     });
 });
 
