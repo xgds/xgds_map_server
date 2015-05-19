@@ -60,7 +60,7 @@ $(function() {
 
     app.views.MapEditorView = app.views.MapLayerView.extend({
     	initialize: function(options) {
-    		app.views.MapLayerView.prototype.initialize.call(this);
+    		app.views.MapLayerView.prototype.initialize.call(this, options);
     	},
         getFeatures: function() {
             var mapLayer = app.mapLayer;
