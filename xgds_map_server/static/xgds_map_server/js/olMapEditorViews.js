@@ -60,15 +60,27 @@ $(function() {
      */
     app.views.MapEditorView = app.views.MapLayerView.extend({
     	initialize: function(options) {
-    		app.views.MapLayerView.prototype.initialize.call(this, options);
+    		app.views.MapLayerView.prototype.initialize.call(this, options); // call super
     		app.vent.on('mapmode', this.setMode, this);
     		app.vent.trigger('mapmode', 'navigate');
     		this.map = this.options.map;
     		
+    		//set up feature overlay where all features will be added
     		this.featureOverlay = new ol.FeatureOverlay({
       		  style: app.util.getDefaultStyle()
       		});
       		this.featureOverlay.setMap(this.map);
+      		app.vent.on('editingToolsRendered', function(){
+      			//set up typeSelect for addFeaturesMode
+        		this.typeSelect = document.getElementById('type');
+        		var _this = this;
+    			this.typeSelect.onchange = function(e) {
+    				if (_this.featureAdder) {
+    					_this.map.removeInteraction(_this.featureAdder);
+    				} 
+    				_this.addDrawInteraction(_this.typeSelect);
+    			};
+      		}, this);
     	},
         getFeatures: function() {
             var mapLayer = app.mapLayer;
@@ -143,7 +155,7 @@ $(function() {
                 'navigate' : 'navigateMode',
                 'reposition' : 'repositionMode'
             };
-
+            
             if (this.currentMode) {
                 this.currentMode.exit.call(this);
             }
@@ -152,46 +164,7 @@ $(function() {
             this.currentMode = mode;
             this.currentModeName = modeName;
         },
-        
-//        app.util.addDrawTypeSelectChangeCallBack();
-        
-//     // add draw interaction to the map.
-//    	addInteraction: function(typeSelect) {
-//    	  var map = app.map.map;
-//		  draw = new ol.interaction.Draw({
-//		    features: featureOverlay.getFeatures(),
-//		    type: /** @type {ol.geom.GeometryType} */ (typeSelect.value)
-//		  });
-//		  map.addInteraction(draw);
-//		  //when user draws a feature, save it as a backbone and db obj.
-//		  draw.on('drawend', function(event) { // finished drawing this feature
-//			  var feature = event.feature;
-//			  var geom = feature.getGeometry();
-//			  var type = geom.getType();
-//			  var coords = geom.getCoordinates();
-//			  //create a new backbone feature obj
-//			  var featureObj = app.util.createBackboneFeatureObj(type, coords);
-//			  //save to DB
-//			  featureObj.save(null, {
-//				  type: 'POST'
-//			  });
-//		  });
-//    	},
-//    	// draw type selection change 
-//    	addDrawTypeSelectChangeCallBack: function() {
-//	    	var map = app.map.map;
-//	    	var typeSelect = document.getElementById('type');
-//			/**
-//			 * Let user change the geometry type.
-//			 * @param {Event} e Change event.
-//			 */
-//			typeSelect.onchange = function(e) {
-//			  map.removeInteraction(draw);
-//			  app.util.addInteraction(typeSelect);
-//			};
-//			app.util.addInteraction(typeSelect);
-//	    },
-        addInteraction(typeSelect) {
+        addDrawInteraction(typeSelect) {
 			this.featureAdder = new ol.interaction.Draw({
 				features: this.featureOverlay.getFeatures(),
 				type:  /** @type {ol.geom.GeometryType} */ (typeSelect.value)
@@ -213,16 +186,11 @@ $(function() {
         addFeaturesMode: {
         	// in this mode, user can add features (all other features are locked)
         	enter: function() {
-        		app.State.disableAddFeature = false;
-        		var typeSelect = document.getElementById('type');
-    			typeSelect.onchange = function(e) {
-    				this.map.removeInteraction(this.featureAdder);
-    				this.addInteraction(typeSelect);
-    			};
-
-    			if (_.isUndefined(this.featureAdder)){
-        			this.addInteraction(typeSelect);
-        		}
+                app.State.disableAddFeature = false;
+				if (this.featureAdder) {
+					this.map.removeInteraction(this.featureAdder);
+				} 
+    			this.addDrawInteraction(this.typeSelect);
         	}, 
         	exit: function() {
         		this.map.removeInteraction(this.featureAdder);
