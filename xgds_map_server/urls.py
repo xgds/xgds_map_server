@@ -40,7 +40,7 @@ urlpatterns = patterns(
     # Open Map Editor on a particular map layer
     (r'^mapeditor/(?P<layerID>[\w-]+)/', views.getMapEditorPage,
      {},
-     'editLayer'),
+     'mapEditLayer'),
     # JSON tree of maps, formatted for jstree
     (r'^listjson/', views.getMapTreeJSON,
      {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']},
@@ -69,7 +69,7 @@ urlpatterns = patterns(
      'addKml'),
     (r'^addlayer/', views.getAddLayerPage,
      {},
-     'addLayer'),
+     'mapAddLayer'),
     # HTML view to confirm deletion of view
     (r'^delete/(?P<mapID>\w+)/', views.getDeleteMapPage,
      {},

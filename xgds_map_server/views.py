@@ -122,7 +122,7 @@ def getMapTreePage(request):
     HTML tree of maps using fancytree
     """
     jsonMapTreeUrl = (request.build_absolute_uri(reverse('mapTreeJSON')))
-    addLayerUrl = (request.build_absolute_uri(reverse('addLayer')))
+    addLayerUrl = (request.build_absolute_uri(reverse('mapAddLayer')))
     addKmlUrl = (request.build_absolute_uri(reverse('addKml')))
     addFolderUrl = (request.build_absolute_uri(reverse('folderAdd')))
     deletedMapsUrl = (request.build_absolute_uri(reverse('deletedMaps')))
@@ -236,10 +236,15 @@ def setNodeVisibility(request):
     if request.method == 'POST':
         try:
             nodeUuid = request.POST['nodeUuid']
-            visible = request.POST['visible']
+            visibleString = request.POST['visible']
+            if visibleString.encode('ascii','ignore') == 'true':
+                visible = True
+            else:
+                visible = False
             node = MAP_NODE_MANAGER.get(uuid=nodeUuid)
             node.visible = visible
             node.save()
+            print "saved visibility for " + node.uuid + ' and visible is ' + node.visible + ' and post is ' + request.POST['visible']
             return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
         except:
             return HttpResponse(json.dumps({'error': 'Set Visibility Failed'}), content_type='application/json')
@@ -254,8 +259,7 @@ def getAddKmlPage(request):
                   (reverse('mapTree')))
 
     if request.method == 'POST':
-        # quick and dirty hack to handle kmlFile field if user
-        # uploads file
+        # quick and dirty hack to handle kmlFile field if user uploads file
         if request.POST['typeChooser'] == 'file' and 'localFile' in request.FILES:
             request.POST['kmlFile'] = request.FILES['localFile'].name
         map_form = MapForm(request.POST, request.FILES)
@@ -762,7 +766,7 @@ def addGroupToFancyJSON(group, map_tree, request, expanded=False):
                             "key": group_layer.uuid,
                             "selected": group_layer.visible,
                             "tooltip": group_layer.description,
-                            "data": {"href": request.build_absolute_uri(reverse('editLayer', kwargs={'layerID': group_layer.uuid})),
+                            "data": {"href": request.build_absolute_uri(reverse('mapEditLayer', kwargs={'layerID': group_layer.uuid})),
                                      "parentId": None,
                                      "layerData": group_layer.toDict()
                                      },
@@ -783,11 +787,11 @@ def deleteGroup(map_group, state):
     recursively deletes maps and groups under a group
     using manual commit control might be a good idea for this
     """
-    for map_obj in KmlMap.objects.filter(parentId=map_group.uuid):
+    for map_obj in KmlMap.objects.filter(parent=map_group.uuid):
         # this is to avoid deleting maps when undeleting
         map_obj.deleted = state
         map_obj.save()
-    for group in MapGroup.objects.filter(parentId=map_group.uuid):
+    for group in MapGroup.objects.filter(parent=map_group.uuid):
         deleteGroup(group, state)
 
 
