@@ -50,6 +50,7 @@ var app = (function($, _, Backbone) {
             this.siteFrameMode = false;
             this.tree = undefined;
             this.treeData = null;
+            this.disableAddFeature = false;
         });
     });
 
@@ -177,7 +178,7 @@ var app = (function($, _, Backbone) {
 			var featureObj = new app.models.Feature(feature);
 			featureObj.set('mapLayer', app.mapLayer);  // set up the relationship.
 	    	featureObj.set('mapLayerName', app.mapLayer.get('name'));
-	    	featureObj.set('saveToDB', false);  // already in the db so no need to save.
+//	    	featureObj.set('saveToDB', false);  // already in the db so no need to save.
 		});
 		
         app.selectedViews = []; // This array holds the views currently selected by checkboxes
@@ -188,10 +189,8 @@ var app = (function($, _, Backbone) {
         });
         app.toolbar.show(new app.views.ToolbarView());
         app.tabs.show(new app.views.TabNavView());
-        
         app.editingTools.show(new app.views.EditingToolsView());
-		app.util.addDrawTypeSelectChangeCallBack();
-		
+		app.vent.trigger('editingToolsRendered');
 		app.vent.trigger('clearSaveStatus');
         if (this.options.readOnly == true){
             app.vent.trigger('readOnly');
@@ -250,40 +249,7 @@ var app = (function($, _, Backbone) {
     ** Global utility functions
     */
     app.util = {
-    	// add draw interaction to the map.
-    	addInteraction: function(typeSelect) {
-    	  var map = app.map.map;
-		  draw = new ol.interaction.Draw({
-		    features: featureOverlay.getFeatures(),
-		    type: /** @type {ol.geom.GeometryType} */ (typeSelect.value)
-		  });
-		  map.addInteraction(draw);
-		  //when user draws a feature, save it as a backbone obj
-		  draw.on('drawend', function(event) { // finished drawing this feature
-			  var feature = event.feature;
-			  var geom = feature.getGeometry();
-			  var type = geom.getType();
-			  var coords = geom.getCoordinates();
-			  var saveToDB = true; //features needs to be saved to db
-			  //create a new backbone feature obj
-			  app.util.createBackboneObjFromFeature(type, coords, saveToDB);
-		  });
-    	},
-    	// draw type selection change 
-    	addDrawTypeSelectChangeCallBack: function() {
-	    	var map = app.map.map;
-	    	var typeSelect = document.getElementById('type');
-			/**
-			 * Let user change the geometry type.
-			 * @param {Event} e Change event.
-			 */
-			typeSelect.onchange = function(e) {
-			  map.removeInteraction(draw);
-			  app.util.addInteraction(typeSelect);
-			};
-			app.util.addInteraction(typeSelect);
-	    },
-	    createBackboneObjFromFeature: function(type, coords, saveToDB) {
+	    createBackboneFeatureObj: function(type, coords) {
 	    	// create a new backbone feature object from the user drawings on map.
 	    	var featureObj = new app.models.Feature();
 	    	featureObj.set('mapLayer', app.mapLayer);
@@ -291,7 +257,26 @@ var app = (function($, _, Backbone) {
 	    	featureObj.set('type', type);
 	    	app.util.transformAndSetCoordinates(type, featureObj, coords);
 	    	featureObj.set('name', type + app.util.getRandomInt());
-	    	featureObj.set('saveToDB', saveToDB);
+	    	return featureObj;
+	    },
+	    
+	    getDefaultStyle: function() {
+	    	var defaultStyle = new ol.style.Style({
+    		    fill: new ol.style.Fill({
+    		      color: 'rgba(255, 255, 255, 0.2)'
+    		    }),
+    		    stroke: new ol.style.Stroke({
+    		      color: '#ffcc33',
+    		      width: 2
+    		    }),
+    		    image: new ol.style.Circle({
+    		      radius: 7,
+    		      fill: new ol.style.Fill({
+    		        color: '#ffcc33'
+    		      })
+    		    })
+    		  });
+	    	return defaultStyle;
 	    },
         indexBy: function(list, keyProp) {
             // Return an object that indexes the objects in a list by their key property.
