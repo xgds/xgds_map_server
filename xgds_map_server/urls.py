@@ -70,6 +70,12 @@ urlpatterns = patterns(
     (r'^addlayer/', views.getAddLayerPage,
      {},
      'mapAddLayer'),
+    (r'^addTile/', views.getAddTilePage,
+     {},
+     'mapAddTile'),
+    (r'^editTile/(?P<tileID>[\w-]+)/', views.getEditTilePage,
+     {},
+     'mapEditTile'),
     # HTML view to confirm deletion of view
     (r'^delete/(?P<mapID>\w+)/', views.getDeleteMapPage,
      {},

@@ -99,6 +99,15 @@ class KmlMap(AbstractMap):
                     for r in LOGO_REGEXES])
 
 
+class MapTile(AbstractMap):
+    """
+    A reference to an external or local KML file.  Note we can't render all KML features in all libraries
+    """
+    sourceFile = models.FileField(upload_to=settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR, max_length=256,
+                                  null=True, blank=True)
+    processed = models.BooleanField(default=False)
+
+
 class MapLayer(AbstractMap):
     """ A map layer which will have a collection of features that have content in them. """
     def toDict(self):
@@ -188,9 +197,8 @@ class PointStyle(AbstractStyle):
                                  help_text='hex value or CSS color name')
     fillOpacity = models.FloatField(null=True, blank=True, default=1,
                                     help_text='between 0 and 1')
- 
-    
-    
+
+
 class Icon(models.Model):
     iconImage = models.ImageField(upload_to='featureImages', height_field='height',
                               width_field='width')
@@ -290,4 +298,4 @@ STYLE_MANAGER = ModelCollectionManager(AbstractStyle,
                                         DrawingStyle,
                                         GroundOverlayStyle])
 
-MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap])
+MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile])

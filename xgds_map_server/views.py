@@ -15,7 +15,6 @@
 # __END_LICENSE__
 
 # Create your views here.
-
 from cStringIO import StringIO
 import json
 import re
@@ -44,9 +43,9 @@ from django.contrib.gis.geos import LinearRing as geosLinearRing
 
 
 from xgds_map_server import settings
-from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MAP_NODE_MANAGER
+from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MAP_NODE_MANAGER
 from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay
-from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm
+from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm
 from geocamUtil.geoEncoder import GeoDjangoEncoder
 
 # pylint: disable=E1101,R0911
@@ -124,6 +123,7 @@ def getMapTreePage(request):
     jsonMapTreeUrl = (request.build_absolute_uri(reverse('mapTreeJSON')))
     addLayerUrl = (request.build_absolute_uri(reverse('mapAddLayer')))
     addKmlUrl = (request.build_absolute_uri(reverse('addKml')))
+    addTileUrl = (request.build_absolute_uri(reverse('mapAddTile')))
     addFolderUrl = (request.build_absolute_uri(reverse('folderAdd')))
     deletedMapsUrl = (request.build_absolute_uri(reverse('deletedMaps')))
     moveNodeURL = (request.build_absolute_uri(reverse('moveNode')))
@@ -132,6 +132,7 @@ def getMapTreePage(request):
                               {'JSONMapTreeURL': jsonMapTreeUrl,
                                'addKmlUrl': addKmlUrl,
                                'addLayerUrl': addLayerUrl,
+                               'addTileUrl': addTileUrl,
                                'addFolderUrl': addFolderUrl,
                                'deletedMapsUrl': deletedMapsUrl,
                                'moveNodeURL': moveNodeURL,
@@ -147,12 +148,12 @@ def getMapEditorPage(request, layerID=None):
     else:
         return HttpResponse(json.dumps({'error': 'Map layer is not valid'}), content_type='application/json')
     return render_to_response("MapEditor.html",
-        RequestContext(request, {'templates': templates,
-                                 'settings': settings,
-                                 'saveUrl': reverse('featureJsonToDB'),
-                                 'mapLayerDict': json.dumps(mapLayerDict, indent=4, cls=GeoDjangoEncoder)
-                                 }),
-        )
+                              RequestContext(request, {'templates': templates,
+                                                       'settings': settings,
+                                                       'saveUrl': reverse('featureJsonToDB'),
+                                                       'mapLayerDict': json.dumps(mapLayerDict, indent=4, cls=GeoDjangoEncoder)
+                                                       }),
+                              )
 
 
 def createGeosObjectFromCoords(data, type):
@@ -184,7 +185,7 @@ def createGeosObjectFromCoords(data, type):
 def saveFeatureJsonToDB(request):
     """
     Read and write feature JSON.
-    
+
     Side note: to initialize a GeoDjango polygon object
         Coordinate dimensions are separated by spaces
         Coordinate pairs (or tuples) are separated by commas
@@ -212,7 +213,7 @@ def saveFeatureJsonToDB(request):
             feature.showLabel = data.get('showLabel', None)
         if data.get('description', None) is not None:
             feature.description = data.get('description', None)
-        feature.save() 
+        feature.save()
         return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
     return HttpResponse(json.dumps({'failed': 'Must be a POST but got %s instead' % request.method }), content_type='application/json')
 
@@ -322,23 +323,102 @@ def getAddLayerPage(request):
             map_layer.deleted = False
             map_layer.locked = layer_form.cleaned_data['locked']
             map_layer.visible = layer_form.cleaned_data['visible']
-            mapGroup = layer_form.cleaned_data['parent']  
+            mapGroup = layer_form.cleaned_data['parent']
             map_layer.parent = MapGroup.objects.get(name=mapGroup)
             map_layer.save()
-        else: 
+        else:
             return render_to_response("AddLayer.html",
-                                  {'mapTreeUrl': mapTreeUrl,
-                                   'layerForm': layer_form,
-                                   'error': True},
-                                   context_instance=RequestContext(request))
+                                      {'mapTreeUrl': mapTreeUrl,
+                                       'layerForm': layer_form,
+                                       'error': True},
+                                      context_instance=RequestContext(request))
         return HttpResponseRedirect(mapTreeUrl)
     else:
         layer_form = MapLayerForm()
         return render_to_response("AddLayer.html",
-                      {'mapTreeUrl': mapTreeUrl,
-                       'layerForm': layer_form,
-                       'error': False},
-                       context_instance=RequestContext(request))
+                                  {'mapTreeUrl': mapTreeUrl,
+                                   'layerForm': layer_form,
+                                   'error': False},
+                                  context_instance=RequestContext(request))
+
+
+def getAddTilePage(request):
+    """
+    HTML view to create a new map tile
+    """
+    if request.method == 'POST':
+        tile_form = MapTileForm(request.POST, request.FILES)
+        if tile_form.is_valid():
+            mapTile = MapTile()
+            mapTile.name = tile_form.cleaned_data['name']
+            mapTile.description = tile_form.cleaned_data['description']
+            mapTile.creator = request.user.username
+            mapTile.creation_time = datetime.datetime.now()
+            mapTile.deleted = False
+            mapTile.locked = tile_form.cleaned_data['locked']
+            mapTile.visible = tile_form.cleaned_data['visible']
+            mapGroupName = tile_form.cleaned_data['parent']
+            mapTile.parent = MapGroup.objects.get(name=mapGroupName)
+            if 'sourceFile' in request.FILES:
+                tile_form.save()
+            mapTile.save()
+        else:
+            return render_to_response("AddMapTile.html",
+                                      {'mapTileForm': tile_form,
+                                       'error': True},
+                                      context_instance=RequestContext(request))
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
+    else:
+        tile_form = MapTileForm()
+        return render_to_response("AddMapTile.html",
+                                  {'mapTileForm': tile_form,
+                                   'error': False},
+                                  context_instance=RequestContext(request))
+
+
+def getEditTilePage(request, tileID):
+    """
+    HTML Form of a map
+    """
+    fromSave = False
+    try:
+        mapTile = MapTile.objects.get(uuid=tileID)
+    except MapTile.DoesNotExist:
+        raise Http404
+    except MapTile.MultipleObjectsReturned:
+        # this really shouldn't happen, ever
+        return HttpResponseServerError()
+
+    # handle post data before loading everything
+    if request.method == 'POST':
+        tile_form = MapTileForm(request.POST, request.FILES)
+        if tile_form.is_valid():
+            mapTile.name = tile_form.cleaned_data['name']
+            mapTile.modifier = request.user.username
+            mapTile.modification_time = datetime.datetime.now()
+            mapTile.description = tile_form.cleaned_data['description']
+            mapTile.openable = tile_form.cleaned_data['openable']
+            mapTile.visible = tile_form.cleaned_data['visible']
+            mapTile.parent = tile_form.cleaned_data['parent']
+            if 'sourceFile' in request.FILES:
+                tile_form.save()
+            mapTile.save()
+            fromSave = True
+        else:
+            return render_to_response("EditMapTile.html",
+                                      {"mapTileForm": tile_form,
+                                       "fromSave": False,
+                                       "error": True,
+                                       "errorText": "Invalid form entries"},
+                                      context_instance=RequestContext(request))
+
+    # return form page with current form data
+    tile_form = MapTileForm(instance=mapTile,)
+    return render_to_response("EditMapTile.html",
+                              {"mapTileForm": tile_form,
+                               "fromSave": fromSave,
+                               },
+                              context_instance=RequestContext(request))
 
 
 def getAddFolderPage(request):
@@ -603,6 +683,8 @@ def getMapDetailPage(request, mapID):
                               context_instance=RequestContext(request))
 
 
+
+
 @never_cache
 def getMapTreeJSON(request):
     """
@@ -726,6 +808,7 @@ def addGroupToFancyJSON(group, map_tree, request, expanded=False):
                            },
                   }
     sub_folders = []
+    sub_tiles = []
     sub_maps = []
     sub_layers = []
     if group.uuid == 1:
@@ -774,11 +857,28 @@ def addGroupToFancyJSON(group, map_tree, request, expanded=False):
         if group_layer.parent is not None:
             group_layer_json['data']['parentId'] = group_layer.parent.uuid
         sub_layers.append(group_layer_json)
+
+    for group_tile in getattr(group, 'subTiles', []):
+        if group_tile.deleted:
+            continue
+        group_tile_json = {"title": group_tile.name,
+                           "key": group_tile.uuid,
+                           "selected": group_tile.visible,
+                           "tooltip": group_tile.description,
+                           "data": {"href": request.build_absolute_uri(reverse('mapEditTile', kwargs={'tileID': group_tile.uuid})),
+                                    "parentId": None,
+                                    "tileURL": "TODO PUT URL HERE"
+                                    },
+                           }
+        if group_tile.parent is not None:
+            group_tile_json['data']['parentId'] = group_tile.parent.uuid
+        sub_tiles.append(group_tile_json)
     if len(sub_folders) > 0 or len(sub_maps) > 0 or len(sub_layers) > 0:
         sub_folders.sort(key=lambda x: x['title'].lower())
+        sub_tiles.sort(key=lambda x: x['title'].lower())
         sub_maps.sort(key=lambda x: x['title'].lower())
         sub_layers.sort(key=lambda x: x['title'].lower())
-        group_json['children'] = sub_folders + sub_maps + sub_layers
+        group_json['children'] = sub_folders + sub_tiles + sub_layers + sub_maps
     map_tree.append(group_json)
 
 
@@ -820,6 +920,7 @@ def getMapTree():
     groups = MapGroup.objects.filter(deleted=0)
     kmlMaps = KmlMap.objects.filter(deleted=0)
     layers = MapLayer.objects.filter(deleted=0)
+    tiles = MapTile.objects.filter(deleted=0)
 
     groupLookup = dict([(group.uuid, group) for group in groups])
 
@@ -830,6 +931,7 @@ def getMapTree():
         group.subGroups = []
         group.subMaps = []
         group.subLayers = []
+        group.subTiles = []
 
     for subGroup in groups:
         if subGroup.parent:
@@ -845,6 +947,11 @@ def getMapTree():
         if subLayer.parent:
             parent = groupLookup[subLayer.parent.uuid]
             parent.subLayers.append(subLayer)
+
+    for subTile in tiles:
+        if subTile.parent:
+            parent = groupLookup[subTile.parent.uuid]
+            parent.subTiles.append(subTile)
 
     rootMapList = [g for g in groups if g.parent is None]
     if len(rootMapList) != 0:
