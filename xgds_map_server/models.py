@@ -28,6 +28,7 @@ from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJ
 # from Carbon.QuickDraw import underline
 from cookielib import offset_from_tz_string
 # pylint: disable=C1001
+import pydevd
 
 LOGO_REGEXES = None
 
@@ -242,6 +243,7 @@ class AbstractFeature(models.Model):
         return self.uuid
 
     def toDict(self):
+        pydevd.settrace('128.102.236.141')
         result = modelToDict(self)
         result['type'] = self.__class__.__name__
         if self.style:

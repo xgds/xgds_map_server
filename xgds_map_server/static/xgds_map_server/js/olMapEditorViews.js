@@ -25,7 +25,6 @@ $(function() {
             app.State.tabsLeftMargin = parseFloat(app.State.tabsContainer.css('margin-left'));
             app.vent.on('layers:loaded', this.initializeMapEditor);
             app.vent.on('layers:loaded', this.createMapEditorView);
-            
         },
         buildLayersForMap: function() {
             app.views.OLMapView.prototype.buildLayersForMap.call(this);
@@ -42,10 +41,6 @@ $(function() {
         }, 
         updateBbox: function() {
             app.views.OLMapView.prototype.updateBbox.call(this);
-            /*var extent = this.mapEditorGroup.getExtent();
-            if (!_.isUndefined(extent)) {
-                map.getView().fitExtent(extent, map.getSize());
-             } */
            },
         render: function() {
             app.views.OLMapView.prototype.render.call(this);
@@ -64,12 +59,6 @@ $(function() {
     		app.vent.on('mapmode', this.setMode, this);
     		app.vent.trigger('mapmode', 'navigate');
     		this.map = this.options.map;
-    		
-    		//set up feature overlay where all features will be added
-    		this.featureOverlay = new ol.FeatureOverlay({
-      		  style: app.util.getDefaultStyle()
-      		});
-      		this.featureOverlay.setMap(this.map);
       		app.vent.on('editingToolsRendered', function(){
       			//set up typeSelect for addFeaturesMode
         		this.typeSelect = document.getElementById('type');
@@ -81,6 +70,12 @@ $(function() {
     				_this.addDrawInteraction(_this.typeSelect);
     			};
       		}, this);
+    	},
+    	createFeatureOverlay: function() {
+            this.featureOverlay = new ol.FeatureOverlay({
+	      		  style: app.util.getDefaultStyle()
+	      		});
+            this.featureOverlay.setMap(this.options.map);
     	},
         getFeatures: function() {
             var mapLayer = app.mapLayer;
@@ -117,28 +112,25 @@ $(function() {
                     layerGroup: this.layerGroup,
                     featureJson: featureJson
                 });
+                this.featureOverlay.addFeature(newFeature.polygonFeature);
                 break;
             case 'Point':
                 newFeature = new app.views.PointEditView({
                     layerGroup: this.layerGroup,
                     featureJson: featureJson
                 });
+                this.featureOverlay.addFeature(newFeature.pointFeature);
                 break;
             case 'LineString':
                 newFeature = new app.views.LineStringEditView({
                     layerGroup: this.layerGroup,
                     featureJson: featureJson
                 });
+                this.featureOverlay.addFeature(newFeature.lineStringFeature);
                 break;
             } 
             if (!_.isUndefined(newFeature)){
                 this.features.push(newFeature);
-            }
-        },
-        render: function() {
-            this.show();
-            if (this.currentMode) {
-            	this.resetMode();
             }
         },
         //clean up, then re-enter the mode. Useful for redraws
@@ -199,33 +191,75 @@ $(function() {
         navigateMode: {
         	// in this mode, user can only navigate around the map (all features are locked)
         	enter: function() {
-
+        		//no op
         	}, 
         	exit: function() {
-
+        		//no op
         	}
         },
         repositionMode: {
         	// in this mode, user can edit any existing features but cannot add a new feature.
         	enter: function() {
-
-        	}, 
+        		app.State.popupsEnabled = false;
+        		if (_.isUndefined(this.repositioner)) {
+        			this.repositioner = new ol.interaction.Modify({
+        				features: this.featureOverlay.getFeatures(),
+        				deleteCondition: function(event) {
+        					return ol.events.condition.shiftKeyOnly(event) &&
+        						ol.events.condition.singleClick(event);
+        				}
+        			});
+        			this.featureDeleter = new ol.interaction.Select({
+        				layers: [this.featureLayer],
+        				style: new ol.style.Style({
+        					image: new ol.style.Circle({
+        						radius: 12,
+        						fill: new ol.style.Fill({
+        							color: 'rgba(255, 0, 0, 0.5)'
+        						})
+        					})	
+        				}),
+        				addCondition: function(event) {
+        					return ol.events.condition.shiftKeyOnly(event)
+        					&& ol.events.condition.singleClick(event);
+        				}
+        			});
+        			this.featureDeleter.getFeatures().on('add', function(e) {
+        				var feature = e.element;
+        				var model = feature.get('model');
+        				if (!_.isUndefined(model)){
+        					this.collection.removeFeature(model);
+        				}
+        			}, this);
+        		} 
+    			this.map.addInteraction(this.repositioner);
+    			this.map.addInteraction(this.featureDeleter);
+    			//TODO: upon edit, need to resave to the database!
+    			
+        	}, //end enter
         	exit: function() {
-
+                this.map.removeInteraction(this.repositioner);
+                this.map.removeInteraction(this.featureDeleter);
         	}
-        }
+        } // end repositionMode
     });
 
     app.views.PolygonEditView = app.views.PolygonView.extend({
-    	
+    	render: function() {
+    		//no op
+    	}
     });
 
     app.views.PointEditView = app.views.PointView.extend({
-
+    	render: function() {
+    		// no op
+    	}
     });
 
     app.views.LineStringEditView = app.views.LineStringView.extend({
-
+    	render: function() {
+    		// no op
+    	}
     });
 
     app.views.GroundOverlayEditView = app.views.GroundOverlayView.extend({

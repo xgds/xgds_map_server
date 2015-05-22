@@ -31,8 +31,10 @@ urlpatterns = patterns(
     # {'readOnly': True, 'securityTags': ['readOnly']},
     # 'mapList'),
     # for saving feature json to db
-    (r'^feature.json', views.saveFeatureJsonToDB, {}, 
-     'featureJsonToDB'),
+    (r'^saveFeature.json$', views.saveFeature, {}, 
+     'saveFeature'),
+    (r'^saveMaplayer.json$', views.saveMaplayer, {}, 
+     'saveMaplayer'),
     # HTML tree of maps
     (r'^maptree/', views.getMapTreePage,
      {'readOnly': True, 'securityTags': ['readOnly']},

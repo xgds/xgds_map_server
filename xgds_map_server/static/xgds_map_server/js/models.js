@@ -29,11 +29,10 @@ app.models = app.models || {};
 		return obj;
 	};
 
-
 	models.MapLayer = Backbone.RelationalModel.extend({
 		idAttribute: '_id', //prevent clobbering mapLayer ID's
-		initialize: function() {
-
+		url: function() {
+			return app.options.saveMaplayerUrl;
 		},
 		relations: [  //MapLayer has many features
 		              {
@@ -61,7 +60,7 @@ app.models = app.models || {};
 	models.Feature = Backbone.RelationalModel.extend({
 		idAttribute: '_id',
 		url: function() {
-			return app.options.saveUrl;
+			return app.options.saveFeatureUrl;
 		},
         toString: function() {
         	var name = this.get('name');
@@ -73,7 +72,9 @@ app.models = app.models || {};
 	models.FeatureCollection = Backbone.Collection.extend({
 		model: models.Feature,
 		initialize: function() {
-
+		},
+		removeFeature: function(featureModel) {
+			this.remove(featureModel);
 		}
 	});
 

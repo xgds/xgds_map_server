@@ -172,13 +172,11 @@ var app = (function($, _, Backbone) {
 
         // create the map layer from map layer obj passed in from server as json
         app.mapLayer = new app.models.MapLayer(app.options.mapLayerDict);
-		
         // create backbone feature objects already existing in mapLayer's attributes
 		$.each(app.mapLayer.attributes.features, function(index, feature) {
 			var featureObj = new app.models.Feature(feature);
 			featureObj.set('mapLayer', app.mapLayer);  // set up the relationship.
 	    	featureObj.set('mapLayerName', app.mapLayer.get('name'));
-//	    	featureObj.set('saveToDB', false);  // already in the db so no need to save.
 		});
 		
         app.selectedViews = []; // This array holds the views currently selected by checkboxes
@@ -259,7 +257,6 @@ var app = (function($, _, Backbone) {
 	    	featureObj.set('name', type + app.util.getRandomInt());
 	    	return featureObj;
 	    },
-	    
 	    getDefaultStyle: function() {
 	    	var defaultStyle = new ol.style.Style({
     		    fill: new ol.style.Fill({

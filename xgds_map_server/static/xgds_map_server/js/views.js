@@ -22,7 +22,7 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
         'click #btn-navigate': function() { app.vent.trigger('mapmode', 'navigate'); this.updateTip('clear');},
         'click #btn-reposition': function() { app.vent.trigger('mapmode', 'reposition'); this.updateTip('edit'); },
         'click #btn-addFeatures': function() { app.vent.trigger('mapmode', 'addFeatures'); this.updateTip('add');},
-        'click #btn-save': function() { this.saveFeatureProperties(); },
+        'click #btn-save': function() { this.saveFeatureProperties(); /* this.saveMapLayerProperties();*/ },
         'click #btn-saveas': function() { this.showSaveAsDialog(); },
         'click #btn-undo': function() { app.Actions.undo(); },
         'click #btn-redo': function() { app.Actions.redo(); }
@@ -159,20 +159,26 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
     },
     
     saveFeatureProperties: function() {
-    	//TODO
+    	var features = app.mapLayer.get('feature').models;
+    	$.each(features, function(index, feature) {
+    		var attrs = {};
+    		feature.save(null, {
+    			  type: 'POST',
+    			  success: function(data) {
+    				  console.log('data back from success (is there a uuid to be saved?)', data);
+    			  }, 
+    			  error: function() {
+    			  }
+    		});
+    	});
     },
-//    saveFeaturesToDB: function() {
-//    	// get the features from the map layer.
-//    	var features = app.mapLayer.get('feature').models;
-//    	$.each(features, function(index, feature) {
-//    		if (feature.get('saveToDB') == true) {  // only save the features user just created.
-//	    		feature.save(null, {
-//	    			  type: 'POST'
-//	    		});
-//	    		feature.set('saveToDB', false);
-//    		}
-//    	});
-//    },
+    
+    saveMapLayerProperties: function() {
+    	//TODO: you do not want to save already existing models!
+    	app.mapLayer.save(null, {
+    		type: 'POST'
+		});
+    },
     
     showSaveAsDialog: function() {
     	$('#saveAsName').val(app.mapLayer.attributes['name']);
@@ -233,7 +239,9 @@ app.views.LayerInfoTabView = Backbone.Marionette.ItemView.extend({
 	}
 });
 
-
+/**
+ * Model this after PropertiesForm in plan so that the model is immediately updated.
+ */
 app.views.FeatureStyleForm = Backbone.Marionette.ItemView.extend({
 	template: '#template-feature-polygon-style-properties',
 	serializeData: function() {
