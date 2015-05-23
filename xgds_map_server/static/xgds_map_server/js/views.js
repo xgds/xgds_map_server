@@ -22,7 +22,7 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
         'click #btn-navigate': function() { app.vent.trigger('mapmode', 'navigate'); this.updateTip('clear');},
         'click #btn-reposition': function() { app.vent.trigger('mapmode', 'reposition'); this.updateTip('edit'); },
         'click #btn-addFeatures': function() { app.vent.trigger('mapmode', 'addFeatures'); this.updateTip('add');},
-        'click #btn-save': function() { this.saveFeatureProperties(); /* this.saveMapLayerProperties();*/ },
+        'click #btn-save': function() { app.mapLayer.save({type: 'POST', contentType: "application/json"}) },
         'click #btn-saveas': function() { this.showSaveAsDialog(); },
         'click #btn-undo': function() { app.Actions.undo(); },
         'click #btn-redo': function() { app.Actions.redo(); }
@@ -157,29 +157,7 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
     getFeatureModelUrl: function(feature) {
     	console.log("feature to be used for url is ", feature);
     },
-    
-    saveFeatureProperties: function() {
-    	var features = app.mapLayer.get('feature').models;
-    	$.each(features, function(index, feature) {
-    		var attrs = {};
-    		feature.save(null, {
-    			  type: 'POST',
-    			  success: function(data) {
-    				  console.log('data back from success (is there a uuid to be saved?)', data);
-    			  }, 
-    			  error: function() {
-    			  }
-    		});
-    	});
-    },
-    
-    saveMapLayerProperties: function() {
-    	//TODO: you do not want to save already existing models!
-    	app.mapLayer.save(null, {
-    		type: 'POST'
-		});
-    },
-    
+       
     showSaveAsDialog: function() {
     	$('#saveAsName').val(app.mapLayer.attributes['name']);
     	$('#saveAsDialog').dialog({
@@ -195,7 +173,7 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
     				var newName = $('#saveAsName').val()
     				app.mapLayer.set('name', newName);
     				app.mapLayer.set('uuid', null);
-    				app.mapLayer.save();
+    				app.mapLayer.save({type: 'POST', contentType: "application/json"});
     				$(this).dialog('close');
     			}
     		},

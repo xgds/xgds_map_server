@@ -28,7 +28,6 @@ from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJ
 # from Carbon.QuickDraw import underline
 from cookielib import offset_from_tz_string
 # pylint: disable=C1001
-import pydevd
 
 LOGO_REGEXES = None
 
@@ -111,8 +110,14 @@ class MapTile(AbstractMap):
 
 class MapLayer(AbstractMap):
     """ A map layer which will have a collection of features that have content in them. """
+    polygonIndex = models.IntegerField(default=0)  # indeces for naming user created features.
+    lineStringIndex = models.IntegerField(default=0)
+    pointIndex = models.IntegerField(default=0)
+    groundOverlayIndex = models.IntegerField(default=0)
+    drawingIndex = models.IntegerField(default=0)
     def toDict(self):
         result = modelToDict(self)
+        result['uuid'] = self.uuid
         featuresList = []
         features = FEATURE_MANAGER.filter(mapLayer__pk=self.uuid)
         for feature in features:
@@ -243,7 +248,6 @@ class AbstractFeature(models.Model):
         return self.uuid
 
     def toDict(self):
-        pydevd.settrace('128.102.236.141')
         result = modelToDict(self)
         result['type'] = self.__class__.__name__
         if self.style:

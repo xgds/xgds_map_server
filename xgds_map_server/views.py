@@ -162,20 +162,22 @@ def updateFeatureGeosCoords(feature, data, type):
     Reference: http://stackoverflow.com/questions/1504288/adding-a-polygon-directly-in-geodjango-postgis
     """
     if type == 'Point':
-        feature.point = geosPoint(data.get('point', None))
+        coords = data['point'] or data.get('point')
+        feature.point = geosPoint(coords)
     elif type == 'Polygon':
-        coords = data.get('polygon', None)[0]
+        coords = data['polygon'] or data.get('polygon')
         internalCoords = geosLinearRing(coords)
         externalCoords = geosLinearRing(coords)
         feature.polygon = geosPolygon(internalCoords, externalCoords)
     elif type == 'LineString':
-        feature.lineString = geosLineString(data.get('lineString', None))
+        coords = data['lineString'] or data.get('lineString')
+        feature.lineString = geosLineString(coords)
     else:
         print "invalid feature type specified in json"
     feature.save()
 
 
-def createFeatureObject(data, type):
+def createFeatureObject(type):
     """
     create feature object.
     """
@@ -201,6 +203,38 @@ def saveMaplayer(request):
     """
     if request.method == "POST":
         data = json.loads(request.body)
+        # assume that map layer already exists!
+        uuid = data.get('uuid', None)
+        try: 
+            mapLayer = MapLayer.objects.get(uuid = uuid)
+        except:
+            return HttpResponse(json.dumps({'failed': 'MapLayer of uuid of %s cannot be found' % uuid}), content_type='application/json')
+        mapLayer.name = data.get('name', None)
+        mapLayer.description = data.get('description', None)
+        # save the features
+        features = data.get('feature', None)
+        for feature in features:
+            print "feature is"
+            print feature
+            featureType = feature['type']
+            featureName = feature['name']
+            featureObj = getExistingFeature(featureName, featureType, mapLayer) 
+            if featureObj is None:         
+                featureObj = createFeatureObject(featureType)  # if feature doesn't exist, create it.
+            # update the feature attributes
+            featureObj.name = featureName          
+            featureObj.mapLayer = mapLayer
+            updateFeatureGeosCoords(featureObj, feature, featureType)  # set its coordinates from data.
+            if feature['popup']:
+                featureObj.popup = feature['popup']
+            if feature['visible']:
+                featureObj.visible = feature['visible']
+            if feature['showLabel']:
+                featureObj.showLabel = feature['showLabel']
+            if feature['description']:
+                featureObj.description = feature['description']
+            featureObj.save()
+        mapLayer.save()
         return HttpResponse(json.dumps({'success': 'true', 'uuid': 'dummy'}), content_type='application/json')
     return HttpResponse(json.dumps({'failed': 'Must be a POST but got %s instead' % request.method }), content_type='application/json')
 
@@ -215,12 +249,12 @@ def getExistingFeature(featureName, type, mapLayer):
     elif type == 'LineString':
         featureClass = LineString
     elif type == 'Polygon':
-        featureclass = Polygon
+        featureClass = Polygon
     else:
         print 'feature type is invalid'
         return None
     try: 
-        feature = featureClass.objects.get(name = featureName, mapLayer = mapLayer)
+        feature = featureClass.objects.filter(name = featureName).filter(mapLayer_id = mapLayer.uuid)[0]
     except: 
         feature = None
         print "No existing feature found of featureName %s and maplayer id %s" % (featureName, mapLayer.uuid)
@@ -230,7 +264,7 @@ def getExistingFeature(featureName, type, mapLayer):
 def saveFeature(request):
     """
     save backbone feature to the database.
-
+ 
     Side note: to initialize a GeoDjango polygon object
         Coordinate dimensions are separated by spaces
         Coordinate pairs (or tuples) are separated by commas
@@ -247,11 +281,9 @@ def saveFeature(request):
             mapLayer = MapLayer.objects.get(name = mapLayerName)
         except:
             return HttpResponse(json.dumps({'failed': 'MapLayerName of %s cannot be found' % mapLayerName}), content_type='application/json')
-        
         feature = getExistingFeature(featureName, featureType, mapLayer) 
         if feature is None:         
-            feature = createFeatureObject(data, featureType)  # if feature doesn't exist, create it.
-
+            feature = createFeatureObject(featureType)  # if feature doesn't exist, create it.
         # update the feature attributes
         feature.name = featureName            
         feature.mapLayer = mapLayer

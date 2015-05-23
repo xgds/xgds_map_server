@@ -250,11 +250,17 @@ var app = (function($, _, Backbone) {
 	    createBackboneFeatureObj: function(type, coords) {
 	    	// create a new backbone feature object from the user drawings on map.
 	    	var featureObj = new app.models.Feature();
-	    	featureObj.set('mapLayer', app.mapLayer);
-	    	featureObj.set('mapLayerName', app.mapLayer.get('name'));
+	    	var mapLayer = app.mapLayer;
+	    	featureObj.set('mapLayer', mapLayer);
+	    	featureObj.set('mapLayerName', mapLayer.get('name'));
 	    	featureObj.set('type', type);
+	    	featureObj.set('description', " ");
 	    	app.util.transformAndSetCoordinates(type, featureObj, coords);
-	    	featureObj.set('name', type + app.util.getRandomInt());
+	    	var featureName = app.util.generateFeatureName(mapLayer, type);
+	    	featureObj.set('name', featureName);
+	    	featureObj.set('popup', false);
+	    	featureObj.set('visible', true);
+	    	featureObj.set('showLabel', true);
 	    	return featureObj;
 	    },
 	    getDefaultStyle: function() {
@@ -283,6 +289,28 @@ var app = (function($, _, Backbone) {
                 obj[item[keyProp]] = item;
             });
             return obj;
+        },
+        generateFeatureName: function(mapLayer, type) {
+        	// create a name based on maplayerName and type and an index
+        	var key = mapLayer.get('name').replace(/ /g,"");
+        	key = key + '_' + type;
+        	var index = null;
+        	if (type == 'Polygon') {
+        		var polygonIndex = mapLayer.get('polygonIndex') + 1;
+        		mapLayer.set('polygonIndex', polygonIndex);
+        		index = polygonIndex;
+        	} else if (type == 'LineString') {
+        		var lineStringIndex = mapLayer.get('lineStringIndex') + 1;
+        		mapLayer.set('lineStringIndex', lineStringIndex);
+        		index = lineStringIndex;
+        	} else if (type == 'Point') {
+        		var pointIndex = mapLayer.get('pointIndex') + 1;
+        		mapLayer.set('pointIndex', pointIndex);
+        		index = pointIndex;
+        	}
+        	// save the maplayer with new index
+        	mapLayer.save();
+        	return key + app.util.pad(index, 3, 0);
         },
         getRandomInt: function() {
         	// returns random integer btw 0 and 100
@@ -347,6 +375,12 @@ var app = (function($, _, Backbone) {
                 second: ss
             });
             return output;
+        },
+        pad: function(n, width, z) { 
+        	//pads a number 'width' times with 'z'. i.e. pad(1,4,0) = 0001 
+        	z = z || '0';
+        	n = n + '';
+        	return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
         },
         randomColor: function() {
             return '#' + ((1 << 24) * Math.random() | 0).toString(16);

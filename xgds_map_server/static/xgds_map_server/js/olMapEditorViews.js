@@ -169,9 +169,10 @@ $(function() {
 				//create a new backbone feature obj
 				var featureObj = app.util.createBackboneFeatureObj(type, coords);
 				//save to DB
-				featureObj.save(null, {
-					type: 'POST'
-				});
+				console.log("addDrawInteraction");
+				featureObj.save({}, {type: 'POST', 
+					contentType: "application/json"
+					});
 			});
 			this.map.addInteraction(this.featureAdder);
         },
