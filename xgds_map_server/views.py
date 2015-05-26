@@ -44,7 +44,7 @@ from django.contrib.gis.geos import LinearRing as geosLinearRing
 
 from xgds_map_server import settings
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MAP_NODE_MANAGER
-from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay
+from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
 from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm
 from geocamUtil.geoEncoder import GeoDjangoEncoder
 # pylint: disable=E1101,R0911
@@ -149,7 +149,6 @@ def getMapEditorPage(request, layerID=None):
     return render_to_response("MapEditor.html",
                               RequestContext(request, {'templates': templates,
                                                        'settings': settings,
-                                                       'saveFeatureUrl': reverse('saveFeature'),
                                                        'saveMaplayerUrl': reverse('saveMaplayer'),
                                                        'mapLayerDict': json.dumps(mapLayerDict, indent=4, cls=GeoDjangoEncoder)
                                                        }),
@@ -165,7 +164,9 @@ def updateFeatureGeosCoords(feature, data, type):
         coords = data['point'] or data.get('point')
         feature.point = geosPoint(coords)
     elif type == 'Polygon':
-        coords = data['polygon'] or data.get('polygon')
+        print "data is "
+        print data
+        coords = data['polygon'][0] or data.get('polygon')[0]
         internalCoords = geosLinearRing(coords)
         externalCoords = geosLinearRing(coords)
         feature.polygon = geosPolygon(internalCoords, externalCoords)
@@ -213,9 +214,8 @@ def saveMaplayer(request):
         mapLayer.description = data.get('description', None)
         # save the features
         features = data.get('feature', None)
+        print features
         for feature in features:
-            print "feature is"
-            print feature
             featureType = feature['type']
             featureName = feature['name']
             featureObj = getExistingFeature(featureName, featureType, mapLayer) 
@@ -261,7 +261,7 @@ def getExistingFeature(featureName, type, mapLayer):
     return feature
 
 
-def saveFeature(request):
+def saveOrDeleteFeature(request, uuid=None):
     """
     save backbone feature to the database.
  
@@ -270,7 +270,6 @@ def saveFeature(request):
         Coordinate pairs (or tuples) are separated by commas
         Coordinate ordering is (x, y) -- that is (lon, lat)
     """
-    #TODO: save hits this function twice. fix this.
     if request.method == "POST":
         data = json.loads(request.body)
         # use the data to create a feature object.
@@ -297,7 +296,17 @@ def saveFeature(request):
         if data.get('description', None) is not None:
             feature.description = data.get('description', None)
         feature.save()
-        return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
+        return HttpResponse(json.dumps({'success': 'true', 'type': 'save'}), content_type='application/json')
+    elif request.method == "DELETE":
+        try: 
+            features = FEATURE_MANAGER.filter(uuid=uuid)
+        except:
+            print "cannot find features "
+        feature = features[0]
+        print "about to delete a feature with uuid %s" % uuid
+        feature.delete()
+        return HttpResponse(json.dumps({'success': 'true', 'type': 'delete'}), content_type='application/json')
+    
     return HttpResponse(json.dumps({'failed': 'Must be a POST but got %s instead' % request.method }), content_type='application/json')
 
 

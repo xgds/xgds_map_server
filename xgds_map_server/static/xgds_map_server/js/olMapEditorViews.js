@@ -112,21 +112,21 @@ $(function() {
                     layerGroup: this.layerGroup,
                     featureJson: featureJson
                 });
-                this.featureOverlay.addFeature(newFeature.polygonFeature);
+                this.featureOverlay.addFeature(newFeature.olFeature);
                 break;
             case 'Point':
                 newFeature = new app.views.PointEditView({
                     layerGroup: this.layerGroup,
                     featureJson: featureJson
                 });
-                this.featureOverlay.addFeature(newFeature.pointFeature);
+                this.featureOverlay.addFeature(newFeature.olFeature);
                 break;
             case 'LineString':
                 newFeature = new app.views.LineStringEditView({
                     layerGroup: this.layerGroup,
                     featureJson: featureJson
                 });
-                this.featureOverlay.addFeature(newFeature.lineStringFeature);
+                this.featureOverlay.addFeature(newFeature.olFeature);
                 break;
             } 
             if (!_.isUndefined(newFeature)){
@@ -169,7 +169,6 @@ $(function() {
 				//create a new backbone feature obj
 				var featureObj = app.util.createBackboneFeatureObj(type, coords);
 				//save to DB
-				console.log("addDrawInteraction");
 				featureObj.save({}, {type: 'POST', 
 					contentType: "application/json"
 					});

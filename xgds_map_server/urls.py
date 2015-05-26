@@ -31,8 +31,11 @@ urlpatterns = patterns(
     # {'readOnly': True, 'securityTags': ['readOnly']},
     # 'mapList'),
     # for saving feature json to db
-    (r'^saveFeature.json$', views.saveFeature, {}, 
-     'saveFeature'),
+    (r'^feature$', views.saveOrDeleteFeature, {}, 
+     'saveOrDeleteFeature'),
+    (r'^feature/(?P<uuid>[\w-]+)/$', views.saveOrDeleteFeature, {}, 
+     'saveOrDeleteFeature'),
+    # for saving feature json to db
     (r'^saveMaplayer.json$', views.saveMaplayer, {}, 
      'saveMaplayer'),
     # HTML tree of maps

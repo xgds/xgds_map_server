@@ -30,7 +30,7 @@ app.models = app.models || {};
 	};
 
 	models.MapLayer = Backbone.RelationalModel.extend({
-		idAttribute: '_id', //prevent clobbering mapLayer ID's
+		idAttribute: 'uuid', //prevent clobbering mapLayer ID's
 		url: function() {
 			return app.options.saveMaplayerUrl;
 		},
@@ -58,10 +58,10 @@ app.models = app.models || {};
 	 * a Collection that can instantiate more than one model type.
 	 */
 	models.Feature = Backbone.RelationalModel.extend({
-		idAttribute: '_id',
-		url: function() {
-			return app.options.saveFeatureUrl;
-		},
+		idAttribute: 'uuid',
+//		url: function() {
+//			return app.options.saveOrDeleteFeatureUrl;
+//		},
         toString: function() {
         	var name = this.get('name');
             return name;
@@ -71,6 +71,9 @@ app.models = app.models || {};
 
 	models.FeatureCollection = Backbone.Collection.extend({
 		model: models.Feature,
+		url: function() {
+			return '/xgds_map_server/feature';
+		},
 		initialize: function() {
 		},
 		removeFeature: function(featureModel) {

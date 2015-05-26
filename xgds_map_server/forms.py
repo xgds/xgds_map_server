@@ -59,7 +59,8 @@ class MapLayerForm(forms.ModelForm):
 
     class Meta:
         model = MapLayer
-        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted']
+        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 
+                   'polygonIndex', 'lineStringIndex', 'pointIndex', 'groundOverlayIndex', 'drawingIndex']
         widgets = {'name': forms.TextInput(attrs={'size': 80}),
                    'description': forms.Textarea(attrs={'cols': 50, 'rows': 7})
                    }
