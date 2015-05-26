@@ -251,8 +251,6 @@ var app = (function($, _, Backbone) {
 	    	// create a new backbone feature object from the user drawings on map.
 	    	var featureObj = new app.models.Feature();
 	    	var mapLayer = app.mapLayer;
-	    	featureObj.set('mapLayer', mapLayer);
-	    	featureObj.set('mapLayerName', mapLayer.get('name'));
 	    	featureObj.set('type', type);
 	    	featureObj.set('description', " ");
 	    	app.util.transformAndSetCoordinates(type, featureObj, coords);
@@ -261,6 +259,8 @@ var app = (function($, _, Backbone) {
 	    	featureObj.set('popup', false);
 	    	featureObj.set('visible', true);
 	    	featureObj.set('showLabel', true);
+	    	featureObj.set('mapLayer', mapLayer);
+	    	featureObj.set('mapLayerName', mapLayer.get('name'));
 	    	return featureObj;
 	    },
 	    getDefaultStyle: function() {
@@ -309,7 +309,7 @@ var app = (function($, _, Backbone) {
         		index = pointIndex;
         	}
         	// save the maplayer with new index
-        	mapLayer.save();
+        	mapLayer.save({type: 'POST', contentType: "application/json"})
         	return key + app.util.pad(index, 3, 0);
         },
         getRandomInt: function() {

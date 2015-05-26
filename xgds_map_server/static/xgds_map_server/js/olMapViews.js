@@ -635,6 +635,13 @@ $(function() {
             // override this in derived class
             return null;
         },
+        destroy: function() {
+        	if (!_.isUndefined(this.olFeature)){
+        		var olFeatures = this.vectorLayer.getSource().getFeatures();
+        		olFeatures.remove(this.olFeature);
+        		delete this.olFeature;
+        	}
+        },
         getPopupContent: function() {
             if (this.featureJson.popup) {
                 return this.featureJson.description;
@@ -649,11 +656,11 @@ $(function() {
     app.views.PolygonView = app.views.VectorView.extend({
         constructFeature: function() {
             var coords = this.featureJson.polygon;
-            this.polygonFeature = new ol.Feature({
+            this.olFeature = new ol.Feature({
                 name: this.featureJson.name,
                 geometry: new ol.geom.Polygon([coords]).transform('EPSG:4326', 'EPSG:3857')
             });
-            return this.polygonFeature;
+            return this.olFeature;
         }, 
         getStyle: function() {
             return app.styles['polygon'];
@@ -662,11 +669,11 @@ $(function() {
     
     app.views.PointView = app.views.VectorView.extend({
         constructFeature: function() {
-            this.pointFeature = new ol.Feature({
+            this.olFeature = new ol.Feature({
                 name: this.featureJson.name,
                 geometry: new ol.geom.Point(transform(this.featureJson.point))
             });
-            return this.pointFeature;
+            return this.olFeature;
         }, 
         getStyle: function() {
             return app.styles['point'];
@@ -675,11 +682,11 @@ $(function() {
     
     app.views.LineStringView = app.views.VectorView.extend({
         constructFeature: function() {
-            this.lineStringFeature = new ol.Feature({
+            this.olFeature = new ol.Feature({
                 name: this.featureJson.name,
                 geometry: new ol.geom.LineString(this.featureJson.lineString).transform('EPSG:4326', 'EPSG:3857')
             });
-            return this.lineStringFeature;
+            return this.olFeature;
         }, 
         getStyle: function() {
             return app.styles['lineString'];

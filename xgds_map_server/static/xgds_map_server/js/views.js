@@ -22,7 +22,7 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
         'click #btn-navigate': function() { app.vent.trigger('mapmode', 'navigate'); this.updateTip('clear');},
         'click #btn-reposition': function() { app.vent.trigger('mapmode', 'reposition'); this.updateTip('edit'); },
         'click #btn-addFeatures': function() { app.vent.trigger('mapmode', 'addFeatures'); this.updateTip('add');},
-        'click #btn-save': function() { app.mapLayer.save({type: 'POST', contentType: "application/json"}) },
+        'click #btn-save': function() { this.saveMapLayer(); },
         'click #btn-saveas': function() { this.showSaveAsDialog(); },
         'click #btn-undo': function() { app.Actions.undo(); },
         'click #btn-redo': function() { app.Actions.redo(); }
@@ -158,6 +158,12 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
     	console.log("feature to be used for url is ", feature);
     },
        
+    saveMapLayer: function() {
+    	app.mapLayer.set('name', $('input[name="mapLayerName"]').val());
+    	app.mapLayer.set('description', $('textarea[name="mapLayerDescription"]').val());
+    	app.mapLayer.save({type: 'POST', contentType: "application/json"}) 
+    },
+    
     showSaveAsDialog: function() {
     	$('#saveAsName').val(app.mapLayer.attributes['name']);
     	$('#saveAsDialog').dialog({
@@ -294,12 +300,19 @@ app.views.FeaturePropertiesView = Backbone.Marionette.CompositeView.extend({
 
 
 app.views.FeaturesHeaderView = Backbone.Marionette.ItemView.extend({
-    template: '#template-features-header'
+    /*
+     * This view also contains the copy, cut, delete btns for features.
+     */
+	template: '#template-features-header',
+	events: {
+		'click #btn-cut': function() { app.vent.trigger('cutSelectedFeatures', this.model)},
+		'click #btn-delete': function() { app.vent.trigger('deleteSelectedFeatures', this.model)},
+	}
 });
 
 
 app.views.FeaturePropertiesHeaderView = Backbone.Marionette.ItemView.extend({
-    template: '#template-feature-properties-header',
+	template: '#template-feature-properties-header',
 	serializeData: function() {
 		var data = this.model.toJSON();
 		return {type: data.type};
@@ -357,7 +370,9 @@ app.views.FeatureElementItemView = app.views.FeatureListItemView.extend({
         }
     },
     onExpand: function() {
-
+    },
+    isSelected: function(evt) {
+        return this.$el.find('input.select').is(':checked');
     },
     serializeData: function() {
         var data = app.views.FeatureListItemView.prototype.serializeData.call(this, arguments);
@@ -376,20 +391,18 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
 	tagName: 'ul',
 	className: 'feature-list',
 	childView: app.views.FeatureElementItemView,
+	initialize: function(options) {
+		this.options = options || {};
+		this.on('childview:expand', this.onItemExpand, this);
+		app.reqres.setHandler('selectedFeatures', this.getSelectedFeatures, this);
+		this.listenTo(app.vent, 'featuresSelected', this.enableFeatureActions);
+		this.listenTo(app.vent, 'featuresUnSelected', this.disableFeatureActions);
+		this.listenTo(app.vent, 'deleteSelectedFeatures', this.deleteSelectedFeatures);
+	},
 	childViewOptions: {
 		expandClass: 'col1'
 	},
 	emptyView: app.views.NoFeaturesView,
-	events: {
-        'click #btn-copy': 'copySelectedFeatures',
-        'click #btn-paste': 'pasteFeatures',
-        'click #btn-cut': 'cutSelectedFeatures',
-        'click #btn-delete': 'deleteSelectedFeatures',
-	},
-	initialize: function(options) {
-		this.options = options || {};
-		this.on('childview:expand', this.onItemExpand, this);
-	},
 	onItemExpand: function(childView) {
         app.State.featureSelected = childView.model;
     },   
@@ -404,14 +417,43 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
     }, 
     cutSelectedFeatures: function() {
     }, 
-    deleteSelectedCommands: function(){
+    deleteSelectedFeatures: function(){
+    	var features = app.request('selectedFeatures');
+    	var selectParent = null;
+    	_.each(features, function(feature) {
+    		feature.destroy({
+    			data: { 'uuid': feature.uuid },
+    			success: function(model, response) {
+    				console.log("Successfully deleted feature!");
+    			}, 
+    			error: function() {
+    				console.log("Error in deleting a feature");
+    			}
+    		});
+    		if(!_.isUndefined(feature.collection)) {
+    			feature.collection.remove(feature);
+    		}
+    	});
+    }, 
+    
+    getSelectedFeatures: function() {
+    	var features = [];
+    	this.children.each(function(childView) {
+    		try {
+    			if (childView.isSelected()) {
+    				features.push(childView.model);
+    			}
+    		} catch (ex) {
+    			// pass
+    		}
+    	});
+    	return features;
     }
 });
 
 
 app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
 	template: '#template-features-view',
-	
     regions: {
         //Column Headings
         colhead1: '#colhead1',
