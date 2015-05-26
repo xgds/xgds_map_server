@@ -103,7 +103,8 @@
         readOnly: {{ editable|yesno:"false,true" }},
         mapLayerDict: {{ mapLayerDict|safe }},
         siteFrame: {{ settings.XGDS_CURRENT_SITEFRAME|safe }},
-        saveUrl: "{{ saveUrl }}"
+        saveFeatureUrl: "{{ saveFeatureUrl }}", 
+        saveMaplayerUrl: "{{ saveMaplayerUrl }}"
     };
 	
 	$(function(){
@@ -116,7 +117,5 @@
         }
     }); 
     
-    var draw = null; //global so we can delete it later from map editor.
-    var featureOverlay; // where the features are drawn.
 {% endblock jsInit %}
   

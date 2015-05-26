@@ -22,7 +22,7 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
         'click #btn-navigate': function() { app.vent.trigger('mapmode', 'navigate'); this.updateTip('clear');},
         'click #btn-reposition': function() { app.vent.trigger('mapmode', 'reposition'); this.updateTip('edit'); },
         'click #btn-addFeatures': function() { app.vent.trigger('mapmode', 'addFeatures'); this.updateTip('add');},
-        'click #btn-save': function() { this.saveFeaturesToDB(); },
+        'click #btn-save': function() { app.mapLayer.save({type: 'POST', contentType: "application/json"}) },
         'click #btn-saveas': function() { this.showSaveAsDialog(); },
         'click #btn-undo': function() { app.Actions.undo(); },
         'click #btn-redo': function() { app.Actions.redo(); }
@@ -157,20 +157,7 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
     getFeatureModelUrl: function(feature) {
     	console.log("feature to be used for url is ", feature);
     },
-    
-    saveFeaturesToDB: function() {
-    	// get the features from the map layer.
-    	var features = app.mapLayer.get('feature').models;
-    	$.each(features, function(index, feature) {
-    		if (feature.get('saveToDB') == true) {  // only save the features user just created.
-	    		feature.save(null, {
-	    			  type: 'POST'
-	    		});
-	    		feature.set('saveToDB', false);
-    		}
-    	});
-    },
-    
+       
     showSaveAsDialog: function() {
     	$('#saveAsName').val(app.mapLayer.attributes['name']);
     	$('#saveAsDialog').dialog({
@@ -186,7 +173,7 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
     				var newName = $('#saveAsName').val()
     				app.mapLayer.set('name', newName);
     				app.mapLayer.set('uuid', null);
-    				app.mapLayer.save();
+    				app.mapLayer.save({type: 'POST', contentType: "application/json"});
     				$(this).dialog('close');
     			}
     		},
@@ -199,6 +186,11 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
     	});
     }
 
+});
+
+
+app.views.EditingToolsView = Backbone.Marionette.ItemView.extend({
+	template: '#template-editing-tools',
 });
 
 
@@ -225,7 +217,9 @@ app.views.LayerInfoTabView = Backbone.Marionette.ItemView.extend({
 	}
 });
 
-
+/**
+ * Model this after PropertiesForm in plan so that the model is immediately updated.
+ */
 app.views.FeatureStyleForm = Backbone.Marionette.ItemView.extend({
 	template: '#template-feature-polygon-style-properties',
 	serializeData: function() {
@@ -595,47 +589,6 @@ app.views.makeExpandable = function(view, expandClass) {
     view.on('expand', view._expand, view);
     view.on('render', view._restoreIcon, view);
 };
-
-
-app.views.EditingToolsView = Backbone.Marionette.ItemView.extend({
-	template: '#template-editing-tools',
-		
-	initialize: function() {
-		var map = app.map.map;
-		// featureOverlay is a global layer where all features get
-		// added to.
-		featureOverlay = new ol.FeatureOverlay({
-		  style: new ol.style.Style({
-		    fill: new ol.style.Fill({
-		      color: 'rgba(255, 255, 255, 0.2)'
-		    }),
-		    stroke: new ol.style.Stroke({
-		      color: '#ffcc33',
-		      width: 2
-		    }),
-		    image: new ol.style.Circle({
-		      radius: 7,
-		      fill: new ol.style.Fill({
-		        color: '#ffcc33'
-		      })
-		    })
-		  })
-		});
-		featureOverlay.setMap(map);
-
-		var modify = new ol.interaction.Modify({
-		  features: featureOverlay.getFeatures(),
-		  // the SHIFT key must be pressed to delete vertices, so
-		  // that new vertices can be drawn at the same position
-		  // of existing vertices
-		  deleteCondition: function(event) {
-		    return ol.events.condition.shiftKeyOnly(event) &&
-		        ol.events.condition.singleClick(event);
-		  }
-		});		
-		map.addInteraction(modify);
-	}
-});
 
 
 app.views.TabNavView = Backbone.Marionette.LayoutView.extend({

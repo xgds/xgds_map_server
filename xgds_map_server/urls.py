@@ -31,8 +31,10 @@ urlpatterns = patterns(
     # {'readOnly': True, 'securityTags': ['readOnly']},
     # 'mapList'),
     # for saving feature json to db
-    (r'^feature.json', views.saveFeatureJsonToDB, {}, 
-     'featureJsonToDB'),
+    (r'^saveFeature.json$', views.saveFeature, {}, 
+     'saveFeature'),
+    (r'^saveMaplayer.json$', views.saveMaplayer, {}, 
+     'saveMaplayer'),
     # HTML tree of maps
     (r'^maptree/', views.getMapTreePage,
      {'readOnly': True, 'securityTags': ['readOnly']},
@@ -40,7 +42,7 @@ urlpatterns = patterns(
     # Open Map Editor on a particular map layer
     (r'^mapeditor/(?P<layerID>[\w-]+)/', views.getMapEditorPage,
      {},
-     'editLayer'),
+     'mapEditLayer'),
     # JSON tree of maps, formatted for jstree
     (r'^listjson/', views.getMapTreeJSON,
      {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']},
@@ -69,7 +71,13 @@ urlpatterns = patterns(
      'addKml'),
     (r'^addlayer/', views.getAddLayerPage,
      {},
-     'addLayer'),
+     'mapAddLayer'),
+    (r'^addTile/', views.getAddTilePage,
+     {},
+     'mapAddTile'),
+    (r'^editTile/(?P<tileID>[\w-]+)/', views.getEditTilePage,
+     {},
+     'mapEditTile'),
     # HTML view to confirm deletion of view
     (r'^delete/(?P<mapID>\w+)/', views.getDeleteMapPage,
      {},

@@ -1,8 +1,8 @@
 <!--<form action="http://some.url/" enctype="multipart/form-data" method="post">-->
 <!--requires a variable called "mapForm"-->
 The files you specify here will be available in the planner as a layer and in Google Earth via a map feed.
-If you plan to include images or other kml / kmz files, we recommend creating a kmz file that contains all included artifacts,
-so that when you are in the field you can access all the content of your layers.<br/>
+WARNING: Right now we do not support kmz files, nor do we support ground overlay in kml.
+You can create ground overlays in Map Layers.</br>  
 {% if mapForm.non_field_errors %}<span style="color:red">{{ mapForm.non_field_errors }}</span>{% endif %}
 {% if mapForm.name.errors %}<span style="color:red">{{ mapForm.name.errors }}</span>{% endif %}
 <label for="id_name">Map Name:</label> {{ mapForm.name }}<br/>

@@ -376,8 +376,12 @@ $(function() {
             this.node = this.options.node; // may be undefined
             this.drawBelow = false;
             this.features = [];
+            this.createFeatureOverlay();
             this.constructFeatures();
             this.render();
+        },
+        createFeatureOverlay: function() {
+        	// override in child view
         },
         constructFeatures: function() {
             if (_.isUndefined(this.layerGroup)){
@@ -565,14 +569,11 @@ $(function() {
     
     app.views.PolygonView = app.views.VectorView.extend({
         constructFeature: function() {
-        	console.log("feature in json: ", this.featureJson);
             var coords = this.featureJson.polygon;
             this.polygonFeature = new ol.Feature({
                 name: this.featureJson.name,
                 geometry: new ol.geom.Polygon([coords]).transform('EPSG:4326', 'EPSG:3857')
             });
-            console.log("the json polygon Feature ", this.featureJson.polygon);
-            console.log("polygonFeature I am tryign to draw: ", this.polygonFeature);
             return this.polygonFeature;
         }, 
         getStyle: function() {

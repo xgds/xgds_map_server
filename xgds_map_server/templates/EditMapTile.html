@@ -1,0 +1,18 @@
+{% extends "MapBase.html" %}
+
+{% block contents %}
+{{ block.super }}
+{% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
+<h2>Edit Map Tile</h2>
+<form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
+{{ mapTileForm.as_p }}
+<input type="submit" value="Save" />
+</form>
+{% endblock %}
+
+{% block jsInit %}
+{{ block.super }}
+{% if fromSave %}
+$(document).ready(function(){setTimeout(function(){$("#saveButton")[0].value="Save";},1500);});
+{% endif %}
+{% endblock %}

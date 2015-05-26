@@ -50,6 +50,7 @@ var app = (function($, _, Backbone) {
             this.siteFrameMode = false;
             this.tree = undefined;
             this.treeData = null;
+            this.disableAddFeature = false;
         });
     });
 
@@ -171,13 +172,11 @@ var app = (function($, _, Backbone) {
 
         // create the map layer from map layer obj passed in from server as json
         app.mapLayer = new app.models.MapLayer(app.options.mapLayerDict);
-		
         // create backbone feature objects already existing in mapLayer's attributes
 		$.each(app.mapLayer.attributes.features, function(index, feature) {
 			var featureObj = new app.models.Feature(feature);
 			featureObj.set('mapLayer', app.mapLayer);  // set up the relationship.
 	    	featureObj.set('mapLayerName', app.mapLayer.get('name'));
-	    	featureObj.set('saveToDB', false);  // already in the db so no need to save.
 		});
 		
         app.selectedViews = []; // This array holds the views currently selected by checkboxes
@@ -188,10 +187,8 @@ var app = (function($, _, Backbone) {
         });
         app.toolbar.show(new app.views.ToolbarView());
         app.tabs.show(new app.views.TabNavView());
-        
         app.editingTools.show(new app.views.EditingToolsView());
-		app.util.addDrawTypeSelectChangeCallBack();
-		
+		app.vent.trigger('editingToolsRendered');
 		app.vent.trigger('clearSaveStatus');
         if (this.options.readOnly == true){
             app.vent.trigger('readOnly');
@@ -250,48 +247,39 @@ var app = (function($, _, Backbone) {
     ** Global utility functions
     */
     app.util = {
-    	// add draw interaction to the map.
-    	addInteraction: function(typeSelect) {
-    	  var map = app.map.map;
-		  draw = new ol.interaction.Draw({
-		    features: featureOverlay.getFeatures(),
-		    type: /** @type {ol.geom.GeometryType} */ (typeSelect.value)
-		  });
-		  map.addInteraction(draw);
-		  //when user draws a feature, save it as a backbone obj
-		  draw.on('drawend', function(event) { // finished drawing this feature
-			  var feature = event.feature;
-			  var geom = feature.getGeometry();
-			  var type = geom.getType();
-			  var coords = geom.getCoordinates();
-			  var saveToDB = true; //features needs to be saved to db
-			  //create a new backbone feature obj
-			  app.util.createBackboneObjFromFeature(type, coords, saveToDB);
-		  });
-    	},
-    	// draw type selection change 
-    	addDrawTypeSelectChangeCallBack: function() {
-	    	var map = app.map.map;
-	    	var typeSelect = document.getElementById('type');
-			/**
-			 * Let user change the geometry type.
-			 * @param {Event} e Change event.
-			 */
-			typeSelect.onchange = function(e) {
-			  map.removeInteraction(draw);
-			  app.util.addInteraction(typeSelect);
-			};
-			app.util.addInteraction(typeSelect);
-	    },
-	    createBackboneObjFromFeature: function(type, coords, saveToDB) {
+	    createBackboneFeatureObj: function(type, coords) {
 	    	// create a new backbone feature object from the user drawings on map.
 	    	var featureObj = new app.models.Feature();
-	    	featureObj.set('mapLayer', app.mapLayer);
-	    	featureObj.set('mapLayerName', app.mapLayer.get('name'));
+	    	var mapLayer = app.mapLayer;
+	    	featureObj.set('mapLayer', mapLayer);
+	    	featureObj.set('mapLayerName', mapLayer.get('name'));
 	    	featureObj.set('type', type);
+	    	featureObj.set('description', " ");
 	    	app.util.transformAndSetCoordinates(type, featureObj, coords);
-	    	featureObj.set('name', type + app.util.getRandomInt());
-	    	featureObj.set('saveToDB', saveToDB);
+	    	var featureName = app.util.generateFeatureName(mapLayer, type);
+	    	featureObj.set('name', featureName);
+	    	featureObj.set('popup', false);
+	    	featureObj.set('visible', true);
+	    	featureObj.set('showLabel', true);
+	    	return featureObj;
+	    },
+	    getDefaultStyle: function() {
+	    	var defaultStyle = new ol.style.Style({
+    		    fill: new ol.style.Fill({
+    		      color: 'rgba(255, 255, 255, 0.2)'
+    		    }),
+    		    stroke: new ol.style.Stroke({
+    		      color: '#ffcc33',
+    		      width: 2
+    		    }),
+    		    image: new ol.style.Circle({
+    		      radius: 7,
+    		      fill: new ol.style.Fill({
+    		        color: '#ffcc33'
+    		      })
+    		    })
+    		  });
+	    	return defaultStyle;
 	    },
         indexBy: function(list, keyProp) {
             // Return an object that indexes the objects in a list by their key property.
@@ -301,6 +289,28 @@ var app = (function($, _, Backbone) {
                 obj[item[keyProp]] = item;
             });
             return obj;
+        },
+        generateFeatureName: function(mapLayer, type) {
+        	// create a name based on maplayerName and type and an index
+        	var key = mapLayer.get('name').replace(/ /g,"");
+        	key = key + '_' + type;
+        	var index = null;
+        	if (type == 'Polygon') {
+        		var polygonIndex = mapLayer.get('polygonIndex') + 1;
+        		mapLayer.set('polygonIndex', polygonIndex);
+        		index = polygonIndex;
+        	} else if (type == 'LineString') {
+        		var lineStringIndex = mapLayer.get('lineStringIndex') + 1;
+        		mapLayer.set('lineStringIndex', lineStringIndex);
+        		index = lineStringIndex;
+        	} else if (type == 'Point') {
+        		var pointIndex = mapLayer.get('pointIndex') + 1;
+        		mapLayer.set('pointIndex', pointIndex);
+        		index = pointIndex;
+        	}
+        	// save the maplayer with new index
+        	mapLayer.save();
+        	return key + app.util.pad(index, 3, 0);
         },
         getRandomInt: function() {
         	// returns random integer btw 0 and 100
@@ -365,6 +375,12 @@ var app = (function($, _, Backbone) {
                 second: ss
             });
             return output;
+        },
+        pad: function(n, width, z) { 
+        	//pads a number 'width' times with 'z'. i.e. pad(1,4,0) = 0001 
+        	z = z || '0';
+        	n = n + '';
+        	return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
         },
         randomColor: function() {
             return '#' + ((1 << 24) * Math.random() | 0).toString(16);

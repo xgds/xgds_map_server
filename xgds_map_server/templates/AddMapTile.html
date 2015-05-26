@@ -1,0 +1,12 @@
+{% extends "MapBase.html" %}
+
+{% block contents %}
+{{ block.super }}
+{% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
+<h2>Add Map Tile</h2>
+Upload a geotiff or zip of multiple geotiff files to create a map tile layer.
+<form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
+{{ mapTileForm.as_p }}
+<input type="submit" value="Create" />
+</form>
+{% endblock %}

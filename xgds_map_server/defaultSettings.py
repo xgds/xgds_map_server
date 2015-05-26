@@ -16,6 +16,7 @@
 
 XGDS_MAP_SERVER_MEDIA_SUBDIR = 'xgds_map_server/'
 XGDS_MAP_SERVER_DATA_SUBDIR = 'xgds_map_server/'
+XGDS_MAP_SERVER_GEOTIFF_SUBDIR = XGDS_MAP_SERVER_DATA_SUBDIR + 'geoTiff/'
 XGDS_MAP_SERVER_TEMPLATE_DEBUG = True  # If this is true, handlebars templates will not be cached.
 
 XGDS_MAP_SERVER_OVERLAY_IMAGES_DIR = XGDS_MAP_SERVER_DATA_SUBDIR + "MapOverlayImages"
@@ -37,8 +38,11 @@ XGDS_MAP_SERVER_LAYER_FEED_URL = "/xgds_map_server/treejson/"
 XGDS_MAP_SERVER_LOGO_PATTERNS = []
 
 # include this in your siteSettings.py BOWER_INSTALLED_APPS
-XGDS_MAP_SERVER_BOWER_INSTALLED_APPS = (
-    'fancytree',
-    'ol3',
-    'ol3-popup'
-)
+XGDS_MAP_SERVER_BOWER_INSTALLED_APPS = ('backbone#1.1.2',
+                                        'marionette',
+                                        'backbone-relational',
+                                        'backbone-forms',
+                                        'fancytree',
+                                        'ol3',
+                                        'ol3-popup'
+                                        )
