@@ -212,53 +212,9 @@ def saveMaplayer(request):
             return HttpResponse(json.dumps({'failed': 'MapLayer of uuid of %s cannot be found' % uuid}), content_type='application/json')
         mapLayer.name = data.get('name', None)
         mapLayer.description = data.get('description', None)
-        # save the features
-        features = data.get('feature', None)
-        print features
-        for feature in features:
-            featureType = feature['type']
-            featureName = feature['name']
-            featureObj = getExistingFeature(featureName, featureType, mapLayer) 
-            if featureObj is None:         
-                featureObj = createFeatureObject(featureType)  # if feature doesn't exist, create it.
-            # update the feature attributes
-            featureObj.name = featureName          
-            featureObj.mapLayer = mapLayer
-            updateFeatureGeosCoords(featureObj, feature, featureType)  # set its coordinates from data.
-            if feature['popup']:
-                featureObj.popup = feature['popup']
-            if feature['visible']:
-                featureObj.visible = feature['visible']
-            if feature['showLabel']:
-                featureObj.showLabel = feature['showLabel']
-            if feature['description']:
-                featureObj.description = feature['description']
-            featureObj.save()
         mapLayer.save()
         return HttpResponse(json.dumps({'success': 'true', 'uuid': 'dummy'}), content_type='application/json')
     return HttpResponse(json.dumps({'failed': 'Must be a POST but got %s instead' % request.method }), content_type='application/json')
-
-
-def getExistingFeature(featureName, type, mapLayer):
-    """
-    return existing feature with featureName and mapLayer (obj)
-    """
-    featureClass = None
-    if type == 'Point':
-        featureClass = Point
-    elif type == 'LineString':
-        featureClass = LineString
-    elif type == 'Polygon':
-        featureClass = Polygon
-    else:
-        print 'feature type is invalid'
-        return None
-    try: 
-        feature = featureClass.objects.filter(name = featureName).filter(mapLayer_id = mapLayer.uuid)[0]
-    except: 
-        feature = None
-        print "No existing feature found of featureName %s and maplayer id %s" % (featureName, mapLayer.uuid)
-    return feature
 
 
 def saveOrDeleteFeature(request, uuid=None):
@@ -280,9 +236,14 @@ def saveOrDeleteFeature(request, uuid=None):
             mapLayer = MapLayer.objects.get(name = mapLayerName)
         except:
             return HttpResponse(json.dumps({'failed': 'MapLayerName of %s cannot be found' % mapLayerName}), content_type='application/json')
-        feature = getExistingFeature(featureName, featureType, mapLayer) 
-        if feature is None:         
-            feature = createFeatureObject(featureType)  # if feature doesn't exist, create it.
+
+        feature = None        
+        if uuid: 
+            feature = FEATURE_MANAGER.filter(uuid=uuid)
+        if feature:
+            feature = feature[0]
+        else: 
+            feature = createFeatureObject(featureType)
         # update the feature attributes
         feature.name = featureName            
         feature.mapLayer = mapLayer
