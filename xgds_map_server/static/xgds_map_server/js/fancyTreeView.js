@@ -99,6 +99,13 @@ app.views.FancyTreeView = Backbone.View.extend({
                         } else {
                             data.node.mapLayerView.render();
                         }
+                    } else if (!_.isUndefined(data.node.data.tileURL)){
+                        if (_.isUndefined(data.node.tileView)) {
+                            // make a new one
+                            app.vent.trigger('tileNode:create', data.node);
+                        } else {
+                            data.node.tileView.render();
+                        }
                     }
                   },
                   persist: {

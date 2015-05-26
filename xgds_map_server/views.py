@@ -950,7 +950,7 @@ def addGroupToFancyJSON(group, map_tree, request, expanded=False):
                            "tooltip": group_tile.description,
                            "data": {"href": request.build_absolute_uri(reverse('mapEditTile', kwargs={'tileID': group_tile.uuid})),
                                     "parentId": None,
-                                    "tileURL": "TODO PUT URL HERE"
+                                    "tileURL": group_tile.getXYZTileSourceUrl()
                                     },
                            }
         if group_tile.parent is not None:

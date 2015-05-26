@@ -90,17 +90,22 @@ $(function() {
                 app.vent.on('mapLayerNode:create', function(node) {
                     this.createMapLayerView(node);
                 }, this);
+                app.vent.on('tileNode:create', function(node) {
+                    this.createTileView(node);
+                }, this);
             },
             
             buildLayersForMap: function() {
                 this.kmlGroup = new ol.layer.Group();
                 this.mapLayerGroup = new ol.layer.Group();
+                this.tileGroup = new ol.layer.Group();
                 this.layersForMap = [
                  new ol.layer.Tile({
                      source: new ol.source.MapQuest({layer: 'osm'})
                  }),
+                 this.tileGroup,
+                 this.mapLayerGroup,
                  this.kmlGroup,
-                 this.mapLayerGroup
                  ]
             },
             
@@ -138,6 +143,7 @@ $(function() {
                         // temporary hashmaps
                         app.kmlMap = {}; 
                         app.mapLayerMap = {};
+                        app.tileMap = {};
                         this.layersInitialized = true;
                         app.vent.trigger('treeData:loaded');
                         this.initializeMapLayers(app.treeData[0]);
@@ -164,6 +170,13 @@ $(function() {
                         } else {
                             var foundLayer = app.mapLayerMap[node.key];
                             foundLayer.render();
+                        }
+                    } else if (!_.isUndefined(node.data.tileURL)){
+                        if (_.isUndefined(app.tileMap[node.key])){
+                            app.tileMap[node.key] = this.createTileView(node);
+                        } else {
+                            var foundTile = app.tileMap[node.key];
+                            foundTile.render();
                         }
                     }
                 }
@@ -196,6 +209,15 @@ $(function() {
                 node.mapLayerView = mapLayerView;
                 return mapLayerView;
             },
+            createTileView: function(node) {
+              var tileView = new app.views.TileView({
+                  node: node,
+                  tileGroup: this.tileGroup,
+                  tileURL: node.data.tileURL
+              });
+              node.tileView = tileView;
+              return tileView;
+            },
             updateMapLayers: function() {
                 if (!_.isUndefined(app.tree)){
                     var selectedNodes = app.tree.getSelectedNodes();
@@ -218,7 +240,16 @@ $(function() {
                             } else {
                                 app.mapLayerMap[node.key] = this.createMapLayerView(node);
                             }
+                        } else if (!_.isUndefined(node.data.tileURL) && _.isUndefined(node.tileView)){
+                            var tileView = app.tileMap[node.key];
+                            if (!_.isUndefined(tileView)){
+                                tileView.node = node;
+                                node.tileView = tileView;
+                            } else {
+                                app.tileMap[node.key] = this.createTileView(node);
+                            }
                         }
+                        
                     }, this);
                 }
             },
@@ -358,6 +389,54 @@ $(function() {
         hide: function() {
             if (this.visible){
                 this.kmlGroup.getLayers().remove(this.kmlVector);
+                this.visible = false;
+            }
+        }
+        
+    });
+    
+    app.views.TileView = Backbone.View.extend({
+        initialize: function(options) {
+            this.options = options || {};
+            this.tileGroup = this.options.tileGroup;
+            this.tileURL = this.options.tileURL;
+            this.node = this.options.node; // may be undefined
+            this.visible = false;
+            
+            if (!options.tileGroup && !options.tileURL) {
+                throw 'Missing a required option!';
+            }
+            this.constructTile();
+            this.render();
+        },
+        constructTile: function() {
+            if (_.isUndefined(this.tileLayer)){
+                
+                this.tileLayer = new ol.layer.Tile({
+                    source: new ol.source.XYZ({
+                        url: this.tileURL
+                    })
+                });
+            }
+        },
+        render: function() {
+            if (_.isUndefined(this.node)){
+                this.show();
+            } else if (this.node.selected){
+                this.show();    
+            } else {
+                this.hide();
+            }
+        },
+        show: function() {
+            if (!this.visible){
+                this.tileGroup.getLayers().push(this.tileLayer);
+                this.visible = true;
+            }
+        },
+        hide: function() {
+            if (this.visible){
+                this.tileGroup.getLayers().remove(this.tileLayer);
                 this.visible = false;
             }
         }

@@ -16,6 +16,7 @@
 
 import re
 import json
+import os
 
 from django.db import models
 from django.contrib.gis.db import models
@@ -107,14 +108,13 @@ class MapTile(AbstractMap):
                                   null=True, blank=True)
     processed = models.BooleanField(default=False)
 
+    def getXYZTileSourceUrl(self):
+        result = os.path.join(settings.DATA_URL, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR, self.name, '{z}/{x}/{-y}.png')
+        return result
+
 
 class MapLayer(AbstractMap):
     """ A map layer which will have a collection of features that have content in them. """
-    polygonIndex = models.IntegerField(default=0)  # indeces for naming user created features.
-    lineStringIndex = models.IntegerField(default=0)
-    pointIndex = models.IntegerField(default=0)
-    groundOverlayIndex = models.IntegerField(default=0)
-    drawingIndex = models.IntegerField(default=0)
     def toDict(self):
         result = modelToDict(self)
         result['uuid'] = self.uuid
