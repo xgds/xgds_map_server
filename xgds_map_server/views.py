@@ -23,6 +23,7 @@ import logging
 import urllib
 import os
 import datetime
+import zipfile
 
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.staticfiles.storage import staticfiles_storage
@@ -47,12 +48,18 @@ from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MAP_NODE
 from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
 from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm
 from geocamUtil.geoEncoder import GeoDjangoEncoder
+
+from geocamPycroraptor2.views import getPyraptordClient, stopPyraptordServiceIfRunning
+
 # pylint: disable=E1101,R0911
 
 latestRequestG = None
 
 HANDLEBARS_TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), 'templates/handlebars')
 _template_cache = None
+
+XGDS_MAP_SERVER_GEOTIFF_PATH = os.path.join(settings.DATA_ROOT, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR)
+
 
 
 def get_handlebars_templates(inp=HANDLEBARS_TEMPLATES_DIR):
@@ -454,6 +461,7 @@ def getAddTilePage(request):
             if 'sourceFile' in request.FILES:
                 tile_form.save()
             mapTile.save()
+            processTiles(request, mapTile.uuid)
         else:
             return render_to_response("AddMapTile.html",
                                       {'mapTileForm': tile_form,
@@ -496,6 +504,7 @@ def getEditTilePage(request, tileID):
                 tile_form.save()
             mapTile.save()
             fromSave = True
+            #TODO handle retiling or changing the path to the tiles ...
         else:
             return render_to_response("EditMapTile.html",
                                       {"mapTileForm": tile_form,
@@ -1203,3 +1212,58 @@ def getMapFeedAll(request):
                         content_type='application/vnd.google-earth.kml+xml')
     resp['Content-Disposition'] = 'attachment; filename=all.kml'
     return resp
+
+
+# TODO this is totally untested
+def processTiles(request, uuid):
+    try:
+        mapTile = MapTile.objects.get(uuid=uuid)
+    except:
+        return
+
+    sourceFiles = []
+    sourceFile = mapTile.sourceFile
+    outPath = mapTile.getTilePath()
+    if not os.path.exists(outPath):
+        os.makedirs(outPath)
+    if sourceFile.endswith('.tif') or sourceFile.endswith('.tiff'):
+        sourceFiles[0] = sourceFile
+    elif sourceFile.endsWith('.zip'):
+        fh = open(sourceFile, 'rb')
+        z = zipfile.ZipFile(fh)
+        unzipPath = os.path.join(settings.XGDS_MAP_SERVER_GEOTIFF_PATH, sourceFile.name.replace('.', '_'))
+        for name in z.namelist():
+            if name.endswith('.tif') or name.endswith('.tiff'):
+                z.extract(name, unzipPath)
+                sourceFiles.append(name)
+            fh.close()
+
+    serviceNames = []
+    for source in sourceFiles:
+        tileCmd = ('%s -z 12-20 --resampling=cubic %s %s'
+                   % (settings.XGDS_MAP_SERVER_GDAL2TILES,
+                      source.filename,
+                      outPath))
+
+        if settings.PYRAPTORD_SERVICE is True:
+            pyraptord = getPyraptordClient('pyraptord')
+            tileSvc = '%s_gdal2tiles' % source.filename
+            serviceNames.append(tileSvc)
+            stopPyraptordServiceIfRunning(pyraptord, tileSvc)
+            pyraptord.updateServiceConfig(tileSvc,
+                                          {'command': tileCmd,
+                                           'cwd': settings.XGDS_MAP_SERVER_GEOTIFF_PATH})
+            pyraptord.restart(tileSvc)
+        else:
+            os.chdir(settings.XGDS_MAP_SERVER_GEOTIFF_PATH)
+            os.system(tileCmd)
+
+    #TODO mark processed only if it worked
+#     if settings.PYRAPTORD_SERVICE is True:
+#         for tileSvc in serviceNames:
+#             statusDict = pyraptord.getStatus(tileSvc)
+#             if statusDict['STATUS'] = 'success':
+#                 remove from list
+    mapTile.setProcessed(True)
+    mapTile.save()
+

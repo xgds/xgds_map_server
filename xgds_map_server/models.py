@@ -109,7 +109,11 @@ class MapTile(AbstractMap):
     processed = models.BooleanField(default=False)
 
     def getXYZTileSourceUrl(self):
-        result = os.path.join(settings.DATA_URL, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR, self.name, '{z}/{x}/{-y}.png')
+        result = os.path.join(self.getTilePath(), '{z}/{x}/{-y}.png')
+        return result
+
+    def getTilePath(self):
+        result = os.path.join(settings.DATA_URL, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR, self.name)
         return result
 
 
