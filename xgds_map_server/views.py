@@ -85,40 +85,24 @@ def get_map_tree_templates(inp=HANDLEBARS_TEMPLATES_DIR):
 
 def getMapServerIndexPage(request):
     """
-    HTML list of maps with description and links to individual maps,
-    and a link to the kml feed
+    An actual map, with the tree.
     """
-    mapList = KmlMap.objects.all().select_related('parent').order_by('name')
-    for m in mapList:
-        if (m.kmlFile.startswith('/') or
-                m.kmlFile.startswith('http://') or
-                m.kmlFile.startswith('https://')):
-            url = m.kmlFile
-        else:
-            url = settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + m.kmlFile
-        m.url = request.build_absolute_uri(url)
-        logging.debug('kmlFile=%s url=%s', m.kmlFile, m.url)
-        if m.openable:
-            m.openable = 'yes'
-        else:
-            m.openable = 'no'
-        if m.visible:
-            m.visible = 'yes'
-        else:
-            m.visible = 'no'
-        if m.parent is None:
-            m.groupname = ''
-        else:
-            m.groupname = m.parent.name
+    templates = get_map_tree_templates()
+    return render_to_response('MapView.html',
+                              {'settings': settings,
+                               'templates': templates},
+                              context_instance=RequestContext(request))
+
+
+def getGoogleEarthFeedPage(request):
+    """
+    Page with description and link to the kml feed
+    """
     feedUrl = (request.build_absolute_uri(reverse(getMapFeed, kwargs={'feedname': ''}))) + '?doc=0'
     filename = settings.XGDS_MAP_SERVER_TOP_LEVEL['filename']
-    templates = get_map_tree_templates()
-    return render_to_response('MapServerLandingPage.html',
-                              {'mapList': mapList,
-                               'feedUrl': feedUrl,
-                               'filename': filename,
-                               'settings': settings,
-                               'templates': templates},
+    return render_to_response('GoogleEarthFeed.html',
+                              {'feedUrl': feedUrl,
+                               'filename': filename},
                               context_instance=RequestContext(request))
 
 
@@ -422,7 +406,8 @@ def getAddTilePage(request):
             if 'sourceFile' in request.FILES:
                 tile_form.save()
             mapTile.save()
-            processTiles(request, mapTile.uuid)
+            # todo test
+#             processTiles(request, mapTile.uuid)
         else:
             return render_to_response("AddMapTile.html",
                                       {'mapTileForm': tile_form,
@@ -1184,19 +1169,21 @@ def processTiles(request, uuid):
 
     sourceFiles = []
     sourceFile = mapTile.sourceFile
-    outPath = mapTile.getTilePath()
+    outPath = os.path.join(settings.PROJ_ROOT, mapTile.getTilePath())
+    #TODO for some reason this is giving a path like /data/bla and it is wrong
     if not os.path.exists(outPath):
         os.makedirs(outPath)
-    if sourceFile.endswith('.tif') or sourceFile.endswith('.tiff'):
-        sourceFiles[0] = sourceFile
-    elif sourceFile.endsWith('.zip'):
-        fh = open(sourceFile, 'rb')
+    if sourceFile.name.endswith('.tif') or sourceFile.name.endswith('.tiff'):
+        sourceFiles[0] = sourceFile.name
+    elif sourceFile.name.endsWith('.zip'):
+        fh = sourceFile.open('rb')
         z = zipfile.ZipFile(fh)
-        unzipPath = os.path.join(settings.XGDS_MAP_SERVER_GEOTIFF_PATH, sourceFile.name.replace('.', '_'))
+        basename = os.path.basename(sourceFile.name)
+        unzipPath = os.path.join(settings.XGDS_MAP_SERVER_GEOTIFF_PATH, basename.replace('.', '_'))
         for name in z.namelist():
             if name.endswith('.tif') or name.endswith('.tiff'):
                 z.extract(name, unzipPath)
-                sourceFiles.append(name)
+                sourceFiles.append(os.path.join(unzipPath, name))
             fh.close()
 
     serviceNames = []
