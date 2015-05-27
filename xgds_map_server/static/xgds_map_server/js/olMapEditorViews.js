@@ -171,7 +171,7 @@ $(function() {
 				//save to DB
 				featureObj.save({}, {type: 'POST', 
 					contentType: "application/json"
-					});
+				});
 			});
 			this.map.addInteraction(this.featureAdder);
         },

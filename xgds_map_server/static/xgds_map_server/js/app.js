@@ -177,6 +177,7 @@ var app = (function($, _, Backbone) {
 			var featureObj = new app.models.Feature(feature);
 			featureObj.set('mapLayer', app.mapLayer);  // set up the relationship.
 	    	featureObj.set('mapLayerName', app.mapLayer.get('name'));
+	    	featureObj.set('uuid', feature.uuid);
 		});
 		
         app.selectedViews = []; // This array holds the views currently selected by checkboxes
@@ -294,22 +295,13 @@ var app = (function($, _, Backbone) {
         	// create a name based on maplayerName and type and an index
         	var key = mapLayer.get('name').replace(/ /g,"");
         	key = key + '_' + type;
-        	var index = null;
-        	if (type == 'Polygon') {
-        		var polygonIndex = mapLayer.get('polygonIndex') + 1;
-        		mapLayer.set('polygonIndex', polygonIndex);
-        		index = polygonIndex;
-        	} else if (type == 'LineString') {
-        		var lineStringIndex = mapLayer.get('lineStringIndex') + 1;
-        		mapLayer.set('lineStringIndex', lineStringIndex);
-        		index = lineStringIndex;
-        	} else if (type == 'Point') {
-        		var pointIndex = mapLayer.get('pointIndex') + 1;
-        		mapLayer.set('pointIndex', pointIndex);
-        		index = pointIndex;
-        	}
-        	// save the maplayer with new index
-        	mapLayer.save({type: 'POST', contentType: "application/json"})
+        	var index = 0;
+        	var features = mapLayer.get('features');
+        	_.each(features, function(feature) {
+        		if (feature.type == type) {
+        			index = index + 1;
+        		}
+        	});
         	return key + app.util.pad(index, 3, 0);
         },
         getRandomInt: function() {
