@@ -822,6 +822,24 @@ def addGroupToJSON(group, map_tree, request):
     map_tree.append(group_json)
 
 
+def getMapLayerJSON(request, layerID):
+    mapLayer = MapLayer.objects.get(uuid=layerID)
+    mapLayer_json = {"title": mapLayer.name,
+                     "key": mapLayer.uuid,
+                     "selected": mapLayer.visible,
+                     "tooltip": mapLayer.description,
+                     "data": {"href": request.build_absolute_uri(reverse('mapEditLayer', kwargs={'layerID': mapLayer.uuid})),
+                              "parentId": None,
+                              "layerData": mapLayer.toDict()
+                              },
+                     }
+    if mapLayer.parent is not None:
+        mapLayer_json['data']['parentId'] = mapLayer.parent.uuid
+    json_data = json.dumps(mapLayer_json, indent=4, cls=GeoDjangoEncoder)
+    return HttpResponse(content=json_data,
+                        content_type="application/json")
+
+
 @never_cache
 def getFancyTreeJSON(request):
     """
@@ -841,7 +859,7 @@ def getFancyTreeJSON(request):
 def addGroupToFancyJSON(group, map_tree, request, expanded=False):
     """
     recursively adds group to json tree
-    in the style of jstree
+    in the style of fancy tree
     """
     if group is None:
         return  # don't do anything if group is None
@@ -898,7 +916,7 @@ def addGroupToFancyJSON(group, map_tree, request, expanded=False):
                             "tooltip": group_layer.description,
                             "data": {"href": request.build_absolute_uri(reverse('mapEditLayer', kwargs={'layerID': group_layer.uuid})),
                                      "parentId": None,
-                                     "layerData": group_layer.toDict()
+                                     "layerJSON": request.build_absolute_uri(reverse('mapLayerJSON', kwargs={'layerID': group_layer.uuid}))
                                      },
                             }
         if group_layer.parent is not None:

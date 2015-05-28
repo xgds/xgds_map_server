@@ -92,7 +92,7 @@ app.views.FancyTreeView = Backbone.View.extend({
                         } else {
                             data.node.mapView.render();
                         }
-                    } else if (!_.isUndefined(data.node.data.layerData)){
+                    } else if (!_.isUndefined(data.node.data.layerJSON)){
                         if (_.isUndefined(data.node.mapLayerView)) {
                             // make a new one
                             app.vent.trigger('mapLayerNode:create', data.node);

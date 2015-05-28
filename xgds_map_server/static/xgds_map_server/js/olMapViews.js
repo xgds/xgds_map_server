@@ -80,7 +80,7 @@ $(function() {
                 this.setupPopups();
                 
                 //events
-                app.vent.on('onMapSetup', this.postMapCreation);
+                this.on('onMapSetup', this.postMapCreation);
                 app.vent.on('layers:loaded', this.render);
                 app.vent.on('layers:loaded', this.initializeMapData);
                 app.vent.on('tree:loaded', this.updateMapLayers);
@@ -172,7 +172,7 @@ $(function() {
                                 foundKml.render();
                             }
                         }
-                    } else if (!_.isUndefined(node.data.layerData)){
+                    } else if (!_.isUndefined(node.data.layerJSON)){
                         if (_.isUndefined(app.mapLayerMap[node.key])){
                             app.mapLayerMap[node.key] = this.createMapLayerView(node);
                         } else {
@@ -211,7 +211,7 @@ $(function() {
                 //  create the map layer view
                 var mapLayerView = new app.views.MapLayerView({
                     node: node,
-                    mapLayerJson: node.data.layerData,
+                    mapLayerJsonURL: node.data.layerJSON,
                     mapLayerGroup: this.mapLayerGroup
                 });
                 node.mapLayerView = mapLayerView;
@@ -240,7 +240,7 @@ $(function() {
                                     app.kmlMap[node.key] = this.createKmlLayerView(node);
                                 }
                             }
-                        } else if (!_.isUndefined(node.data.layerData) && _.isUndefined(node.mapLayerView)){
+                        } else if (!_.isUndefined(node.data.layerJSON) && _.isUndefined(node.mapLayerView)){
                             var mapLayerView = app.mapLayerMap[node.key];
                             if (!_.isUndefined(mapLayerView)){
                                 mapLayerView.node = node;
@@ -446,15 +446,18 @@ $(function() {
     app.views.MapLayerView = Backbone.View.extend({
         initialize: function(options) {
             this.options = options || {};
-            if (!options.mapLayerGroup && !options.mapLayerJson) {
+            if (!options.mapLayerGroup && !options.mapLayerJsonURL) {
                 throw 'Missing a required option!';
             }
             this.visible = false;
-            this.mapLayerGroup = this.options.mapLayerGroup;
-            this.mapLayerJson = this.getFeatures();
             this.node = this.options.node; // may be undefined
             this.drawBelow = false;
             this.features = [];
+            this.mapLayerGroup = this.options.mapLayerGroup;
+            this.on( "jsonLoaded", this.finishInitialization, this);
+            this.getFeatures();
+        },
+        finishInitialization: function() {
             this.createFeatureOverlay();
             this.constructFeatures();
             this.render();
@@ -505,7 +508,11 @@ $(function() {
             }
         },
         getFeatures: function() {
-        	return this.options.mapLayerJson;
+            var thisMapLayerView = this;
+            $.getJSON(this.options.mapLayerJsonURL, function(data){
+                thisMapLayerView.mapLayerJson = data.data.layerData;
+                thisMapLayerView.trigger('jsonLoaded');
+            });
         },
         render: function() {
             if (_.isUndefined(this.node)){

@@ -53,18 +53,18 @@ urlpatterns = patterns(
     (r'^listjson/', views.getMapTreeJSON,
      {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']},
      'mapListJSON'),
-    (r'^treejson/', views.getFancyTreeJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']},
-     'mapTreeJSON'),
+    (r'^treejson/', views.getFancyTreeJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapTreeJSON'),
+    (r'^mapLayerJSON/(?P<layerID>[\w-]+)/', views.getMapLayerJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapLayerJSON'),
     # HTML detail view of map
-    (r'^detail/(?P<mapID>\w+)/', views.getMapDetailPage,
+    (r'^detail/(?P<mapID>[\w-]+)/', views.getMapDetailPage,
      {'readOnly': True },
      'mapDetail'),
     # HTML detail of a folder (group)
-    (r'^folderDetail/(?P<groupID>\w+)/', views.getFolderDetailPage,
+    (r'^folderDetail/(?P<groupID>[\w-]+)/', views.getFolderDetailPage,
      {'readOnly': True},
      'folderDetail'),
     # HTML view to delete a folder (group)
-    (r'^folderDelete/(?P<groupID>\w+)/', views.getDeleteFolderPage,
+    (r'^folderDelete/(?P<groupID>[\w-]+)/', views.getDeleteFolderPage,
      {},
      'folderDelete'),
     # HTML view to add a folder (group)
@@ -85,7 +85,7 @@ urlpatterns = patterns(
      {},
      'mapEditTile'),
     # HTML view to confirm deletion of view
-    (r'^delete/(?P<mapID>\w+)/', views.getDeleteMapPage,
+    (r'^delete/(?P<mapID>[\w-]+)/', views.getDeleteMapPage,
      {},
      'mapDelete'),
     # List of deleted maps that can be un-deleted
