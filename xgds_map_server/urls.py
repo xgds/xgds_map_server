@@ -25,6 +25,9 @@ urlpatterns = patterns(
     (r'^$', views.getMapServerIndexPage,
      {'readOnly': True, 'securityTags': ['readOnly']},
      'xgds_map_server_index'),
+    (r'^feedPage/', views.getGoogleEarthFeedPage,
+     {'readOnly': True, 'securityTags': ['readOnly']},
+     'xgds_map_server_feed'),
     # Map server urls
     # HTML list of maps with description and links to individual maps, and a link to the kml feed
     # (r'^list/', views.getMapListPage,

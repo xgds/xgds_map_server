@@ -17,6 +17,7 @@
 XGDS_MAP_SERVER_MEDIA_SUBDIR = 'xgds_map_server/'
 XGDS_MAP_SERVER_DATA_SUBDIR = 'xgds_map_server/'
 XGDS_MAP_SERVER_GEOTIFF_SUBDIR = XGDS_MAP_SERVER_DATA_SUBDIR + 'geoTiff/'
+
 XGDS_MAP_SERVER_TEMPLATE_DEBUG = True  # If this is true, handlebars templates will not be cached.
 
 XGDS_MAP_SERVER_OVERLAY_IMAGES_DIR = XGDS_MAP_SERVER_DATA_SUBDIR + "MapOverlayImages"
@@ -29,6 +30,9 @@ XGDS_MAP_SERVER_TOP_LEVEL = {
 
 # kml root from xgds_map_server
 XGDS_MAP_SERVER_LAYER_FEED_URL = "/xgds_map_server/treejson/"
+
+# path to script to turn geotiffs into tiles, via gdal with our patch
+XGDS_MAP_SERVER_GDAL2TILES = "/xgds_map_server/bin/gdal2tiles.py"
 
 
 # A list of regex strings. If the name of a Map object matches one of

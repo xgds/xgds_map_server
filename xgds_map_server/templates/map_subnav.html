@@ -2,9 +2,12 @@
 {% block sitemenu-content-secondary %}
 {% load nav %}
 <div class="sitemenu-nav-secondary">
+	<nav class="subnav">
 	<ul>
-		<li{% currentnav xgds_map_server_index %}><a href="{% url 'xgds_map_server_index' %}">Master Map Feed</a></li>
-		<li {% currentnav map* folder* addKml deletedMaps %}><a href="{% url 'mapTree' %}">Manage Content</a></li>
+		<li{% currentnav xgds_map_server_index %}><a href="{% url 'xgds_map_server_index' %}">View</a></li>
+		<li {% currentnav map* folder* addKml deletedMaps %}><a href="{% url 'mapTree' %}">Edit</a></li>
+		<li{% currentnav xgds_map_server_feed %}><a href="{% url 'xgds_map_server_feed' %}">Google Earth Feed</a></li>
   	</ul>
+  	</nav>
 </div>
 {% endblock %}

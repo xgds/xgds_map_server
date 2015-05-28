@@ -23,6 +23,7 @@ import logging
 import urllib
 import os
 import datetime
+import zipfile
 
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.staticfiles.storage import staticfiles_storage
@@ -47,12 +48,18 @@ from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MAP_NODE
 from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
 from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm
 from geocamUtil.geoEncoder import GeoDjangoEncoder
+
+from geocamPycroraptor2.views import getPyraptordClient, stopPyraptordServiceIfRunning
+
 # pylint: disable=E1101,R0911
 
 latestRequestG = None
 
 HANDLEBARS_TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), 'templates/handlebars')
 _template_cache = None
+
+XGDS_MAP_SERVER_GEOTIFF_PATH = os.path.join(settings.DATA_ROOT, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR)
+
 
 
 def get_handlebars_templates(inp=HANDLEBARS_TEMPLATES_DIR):
@@ -78,40 +85,24 @@ def get_map_tree_templates(inp=HANDLEBARS_TEMPLATES_DIR):
 
 def getMapServerIndexPage(request):
     """
-    HTML list of maps with description and links to individual maps,
-    and a link to the kml feed
+    An actual map, with the tree.
     """
-    mapList = KmlMap.objects.all().select_related('parent').order_by('name')
-    for m in mapList:
-        if (m.kmlFile.startswith('/') or
-                m.kmlFile.startswith('http://') or
-                m.kmlFile.startswith('https://')):
-            url = m.kmlFile
-        else:
-            url = settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + m.kmlFile
-        m.url = request.build_absolute_uri(url)
-        logging.debug('kmlFile=%s url=%s', m.kmlFile, m.url)
-        if m.openable:
-            m.openable = 'yes'
-        else:
-            m.openable = 'no'
-        if m.visible:
-            m.visible = 'yes'
-        else:
-            m.visible = 'no'
-        if m.parent is None:
-            m.groupname = ''
-        else:
-            m.groupname = m.parent.name
+    templates = get_map_tree_templates()
+    return render_to_response('MapView.html',
+                              {'settings': settings,
+                               'templates': templates},
+                              context_instance=RequestContext(request))
+
+
+def getGoogleEarthFeedPage(request):
+    """
+    Page with description and link to the kml feed
+    """
     feedUrl = (request.build_absolute_uri(reverse(getMapFeed, kwargs={'feedname': ''}))) + '?doc=0'
     filename = settings.XGDS_MAP_SERVER_TOP_LEVEL['filename']
-    templates = get_map_tree_templates()
-    return render_to_response('MapServerLandingPage.html',
-                              {'mapList': mapList,
-                               'feedUrl': feedUrl,
-                               'filename': filename,
-                               'settings': settings,
-                               'templates': templates},
+    return render_to_response('GoogleEarthFeed.html',
+                              {'feedUrl': feedUrl,
+                               'filename': filename},
                               context_instance=RequestContext(request))
 
 
@@ -434,6 +425,8 @@ def getAddTilePage(request):
             if 'sourceFile' in request.FILES:
                 tile_form.save()
             mapTile.save()
+            # todo test
+#             processTiles(request, mapTile.uuid)
         else:
             return render_to_response("AddMapTile.html",
                                       {'mapTileForm': tile_form,
@@ -476,6 +469,7 @@ def getEditTilePage(request, tileID):
                 tile_form.save()
             mapTile.save()
             fromSave = True
+            #TODO handle retiling or changing the path to the tiles ...
         else:
             return render_to_response("EditMapTile.html",
                                       {"mapTileForm": tile_form,
@@ -1183,3 +1177,60 @@ def getMapFeedAll(request):
                         content_type='application/vnd.google-earth.kml+xml')
     resp['Content-Disposition'] = 'attachment; filename=all.kml'
     return resp
+
+
+# TODO this is totally untested
+def processTiles(request, uuid):
+    try:
+        mapTile = MapTile.objects.get(uuid=uuid)
+    except:
+        return
+
+    sourceFiles = []
+    sourceFile = mapTile.sourceFile
+    outPath = os.path.join(settings.PROJ_ROOT, mapTile.getTilePath())
+    #TODO for some reason this is giving a path like /data/bla and it is wrong
+    if not os.path.exists(outPath):
+        os.makedirs(outPath)
+    if sourceFile.name.endswith('.tif') or sourceFile.name.endswith('.tiff'):
+        sourceFiles[0] = sourceFile.name
+    elif sourceFile.name.endsWith('.zip'):
+        fh = sourceFile.open('rb')
+        z = zipfile.ZipFile(fh)
+        basename = os.path.basename(sourceFile.name)
+        unzipPath = os.path.join(settings.XGDS_MAP_SERVER_GEOTIFF_PATH, basename.replace('.', '_'))
+        for name in z.namelist():
+            if name.endswith('.tif') or name.endswith('.tiff'):
+                z.extract(name, unzipPath)
+                sourceFiles.append(os.path.join(unzipPath, name))
+            fh.close()
+
+    serviceNames = []
+    for source in sourceFiles:
+        tileCmd = ('%s -z 12-20 --resampling=cubic %s %s'
+                   % (settings.XGDS_MAP_SERVER_GDAL2TILES,
+                      source.filename,
+                      outPath))
+
+        if settings.PYRAPTORD_SERVICE is True:
+            pyraptord = getPyraptordClient('pyraptord')
+            tileSvc = '%s_gdal2tiles' % source.filename
+            serviceNames.append(tileSvc)
+            stopPyraptordServiceIfRunning(pyraptord, tileSvc)
+            pyraptord.updateServiceConfig(tileSvc,
+                                          {'command': tileCmd,
+                                           'cwd': settings.XGDS_MAP_SERVER_GEOTIFF_PATH})
+            pyraptord.restart(tileSvc)
+        else:
+            os.chdir(settings.XGDS_MAP_SERVER_GEOTIFF_PATH)
+            os.system(tileCmd)
+
+    #TODO mark processed only if it worked
+#     if settings.PYRAPTORD_SERVICE is True:
+#         for tileSvc in serviceNames:
+#             statusDict = pyraptord.getStatus(tileSvc)
+#             if statusDict['STATUS'] = 'success':
+#                 remove from list
+    mapTile.setProcessed(True)
+    mapTile.save()
+

@@ -18,7 +18,7 @@ from django import forms
 
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile
 from xgds_map_server import settings
-
+from geocamUtil.extFileField import ExtFileField
 
 # pylint: disable=C1001
 
@@ -66,7 +66,8 @@ class MapLayerForm(forms.ModelForm):
 
 
 class MapTileForm(forms.ModelForm):
-    sourceFile = forms.FileField()
+    sourceFile = ExtFileField(ext_whitelist=(".tif", ".tiff", ".zip"))
+#     sourceFile = forms.FileField()
     parent = forms.ModelChoiceField(queryset=MapGroup.objects.filter(deleted=False),
                                     empty_label=None,
                                     label="Parent Folder")
