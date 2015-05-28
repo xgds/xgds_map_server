@@ -80,6 +80,7 @@ $(function() {
                 this.setupPopups();
                 
                 //events
+                app.vent.on('onMapSetup', this.postMapCreation);
                 app.vent.on('layers:loaded', this.render);
                 app.vent.on('layers:loaded', this.initializeMapData);
                 app.vent.on('tree:loaded', this.updateMapLayers);
@@ -93,6 +94,13 @@ $(function() {
                 app.vent.on('tileNode:create', function(node) {
                     this.createTileView(node);
                 }, this);
+            },
+            
+            postMapCreation: function() {
+                var callback = app.options.XGDS_PLANNER_MAP_LOADED_CALLBACK;
+                if (callback != null) {
+                    callback();
+                }
             },
             
             buildLayersForMap: function() {
@@ -194,9 +202,9 @@ $(function() {
                 var kmlLayerView = new app.views.KmlLayerView({
                     node: node,
                     kmlFile: node.data.kmlFile,
-                    kmlGroup: this.kmlGroup
+                    group: this.kmlGroup
                 });
-                node.kmlLayerView = kmlLayerView;
+                node.mapView = kmlLayerView;
                 return kmlLayerView;
             },
             createMapLayerView: function(node) {
@@ -212,22 +220,22 @@ $(function() {
             createTileView: function(node) {
               var tileView = new app.views.TileView({
                   node: node,
-                  tileGroup: this.tileGroup,
+                  group: this.tileGroup,
                   tileURL: node.data.tileURL
               });
-              node.tileView = tileView;
+              node.mapView = tileView;
               return tileView;
             },
             updateMapLayers: function() {
                 if (!_.isUndefined(app.tree)){
                     var selectedNodes = app.tree.getSelectedNodes();
                     selectedNodes.forEach(function(node){
-                        if (!_.isUndefined(node.data.kmlFile) && _.isUndefined(node.kmlLayerView)){
+                        if (!_.isUndefined(node.data.kmlFile) && _.isUndefined(node.mapView)){
                             if (!endsWith(node.data.kmlFile, "kmz")) {
                                 var kmlLayerView = app.kmlMap[node.key];
                                 if (!_.isUndefined(kmlLayerView)){
                                     kmlLayerView.node = node;
-                                    node.kmlLayerView = kmlLayerView;
+                                    node.mapView = kmlLayerView;
                                 } else {
                                     app.kmlMap[node.key] = this.createKmlLayerView(node);
                                 }
@@ -240,11 +248,11 @@ $(function() {
                             } else {
                                 app.mapLayerMap[node.key] = this.createMapLayerView(node);
                             }
-                        } else if (!_.isUndefined(node.data.tileURL) && _.isUndefined(node.tileView)){
+                        } else if (!_.isUndefined(node.data.tileURL) && _.isUndefined(node.mapView)){
                             var tileView = app.tileMap[node.key];
                             if (!_.isUndefined(tileView)){
                                 tileView.node = node;
-                                node.tileView = tileView;
+                                node.mapView = tileView;
                             } else {
                                 app.tileMap[node.key] = this.createTileView(node);
                             }
@@ -341,24 +349,62 @@ $(function() {
             }
         });
     
-    app.views.KmlLayerView = Backbone.View.extend({
+    app.views.TreeMapElement = Backbone.View.extend({
         initialize: function(options) {
             this.options = options || {};
-            this.kmlGroup = this.options.kmlGroup;
-            this.kmlFile = this.options.kmlFile;
+            this.group = this.options.group;
             this.node = this.options.node; // may be undefined
             this.visible = false;
             
-            if (!options.kmlGroup && !options.kmlFile) {
-                throw 'Missing a required option!';
-            }
-            this.constructVector();
+            this.checkRequired();
+            this.constructMapElements();
             this.render();
         },
-        constructVector: function() {
-            if (_.isUndefined(this.kmlVector)){
-                
-                this.kmlVector = new ol.layer.Vector({
+        checkRequired: function() {
+            if (!this.group) {
+                throw 'Missing map group!';
+            }
+        },
+        render: function() {
+            if (_.isUndefined(this.node)){
+                this.show();
+            } else if (this.node.selected){
+                this.show();    
+            } else {
+                this.hide();
+            }
+        },
+        show: function() {
+            if (!this.visible){
+                var mygroup = this.group;
+                var mylayers = mygroup.getLayers();
+                this.group.getLayers().push(this.mapElement);
+                this.visible = true;
+            }
+        },
+        hide: function() {
+            if (this.visible){
+                var mygroup = this.group;
+                var mylayers = mygroup.getLayers();
+                this.group.getLayers().remove(this.mapElement);
+                this.visible = false;
+            }
+        }
+    });
+    app.views.KmlLayerView = app.views.TreeMapElement.extend({
+        initialize: function(options) {
+            this.kmlFile = options.kmlFile;
+            app.views.TreeMapElement.prototype.initialize.call(this, options);
+        },
+        checkRequired: function() {
+            if (!this.kmlFile) {
+                throw 'Missing kml File option!';
+            }
+            app.views.TreeMapElement.prototype.checkRequired.call(this);
+        },
+        constructMapElements: function() {
+            if (_.isUndefined(this.mapElement)){
+                this.mapElement = new ol.layer.Vector({
                     source: new ol.source.KML({
                         projection: KML_PROJECTION,
                         url: this.kmlFile
@@ -370,74 +416,28 @@ $(function() {
                     }) */
                 });
             }
-        },
-        render: function() {
-            if (_.isUndefined(this.node)){
-                this.show();
-            } else if (this.node.selected){
-                this.show();    
-            } else {
-                this.hide();
-            }
-        },
-        show: function() {
-            if (!this.visible){
-                this.kmlGroup.getLayers().push(this.kmlVector);
-                this.visible = true;
-            }
-        },
-        hide: function() {
-            if (this.visible){
-                this.kmlGroup.getLayers().remove(this.kmlVector);
-                this.visible = false;
-            }
         }
         
     });
     
-    app.views.TileView = Backbone.View.extend({
+    app.views.TileView = app.views.TreeMapElement.extend({
         initialize: function(options) {
-            this.options = options || {};
-            this.tileGroup = this.options.tileGroup;
-            this.tileURL = this.options.tileURL;
-            this.node = this.options.node; // may be undefined
-            this.visible = false;
-            
-            if (!options.tileGroup && !options.tileURL) {
-                throw 'Missing a required option!';
-            }
-            this.constructTile();
-            this.render();
+            this.tileURL = options.tileURL;
+            app.views.TreeMapElement.prototype.initialize.call(this, options);
         },
-        constructTile: function() {
-            if (_.isUndefined(this.tileLayer)){
-                
-                this.tileLayer = new ol.layer.Tile({
+        checkRequired: function() {
+            if (!this.tileURL) {
+                throw 'Missing tile URL option!';
+            }
+            app.views.TreeMapElement.prototype.checkRequired.call(this);
+        },
+        constructMapElements: function() {
+            if (_.isUndefined(this.mapElement)){
+                this.mapElement = new ol.layer.Tile({
                     source: new ol.source.XYZ({
                         url: this.tileURL
                     })
                 });
-            }
-        },
-        render: function() {
-            if (_.isUndefined(this.node)){
-                this.show();
-            } else if (this.node.selected){
-                this.show();    
-            } else {
-                this.hide();
-            }
-        },
-        show: function() {
-            if (!this.visible){
-                this.tileGroup.getLayers().push(this.tileLayer);
-                this.visible = true;
-            }
-        },
-        hide: function() {
-            if (this.visible){
-                this.tileGroup.getLayers().remove(this.tileLayer);
-                this.visible = false;
             }
         }
         

@@ -86,11 +86,11 @@ app.views.FancyTreeView = Backbone.View.extend({
                 },
                 select: function(event, data) {
                     if (!_.isUndefined(data.node.data.kmlFile)){
-                        if (_.isUndefined(data.node.kmlLayerView)) {
+                        if (_.isUndefined(data.node.mapView)) {
                             // make a new one
                             app.vent.trigger('kmlNode:create', data.node);
                         } else {
-                            data.node.kmlLayerView.render();
+                            data.node.mapView.render();
                         }
                     } else if (!_.isUndefined(data.node.data.layerData)){
                         if (_.isUndefined(data.node.mapLayerView)) {
@@ -100,11 +100,11 @@ app.views.FancyTreeView = Backbone.View.extend({
                             data.node.mapLayerView.render();
                         }
                     } else if (!_.isUndefined(data.node.data.tileURL)){
-                        if (_.isUndefined(data.node.tileView)) {
+                        if (_.isUndefined(data.node.mapView)) {
                             // make a new one
                             app.vent.trigger('tileNode:create', data.node);
                         } else {
-                            data.node.tileView.render();
+                            data.node.mapView.render();
                         }
                     }
                   },
