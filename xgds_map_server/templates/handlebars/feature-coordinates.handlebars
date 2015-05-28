@@ -2,7 +2,7 @@
 <ul>
   {{#each coords}}
   	<li>
-	<input name="featureCoords" type="text" value="{{this}}" size="45"/>
+	<input class="featureCoords" id="{{@index}}" type="text" value="{{this}}" size="45"/>
   	</li>
   {{/each}}
 </ul>

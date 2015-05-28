@@ -146,27 +146,37 @@ def getMapEditorPage(request, layerID=None):
                               )
 
 
-def updateFeatureGeosCoords(feature, data, type):
+def getFeatureCoordinates(data, type):
+    if type == 'Point':
+        coords = data['point'] or data.get('point')
+    elif type == 'Polygon':
+        coords = data['polygon'][0] or data.get('polygon')[0]
+    elif type == 'LineString':
+        coords = data['lineString'] or data.get('lineString')
+    else:
+        print "invalid feature type specified in json"
+    return coords
+
+
+def setFeatureCoordinates(feature, coords, type):
     """
-    update the feature coordinates
     Reference: http://stackoverflow.com/questions/1504288/adding-a-polygon-directly-in-geodjango-postgis
     """
     if type == 'Point':
-        coords = data['point'] or data.get('point')
         feature.point = geosPoint(coords)
     elif type == 'Polygon':
-        print "data is "
-        print data
-        coords = data['polygon'][0] or data.get('polygon')[0]
-        internalCoords = geosLinearRing(coords)
+        try: 
+            internalCoords = geosLinearRing(coords)
+        except: 
+            return "GEOS_ERROR: IllegalArgumentException: Points of LinearRing do not form a closed linestring!"
         externalCoords = geosLinearRing(coords)
         feature.polygon = geosPolygon(internalCoords, externalCoords)
     elif type == 'LineString':
-        coords = data['lineString'] or data.get('lineString')
         feature.lineString = geosLineString(coords)
     else:
         print "invalid feature type specified in json"
     feature.save()
+    return None
 
 
 def createFeatureObject(type):
@@ -191,20 +201,21 @@ def createFeatureObject(type):
 
 def saveMaplayer(request):
     """
-    save backbone Maplayer to the database
+    Update map layer properties: this also saves feature properties that belong to this map layer.
     """
-    if request.method == "POST":
+    pydevd.settrace('128.102.236.193')
+    if request.method == "PUT":  # map layer already exists so backbone sends a PUT request to update it.
         data = json.loads(request.body)
-        # assume that map layer already exists!
         uuid = data.get('uuid', None)
         try: 
             mapLayer = MapLayer.objects.get(uuid = uuid)
         except:
             return HttpResponse(json.dumps({'failed': 'MapLayer of uuid of %s cannot be found' % uuid}), content_type='application/json')
-        mapLayer.name = data.get('name', None)
-        mapLayer.description = data.get('description', None)
+        mapLayer.name = data.get('name', "")
+        mapLayer.description = data.get('description', "")
         mapLayer.save()
-        return HttpResponse(json.dumps({'success': 'true', 'uuid': 'dummy'}), content_type='application/json')
+        
+        return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
     return HttpResponse(json.dumps({'failed': 'Must be a POST but got %s instead' % request.method }), content_type='application/json')
 
 
@@ -217,28 +228,35 @@ def saveOrDeleteFeature(request, uuid=None):
         Coordinate pairs (or tuples) are separated by commas
         Coordinate ordering is (x, y) -- that is (lon, lat)
     """
-    if request.method == "POST":
+    if (request.method == "POST") or (request.method == "PUT"):
         data = json.loads(request.body)
         # use the data to create a feature object.
-        featureType = data.get('type', None)
-        featureName = data.get('name', None)
-        mapLayerName = data.get('mapLayerName', None)
+        featureType = data.get('type', "")
+        featureName = data.get('name', "")
+        mapLayerName = data.get('mapLayerName', "")
         try:
             mapLayer = MapLayer.objects.get(name = mapLayerName)
         except:
             return HttpResponse(json.dumps({'failed': 'MapLayerName of %s cannot be found' % mapLayerName}), content_type='application/json')
 
-        feature = None        
-        if uuid: 
-            feature = FEATURE_MANAGER.filter(uuid=uuid)
-        if feature:
-            feature = feature[0]
-        else: 
+        feature = None
+        
+        if request.method == "POST":
             feature = createFeatureObject(featureType)
+        elif request.method == "PUT":  # grab existing feature
+            feature = FEATURE_MANAGER.filter(uuid=uuid)
+            if feature:
+                feature = feature[0]
+            else: 
+                return HttpResponse(json.dumps({'failed': 'feature of uuid: %s cannot be found' % uuid}), content_type='application/json')
         # update the feature attributes
         feature.name = featureName            
         feature.mapLayer = mapLayer
-        updateFeatureGeosCoords(feature, data, featureType)  # set its coordinates from data.
+        coords = getFeatureCoordinates(data, featureType)
+        errorText = setFeatureCoordinates(feature, coords, featureType)
+        if errorText: 
+            return HttpResponse(json.dumps({'failed': errorText }), content_type='application/json')
+
         if data.get('popup', None) is not None:
             feature.popup = data.get('popup', None)
         if data.get('visible', None) is not None:
@@ -249,6 +267,7 @@ def saveOrDeleteFeature(request, uuid=None):
             feature.description = data.get('description', None)
         feature.save()
         return HttpResponse(json.dumps({'success': 'true', 'type': 'save'}), content_type='application/json')
+    
     elif request.method == "DELETE":
         try: 
             features = FEATURE_MANAGER.filter(uuid=uuid)
