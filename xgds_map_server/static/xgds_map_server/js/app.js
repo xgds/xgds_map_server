@@ -411,7 +411,17 @@ var app = (function($, _, Backbone) {
                 ('00' + (~~(b * 255)).toString(16)).slice(-2);
             return (c);
         },
-
+        
+        getFeatureCoordinates: function(type, feature) {
+        	if (type == 'Point') {
+        		return feature.get('point');
+        	} else if (type == 'Polygon') {
+        		return feature.get('polygon');
+        	} else if (type == 'LineString') {
+        		return feature.get('lineString');
+        	} 
+        },
+        
         updateFeatureCoordinate: function(type, feature, newX, newY, index) {
         	/*
         	 * newCoords: updated (x,y) in lon lat

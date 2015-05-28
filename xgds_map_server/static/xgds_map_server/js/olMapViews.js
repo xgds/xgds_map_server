@@ -16,7 +16,7 @@
 
 var DEG2RAD = Math.PI / 180.0;
 
-// transform lat long
+// transform coords from lon lat to spherical mercator (ol map coords) 
 function transform(coords){
     return ol.proj.transform(coords, 'EPSG:4326',   'EPSG:3857');    
 }

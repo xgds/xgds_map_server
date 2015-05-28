@@ -443,7 +443,6 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
     			data: { 'uuid': feature.uuid },
     			success: function(model, response) {
     				console.log("Successfully deleted feature!");
-    				app.vent.trigger('featureDeleted', feature.uuid)
     			}, 
     			error: function() {
     				console.log("Error in deleting a feature");

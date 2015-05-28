@@ -70,6 +70,7 @@ $(function() {
     				_this.addDrawInteraction(_this.typeSelect);
     			};
       		}, this);
+      		app.vent.on('deleteSelectedFeatures', this.deleteFeatureFromOverlay, this);
     	},
     	createFeatureOverlay: function() {
             this.featureOverlay = new ol.FeatureOverlay({
@@ -156,6 +157,22 @@ $(function() {
             mode.enter.call(this);
             this.currentMode = mode;
             this.currentModeName = modeName;
+        },
+        deleteFeatureFromOverlay: function() {
+        	// remove the selected features from the overlay
+        	var features = app.request('selectedFeatures');
+        	var olCollection = this.featureOverlay.getFeatures();
+        	var _this = this;
+        	olCollection.forEach(function(olFeature){
+        		var olCoords = olFeature.getGeometry().getCoordinates();
+        		_.each(features, function(feature) {
+        			var lonLat = app.util.getFeatureCoordinates(feature.get('type'), feature);
+        			var olMapCoords = transform(lonLat);  			
+        			if ((olMapCoords[0] == olCoords[0]) && (olMapCoords[0] == olCoords[0])) {
+        				_this.featureOverlay.removeFeature(olFeature);
+        			} 
+        		});
+        	});
         },
         
         addDrawInteraction(typeSelect) {
