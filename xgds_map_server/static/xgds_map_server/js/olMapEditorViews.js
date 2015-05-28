@@ -140,13 +140,20 @@ $(function() {
         	});
         },
         
-        updateFeaturePosition: function(olMapCoord, feature) {
-        	console.log('inside update feature position');
-        	console.log('ol map coords', olMapCoord);
-        	console.log('feature', feature);
-        	//TODO: find the matching feature.
+        updateFeaturePosition: function(feature) {
+    		var olFeature = feature.olFeature;
+    		if (type == 'Point') {
+    			var newPoint = new ol.geom.Point(transform(feature.get('point')));
+        		olFeature.setGeometry(newPoint);
+        	} else if (type == 'Polygon') {
+        		var coords = this.feature.get('polygon')
+        		var newPolygon = new ol.geom.Polygon([coords]).transform('EPSG:4326', 'EPSG:3857');
+        		olFeature.setGeometry(newPolygon);
+        	} else if (type == 'LineString') {
+        		var newLineString = new ol.geom.LineString(feature.get('lineString')).transform('EPSG:4326', 'EPSG:3857');
+        		olFeature.setGeometry(newLineString);
+        	} 
         	
-        	var olCollection = this.featureOverlay.getFeature();  	
         },
         //clean up, then re-enter the mode. Useful for redraws
         resetMode: function() {
@@ -277,6 +284,9 @@ $(function() {
     app.views.PolygonEditView = app.views.PolygonView.extend({
     	render: function() {
     		//no op
+    	},
+    	updateGeometry: function() {
+    		
     	}
     });
 
