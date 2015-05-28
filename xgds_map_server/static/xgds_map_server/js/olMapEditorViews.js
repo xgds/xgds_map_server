@@ -87,45 +87,46 @@ $(function() {
                 this.layerGroup = new ol.layer.Group({name: app.mapLayer.get('name')});
             };
             var mlview = this;
-            $.each(app.mapLayer.get('feature'), function(index, featureObj){
+            var testFeatureObjects = app.mapLayer.get('feature');
+            _.each(testFeatureObjects.models, function(featureObj){
             	mlview.createFeature(featureObj);
             });
         },
         createFeature: function(featureObj){
-            var newFeature;
-            var featureJson = featureObj.get('json');
+            var newFeatureView;
+            var featureJson = featureObj.json;
             switch (featureJson['type']){
             case 'GroundOverlay':
-                newFeature = new app.views.GroundOverlayEditView({
+                newFeatureView = new app.views.GroundOverlayEditView({
                     layerGroup: this.layerGroup,
                     featureJson: featureJson
                 });
                 this.drawBelow = true;
                 break;
             case 'Polygon':
-                newFeature = new app.views.PolygonEditView({
+                newFeatureView = new app.views.PolygonEditView({
                     layerGroup: this.layerGroup,
                     featureJson: featureJson
                 });
                 break;
             case 'Point':
-                newFeature = new app.views.PointEditView({
+                newFeatureView = new app.views.PointEditView({
                     layerGroup: this.layerGroup,
                     featureJson: featureJson
                 });
                 break;
             case 'LineString':
-                newFeature = new app.views.LineStringEditView({
+                newFeatureView = new app.views.LineStringEditView({
                     layerGroup: this.layerGroup,
                     featureJson: featureJson
                 });
                 break;
             } 
-            if (!_.isUndefined(newFeature)){
-                this.featureOverlay.addFeature(newFeature.olFeature);
-                featureObj.olFeature = newFeature.getFeature;
-                newFeature.featureObj = featureObj;
-                this.features.push(newFeature);
+            if (!_.isUndefined(newFeatureView)){
+                this.featureOverlay.addFeature(newFeatureView.olFeature);
+                featureObj.olFeature = newFeatureView.getFeature();
+                newFeatureView.featureObj = featureObj;
+                this.features.push(newFeatureView);
             }
         },
         
@@ -182,12 +183,28 @@ $(function() {
 				var type = geom.getType();
 				var coords = geom.getCoordinates();
 				//create a new backbone feature obj
-				var featureObj = app.util.createBackboneFeatureObj(type, coords, event.feature);
-				//save to DB
-				featureObj.save();
-			});
+				var featureObj = this.createBackboneFeatureObj(type, coords, event.feature);
+			}, this);
 			this.map.addInteraction(this.featureAdder);
         },
+        createBackboneFeatureObj: function(type, coords, olFeature) {
+	    	// create a new backbone feature object from the user drawings on map.
+	    	var featureObj = new app.models.Feature();
+	    	var mapLayer = app.mapLayer;
+	    	featureObj.set('type', type);
+	    	featureObj.set('description', " ");
+	    	app.util.transformAndSetCoordinates(type, featureObj, coords);
+	    	var featureName = app.util.generateFeatureName(mapLayer, type);
+	    	featureObj.set('name', featureName);
+	    	featureObj.set('popup', false);
+	    	featureObj.set('visible', true);
+	    	featureObj.set('showLabel', true);
+	    	featureObj.set('mapLayer', mapLayer);
+	    	featureObj.set('mapLayerName', mapLayer.get('name'));
+	    	featureObj.olFeature =  olFeature;
+	    	featureObj.save();
+	    	return featureObj;
+	    },
         addFeaturesMode: {
         	// in this mode, user can add features (all other features are locked)
         	enter: function() {

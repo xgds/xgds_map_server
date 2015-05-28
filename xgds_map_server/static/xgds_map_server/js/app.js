@@ -174,12 +174,12 @@ var app = (function($, _, Backbone) {
         app.mapLayer = new app.models.MapLayer(app.options.mapLayerDict);
         
         // create backbone feature objects already existing in mapLayer's attributes
-		$.each(app.mapLayer.get('feature'), function(index, featureJson) {
+		$.each(app.mapLayer.attributes.features, function(index, featureJson) {
 			var featureObj = new app.models.Feature(featureJson);
-			featureObj.set('json', featureJson);
+			featureObj.json = featureJson;
 			featureObj.set('mapLayer', app.mapLayer);  // set up the relationship.
 	    	featureObj.set('mapLayerName', app.mapLayer.get('name'));
-	    	featureObj.set('uuid', feature.uuid);
+	    	featureObj.set('uuid', featureJson.uuid);
 		});
 		
         app.map = new app.views.OLEditMapView({
@@ -247,23 +247,6 @@ var app = (function($, _, Backbone) {
     ** Global utility functions
     */
     app.util = {
-	    createBackboneFeatureObj: function(type, coords, olFeature) {
-	    	// create a new backbone feature object from the user drawings on map.
-	    	var featureObj = new app.models.Feature();
-	    	var mapLayer = app.mapLayer;
-	    	featureObj.set('type', type);
-	    	featureObj.set('description', " ");
-	    	app.util.transformAndSetCoordinates(type, featureObj, coords);
-	    	var featureName = app.util.generateFeatureName(mapLayer, type);
-	    	featureObj.set('name', featureName);
-	    	featureObj.set('popup', false);
-	    	featureObj.set('visible', true);
-	    	featureObj.set('showLabel', true);
-	    	featureObj.set('mapLayer', mapLayer);
-	    	featureObj.set('mapLayerName', mapLayer.get('name'));
-	    	featureObj.olFeature =  olFeature;
-	    	return featureObj;
-	    },
 	    getDefaultStyle: function() {
 	    	var defaultStyle = new ol.style.Style({
     		    fill: new ol.style.Fill({

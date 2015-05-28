@@ -442,15 +442,16 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
     		feature.destroy({
     			data: { 'uuid': feature.uuid },
     			success: function(model, response) {
+    				if(!_.isUndefined(feature.collection)) {
+    	    			feature.collection.remove(feature);
+    	    		}
     				console.log("Successfully deleted feature!");
     			}, 
     			error: function() {
     				console.log("Error in deleting a feature");
     			}
     		});
-    		if(!_.isUndefined(feature.collection)) {
-    			feature.collection.remove(feature);
-    		}
+    		
     	});
     }, 
     
