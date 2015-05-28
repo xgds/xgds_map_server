@@ -41,7 +41,7 @@ $(function() {
         }, 
         updateBbox: function() {
             app.views.OLMapView.prototype.updateBbox.call(this);
-           },
+        },
         render: function() {
             app.views.OLMapView.prototype.render.call(this);
             this.createMapEditorView();
@@ -156,6 +156,7 @@ $(function() {
             this.currentMode = mode;
             this.currentModeName = modeName;
         },
+        
         addDrawInteraction(typeSelect) {
 			this.featureAdder = new ol.interaction.Draw({
 				features: this.featureOverlay.getFeatures(),
@@ -169,9 +170,7 @@ $(function() {
 				//create a new backbone feature obj
 				var featureObj = app.util.createBackboneFeatureObj(type, coords);
 				//save to DB
-				featureObj.save({}, {type: 'POST', 
-					contentType: "application/json"
-				});
+				featureObj.save();
 			});
 			this.map.addInteraction(this.featureAdder);
         },

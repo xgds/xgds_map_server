@@ -180,9 +180,6 @@ var app = (function($, _, Backbone) {
 	    	featureObj.set('uuid', feature.uuid);
 		});
 		
-        app.selectedViews = []; // This array holds the views currently selected by checkboxes
-        app.copiedCommands = []; // array of copied commands
-
         app.map = new app.views.OLEditMapView({
             el: '#map'
         });
@@ -415,6 +412,24 @@ var app = (function($, _, Backbone) {
             return (c);
         },
 
+        updateFeatureCoordinate: function(type, feature, newX, newY, index) {
+        	/*
+        	 * newCoords: updated (x,y) in lon lat
+        	 * index: index for vertices if is a linestring or a polygon
+        	 */
+        	if (type == 'Point') {
+        		feature.set('point', [newX, newY]);
+        	} else if (type == 'Polygon') {
+        		var polygon = feature.get('polygon');
+        		polygon[index] = [newX, newY];
+        		feature.set('polygon', [polygon]);
+        	} else if (type == 'LineString') {
+        		var lineString = feature.get('lineString');
+        		lineString[index] = [newX, newY];
+        		feature.set('lineString', lineString);
+        	} 
+        },
+        
         transformAndSetCoordinates: function(type, feature, coordinates) {
         	// transform user drawn coordinates from spherical mercator to lon lat
         	var tCoords = null;

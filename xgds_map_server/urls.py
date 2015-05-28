@@ -33,7 +33,7 @@ urlpatterns = patterns(
     # for saving feature json to db
     (r'^feature$', views.saveOrDeleteFeature, {}, 
      'saveOrDeleteFeature'),
-    (r'^feature/(?P<uuid>[\w-]+)/$', views.saveOrDeleteFeature, {}, 
+    (r'^feature/(?P<uuid>[\w-]+)$', views.saveOrDeleteFeature, {}, 
      'saveOrDeleteFeature'),
     # for saving feature json to db
     (r'^saveMaplayer.json$', views.saveMaplayer, {}, 

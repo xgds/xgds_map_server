@@ -36,7 +36,6 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
         this.listenTo(app.vent, 'redoNotEmpty', this.enableRedo);
         this.listenTo(app.mapLayer, 'sync', function(model) {this.updateSaveStatus('sync')});
         this.listenTo(app.mapLayer, 'error', function(model) {this.updateSaveStatus('error')});
-
     },
 
     onShow: function() {
@@ -253,6 +252,23 @@ app.views.FeaturePointStyleForm = app.views.FeatureStyleForm.extend({
 
 app.views.FeatureCoordinatesView = Backbone.Marionette.ItemView.extend({
 	template: '#template-feature-coordinates',
+	events: {
+		"change input.featureCoords": "coordsChanged"
+	},
+	coordsChanged: function(e) {
+		//update this.model (feature)
+		var coordIndex = e.target.id;
+		var coordValue = e.target.value;
+		coordValue = coordValue.split(',');
+		var newX = parseFloat(coordValue[0]);
+		var newY = parseFloat(coordValue[1]);
+		app.util.updateFeatureCoordinate(this.model.get('type'), this.model, newX, newY, coordIndex);
+		this.model.save();
+		
+		//TODO: change the location of feature on the map.
+		var mercatorCoord = transform([newX, newY]);
+		console.log('mercatorCoord');
+	},
 	serializeData: function() {
 		var data = this.model.toJSON();
 		var coordinates = null;
@@ -369,8 +385,6 @@ app.views.FeatureElementItemView = app.views.FeatureListItemView.extend({
             app.vent.trigger('showFeature', this.model);
         }
     },
-    onExpand: function() {
-    },
     isSelected: function(evt) {
         return this.$el.find('input.select').is(':checked');
     },
@@ -391,6 +405,7 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
 	tagName: 'ul',
 	className: 'feature-list',
 	childView: app.views.FeatureElementItemView,
+	emptyView: app.views.NoFeaturesView,
 	initialize: function(options) {
 		this.options = options || {};
 		this.on('childview:expand', this.onItemExpand, this);
@@ -402,9 +417,12 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
 	childViewOptions: {
 		expandClass: 'col1'
 	},
-	emptyView: app.views.NoFeaturesView,
 	onItemExpand: function(childView) {
-        app.State.featureSelected = childView.model;
+		/*
+		 * This gets called when a feature is expanded (shows chevron) 
+		 */
+		app.State.featureSelected = childView.model;
+		console.log("Currently this feature is selected: ", app.State.featureSelected);
     },   
     onClose: function() {
         this.children.each(function(view) {
@@ -425,6 +443,7 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
     			data: { 'uuid': feature.uuid },
     			success: function(model, response) {
     				console.log("Successfully deleted feature!");
+    				app.vent.trigger('featureDeleted', feature.uuid)
     			}, 
     			error: function() {
     				console.log("Error in deleting a feature");
