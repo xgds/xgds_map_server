@@ -77,7 +77,7 @@ $(function() {
 	      		});
             this.featureOverlay.setMap(this.options.map);
     	},
-        getFeatures: function() {
+    	initializeFeaturesJson: function() {
             var mapLayer = app.mapLayer;
             var featuresJSON = []
             if (app.mapLayer && app.mapLayer.get('feature')) {
@@ -86,7 +86,8 @@ $(function() {
                     featuresJSON.push(feature.toJSON());
                 });
             }
-            return featuresJSON;
+            this.mapLayerJson = featuresJSON;
+            this.trigger('readyToDraw');
         },
         constructFeatures: function() {
             if (_.isUndefined(this.layerGroup)){

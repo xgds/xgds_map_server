@@ -454,13 +454,20 @@ $(function() {
             this.drawBelow = false;
             this.features = [];
             this.mapLayerGroup = this.options.mapLayerGroup;
-            this.on( "jsonLoaded", this.finishInitialization, this);
-            this.getFeatures();
+            this.on( "readyToDraw", this.finishInitialization, this);
+            this.initializeFeaturesJson();
         },
         finishInitialization: function() {
             this.createFeatureOverlay();
             this.constructFeatures();
             this.render();
+        },
+        initializeFeaturesJson: function() {
+            var thisMapLayerView = this;
+            $.getJSON(this.options.mapLayerJsonURL, function(data){
+                thisMapLayerView.mapLayerJson = data.data.layerData;
+                thisMapLayerView.trigger('readyToDraw');
+            });
         },
         createFeatureOverlay: function() {
         	// override in child view
@@ -506,13 +513,6 @@ $(function() {
             if (!_.isUndefined(newFeature)){
                 this.features.push(newFeature);
             }
-        },
-        getFeatures: function() {
-            var thisMapLayerView = this;
-            $.getJSON(this.options.mapLayerJsonURL, function(data){
-                thisMapLayerView.mapLayerJson = data.data.layerData;
-                thisMapLayerView.trigger('jsonLoaded');
-            });
         },
         render: function() {
             if (_.isUndefined(this.node)){
