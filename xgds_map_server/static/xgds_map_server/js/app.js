@@ -172,9 +172,11 @@ var app = (function($, _, Backbone) {
 
         // create the map layer from map layer obj passed in from server as json
         app.mapLayer = new app.models.MapLayer(app.options.mapLayerDict);
+        
         // create backbone feature objects already existing in mapLayer's attributes
-		$.each(app.mapLayer.attributes.features, function(index, feature) {
-			var featureObj = new app.models.Feature(feature);
+		$.each(app.mapLayer.get('feature'), function(index, featureJson) {
+			var featureObj = new app.models.Feature(featureJson);
+			featureObj.set('json', featureJson);
 			featureObj.set('mapLayer', app.mapLayer);  // set up the relationship.
 	    	featureObj.set('mapLayerName', app.mapLayer.get('name'));
 	    	featureObj.set('uuid', feature.uuid);
@@ -245,7 +247,7 @@ var app = (function($, _, Backbone) {
     ** Global utility functions
     */
     app.util = {
-	    createBackboneFeatureObj: function(type, coords) {
+	    createBackboneFeatureObj: function(type, coords, olFeature) {
 	    	// create a new backbone feature object from the user drawings on map.
 	    	var featureObj = new app.models.Feature();
 	    	var mapLayer = app.mapLayer;
@@ -259,6 +261,7 @@ var app = (function($, _, Backbone) {
 	    	featureObj.set('showLabel', true);
 	    	featureObj.set('mapLayer', mapLayer);
 	    	featureObj.set('mapLayerName', mapLayer.get('name'));
+	    	featureObj.olFeature =  olFeature;
 	    	return featureObj;
 	    },
 	    getDefaultStyle: function() {

@@ -623,24 +623,27 @@ $(function() {
     
     app.views.VectorView = app.views.LayerFeatureView.extend({
         constructContent: function() {
-            var feature = this.constructFeature();
-            if (!_.isNull(feature)){
+            this.feature = this.constructFeature();
+            if (!_.isNull(this.feature)){
                 this.vectorLayer = new ol.layer.Vector({
                     name: this.featureJson.name,
                     source: new ol.source.Vector({
-                        features: [feature]
+                        features: [this.feature]
                     }),
                     style: this.getStyles()
                 });    
             }
             var popup = this.getPopupContent();
             if (!_.isNull(popup)){
-                feature['popup'] = popup;
+                this.feature['popup'] = popup;
             }
         },
         constructFeature: function() {
             // override this in derived class
             return null;
+        },
+        getFeature: function() {
+        	return this.feature;
         },
         destroy: function() {
         	if (!_.isUndefined(this.olFeature)){

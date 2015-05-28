@@ -71,6 +71,7 @@ $(function() {
     			};
       		}, this);
       		app.vent.on('deleteSelectedFeatures', this.deleteFeatureFromOverlay, this);
+      		app.vent.on('updateFeaturePosition', this.updateFeaturePosition, this);
     	},
     	createFeatureOverlay: function() {
             this.featureOverlay = new ol.FeatureOverlay({
@@ -79,28 +80,20 @@ $(function() {
             this.featureOverlay.setMap(this.options.map);
     	},
     	initializeFeaturesJson: function() {
-            var mapLayer = app.mapLayer;
-            var featuresJSON = []
-            if (app.mapLayer && app.mapLayer.get('feature')) {
-                var features = app.mapLayer.get('feature');
-                $.each(features.models, function(index, feature){
-                    featuresJSON.push(feature.toJSON());
-                });
-            }
-            this.mapLayerJson = featuresJSON;
             this.trigger('readyToDraw');
         },
         constructFeatures: function() {
             if (_.isUndefined(this.layerGroup)){
-                this.layerGroup = new ol.layer.Group({name: this.mapLayerJson.name});
+                this.layerGroup = new ol.layer.Group({name: app.mapLayer.get('name')});
             };
             var mlview = this;
-            $.each(mlview.mapLayerJson, function(index, value) {
-                    mlview.createFeature(value);
+            $.each(app.mapLayer.get('feature'), function(index, featureObj){
+            	mlview.createFeature(featureObj);
             });
         },
-        createFeature: function(featureJson){
+        createFeature: function(featureObj){
             var newFeature;
+            var featureJson = featureObj.get('json');
             switch (featureJson['type']){
             case 'GroundOverlay':
                 newFeature = new app.views.GroundOverlayEditView({
@@ -114,26 +107,45 @@ $(function() {
                     layerGroup: this.layerGroup,
                     featureJson: featureJson
                 });
-                this.featureOverlay.addFeature(newFeature.olFeature);
                 break;
             case 'Point':
                 newFeature = new app.views.PointEditView({
                     layerGroup: this.layerGroup,
                     featureJson: featureJson
                 });
-                this.featureOverlay.addFeature(newFeature.olFeature);
                 break;
             case 'LineString':
                 newFeature = new app.views.LineStringEditView({
                     layerGroup: this.layerGroup,
                     featureJson: featureJson
                 });
-                this.featureOverlay.addFeature(newFeature.olFeature);
                 break;
             } 
             if (!_.isUndefined(newFeature)){
+                this.featureOverlay.addFeature(newFeature.olFeature);
+                featureObj.olFeature = newFeature.getFeature;
+                newFeature.featureObj = featureObj;
                 this.features.push(newFeature);
             }
+        },
+        
+        deleteFeatureFromOverlay: function() {
+        	// remove the selected features from the overlay
+        	var features = app.request('selectedFeatures');
+        	var _this = this;
+        	_.each(features, function(feature){
+        		var olFeature = feature.olFeature;
+        		_this.featureOverlay.removeFeature(olFeature);
+        	});
+        },
+        
+        updateFeaturePosition: function(olMapCoord, feature) {
+        	console.log('inside update feature position');
+        	console.log('ol map coords', olMapCoord);
+        	console.log('feature', feature);
+        	//TODO: find the matching feature.
+        	
+        	var olCollection = this.featureOverlay.getFeature();  	
         },
         //clean up, then re-enter the mode. Useful for redraws
         resetMode: function() {
@@ -158,22 +170,6 @@ $(function() {
             this.currentMode = mode;
             this.currentModeName = modeName;
         },
-        deleteFeatureFromOverlay: function() {
-        	// remove the selected features from the overlay
-        	var features = app.request('selectedFeatures');
-        	var olCollection = this.featureOverlay.getFeatures();
-        	var _this = this;
-        	olCollection.forEach(function(olFeature){
-        		var olCoords = olFeature.getGeometry().getCoordinates();
-        		_.each(features, function(feature) {
-        			var lonLat = app.util.getFeatureCoordinates(feature.get('type'), feature);
-        			var olMapCoords = transform(lonLat);  			
-        			if ((olMapCoords[0] == olCoords[0]) && (olMapCoords[0] == olCoords[0])) {
-        				_this.featureOverlay.removeFeature(olFeature);
-        			} 
-        		});
-        	});
-        },
         
         addDrawInteraction(typeSelect) {
 			this.featureAdder = new ol.interaction.Draw({
@@ -186,7 +182,7 @@ $(function() {
 				var type = geom.getType();
 				var coords = geom.getCoordinates();
 				//create a new backbone feature obj
-				var featureObj = app.util.createBackboneFeatureObj(type, coords);
+				var featureObj = app.util.createBackboneFeatureObj(type, coords, event.feature);
 				//save to DB
 				featureObj.save();
 			});
