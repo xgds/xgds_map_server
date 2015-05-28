@@ -50,7 +50,6 @@ from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileFo
 from geocamUtil.geoEncoder import GeoDjangoEncoder
 
 from geocamPycroraptor2.views import getPyraptordClient, stopPyraptordServiceIfRunning
-
 # pylint: disable=E1101,R0911
 
 latestRequestG = None
@@ -203,8 +202,7 @@ def saveMaplayer(request):
     """
     Update map layer properties: this also saves feature properties that belong to this map layer.
     """
-    pydevd.settrace('128.102.236.193')
-    if request.method == "PUT":  # map layer already exists so backbone sends a PUT request to update it.
+    if (request.method == "PUT") or (request.method == "POST"):  # map layer already exists so backbone sends a PUT request to update it.
         data = json.loads(request.body)
         uuid = data.get('uuid', None)
         try: 

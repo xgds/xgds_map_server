@@ -22,7 +22,6 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
         'click #btn-navigate': function() { app.vent.trigger('mapmode', 'navigate'); this.updateTip('clear');},
         'click #btn-reposition': function() { app.vent.trigger('mapmode', 'reposition'); this.updateTip('edit'); },
         'click #btn-addFeatures': function() { app.vent.trigger('mapmode', 'addFeatures'); this.updateTip('add');},
-        'click #btn-save': function() { this.saveMapLayer(); },
         'click #btn-saveas': function() { this.showSaveAsDialog(); },
         'click #btn-undo': function() { app.Actions.undo(); },
         'click #btn-redo': function() { app.Actions.redo(); }
@@ -109,11 +108,7 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
             'sync': 'Map layer saved.',
             'error': 'Save error.',
             'clear': '',
-            'readOnly': 'Map layer is LOCKED.'
         };
-        if (app.options.readOnly) {
-            eventName = 'readOnly';
-        }
         if (eventName == 'change') {
             app.dirty = true;
         } else if (eventName == 'sync') {
@@ -122,7 +117,7 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
 
         var msg = msgMap[eventName];
         this.$el.find('#save-status').text(msg);
-        if (eventName == 'change' || eventName == 'error' || eventName == 'readOnly') {
+        if (eventName == 'change' || eventName == 'error') {
             this.$el.find('#save-status').addClass('notify-alert');
         } else {
             this.$el.find('#save-status').removeClass('notify-alert');
@@ -155,12 +150,6 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
 
     getFeatureModelUrl: function(feature) {
     	console.log("feature to be used for url is ", feature);
-    },
-       
-    saveMapLayer: function() {
-    	app.mapLayer.set('name', $('input[name="mapLayerName"]').val());
-    	app.mapLayer.set('description', $('textarea[name="mapLayerDescription"]').val());
-    	app.mapLayer.save({type: 'POST', contentType: "application/json"}) 
     },
     
     showSaveAsDialog: function() {
@@ -215,6 +204,16 @@ app.views.HideableRegion = Backbone.Marionette.Region.extend({
 app.views.LayerInfoTabView = Backbone.Marionette.ItemView.extend({
 	template: '#template-layer-info',
 	initialize: function() {
+	},
+	events: {
+		'change #mapLayerName': function(evt) {
+			this.model.set('name', evt.target.value);
+			this.model.save()
+		},
+		'change #mapLayerDescription': function(evt) {
+			this.model.set('description', evt.target.value);
+			this.model.save();
+		}    
 	},
 	serializeData: function() {
 		var data = this.model.toJSON();
@@ -309,6 +308,22 @@ app.views.FeaturePropertiesView = Backbone.Marionette.CompositeView.extend({
 		}, 
 		'click .feature-coordinates': function(evt) {
 			app.vent.trigger('showCoordinates', this.model);
+		}, 
+		'change #featureName': function(evt) {
+			this.model.set('name', evt.target.value);
+			this.model.save();
+		}, 
+		'change #featureDescription': function(evt) {
+			this.model.set('description', evt.target.value);
+			this.model.save();
+		},
+		'click #drawLabel': function(evt) {
+			this.model.set('showLabel', evt.target.checked);
+			this.model.save();
+		},
+		'click #showPopup': function(evt) {
+			this.model.set('popup', evt.target.checked);
+			this.model.save();
 		}
 	}
 });
