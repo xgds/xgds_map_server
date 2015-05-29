@@ -80,7 +80,7 @@ $(function() {
                 this.setupPopups();
                 
                 //events
-                this.on('onMapSetup', this.postMapCreation);
+                app.vent.on('onMapSetup', this.postMapCreation);
                 app.vent.on('layers:loaded', this.render);
                 app.vent.on('layers:loaded', this.initializeMapData);
                 app.vent.on('tree:loaded', this.updateMapLayers);
