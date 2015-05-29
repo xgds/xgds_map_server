@@ -60,7 +60,6 @@ _template_cache = None
 XGDS_MAP_SERVER_GEOTIFF_PATH = os.path.join(settings.DATA_ROOT, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR)
 
 
-
 def get_handlebars_templates(inp=HANDLEBARS_TEMPLATES_DIR):
     global _template_cache
     if settings.XGDS_MAP_SERVER_TEMPLATE_DEBUG or not _template_cache:
@@ -747,8 +746,6 @@ def getMapDetailPage(request, mapID):
                               context_instance=RequestContext(request))
 
 
-
-
 @never_cache
 def getMapTreeJSON(request):
     """
@@ -857,111 +854,51 @@ def getMapLayerJSON(request, layerID):
                         content_type="application/json")
 
 
+def getRootNode():
+    roots = MapGroup.objects.filter(parent=None)
+    if roots:
+        return roots[0]
+
+
 @never_cache
 def getFancyTreeJSON(request):
     """
     json tree of map groups
     note that this does json for fancytree
     """
-    global latestRequestG
-    latestRequestG = request
-    map_tree = getMapTree()
-    map_tree_json = []
-    addGroupToFancyJSON(map_tree, map_tree_json, request, True)
+    root = getRootNode()
+    map_tree_json = addGroupToFancyJSON(root, [])
     json_data = json.dumps(map_tree_json, indent=4, cls=GeoDjangoEncoder)
     return HttpResponse(content=json_data,
                         content_type="application/json")
 
 
-def addGroupToFancyJSON(group, map_tree, request, expanded=False):
+def addGroupToFancyJSON(group, map_tree_json):
     """
     recursively adds group to json tree
     in the style of fancy tree
     """
     if group is None:
         return  # don't do anything if group is None
-    group_json = {"title": group.name,
-                  "key": group.uuid,
-                  "folder": True,
-                  "tooltip": group.description,
-                  "expanded": expanded,
-                  "data": {"href": request.build_absolute_uri(reverse('folderDetail', kwargs={'groupID': group.uuid})),
-                           "parentId": None,
-                           },
-                  }
-    sub_folders = []
-    sub_tiles = []
-    sub_maps = []
-    sub_layers = []
-    if group.uuid == 1:
+    sub_nodes = []
+    group_json = group.getTreeJson()
+    if not group_json['data']['parentId']:
         # ensure that we don't have conflicts with the base map
         # for the detail page, and that nobody deletes every map
         del group_json['data']['href']
-    if group.parent is not None:
-        group_json['data']['parentId'] = group.parent.uuid
-    for map_group in getattr(group, 'subGroups', []):
-        if map_group.deleted:
-            continue
-        addGroupToFancyJSON(map_group, sub_folders, request)
-    for group_map in getattr(group, 'subMaps', []):
-        if group_map.deleted:
-            continue
-        group_map_json = {"title": group_map.name,
-                          "key": group_map.uuid,
-                          "selected": group_map.visible,
-                          "tooltip": group_map.description,
-                          "extraClasses": "kmlFile",
-                          "data": {"href": request.build_absolute_uri(reverse('mapDetail', kwargs={'mapID': group_map.uuid})),
-                                   "parentId": None,
-                                   "kmlFile": settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + group_map.kmlFile,
-                                   "openable": group_map.openable,
-                                   },
-                          }
-        if group_map.parent is not None:
-            group_map_json['data']['parentId'] = group_map.parent.uuid
-        try:  # as far as I know, there is no better way to do this
-            group_map_json['data']['localFile'] = request.build_absolute_uri(group_map.localFile.url)
-        except ValueError:  # this means there is no file associated with localFile
-            pass
-        sub_maps.append(group_map_json)
-    for group_layer in getattr(group, 'subLayers', []):
-        if group_layer.deleted:
-            continue
-        group_layer_json = {"title": group_layer.name,
-                            "key": group_layer.uuid,
-                            "selected": group_layer.visible,
-                            "tooltip": group_layer.description,
-                            "data": {"href": request.build_absolute_uri(reverse('mapEditLayer', kwargs={'layerID': group_layer.uuid})),
-                                     "parentId": None,
-                                     "layerJSON": request.build_absolute_uri(reverse('mapLayerJSON', kwargs={'layerID': group_layer.uuid}))
-                                     },
-                            }
-        if group_layer.parent is not None:
-            group_layer_json['data']['parentId'] = group_layer.parent.uuid
-        sub_layers.append(group_layer_json)
+        group_json['expanded'] = True
 
-    for group_tile in getattr(group, 'subTiles', []):
-        if group_tile.deleted:
+    nodes = MAP_NODE_MANAGER.filter(parent=group)
+    for node in nodes:
+        if node.deleted:
             continue
-        group_tile_json = {"title": group_tile.name,
-                           "key": group_tile.uuid,
-                           "selected": group_tile.visible,
-                           "tooltip": group_tile.description,
-                           "data": {"href": request.build_absolute_uri(reverse('mapEditTile', kwargs={'tileID': group_tile.uuid})),
-                                    "parentId": None,
-                                    "tileURL": group_tile.getXYZTileSourceUrl()
-                                    },
-                           }
-        if group_tile.parent is not None:
-            group_tile_json['data']['parentId'] = group_tile.parent.uuid
-        sub_tiles.append(group_tile_json)
-    if len(sub_folders) > 0 or len(sub_maps) > 0 or len(sub_layers) > 0:
-        sub_folders.sort(key=lambda x: x['title'].lower())
-        sub_tiles.sort(key=lambda x: x['title'].lower())
-        sub_maps.sort(key=lambda x: x['title'].lower())
-        sub_layers.sort(key=lambda x: x['title'].lower())
-        group_json['children'] = sub_folders + sub_tiles + sub_layers + sub_maps
-    map_tree.append(group_json)
+        if node.__class__.__name__ == MapGroup.__name__:
+            sub_nodes.append(addGroupToFancyJSON(node, [])[0])
+        else:
+            sub_nodes.append(node.getTreeJson())
+    group_json['children'] = sub_nodes
+    map_tree_json.append(group_json)
+    return map_tree_json
 
 
 def deleteGroup(map_group, state):
@@ -999,6 +936,7 @@ def setMapProperties(m):
 
 
 def getMapTree():
+    ''' This is left here to support older kml feed views '''
     groups = MapGroup.objects.filter(deleted=0)
     kmlMaps = KmlMap.objects.filter(deleted=0)
     layers = MapLayer.objects.filter(deleted=0)

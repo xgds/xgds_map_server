@@ -61,9 +61,7 @@ var app = (function($, _, Backbone) {
         app.map = new app.views.OLMapView({
             el: '#map'
         });
-//        app.mapRegion.show(new app.views.OLMapView());
-//        app.map = app.mapRegion.currentView;
-//        
+        app.vent.trigger('onMapSetup');
         app.layersRegion.show(new app.views.FancyTreeView());
     });
     
