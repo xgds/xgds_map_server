@@ -373,7 +373,7 @@ def getAddLayerPage(request):
                                       {'layerForm': layer_form,
                                        'error': True},
                                       context_instance=RequestContext(request))
-        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapEditLayer', kwargs={'layerID': map_layer.uuid})))
     else:
         layer_form = MapLayerForm()
         return render_to_response("AddLayer.html",
