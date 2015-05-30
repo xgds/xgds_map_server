@@ -44,9 +44,9 @@ from django.contrib.gis.geos import LinearRing as geosLinearRing
 
 
 from xgds_map_server import settings
-from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MAP_NODE_MANAGER
+from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapSearch, MapCollection, MAP_NODE_MANAGER
 from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
-from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm
+from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm, MapSearchForm, MapCollectionForm
 from geocamUtil.geoEncoder import GeoDjangoEncoder
 
 from geocamPycroraptor2.views import getPyraptordClient, stopPyraptordServiceIfRunning
@@ -109,20 +109,10 @@ def getMapTreePage(request):
     HTML tree of maps using fancytree
     """
     jsonMapTreeUrl = (request.build_absolute_uri(reverse('mapTreeJSON')))
-    addLayerUrl = (request.build_absolute_uri(reverse('mapAddLayer')))
-    addKmlUrl = (request.build_absolute_uri(reverse('addKml')))
-    addTileUrl = (request.build_absolute_uri(reverse('mapAddTile')))
-    addFolderUrl = (request.build_absolute_uri(reverse('folderAdd')))
-    deletedMapsUrl = (request.build_absolute_uri(reverse('deletedMaps')))
     moveNodeURL = (request.build_absolute_uri(reverse('moveNode')))
     setVisibilityURL = (request.build_absolute_uri(reverse('setNodeVisibility')))
     return render_to_response("MapTree.html",
                               {'JSONMapTreeURL': jsonMapTreeUrl,
-                               'addKmlUrl': addKmlUrl,
-                               'addLayerUrl': addLayerUrl,
-                               'addTileUrl': addTileUrl,
-                               'addFolderUrl': addFolderUrl,
-                               'deletedMapsUrl': deletedMapsUrl,
                                'moveNodeURL': moveNodeURL,
                                'setVisibilityURL': setVisibilityURL},
                               context_instance=RequestContext(request))
@@ -316,9 +306,6 @@ def getAddKmlPage(request):
     """
     HTML view to create new map
     """
-    mapTreeUrl = (request.build_absolute_uri
-                  (reverse('mapTree')))
-
     if request.method == 'POST':
         # quick and dirty hack to handle kmlFile field if user uploads file
         if request.POST['typeChooser'] == 'file' and 'localFile' in request.FILES:
@@ -349,18 +336,15 @@ def getAddKmlPage(request):
                     map_obj.save()
         else:
             return render_to_response("AddKml.html",
-                                      {'mapTreeUrl': mapTreeUrl,
-                                       'mapForm': map_form,
+                                      {'mapForm': map_form,
                                        'error': True,
                                        'errorText': 'Invalid form entries'},
                                       context_instance=RequestContext(request))
-        return HttpResponseRedirect(mapTreeUrl)
-
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
     else:
         map_form = MapForm()
         return render_to_response("AddKml.html",
-                                  {'mapTreeUrl': mapTreeUrl,
-                                   'mapForm': map_form},
+                                  {'mapForm': map_form},
                                   context_instance=RequestContext(request))
 
 
@@ -368,8 +352,6 @@ def getAddLayerPage(request):
     """
     HTML view to create a new layer
     """
-    mapTreeUrl = (request.build_absolute_uri
-                  (reverse('mapTree')))
     if request.method == 'POST':
         layer_form = MapLayerForm(request.POST)
         if layer_form.is_valid():
@@ -388,16 +370,14 @@ def getAddLayerPage(request):
             map_layer.save()
         else:
             return render_to_response("AddLayer.html",
-                                      {'mapTreeUrl': mapTreeUrl,
-                                       'layerForm': layer_form,
+                                      {'layerForm': layer_form,
                                        'error': True},
                                       context_instance=RequestContext(request))
-        return HttpResponseRedirect(mapTreeUrl)
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
     else:
         layer_form = MapLayerForm()
         return render_to_response("AddLayer.html",
-                                  {'mapTreeUrl': mapTreeUrl,
-                                   'layerForm': layer_form,
+                                  {'layerForm': layer_form,
                                    'error': False},
                                   context_instance=RequestContext(request))
 
@@ -406,6 +386,8 @@ def getAddTilePage(request):
     """
     HTML view to create a new map tile
     """
+    instruction = "Upload a geotiff or zip of multiple geotiff files to create a map tile layer."
+    title = "Add Map Tile"
     if request.method == 'POST':
         tile_form = MapTileForm(request.POST, request.FILES)
         if tile_form.is_valid():
@@ -415,8 +397,6 @@ def getAddTilePage(request):
             mapTile.creator = request.user.username
             mapTile.creation_time = datetime.datetime.now()
             mapTile.deleted = False
-            mapTile.locked = tile_form.cleaned_data['locked']
-            mapTile.visible = tile_form.cleaned_data['visible']
             mapGroupName = tile_form.cleaned_data['parent']
             mapTile.parent = MapGroup.objects.get(name=mapGroupName)
             if 'sourceFile' in request.FILES:
@@ -425,16 +405,20 @@ def getAddTilePage(request):
             # todo test
 #             processTiles(request, mapTile.uuid)
         else:
-            return render_to_response("AddMapTile.html",
-                                      {'mapTileForm': tile_form,
-                                       'error': True},
+            return render_to_response("AddNode.html",
+                                      {'form': tile_form,
+                                       'error': True,
+                                       "instruction": instruction,
+                                       "title": title},
                                       context_instance=RequestContext(request))
         return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
     else:
         tile_form = MapTileForm()
-        return render_to_response("AddMapTile.html",
-                                  {'mapTileForm': tile_form,
-                                   'error': False},
+        return render_to_response("AddNode.html",
+                                  {'form': tile_form,
+                                   'error': False,
+                                   'instruction': instruction,
+                                   'title': title},
                                   context_instance=RequestContext(request))
 
 
@@ -468,17 +452,19 @@ def getEditTilePage(request, tileID):
             fromSave = True
             #TODO handle retiling or changing the path to the tiles ...
         else:
-            return render_to_response("EditMapTile.html",
-                                      {"mapTileForm": tile_form,
+            return render_to_response("EditNode.html",
+                                      {"form": tile_form,
                                        "fromSave": False,
+                                       "title": "Edit Map Tile",
                                        "error": True,
                                        "errorText": "Invalid form entries"},
                                       context_instance=RequestContext(request))
 
     # return form page with current form data
     tile_form = MapTileForm(instance=mapTile,)
-    return render_to_response("EditMapTile.html",
-                              {"mapTileForm": tile_form,
+    return render_to_response("EditNode.html",
+                              {"form": tile_form,
+                               "title": "Edit Map Tile",
                                "fromSave": fromSave,
                                },
                               context_instance=RequestContext(request))
@@ -488,9 +474,6 @@ def getAddFolderPage(request):
     """
     HTML view to create new folder (group)
     """
-    mapTreeUrl = (request.build_absolute_uri
-                  (reverse('mapTree')))
-
     if request.method == 'POST':
         group_form = MapGroupForm(request.POST)
         if group_form.is_valid():
@@ -505,33 +488,186 @@ def getAddFolderPage(request):
                                        'error': True,
                                        'errorText': "Invalid form entries"},
                                       context_instance=RequestContext(request))
-        return HttpResponseRedirect(mapTreeUrl)
-
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
     else:
         group_form = MapGroupForm()
         return render_to_response("AddFolder.html",
-                                  {'mapTreeUrl': mapTreeUrl,
-                                   'groupForm': group_form,
+                                  {'groupForm': group_form,
                                    'error': False},
                                   context_instance=RequestContext(request))
 
 
+def getAddMapSearchPage(request):
+    """
+    HTML view to create new map search
+    """
+    if request.method == 'POST':
+        form = MapSearchForm(request.POST)
+        if form.is_valid():
+            msearch = MapSearch()
+            msearch.name = form.cleaned_data['name']
+            msearch.description = form.cleaned_data['description']
+            msearch.parent = form.cleaned_data['parent']
+            msearch.creator = request.user.username
+            msearch.creation_time = datetime.datetime.now()
+            msearch.deleted = False
+            msearch.locked = form.cleaned_data['locked']
+            msearch.visible = form.cleaned_data['visible']
+            msearch.requestLog = form.cleaned_data['requestLog']
+            msearch.refreshRate = form.cleaned_data['refreshRate']
+            msearch.save()
+        else:
+            return render_to_response("AddMapSearch.html",
+                                      {'form': form,
+                                       'error': True,
+                                       'errorText': "Invalid form entries"},
+                                      context_instance=RequestContext(request))
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
+    else:
+        form = MapSearchForm()
+        return render_to_response("AddMapSearch.html",
+                                  {'form': form,
+                                   'error': False},
+                                  context_instance=RequestContext(request))
+
+
+def getEditMapSearchPage(request, mapSearchID):
+    title = "Edit Map Search"
+    fromSave = False
+    try:
+        msearch = MapSearch.objects.get(uuid=mapSearchID)
+    except MapSearch.DoesNotExist:
+        raise Http404
+    except MapSearch.MultipleObjectsReturned:
+        # this really shouldn't happen, ever
+        return HttpResponseServerError()
+
+    # handle post data before loading everything
+    if request.method == 'POST':
+        form = MapSearchForm(request.POST)
+        if form.is_valid():
+            msearch = MapSearch()
+            msearch.name = form.cleaned_data['name']
+            msearch.description = form.cleaned_data['description']
+            msearch.parent = form.cleaned_data['parent']
+            msearch.creator = request.user.username
+            msearch.creation_time = datetime.datetime.now()
+            msearch.locked = form.cleaned_data['locked']
+            msearch.visible = form.cleaned_data['visible']
+            msearch.requestLog = form.cleaned_data['requestLog']
+            msearch.refreshRate = form.cleaned_data['refreshRate']
+            msearch.save()
+        else:
+            return render_to_response("EditNode.html",
+                                      {"form": form,
+                                       "title": title,
+                                       "fromSave": False,
+                                       "error": True,
+                                       "errorText": "Invalid form entries"},
+                                      context_instance=RequestContext(request))
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
+
+    # return form page with current form data
+    form = MapSearchForm(instance=msearch)
+    return render_to_response("EditNode.html",
+                              {"form": form,
+                               "title": title,
+                               "fromSave": fromSave,
+                               },
+                              context_instance=RequestContext(request))
+
+
+def getAddMapCollectionPage(request):
+    """
+    HTML view to create new map collection
+    """
+    instruction = "Create a new map collection -- that is a collection of objects that can be turned on and off on the map."
+    title = "Add Map Collection"
+    if request.method == 'POST':
+        form = MapCollectionForm(request.POST)
+        if form.is_valid():
+            mcollection = MapCollection()
+            mcollection.name = form.cleaned_data['name']
+            mcollection.description = form.cleaned_data['description']
+            mcollection.parent = form.cleaned_data['parent']
+            mcollection.creator = request.user.username
+            mcollection.creation_time = datetime.datetime.now()
+            mcollection.deleted = False
+            mcollection.locked = form.cleaned_data['locked']
+            mcollection.visible = form.cleaned_data['visible']
+            mcollection.collection = form.cleaned_data['collection']
+            mcollection.save()
+        else:
+            return render_to_response("AddNode.html",
+                                      {'form': form,
+                                       'error': True,
+                                       'title': title,
+                                       'instruction': instruction,
+                                       'errorText': "Invalid form entries"},
+                                      context_instance=RequestContext(request))
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
+    else:
+        form = MapCollectionForm()
+        return render_to_response("AddNode.html",
+                                  {'form': form,
+                                   'error': False,
+                                   'title': title,
+                                   'instruction': instruction},
+                                  context_instance=RequestContext(request))
+
+
+def getEditMapCollectionPage(request, mapCollectionID):
+    title = "Edit Map Collection"
+    fromSave = False
+    try:
+        mcollection = MapCollection.objects.get(uuid=mapCollectionID)
+    except MapCollection.DoesNotExist:
+        raise Http404
+    except MapCollection.MultipleObjectsReturned:
+        # this really shouldn't happen, ever
+        return HttpResponseServerError()
+
+    # handle post data before loading everything
+    if request.method == 'POST':
+        form = MapCollectionForm(request.POST)
+        if form.is_valid():
+            mcollection.name = form.cleaned_data['name']
+            mcollection.description = form.cleaned_data['description']
+            mcollection.parent = form.cleaned_data['parent']
+            mcollection.creator = request.user.username
+            mcollection.creation_time = datetime.datetime.now()
+            mcollection.locked = form.cleaned_data['locked']
+            mcollection.visible = form.cleaned_data['visible']
+            mcollection.save()
+        else:
+            return render_to_response("EditNode.html",
+                                      {"form": form,
+                                       "title": title,
+                                       "fromSave": False,
+                                       "error": True,
+                                       "errorText": "Invalid form entries"},
+                                      context_instance=RequestContext(request))
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
+
+    # return form page with current form data
+    form = MapCollectionForm(instance=mcollection)
+    return render_to_response("EditNode.html",
+                              {"form": form,
+                               "title": title,
+                               "fromSave": fromSave,
+                               },
+                              context_instance=RequestContext(request))
+
+
 @csrf_protect
-def getDeleteMapPage(request, mapID):
+def getDeleteNodePage(request, nodeID):
     """
     HTML view to delete map
     """
-    mapDetailUrl = (request.build_absolute_uri(reverse('mapDetail', kwargs={'mapID': mapID})))
-    mapTreeUrl = (request.build_absolute_uri(reverse('mapTree')))
-    deletedMapsUrl = (request.build_absolute_uri(reverse('deletedMaps')))
-
     try:
-        map_obj = KmlMap.objects.get(uuid=mapID)
-    except KmlMap.DoesNotExist:
+        map_obj = MAP_NODE_MANAGER.objects.get(uuid=mapID)
+    except:
         raise Http404
-    except KmlMap.MultipleObjectsReturned:
-        # this really shouldn't happen, ever
-        return HttpResponseServerError()
 
     if request.method == 'POST':
         # csrf protection means this has to happen
@@ -539,32 +675,21 @@ def getDeleteMapPage(request, mapID):
         # switch the state of the map (undelete and delete)
         map_obj.deleted = not map_obj.deleted
         map_obj.save()
-        return HttpResponseRedirect(mapTreeUrl)
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
 
     else:
-        return render_to_response("MapDelete.html",
-                                  {'mapTreeUrl': mapTreeUrl,
-                                   'mapDetailUrl': mapDetailUrl,
-                                   'deletedMapsUrl': deletedMapsUrl,
-                                   'mapObj': map_obj},
+        return render_to_response("NodeDelete.html",
+                                  {'mapObj': map_obj},
                                   context_instance=RequestContext(request))
 
 
-def getDeletedMapsPage(request):
+def getDeletedNodesPage(request):
     """
-    HTML list of deleted maps that can be un-deleted
+    HTML list of deleted nodes that can be un-deleted
     """
-    baseUrl = request.build_absolute_uri(reverse("xgds_map_server_index"))
-    mapTreeUrl = request.build_absolute_uri(reverse("mapTree"))
-
-    maps = KmlMap.objects.filter(deleted=True)
-    folders = MapGroup.objects.filter(deleted=True)
-    return render_to_response("DeletedMaps.html",
-                              {'mapDeleteUrl': baseUrl + 'delete',
-                               'mapTreeUrl': mapTreeUrl,
-                               'folderDeleteUrl': baseUrl + 'folderDelete',
-                               'maps': maps,
-                               'folders': folders},
+    nodes = MAP_NODE_MANAGER.filter(deleted=True)
+    return render_to_response("DeletedNodes.html",
+                              {'nodes': nodes},
                               context_instance=RequestContext(request))
 
 
@@ -573,14 +698,6 @@ def getDeleteFolderPage(request, groupID):
     """
     HTML view to delete a folder
     """
-    folderDetailUrl = (request.build_absolute_uri
-                       (reverse('folderDetail',
-                                kwargs={'groupID': groupID})))
-    mapTreeUrl = (request.build_absolute_uri
-                  (reverse('mapTree')))
-    deletedMapsUrl = (request.build_absolute_uri
-                      (reverse('deletedMaps')))
-
     try:
         map_group = MapGroup.objects.get(uuid=groupID)
     except MapGroup.DoesNotExist:
@@ -603,17 +720,15 @@ def getDeleteFolderPage(request, groupID):
             transaction.commit()
         finally:
             transaction.set_autocommit(True)
-        return HttpResponseRedirect(mapTreeUrl)
+        return HttpResponseRedirect(request.build_absolute_uri(reverse("mapTree")))
 
     else:
         # either there's some transaction I'm not aware of happening,
         # or transaction just expects a call regardless of any database activity
         transaction.rollback()
         return render_to_response("FolderDelete.html",
-                                  {'mapTreeUrl': mapTreeUrl,
-                                   'folderDetailUrl': folderDetailUrl,
-                                   'groupObj': map_group,
-                                   'deletedMapsUrl': deletedMapsUrl},
+                                  {'groupObj': map_group
+                                   },
                                   context_instance=RequestContext(request))
 
 
@@ -621,16 +736,6 @@ def getFolderDetailPage(request, groupID):
     """
     HTML Form of a map group (folder)
     """
-    folderDetailUrl = (request.build_absolute_uri
-                       (reverse('folderDetail',
-                                kwargs={'groupID': groupID})))
-    folderDeleteUrl = (request.build_absolute_uri
-                       (reverse('folderDelete',
-                                kwargs={'groupID': groupID})))
-    mapTreeUrl = (request.build_absolute_uri
-                  (reverse('mapTree')))
-    deletedMapsUrl = (request.build_absolute_uri
-                      (reverse('deletedMaps')))
     fromSave = False
 
     try:
@@ -651,28 +756,20 @@ def getFolderDetailPage(request, groupID):
             map_group.save()
             fromSave = True
         else:
-            return render_to_response("FolderDetail.html",
-                                      {"folderDetailUrl": folderDetailUrl,
-                                       "mapTreeUrl": mapTreeUrl,
-                                       "deletedMapsUrl": deletedMapsUrl,
-                                       "groupForm": group_form,
+            return render_to_response("EditFolder.html",
+                                      {"groupForm": group_form,
                                        "group_obj": map_group,
                                        "fromSave": fromSave,
-                                       "folderDeleteUrl": folderDeleteUrl,
                                        "error": True,
                                        "errorText": "Invalid form entries"},
                                       context_instance=RequestContext(request))
 
     # return form page with current data
     group_form = MapGroupForm(instance=map_group)
-    return render_to_response("FolderDetail.html",
-                              {"folderDetailUrl": folderDetailUrl,
-                               "deletedMapsUrl": deletedMapsUrl,
-                               "mapTreeUrl": mapTreeUrl,
-                               "groupForm": group_form,
+    return render_to_response("EditFolder.html",
+                              {"groupForm": group_form,
                                "group_obj": map_group,
-                               "fromSave": fromSave,
-                               "folderDeleteUrl": folderDeleteUrl},
+                               "fromSave": fromSave},
                               context_instance=RequestContext(request))
 
 
@@ -680,10 +777,6 @@ def getMapDetailPage(request, mapID):
     """
     HTML Form of a map
     """
-    mapDetailUrl = (request.build_absolute_uri(reverse('mapDetail', kwargs={'mapID': mapID})))
-    mapDeleteUrl = (request.build_absolute_uri(reverse('mapDelete', kwargs={'mapID': mapID})))
-    deletedMapsUrl = (request.build_absolute_uri(reverse('deletedMaps')))
-    mapTreeUrl = (request.build_absolute_uri(reverse('mapTree')))
     fromSave = False
     try:
         map_obj = KmlMap.objects.get(uuid=mapID)
@@ -715,14 +808,10 @@ def getMapDetailPage(request, mapID):
                 kmlChecked = True
             else:
                 kmlChecked = False
-            return render_to_response("MapDetail.html",
-                                      {"mapDetailUrl": mapDetailUrl,
-                                       "mapTreeUrl": mapTreeUrl,
-                                       "deletedMapsUrl": deletedMapsUrl,
-                                       "mapForm": map_form,
+            return render_to_response("EditKmlMap.html",
+                                      {"mapForm": map_form,
                                        "fromSave": False,
                                        "kmlChecked": kmlChecked,
-                                       "mapDeleteUrl": mapDeleteUrl,
                                        "error": True,
                                        "errorText": "Invalid form entries",
                                        "map_obj": map_obj},
@@ -734,14 +823,10 @@ def getMapDetailPage(request, mapID):
         kmlChecked = True
     else:
         kmlChecked = False
-    return render_to_response("MapDetail.html",
-                              {"mapDetailUrl": mapDetailUrl,
-                               "mapTreeUrl": mapTreeUrl,
-                               "deletedMapsUrl": deletedMapsUrl,
-                               "mapForm": map_form,
+    return render_to_response("EditKmlMap.html",
+                              {"mapForm": map_form,
                                "kmlChecked": kmlChecked,
                                "fromSave": fromSave,
-                               "mapDeleteUrl": mapDeleteUrl,
                                "map_obj": map_obj},
                               context_instance=RequestContext(request))
 
@@ -906,10 +991,10 @@ def deleteGroup(map_group, state):
     recursively deletes maps and groups under a group
     using manual commit control might be a good idea for this
     """
-    for map_obj in KmlMap.objects.filter(parent=map_group.uuid):
+    for node in MAP_NODE_MANAGER.filter(parent=map_group):
         # this is to avoid deleting maps when undeleting
-        map_obj.deleted = state
-        map_obj.save()
+        node.deleted = state
+        node.save()
     for group in MapGroup.objects.filter(parent=map_group.uuid):
         deleteGroup(group, state)
 

@@ -1,0 +1,13 @@
+{% extends "MapBase.html" %}
+{% load get_class_name from utils %}
+{% block contents %}
+<p>Click an element to undelete it.</p>
+<h3>Deleted Elements</h3>
+{% for node in nodes %}
+{% if node|get_class_name = 'MapGroup' %}
+<a href="{% url 'folderDelete' node.uuid %}">{{ node.name }}</a><br>
+{% else %}
+<a href="{% url 'nodeDelete' node.uuid %}">{{ node.name }}</a><br>
+{% endif %}
+{% endfor %}
+{% endblock %}

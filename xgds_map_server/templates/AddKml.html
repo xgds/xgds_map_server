@@ -14,6 +14,6 @@ You can create ground overlays in Map Layers.</br>
 
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
 {% include "MapForm.html" %}
-<input type="submit" value="Create" /><input type="button" onclick="document.location.href = '{{ mapTreeUrl }}'" value="Back" />
+<input type="submit" value="Create" />
 </form>
 {% endblock %}

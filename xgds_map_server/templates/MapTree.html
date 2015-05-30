@@ -8,11 +8,14 @@
 {% endblock %}
 
 {% block contents %}
-<input type="button" class="mybutton" value="Add Layer" onClick="document.location.href='{{ addLayerUrl }}'">
-<input type="button" class="mybutton" value="Add Kml" onClick="document.location.href='{{ addKmlUrl }}'">
-<input type="button" class="mybutton" value="Add Tile" onClick="document.location.href='{{ addTileUrl }}'">
-<input type="button" class="mybutton" value="Add Folder" onClick="document.location.href='{{ addFolderUrl }}'">
-<input type="button" class="mybutton" value="Undelete" onClick="document.location.href='{{ deletedMapsUrl }}'"><br>
+<strong>Add</strong>
+<a href="{% url 'folderAdd' %}" class="mybutton">Folder</a>
+<a href="{% url 'addKml' %}" class="mybutton">Kml</a>
+<a href="{% url 'mapAddLayer' %}" class="mybutton">Layer</a>
+<a href="{% url 'mapAddTile' %}" class="mybutton">Tile</a>
+<a href="{% url 'mapAddMapCollection' %}" class="mybutton">Collection</a>
+<a href="{% url 'mapAddMapSearch' %}" class="mybutton">Search</a>
+<a href="{% url 'deletedNodes' %}" class="mybutton">Undelete</a>
 <style scoped>
   @import url('{{EXTERNAL_URL}}jquery-ui/themes/base/jquery-ui.css');
   @import url('{{ EXTERNAL_URL }}fancytree/dist/skin-lion/ui.fancytree.min.css');

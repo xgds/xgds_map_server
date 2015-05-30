@@ -3,10 +3,11 @@
 {% block contents %}
 {{ block.super }}
 {% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
-<h2>Edit Map Tile</h2>
+<h2>{{ title }}</h2>
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
-{{ mapTileForm.as_p }}
+{{ form.as_p }}
 <input type="submit" value="Save" />
+<a href="{% url 'nodeDelete' form.instance.uuid %}" class="mybutton">{% if form.instance.deleted %}Undelete{% else %}Delete{% endif %}</a>
 </form>
 {% endblock %}
 
