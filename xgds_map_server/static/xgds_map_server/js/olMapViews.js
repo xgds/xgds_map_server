@@ -97,7 +97,7 @@ $(function() {
             },
             
             postMapCreation: function() {
-                var callback = app.options.XGDS_PLANNER_MAP_LOADED_CALLBACK;
+                var callback = app.options.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK;
                 if (callback != null) {
                     callback();
                 }

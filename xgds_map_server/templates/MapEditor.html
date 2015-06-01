@@ -36,6 +36,9 @@
         <div id="map" class="five columns"></div>
         <div id="tabs" class="seven columns"></div>       
     </div>
+    <div class="row">
+		<div id="postmap"></div>
+	</div>
     
     <div id="saveAsDialog" style="display:none; background:white !important;">
 		<p>Enter a new map layer name to save as.</p>
@@ -92,13 +95,14 @@
 		{{template|safe}}
 		</script>
     {% endfor %}
-    
+    {% javascript 'custom_map' %}
 {% endblock scripts %}
 
 {% block jsInit %}
     appOptions = {
         offline: {{ settings.XGDS_PLANNER_OFFLINE|yesno:"true,false" }},
         layerFeedUrl: "{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}",
+        XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: {{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }},
         dataUrl: "{{ settings.DATA_URL }}",
         readOnly: {{ editable|yesno:"false,true" }},
         mapLayerDict: {{ mapLayerDict|safe }},

@@ -50,3 +50,21 @@ XGDS_MAP_SERVER_BOWER_INSTALLED_APPS = ('backbone#1.1.2',
                                         'ol3',
                                         'ol3-popup'
                                         )
+
+# if you want to have a custom javascript included in your maps, override this in siteSettings.
+# for example:
+#    XGDS_MAP_SERVER_PIPELINE_JS = {'custom_map': {'source_filenames': ('plrpExplorer/js/bathymetry.js'),
+#                                                 'output_filename': 'js/custom_map_js.js',
+#                                                 }
+#                               }
+# IMPORTANT: we are expecting something named custom_map so don't rename it.
+# and then include it in PIPELINE_JS ie
+# PIPELINE_JS.update(XGDS_MAP_SERVER_PIPELINE_JS)
+XGDS_MAP_SERVER_PIPELINE_JS = {'custom_map': {'source_filenames': ('xgds_map_server/js/custom_map.js'),
+                                              'output_filename': 'js/custom_map.js',
+                                              }
+                               }
+
+# XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: The fully qualified name of an
+# extra JavaScript callback to call after the map is loaded.
+XGDS_MAP_SERVER_MAP_LOADED_CALLBACK = 'null'
