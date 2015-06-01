@@ -54,13 +54,19 @@ $(function() {
                 this.options = options || {};
                 _.bindAll(this);
                 
-                this.$el.resizable();
+                var _this = this;
+                this.$el.resizable({
+                    stop: function( event, ui ) {
+                        _this.handleResize();
+                    }
+                  });
                 // pre-set certain variables to speed up this code
                 app.State.pageContainer = this.$el.parent();
                 app.State.pageInnerWidth = app.State.pageContainer.innerWidth();
                 var horizOrigin = this.$el.width();
 
                 this.$el.bind('resize', this.handleResize);
+                app.vent.on('doMapResize', this.handleResize);
                 // also bind to window to adjust on window size change
                 $(window).bind('resize', this.handleWindowResize);
                 
@@ -97,6 +103,7 @@ $(function() {
             },
             
             postMapCreation: function() {
+                this.handleResize();
                 var callback = app.options.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK;
                 if (callback != null) {
                     callback();
@@ -118,7 +125,8 @@ $(function() {
             },
             
             handleResize: function() {
-                app.map.map.updateSize();
+                var view = this.map.getView();
+                this.map.updateSize();
             },
             
             handleWindowResize: function() {
