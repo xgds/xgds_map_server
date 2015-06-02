@@ -128,7 +128,7 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
     updateTip: function(eventName) {
         var msgMap = {
             'edit': 'Click and drag blue dot on the feature to edit.',
-            'add': 'Click to add a new feature. Double click to complete feature creation.',
+            'add': 'Double click to finish a line or polygon. Shift-click to delete a vertex.',
             'clear': 'Click and drag to pan map.'
         };
         var msg = msgMap[eventName];
@@ -183,11 +183,13 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
 
 });
 
-
 app.views.EditingToolsView = Backbone.Marionette.ItemView.extend({
 	template: '#template-editing-tools',
+	close: function() {
+        this.ensureEl();
+        this.$el.hide();
+    }
 });
-
 
 app.views.HideableRegion = Backbone.Marionette.Region.extend({
     close: function() {
@@ -336,7 +338,7 @@ app.views.FeaturesHeaderView = Backbone.Marionette.ItemView.extend({
      */
 	template: '#template-features-header',
 	events: {
-		'click #btn-cut': function() { app.vent.trigger('cutSelectedFeatures', this.model)},
+		'click #btn-duplicate': function() { app.vent.trigger('duplicateSelectedFeatures', this.model)},
 		'click #btn-delete': function() { app.vent.trigger('deleteSelectedFeatures', this.model)},
 	}
 });
@@ -444,11 +446,14 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
             view.close();
         });
     },
-    copySelectedFeatures: function() {
-    },
-    pasteFeatures: function() {
-    }, 
-    cutSelectedFeatures: function() {
+    duplicateSelectedFeatures: function() {
+        var features = app.request('selectedFeatures');
+        var selectParent = null;
+        _.each(features, function(feature) {
+            //HERETAMAR figure out how to clone a feature
+            var olFeature = feature.clone();
+            var featureObj = app.util.createBackboneFeatureObj(olFeature);
+        });
     }, 
     deleteSelectedFeatures: function(){
     	var features = app.request('selectedFeatures');
@@ -460,7 +465,6 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
     				if(!_.isUndefined(feature.collection)) {
     	    			feature.collection.remove(feature);
     	    		}
-    				console.log("Successfully deleted feature!");
     			}, 
     			error: function() {
     				console.log("Error in deleting a feature");

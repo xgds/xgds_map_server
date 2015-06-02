@@ -59,16 +59,20 @@ $(function() {
     		app.vent.on('mapmode', this.setMode, this);
     		app.vent.trigger('mapmode', 'navigate');
     		this.map = this.options.map;
-      		app.vent.on('editingToolsRendered', function(){
+    		app.vent.on('editingToolsRendered', function(){
       			//set up typeSelect for addFeaturesMode
-        		this.typeSelect = document.getElementById('type');
+//        		this.typeSelect = document.getElementById('type');
         		var _this = this;
-    			this.typeSelect.onchange = function(e) {
+        		var theEl = $('input:radio[name=addType]');
+        		var selectedEl = $('input:radio[name=addType]:checked');
+        		_this.typeSelect = selectedEl.val();
+                $('input:radio[name=addType]').change(function() {
     				if (_this.featureAdder) {
     					_this.map.removeInteraction(_this.featureAdder);
     				} 
+    				_this.typeSelect = $('input:radio[name=addType]:checked').val();
     				_this.addDrawInteraction(_this.typeSelect);
-    			};
+    			});
       		}, this);
       		app.vent.on('deleteSelectedFeatures', this.deleteFeatureFromOverlay, this);
       		app.vent.on('updateFeaturePosition', this.updateFeaturePosition, this);
@@ -182,39 +186,21 @@ $(function() {
         addDrawInteraction(typeSelect) {
 			this.featureAdder = new ol.interaction.Draw({
 				features: this.featureOverlay.getFeatures(),
-				type:  /** @type {ol.geom.GeometryType} */ (typeSelect.value)
+				type:  /** @type {ol.geom.GeometryType} */ (typeSelect)
 			}, this);
 			this.featureAdder.on('drawend', function(event) { // finished drawing this feature
-				var feature = event.feature;
-				var geom = feature.getGeometry();
-				var type = geom.getType();
-				var coords = geom.getCoordinates();
 				//create a new backbone feature obj
-				var featureObj = this.createBackboneFeatureObj(type, coords, event.feature);
+				var featureObj = app.util.createBackboneFeatureObj(event.feature);
 			}, this);
 			this.map.addInteraction(this.featureAdder);
         },
-        createBackboneFeatureObj: function(type, coords, olFeature) {
-	    	// create a new backbone feature object from the user drawings on map.
-	    	var featureObj = new app.models.Feature();
-	    	var mapLayer = app.mapLayer;
-	    	featureObj.set('type', type);
-	    	featureObj.set('description', " ");
-	    	app.util.transformAndSetCoordinates(type, featureObj, coords);
-	    	var featureName = app.util.generateFeatureName(mapLayer, type);
-	    	featureObj.set('name', featureName);
-	    	featureObj.set('popup', false);
-	    	featureObj.set('visible', true);
-	    	featureObj.set('showLabel', true);
-	    	featureObj.set('mapLayer', mapLayer);
-	    	featureObj.set('mapLayerName', mapLayer.get('name'));
-	    	featureObj.olFeature =  olFeature;
-	    	featureObj.save();
-	    	return featureObj;
-	    },
         addFeaturesMode: {
         	// in this mode, user can add features (all other features are locked)
         	enter: function() {
+                $("#noEditingTools").hide();
+
+                app.editingTools.show(new app.views.EditingToolsView());
+                app.vent.trigger('editingToolsRendered');
                 app.State.disableAddFeature = false;
 				if (this.featureAdder) {
 					this.map.removeInteraction(this.featureAdder);
@@ -223,6 +209,8 @@ $(function() {
         	}, 
         	exit: function() {
         		this.map.removeInteraction(this.featureAdder);
+        		app.editingTools.reset();
+        		$("#noEditingTools").show();
         	}
         },
         navigateMode: {

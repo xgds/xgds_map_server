@@ -186,9 +186,12 @@ var app = (function($, _, Backbone) {
         app.vent.trigger('onMapSetup');
         app.toolbar.show(new app.views.ToolbarView());
         app.tabs.show(new app.views.TabNavView());
-        app.editingTools.show(new app.views.EditingToolsView());
-		app.vent.trigger('editingToolsRendered');
 		app.vent.trigger('clearSaveStatus');
+		if (app.mapLayer.attributes.features.length == 0){
+		    app.vent.trigger('mapmode', 'addFeatures');
+		} else {
+		    app.vent.trigger('mapmode', 'navigate');;
+		}
     });
     
     app.router = new Backbone.Router({
@@ -270,18 +273,60 @@ var app = (function($, _, Backbone) {
             });
             return obj;
         },
+        createBackboneFeatureObj: function(olFeature) {
+            // create a new backbone feature object from the user drawings on map.
+            var geom = olFeature.getGeometry();
+            var type = geom.getType();
+            var coords = geom.getCoordinates();
+            var featureObj = new app.models.Feature();
+            var mapLayer = app.mapLayer;
+            featureObj.set('type', type);
+            featureObj.set('description', " ");
+            app.util.transformAndSetCoordinates(type, featureObj, coords);
+            var featureName = app.util.generateFeatureName(mapLayer, type);
+            featureObj.set('name', featureName);
+            featureObj.set('popup', false);
+            featureObj.set('visible', true);
+            featureObj.set('showLabel', false);
+            featureObj.set('mapLayer', mapLayer);
+            featureObj.set('mapLayerName', mapLayer.get('name'));
+            featureObj.olFeature =  olFeature;
+            featureObj.save();
+            return featureObj;
+        },
         generateFeatureName: function(mapLayer, type) {
         	// create a name based on maplayerName and type and an index
         	var key = mapLayer.get('name').replace(/ /g,"");
         	key = key + '_' + type;
-        	var index = 0;
-        	var features = mapLayer.get('features');
-        	_.each(features, function(feature) {
-        		if (feature.type == type) {
-        			index = index + 1;
-        		}
-        	});
-        	return key + app.util.pad(index, 3, 0);
+        	return key + app.util.pad(this.getNextIndex(type), 3, 0);
+        },
+        getNextIndex: function(type){
+            if (!app.indicesInitialized){
+                this.initializeIndices();
+            }
+            if (_.isUndefined(app.featureIndex[type])){
+                app.featureIndex[type] = 0;
+            }
+            app.featureIndex[type] = app.featureIndex[type] + 1;
+            return app.featureIndex[type];
+        },
+        initializeIndices: function() {
+            var index = 0;
+            var features = app.mapLayer.get('features');
+            app.featureIndex = [];
+            app.featureIndex['Polygon'] = 0;
+            app.featureIndex['Point'] = 0;
+            app.featureIndex['LineString'] = 0;
+            app.featureIndex['GroundOverlay'] = 0;
+            _.each(features, function(feature) {
+                var type = feature.type;
+                if (_.isUndefined(app.featureIndex[type])){
+                    app.featureIndex[type] = 0;
+                } else {
+                    app.featureIndex[type] = app.featureIndex[type] + 1;
+                }
+            }); 
+            app.indicesInitialized = true;
         },
         getRandomInt: function() {
         	// returns random integer btw 0 and 100

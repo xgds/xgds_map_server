@@ -213,12 +213,14 @@ class MapCollection(AbstractMap):
     collection = models.ForeignKey(Collection)
 
     def getEditHref(self):
-        return reverse('mapEditCollecction', kwargs={'id': self.uuid})
+        return reverse('mapEditMapCollection', kwargs={'mapCollectionID': self.uuid})
 
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
         result = super(AbstractMap, self).getTreeJson()
-        result["data"]["collectionJSON"] = reverse('data_collectionJSON', kwargs={'collectionID': self.collection.uuid})
+        result["data"]["collectionJSON"] = reverse('xgds_data_displayRecord', kwargs={'displayModuleName': 'xgds_data',
+                                                                                      'displayModelName': 'Collection',
+                                                                                      'rid': self.collection.id}) + '?format=json'
         return result
 
 
@@ -227,16 +229,16 @@ class MapSearch(AbstractMap):
     A layer that repsresents a search which can be refreshing
     """
     requestLog = models.ForeignKey(RequestLog)
-    refreshRate = models.IntegerField(default=0) # refresh rate in seconds, 0 = no refresh
+    refreshRate = models.IntegerField(default=0)  # refresh rate in seconds, 0 = no refresh
 
     def getEditHref(self):
-        return reverse('mapEditSearch', kwargs={'id': self.uuid})
+        return reverse('mapEditMapSearch', kwargs={'mapSearchID': self.uuid})
 
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
         result = super(AbstractMap, self).getTreeJson()
         result["data"]["refresh"] = self.refreshRate
-        result["data"]["searchResultsJSON"] = reverse('data_searchResultsJSON', kwargs={'collectionID': self.requestLog.uuid})
+        result["data"]["searchResultsJSON"] = reverse('data_searchResultsJSON', kwargs={'collectionID': self.requestLog.id})
         return result
 
 
