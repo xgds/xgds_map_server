@@ -59,4 +59,17 @@ class MapGroupAdmin(admin.ModelAdmin):
 admin.site.register(models.KmlMap, KmlMapAdmin)
 admin.site.register(models.MapGroup, MapGroupAdmin)
 admin.site.register(models.MapLayer, MapLayerAdmin)
-#TODO register other map layer stuff
+#TODO make admin classes for other map layer stuff below
+admin.site.register(models.MapTile)
+admin.site.register(models.LabelStyle)
+admin.site.register(models.PolygonStyle)
+admin.site.register(models.LineStringStyle)
+admin.site.register(models.PointStyle)
+admin.site.register(models.Icon)
+admin.site.register(models.DrawingStyle)
+admin.site.register(models.GroundOverlayStyle)
+admin.site.register(models.Polygon)
+admin.site.register(models.LineString)
+admin.site.register(models.Point)
+admin.site.register(models.Drawing)
+admin.site.register(models.GroundOverlay)
