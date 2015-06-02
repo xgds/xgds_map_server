@@ -320,11 +320,11 @@ app.views.FeaturePropertiesView = Backbone.Marionette.CompositeView.extend({
 			this.model.set('description', evt.target.value);
 			this.model.save();
 		},
-		'click #drawLabel': function(evt) {
+		'click #showLabel': function(evt) {
 			this.model.set('showLabel', evt.target.checked);
 			this.model.save();
 		},
-		'click #showPopup': function(evt) {
+		'click #popup': function(evt) {
 			this.model.set('popup', evt.target.checked);
 			this.model.save();
 		}
