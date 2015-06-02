@@ -25,6 +25,17 @@ function inverse(coords){
     return ol.proj.transform(coords, 'EPSG:3857', 'EPSG:4326');    
 }
 
+function inverseList(coords){
+    // Takes a flat list of coords and returns a list of transformed coordinate pairs
+    var result = [];
+    for (i = 0; i < coords.length; i = i + 2){
+        var coord = [coords[i], coords[i+1]]
+        var transformedCoord = ol.proj.transform(coord, 'EPSG:3857', 'EPSG:4326');
+        result.push(transformedCoord);
+    }
+    return result;
+}
+
 function endsWith(str, suffix) {
     return str.indexOf(suffix, str.length - suffix.length) !== -1;
 }

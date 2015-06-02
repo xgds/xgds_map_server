@@ -130,6 +130,13 @@ $(function() {
                 this.featureOverlay.addFeature(newFeatureView.olFeature);
                 featureObj.olFeature = newFeatureView.getFeature();
                 newFeatureView.featureObj = featureObj;
+                featureObj.olFeature['model'] = featureObj;
+                featureObj.olFeature['view'] = newFeatureView;
+                featureObj.olFeature.on('change', function(event) {
+                    var geometry = event.target.get('geometry');
+                    var view = event.target['view'];
+                    view.updateCoordsFromGeometry(geometry);
+                });
                 this.features.push(newFeatureView);
             }
         },
@@ -186,7 +193,11 @@ $(function() {
         addDrawInteraction(typeSelect) {
 			this.featureAdder = new ol.interaction.Draw({
 				features: this.featureOverlay.getFeatures(),
-				type:  /** @type {ol.geom.GeometryType} */ (typeSelect)
+				type:  /** @type {ol.geom.GeometryType} */ (typeSelect),
+				deleteCondition: function(event) {
+                    return ol.events.condition.shiftKeyOnly(event) &&
+                        ol.events.condition.singleClick(event);
+                }
 			}, this);
 			this.featureAdder.on('drawend', function(event) { // finished drawing this feature
 				//create a new backbone feature obj
@@ -234,31 +245,16 @@ $(function() {
         						ol.events.condition.singleClick(event);
         				}
         			});
-        			this.featureDeleter = new ol.interaction.Select({
-        				layers: [this.featureLayer],
-        				style: new ol.style.Style({
-        					image: new ol.style.Circle({
-        						radius: 12,
-        						fill: new ol.style.Fill({
-        							color: 'rgba(255, 0, 0, 0.5)'
-        						})
-        					})	
-        				}),
-        				addCondition: function(event) {
-        					return ol.events.condition.shiftKeyOnly(event)
-        					&& ol.events.condition.singleClick(event);
-        				}
-        			});
-        			this.featureDeleter.getFeatures().on('add', function(e) {
-        				var feature = e.element;
-        				var model = feature.get('model');
-        				if (!_.isUndefined(model)){
-        					this.collection.removeFeature(model);
-        				}
-        			}, this);
+//        			this.featureDeleter.getFeatures().on('add', function(e) {
+//        				var feature = e.element;
+//        				var model = feature.get('model');
+//        				if (!_.isUndefined(model)){
+//        					this.collection.removeFeature(model);
+//        				}
+//        			}, this);
         		} 
     			this.map.addInteraction(this.repositioner);
-    			this.map.addInteraction(this.featureDeleter);
+//    			this.map.addInteraction(this.featureDeleter);
     			//TODO: upon edit, need to resave to the database!
     			
         	}, //end enter
@@ -273,38 +269,50 @@ $(function() {
     	render: function() {
     		//no op
     	},
-    	updateGeometry: function() {
-    		
+    	updateCoordsFromGeometry: function(geometry) {
+            var coords = inverseList(geometry.flatCoordinates);
+            this.featureObj.set('polygon',coords);
+            this.featureObj.trigger('coordsChanged');
+            this.featureObj.save();
     	}
     });
 
     app.views.PointEditView = app.views.PointView.extend({
     	render: function() {
     		// no op
-    	}
+    	},
+    	updateCoordsFromGeometry: function(geometry) {
+            var coords = inverse(geometry.flatCoordinates);
+            this.featureObj.set('point',coords);
+            this.featureObj.trigger('coordsChanged');
+            this.featureObj.save();
+        }
     });
 
     app.views.LineStringEditView = app.views.LineStringView.extend({
     	render: function() {
     		// no op
-    	}
+    	},
+    	updateCoordsFromGeometry: function(geometry) {
+            var coords = inverseList(geometry.flatCoordinates);
+            this.featureObj.set('lineString',coords);
+            this.featureObj.trigger('coordsChanged');
+            this.featureObj.save();
+        }
     });
 
     app.views.GroundOverlayEditView = app.views.GroundOverlayView.extend({
-        
-    });
-
-    app.views.HideableRegion = Backbone.Marionette.Region.extend({
-        close: function() {
-            Backbone.Marionette.Region.prototype.close.call(this);
-            this.ensureEl();
-            this.$el.hide();
+        render: function() {
+            //no op
         },
-        show: function(view) {
-            Backbone.Marionette.Region.prototype.show.call(this, view);
-            this.$el.show();
+        updateCoordsFromGeometry: function(geometry) {
+            var coords = inverseList(geometry.flatCoordinates);
+            this.featureObj.set('polygon',coords);
+            this.featureObj.trigger('coordsChanged');
+            this.featureObj.save();
         }
     });
+
 });
 
 

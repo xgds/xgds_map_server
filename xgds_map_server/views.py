@@ -134,14 +134,17 @@ def getMapEditorPage(request, layerID=None):
                               )
 
 
+import pydevd
 def getFeatureCoordinates(data, type):
+    coords = None
     if type == 'Point':
         coords = data['point'] or data.get('point')
     elif type == 'Polygon':
-        coords = data['polygon'][0] or data.get('polygon')[0]
+        coords = data['polygon'] or data.get('polygon')
     elif type == 'LineString':
         coords = data['lineString'] or data.get('lineString')
     else:
+        pydevd.settrace('128.102.237.251')
         print "invalid feature type specified in json"
     return coords
 
@@ -153,15 +156,16 @@ def setFeatureCoordinates(feature, coords, type):
     if type == 'Point':
         feature.point = geosPoint(coords)
     elif type == 'Polygon':
-        try: 
+        try:
             internalCoords = geosLinearRing(coords)
-        except: 
+        except:
             return "GEOS_ERROR: IllegalArgumentException: Points of LinearRing do not form a closed linestring!"
         externalCoords = geosLinearRing(coords)
         feature.polygon = geosPolygon(internalCoords, externalCoords)
     elif type == 'LineString':
         feature.lineString = geosLineString(coords)
     else:
+        pydevd.settrace('128.102.237.251')
         print "invalid feature type specified in json"
     feature.save()
     return None
@@ -194,26 +198,26 @@ def saveMaplayer(request):
     if (request.method == "PUT") or (request.method == "POST"):  # map layer already exists so backbone sends a PUT request to update it.
         data = json.loads(request.body)
         uuid = data.get('uuid', None)
-        try: 
+        try:
             mapLayer = MapLayer.objects.get(uuid = uuid)
         except:
             return HttpResponse(json.dumps({'failed': 'MapLayer of uuid of %s cannot be found' % uuid}), content_type='application/json')
         mapLayer.name = data.get('name', "")
         mapLayer.description = data.get('description', "")
         mapLayer.save()
-        
+
         return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
-    return HttpResponse(json.dumps({'failed': 'Must be a POST but got %s instead' % request.method }), content_type='application/json')
+    return HttpResponse(json.dumps({'failed': 'Must be a POST but got %s instead' % request.method}), content_type='application/json')
 
 
 def saveOrDeleteFeature(request, uuid=None):
     """
     save backbone feature to the database.
- 
+
     Side note: to initialize a GeoDjango polygon object
         Coordinate dimensions are separated by spaces
         Coordinate pairs (or tuples) are separated by commas
-        Coordinate ordering is (x, y) -- that is (lon, lat)
+        Coordinate ordering is (y, x) -- that is (lon, lat)
     """
     if (request.method == "POST") or (request.method == "PUT"):
         data = json.loads(request.body)
@@ -222,27 +226,28 @@ def saveOrDeleteFeature(request, uuid=None):
         featureName = data.get('name', "")
         mapLayerName = data.get('mapLayerName', "")
         try:
-            mapLayer = MapLayer.objects.get(name = mapLayerName)
+            mapLayer = MapLayer.objects.get(name=mapLayerName)
         except:
             return HttpResponse(json.dumps({'failed': 'MapLayerName of %s cannot be found' % mapLayerName}), content_type='application/json')
 
         feature = None
-        
+
         if request.method == "POST":
             feature = createFeatureObject(featureType)
         elif request.method == "PUT":  # grab existing feature
             feature = FEATURE_MANAGER.filter(uuid=uuid)
             if feature:
                 feature = feature[0]
-            else: 
+            else:
                 return HttpResponse(json.dumps({'failed': 'feature of uuid: %s cannot be found' % uuid}), content_type='application/json')
         # update the feature attributes
-        feature.name = featureName            
+        feature.name = featureName
         feature.mapLayer = mapLayer
         coords = getFeatureCoordinates(data, featureType)
         errorText = setFeatureCoordinates(feature, coords, featureType)
-        if errorText: 
-            return HttpResponse(json.dumps({'failed': errorText }), content_type='application/json')
+        if errorText:
+            pydevd.settrace('128.102.237.251')
+            return HttpResponse(json.dumps({'failed': errorText}), content_type='application/json')
 
         if data.get('popup', None) is not None:
             feature.popup = data.get('popup', None)
@@ -253,19 +258,21 @@ def saveOrDeleteFeature(request, uuid=None):
         if data.get('description', None) is not None:
             feature.description = data.get('description', None)
         feature.save()
-        return HttpResponse(json.dumps({'success': 'true', 'type': 'save'}), content_type='application/json')
-    
+        return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
+#         return HttpResponse(json.dumps({'success': 'true', 'type': 'save'}), content_type='application/json')
+
     elif request.method == "DELETE":
-        try: 
+        try:
             features = FEATURE_MANAGER.filter(uuid=uuid)
         except:
             print "cannot find features "
         feature = features[0]
         print "about to delete a feature with uuid %s" % uuid
         feature.delete()
-        return HttpResponse(json.dumps({'success': 'true', 'type': 'delete'}), content_type='application/json')
-    
-    return HttpResponse(json.dumps({'failed': 'Must be a POST but got %s instead' % request.method }), content_type='application/json')
+        return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
+#         return HttpResponse(json.dumps({'success': 'true', 'type': 'delete'}), content_type='application/json')
+
+    return HttpResponse(json.dumps({'failed': 'Must be a POST but got %s instead' % request.method}), content_type='application/json')
 
 
 def moveNode(request):
