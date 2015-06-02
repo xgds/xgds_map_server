@@ -16,65 +16,66 @@
 
 from django import forms
 
-from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile
+from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapCollection, MapSearch
 from xgds_map_server import settings
+from xgds_data.models import Collection, RequestLog
 from geocamUtil.extFileField import ExtFileField
 
 # pylint: disable=C1001
 
 
-class MapForm(forms.ModelForm):
-    """ This is really for kml
-    """
+class AbstractMapForm(forms.ModelForm):
     parent = forms.ModelChoiceField(queryset=MapGroup.objects.filter(deleted=False), empty_label=None, label="Parent Folder")
-    description = forms.CharField(required=False, widget=forms.Textarea(attrs={'cols': 50, 'rows': 7}))
+
+    def getModel(self):
+        return None
+
+    def getExclude(self):
+        return ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted']
 
     class Meta:
-        model = KmlMap
+        abstract = True
+#         model = self.getModel()
         widgets = {
             # Note: no practical way to retrieve max lengths from Map model
-            'name': forms.TextInput(attrs={'size': 80})
-        }
-        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted']
-
-
-class MapGroupForm(forms.ModelForm):
-    parent = forms.ModelChoiceField(queryset=MapGroup.objects.filter(deleted=False),
-                                      empty_label=None,
-                                      label="Parent Folder")
-
-    class Meta:
-        model = MapGroup
-        widgets = {
             'name': forms.TextInput(attrs={'size': 80}),
             'description': forms.Textarea(attrs={'cols': 50, 'rows': 7})
         }
         exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted']
 
 
-class MapLayerForm(forms.ModelForm):
-    parent = forms.ModelChoiceField(queryset=MapGroup.objects.filter(deleted=False),
-                                    empty_label=None,
-                                    label="Parent Folder")
+class MapForm(AbstractMapForm):
+    class Meta(AbstractMapForm.Meta):
+        model = KmlMap
 
-    class Meta:
+
+class MapGroupForm(AbstractMapForm):
+    class Meta(AbstractMapForm.Meta):
+        model = MapGroup
+
+
+class MapLayerForm(AbstractMapForm):
+    class Meta(AbstractMapForm.Meta):
         model = MapLayer
-        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted']
-        widgets = {'name': forms.TextInput(attrs={'size': 80}),
-                   'description': forms.Textarea(attrs={'cols': 50, 'rows': 7})
-                   }
 
 
-class MapTileForm(forms.ModelForm):
+class MapTileForm(AbstractMapForm):
     sourceFile = ExtFileField(ext_whitelist=(".tif", ".tiff", ".zip"))
-#     sourceFile = forms.FileField()
-    parent = forms.ModelChoiceField(queryset=MapGroup.objects.filter(deleted=False),
-                                    empty_label=None,
-                                    label="Parent Folder")
 
-    class Meta:
-        model = MapTile
+    class Meta(AbstractMapForm.Meta):
+        model = MapGroup
         exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed']
-        widgets = {'name': forms.TextInput(attrs={'size': 80}),
-                   'description': forms.Textarea(attrs={'cols': 50, 'rows': 7})
-                   }
+
+
+class MapCollectionForm(AbstractMapForm):
+    collection = forms.ModelChoiceField(queryset=Collection.objects.all().order_by('name'), empty_label=None)
+
+    class Meta(AbstractMapForm.Meta):
+        model = MapCollection
+
+
+class MapSearchForm(AbstractMapForm):
+    requestLog = forms.ModelChoiceField(queryset=RequestLog.objects.all(), empty_label=None)
+
+    class Meta(AbstractMapForm.Meta):
+        model = MapSearch

@@ -1,4 +1,6 @@
 {% extends "MapBase.html" %}
+{% load pipeline %}
+
 {% block contents %}
 <div id="application">
 	<div id="toolbar" class="row">
@@ -7,11 +9,15 @@
         <div id="map" class="six columns"></div>
         <div id="layers" class="six columns"></div>
     </div>
+    <div class="row">
+		<div id="postmap"></div>
+	</div>
 </div>
 {% endblock %}
 
 {% block cssExtras %}
 <style scoped>
+  @import url('{{EXTERNAL_URL}}jquery-ui/themes/base/jquery-ui.css');
   @import url('{{ EXTERNAL_URL }}ol3/css/ol.css');
   @import url('{{EXTERNAL_URL}}ol3-popup/src/ol3-popup.css');
   @import url('{{ EXTERNAL_URL }}fancytree/dist/skin-lion/ui.fancytree.min.css');
@@ -44,12 +50,15 @@
 		{{template|safe}}
 	</script>
     {% endfor %}
+    {% javascript 'custom_map' %}
 {% endblock scripts %}
 
 {% block jsInit %}
 	appOptions = {
 		layerFeedUrl: "{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}",
-		siteFrame: {{ settings.XGDS_CURRENT_SITEFRAME|safe }}
+		siteFrame: {{ settings.XGDS_CURRENT_SITEFRAME|safe }},
+		XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: {{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }},
+		dataUrl: "{{ settings.DATA_URL }}"
 	}
 	$(function(){
     	app.start(appOptions);

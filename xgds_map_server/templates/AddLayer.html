@@ -8,6 +8,6 @@ Here you can create a new map layer. You can add new features, overlays, and dra
 map layers in the map editor view. 
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
 {{ layerForm.as_p }}
-<input type="submit" value="Create" /><input type="button" onclick="document.location.href = '{{ mapTreeUrl }}'" value="Back" />
+<input type="submit" value="Create" />
 </form>
 {% endblock %}

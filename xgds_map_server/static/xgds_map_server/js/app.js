@@ -165,9 +165,7 @@ var app = (function($, _, Backbone) {
     });
 
     app.addInitializer(function(options) {
-
         this.options = options = _.defaults(options || {}, {
-            readOnly: false,
         });
 
         // create the map layer from map layer obj passed in from server as json
@@ -185,14 +183,12 @@ var app = (function($, _, Backbone) {
         app.map = new app.views.OLEditMapView({
             el: '#map'
         });
+        app.vent.trigger('onMapSetup');
         app.toolbar.show(new app.views.ToolbarView());
         app.tabs.show(new app.views.TabNavView());
         app.editingTools.show(new app.views.EditingToolsView());
 		app.vent.trigger('editingToolsRendered');
 		app.vent.trigger('clearSaveStatus');
-        if (this.options.readOnly == true){
-            app.vent.trigger('readOnly');
-        }
     });
     
     app.router = new Backbone.Router({

@@ -18,12 +18,15 @@ import re
 import json
 import os
 
+from django.core.urlresolvers import reverse
 from django.db import models
 from django.contrib.gis.db import models
 from xgds_map_server import settings
 from geocamUtil.models.UuidField import UuidField
 from geocamUtil.models.managers import ModelCollectionManager
 from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
+from xgds_data.models import Collection, RequestLog
+
 # from Carbon.TextEdit import WIDTHHook
 # from aetypes import Boolean
 # from Carbon.QuickDraw import underline
@@ -51,11 +54,30 @@ class AbstractMapNode(models.Model):
         """ child classes must define parent"""
         return None
 
+    def getEditHref(self):
+        """ child classes must define edit href
+        """
+        return None
+
     def __unicode__(self):
         return self.name
 
+    def getTreeJson(self):
+        """ Get the json block that the fancy tree needs to render this node """
+        result = {"title": self.name,
+                  "key": self.uuid,
+                  "tooltip": self.description,
+                  "data": {"type": self.__class__.__name__,
+                           "parentId": None,
+                           "href": self.getEditHref()}
+                  }
+        if self.parent:
+            result['data']['parentId'] = self.parent.uuid
+        return result
+
     class Meta:
         abstract = True
+        ordering = ['name']
 
 
 class MapGroup(AbstractMapNode):
@@ -65,6 +87,23 @@ class MapGroup(AbstractMapNode):
     parent = models.ForeignKey('self', db_column='parentId',
                                null=True, blank=True,
                                verbose_name='parent group')
+
+    def getTreeJson(self):
+        """ Get the json block that the fancy tree needs to render this node """
+        """ for some reason you cannot call super on this one """
+        result = {"title": self.name,
+                  "key": self.uuid,
+                  "tooltip": self.description,
+                  "data": {"parentId": None,
+                           "href": self.getEditHref()}
+                  }
+        if self.parent:
+            result['data']['parentId'] = self.parent.uuid
+        result["folder"] = True
+        return result
+
+    def getEditHref(self):
+        return reverse('folderDetail', kwargs={'groupID': self.uuid})
 
 
 class AbstractMap(AbstractMapNode):
@@ -76,6 +115,12 @@ class AbstractMap(AbstractMapNode):
     parent = models.ForeignKey(MapGroup, db_column='parentId',
                                null=True, blank=True,
                                verbose_name='group')
+
+    def getTreeJson(self):
+        """ Get the json block that the fancy tree needs to render this node """
+        result = super(AbstractMapNode, self).getTreeJson()
+        result["selected"] = self.visible
+        return result
 
     class Meta:
         abstract = True
@@ -90,6 +135,9 @@ class KmlMap(AbstractMap):
                                  null=True, blank=True)
     openable = models.BooleanField(default=True)
 
+    def getEditHref(self):
+        return reverse('mapDetail', kwargs={'mapID': self.uuid})
+
     @property
     def isLogo(self):
         global LOGO_REGEXES
@@ -98,6 +146,15 @@ class KmlMap(AbstractMap):
                             for pattern in settings.XGDS_MAP_SERVER_LOGO_PATTERNS]
         return any([r.search(self.name)
                     for r in LOGO_REGEXES])
+
+    def getTreeJson(self):
+        """ Get the json block that the fancy tree needs to render this node """
+        result = super(AbstractMap, self).getTreeJson()
+        result["data"]["openable"] = self.openable
+        result["data"]["kmlFile"] = settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + self.kmlFile
+        if self.localFile:
+            result["data"]["localFile"] = self.localFile.url
+        return result
 
 
 class MapTile(AbstractMap):
@@ -116,9 +173,22 @@ class MapTile(AbstractMap):
         result = os.path.join(settings.DATA_URL, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR, self.name)
         return result
 
+    def getEditHref(self):
+        return reverse('mapEditTile', kwargs={'tileID': self.uuid})
+
+    def getTreeJson(self):
+        """ Get the json block that the fancy tree needs to render this node """
+        result = super(AbstractMap, self).getTreeJson()
+        result["data"]["tileURL"] = self.getXYZTileSourceUrl()
+        return result
+
 
 class MapLayer(AbstractMap):
     """ A map layer which will have a collection of features that have content in them. """
+
+    def getEditHref(self):
+        return reverse('mapEditLayer', kwargs={'layerID': self.uuid})
+
     def toDict(self):
         result = modelToDict(self)
         result['uuid'] = self.uuid
@@ -127,6 +197,46 @@ class MapLayer(AbstractMap):
         for feature in features:
             featuresList.append(feature.toDict())
         result['features'] = featuresList
+        return result
+
+    def getTreeJson(self):
+        """ Get the json block that the fancy tree needs to render this node """
+        result = super(AbstractMap, self).getTreeJson()
+        result["data"]["layerJSON"] = reverse('mapLayerJSON', kwargs={'layerID': self.uuid})
+        return result
+
+
+class MapCollection(AbstractMap):
+    """
+    A layer that encapsulates a collection of found objects.
+    """
+    collection = models.ForeignKey(Collection)
+
+    def getEditHref(self):
+        return reverse('mapEditCollecction', kwargs={'id': self.uuid})
+
+    def getTreeJson(self):
+        """ Get the json block that the fancy tree needs to render this node """
+        result = super(AbstractMap, self).getTreeJson()
+        result["data"]["collectionJSON"] = reverse('data_collectionJSON', kwargs={'collectionID': self.collection.uuid})
+        return result
+
+
+class MapSearch(AbstractMap):
+    """
+    A layer that repsresents a search which can be refreshing
+    """
+    requestLog = models.ForeignKey(RequestLog)
+    refreshRate = models.IntegerField(default=0) # refresh rate in seconds, 0 = no refresh
+
+    def getEditHref(self):
+        return reverse('mapEditSearch', kwargs={'id': self.uuid})
+
+    def getTreeJson(self):
+        """ Get the json block that the fancy tree needs to render this node """
+        result = super(AbstractMap, self).getTreeJson()
+        result["data"]["refresh"] = self.refreshRate
+        result["data"]["searchResultsJSON"] = reverse('data_searchResultsJSON', kwargs={'collectionID': self.requestLog.uuid})
         return result
 
 
@@ -309,4 +419,4 @@ STYLE_MANAGER = ModelCollectionManager(AbstractStyle,
                                         DrawingStyle,
                                         GroundOverlayStyle])
 
-MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile])
+MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile, MapCollection])
