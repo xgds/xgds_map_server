@@ -24,6 +24,7 @@ import urllib
 import os
 import datetime
 import zipfile
+import inspect
 
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.staticfiles.storage import staticfiles_storage
@@ -48,6 +49,8 @@ from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapSearc
 from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
 from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm, MapSearchForm, MapCollectionForm
 from geocamUtil.geoEncoder import GeoDjangoEncoder
+from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
+from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
 
 from geocamPycroraptor2.views import getPyraptordClient, stopPyraptordServiceIfRunning
 # pylint: disable=E1101,R0911
@@ -938,6 +941,25 @@ def getMapLayerJSON(request, layerID):
     if mapLayer.parent is not None:
         mapLayer_json['data']['parentId'] = mapLayer.parent.uuid
     json_data = json.dumps(mapLayer_json, indent=4, cls=GeoDjangoEncoder)
+    return HttpResponse(content=json_data,
+                        content_type="application/json")
+
+
+def getMapCollectionJSON(request, mapCollectionID):
+    mapCollection = MapCollection.objects.get(uuid=mapCollectionID)
+    collection = mapCollection.collection
+    json_data = None
+    if collection:
+        contents = collection.resolvedContents()
+        dict_data = []
+        for content in contents:
+            if inspect.isroutine(content.toMapDict):
+                resultDict = content.toMapDict()
+            else:
+                resultDict = modelToDict(content)
+            dict_data.append(resultDict)
+        json_data = json.dumps(dict_data, indent=4, cls=DatetimeJsonEncoder)
+
     return HttpResponse(content=json_data,
                         content_type="application/json")
 

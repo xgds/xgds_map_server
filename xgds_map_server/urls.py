@@ -74,6 +74,8 @@ urlpatterns = patterns(
     (r'^editMapSearch/(?P<mapSearchID>[\w-]+)/', views.getEditMapSearchPage, {}, 'mapEditMapSearch'),
     (r'^addMapCollection/', views.getAddMapCollectionPage, {}, 'mapAddMapCollection'),
     (r'^editMapCollection/(?P<mapCollectionID>[\w-]+)/', views.getEditMapCollectionPage, {}, 'mapEditMapCollection'),
+    (r'^mapCollectionJSON/(?P<mapCollectionID>[\w-]+)/', views.getMapCollectionJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapCollectionJSON'),
+    
     # HTML view to confirm deletion of view
     (r'^delete/(?P<nodeID>[\w-]+)/', views.getDeleteNodePage, {}, 'nodeDelete'),
     # List of deleted maps that can be un-deleted

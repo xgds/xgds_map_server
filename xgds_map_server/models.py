@@ -218,9 +218,10 @@ class MapCollection(AbstractMap):
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
         result = super(AbstractMap, self).getTreeJson()
-        result["data"]["collectionJSON"] = reverse('xgds_data_displayRecord', kwargs={'displayModuleName': 'xgds_data',
-                                                                                      'displayModelName': 'Collection',
-                                                                                      'rid': self.collection.id}) + '?format=json'
+        result["data"]["collectionJSON"] = reverse('mapCollectionJSON', kwargs={'mapCollectionID': self.uuid})
+#         result["data"]["collectionJSON"] = reverse('xgds_data_displayRecord', kwargs={'displayModuleName': 'xgds_data',
+#                                                                                       'displayModelName': 'Collection',
+#                                                                                       'rid': self.collection.id}) + '?format=json'
         return result
 
 
