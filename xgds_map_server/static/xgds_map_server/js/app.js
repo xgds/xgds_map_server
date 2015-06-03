@@ -277,7 +277,7 @@ var app = (function($, _, Backbone) {
             // create a new backbone feature object from the user drawings on map.
             var geom = olFeature.getGeometry();
             var type = geom.getType();
-            var coords = geom.getCoordinates();
+            var coords = geom.flatCoordinates;
             var featureObj = new app.models.Feature();
             var mapLayer = app.mapLayer;
             featureObj.set('type', type);
@@ -459,7 +459,7 @@ var app = (function($, _, Backbone) {
         	} else if (type == 'Polygon') {
         		var polygon = feature.get('polygon');
         		polygon[index] = [newX, newY];
-        		feature.set('polygon', [polygon]);
+        		feature.set('polygon', polygon);
         	} else if (type == 'LineString') {
         		var lineString = feature.get('lineString');
         		lineString[index] = [newX, newY];
@@ -471,21 +471,14 @@ var app = (function($, _, Backbone) {
         	// transform user drawn coordinates from spherical mercator to lon lat
         	var tCoords = null;
         	if (type == "Point") {
-    			tCoords = ol.proj.transform(coordinates, 'EPSG:3857', 'EPSG:4326');  
-    			feature.set("point", tCoords);
+    			feature.set("point", inverse(coordinates));
     		} else if (type == "Polygon") {
-    			tCoords = [];
-        		$.each(coordinates[0], function(index, coord) {
-        			tCoords.push(ol.proj.transform(coord, 'EPSG:3857', 'EPSG:4326'));  
-        		});
-    			feature.set("polygon", [tCoords]);
+    			feature.set('polygon', inverseFlatList(coordinates));
     		} else if (type == "LineString") {
-    			tCoords = [];
-        		$.each(coordinates, function(index, coord) {
-        			tCoords.push(ol.proj.transform(coord, 'EPSG:3857', 'EPSG:4326'));  
-        		});
-    			feature.set("lineString", tCoords);
-    		}
+                feature.set('lineString', inverseFlatList(coordinates));
+    		} else if (type == "GroundOverlay") {
+                feature.set('polygon', inverseFlatList(coordinates));
+            }
     	},
         
         toSiteFrame: function(coords, alternateCrs) {

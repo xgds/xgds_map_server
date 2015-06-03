@@ -16,9 +16,39 @@
 
 var DEG2RAD = Math.PI / 180.0;
 
+// take a list of tuples and return a flat list
+function flatten(coords){
+    var result = [];
+    for (i = 0; i < coords.length; i++){
+        result.push(coords[i][0]);
+        result.push(coords[i][1]);
+    }
+    return result;
+}
+
 // transform coords from lon lat to spherical mercator (ol map coords) 
 function transform(coords){
     return ol.proj.transform(coords, 'EPSG:4326',   'EPSG:3857');    
+}
+
+function transformFlatList(coords){
+    // Takes a flat list of coords and returns a list of transformed coordinate pairs
+    var result = [];
+    for (i = 0; i < coords.length; i = i + 2){
+        var coord = [coords[i], coords[i+1]]
+        result.push(transform(coord));
+    }
+    return result;
+}
+
+function transformList(coords){
+    // Takes a  list of coords and returns a list of transformed coordinate pairs
+    var result = [];
+    for (i = 0; i < coords.length; i = i + 1){
+        var coord = coords[i];
+        result.push(transform(coord));
+    }
+    return result;
 }
 
 function inverse(coords){
@@ -26,12 +56,21 @@ function inverse(coords){
 }
 
 function inverseList(coords){
-    // Takes a flat list of coords and returns a list of transformed coordinate pairs
+    // Takes a list of coords and returns a list of inverse coordinate pairs
+    var result = [];
+    for (i = 0; i < coords.length; i = i + 1){
+        var coord = coords[i];
+        result.push(inverse(coord));
+    }
+    return result;
+}
+
+function inverseFlatList(coords){
+    // Takes a flat list of coords and returns a list of inverse coordinate pairs
     var result = [];
     for (i = 0; i < coords.length; i = i + 2){
-        var coord = [coords[i], coords[i+1]]
-        var transformedCoord = ol.proj.transform(coord, 'EPSG:3857', 'EPSG:4326');
-        result.push(transformedCoord);
+        var coord = [coords[i], coords[i+1]];
+        result.push(inverse(coord));
     }
     return result;
 }

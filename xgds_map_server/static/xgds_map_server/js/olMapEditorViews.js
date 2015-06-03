@@ -60,8 +60,6 @@ $(function() {
     		app.vent.trigger('mapmode', 'navigate');
     		this.map = this.options.map;
     		app.vent.on('editingToolsRendered', function(){
-      			//set up typeSelect for addFeaturesMode
-//        		this.typeSelect = document.getElementById('type');
         		var _this = this;
         		var theEl = $('input:radio[name=addType]');
         		var selectedEl = $('input:radio[name=addType]:checked');
@@ -102,6 +100,7 @@ $(function() {
             switch (featureJson['type']){
             case 'GroundOverlay':
                 newFeatureView = new app.views.GroundOverlayEditView({
+                    model: featureObj,
                     layerGroup: this.layerGroup,
                     featureJson: featureJson
                 });
@@ -109,34 +108,36 @@ $(function() {
                 break;
             case 'Polygon':
                 newFeatureView = new app.views.PolygonEditView({
+                    model: featureObj,
                     layerGroup: this.layerGroup,
                     featureJson: featureJson
                 });
                 break;
             case 'Point':
                 newFeatureView = new app.views.PointEditView({
+                    model: featureObj,
                     layerGroup: this.layerGroup,
                     featureJson: featureJson
                 });
                 break;
             case 'LineString':
                 newFeatureView = new app.views.LineStringEditView({
+                    model: featureObj,
                     layerGroup: this.layerGroup,
                     featureJson: featureJson
                 });
                 break;
             } 
             if (!_.isUndefined(newFeatureView)){
-                this.featureOverlay.addFeature(newFeatureView.olFeature);
                 featureObj.olFeature = newFeatureView.getFeature();
-                newFeatureView.featureObj = featureObj;
-                featureObj.olFeature['model'] = featureObj;
-                featureObj.olFeature['view'] = newFeatureView;
+                featureObj.olFeature.set('model', featureObj);
+                featureObj.olFeature.set('view', newFeatureView);
                 featureObj.olFeature.on('change', function(event) {
                     var geometry = event.target.get('geometry');
-                    var view = event.target['view'];
+                    var view = event.target.get('view');
                     view.updateCoordsFromGeometry(geometry);
                 });
+                this.featureOverlay.addFeature(featureObj.olFeature);
                 this.features.push(newFeatureView);
             }
         },
@@ -200,7 +201,6 @@ $(function() {
                 }
 			}, this);
 			this.featureAdder.on('drawend', function(event) { // finished drawing this feature
-				//create a new backbone feature obj
 				var featureObj = app.util.createBackboneFeatureObj(event.feature);
 			}, this);
 			this.map.addInteraction(this.featureAdder);
@@ -209,7 +209,6 @@ $(function() {
         	// in this mode, user can add features (all other features are locked)
         	enter: function() {
                 $("#noEditingTools").hide();
-
                 app.editingTools.show(new app.views.EditingToolsView());
                 app.vent.trigger('editingToolsRendered');
                 app.State.disableAddFeature = false;
@@ -245,71 +244,138 @@ $(function() {
         						ol.events.condition.singleClick(event);
         				}
         			});
-//        			this.featureDeleter.getFeatures().on('add', function(e) {
-//        				var feature = e.element;
-//        				var model = feature.get('model');
-//        				if (!_.isUndefined(model)){
-//        					this.collection.removeFeature(model);
-//        				}
-//        			}, this);
         		} 
     			this.map.addInteraction(this.repositioner);
-//    			this.map.addInteraction(this.featureDeleter);
-    			//TODO: upon edit, need to resave to the database!
-    			
+    			this.pointDeleter = new ol.interaction.Select({
+                    layers: [this.featureOverlay.getFeatures()], //[this.layerGroup.getLayers()],
+//                    style: new ol.style.Style({
+//                        image: new ol.style.Circle({
+//                          radius: 12,
+//                          fill: new ol.style.Fill({
+//                            color: 'rgba(255, 0, 0, 0.5)'
+//                          })
+//                        })
+//                      }),
+                    addCondition: function(event) {
+                        return ol.events.condition.shiftKeyOnly(event)
+                        && ol.events.condition.singleClick(event);
+                      }
+                    });
+                
+                this.pointDeleter.getFeatures().on('add', function(e) {
+                    var geometry = e.element.get('geometry');
+                    var type = geometry.getType();
+                    if (type == "Point") {
+                        //TODO very mysterious this ol.Feature is a DIFFERENT / new feature and not the same one.
+                        var view = e.element.get('view'); 
+                    }
+                }, this);
+                this.map.addInteraction(this.pointDeleter);
+                
         	}, //end enter
         	exit: function() {
                 this.map.removeInteraction(this.repositioner);
-                this.map.removeInteraction(this.featureDeleter);
+                this.map.removeInteraction(this.pointDeleter);
         	}
         } // end repositionMode
     });
 
     app.views.PolygonEditView = app.views.PolygonView.extend({
+        initialize: function(options){
+            app.views.PolygonView.prototype.initialize.call(this, options);
+            this.listenTo(this.model, 'change:coordinates', function() {this.updateGeometryFromCoords()});
+        },
     	render: function() {
     		//no op
     	},
+    	updateGeometryFromCoords: function(){
+    	    var coords = this.model.get('polygon');
+            var xcoords = transformList(coords);
+            var geom = this.olFeature.getGeometry();
+            geom.setCoordinates([xcoords], 'XY');
+    	},
     	updateCoordsFromGeometry: function(geometry) {
-            var coords = inverseList(geometry.flatCoordinates);
-            this.featureObj.set('polygon',coords);
-            this.featureObj.trigger('coordsChanged');
-            this.featureObj.save();
+            var coords = inverseFlatList(geometry.flatCoordinates);
+            this.model.set('polygon',coords);
+            this.model.trigger('coordsChanged');
+            this.model.save();
     	}
     });
 
     app.views.PointEditView = app.views.PointView.extend({
-    	render: function() {
+        initialize: function(options){
+            app.views.PointView.prototype.initialize.call(this, options);
+            this.listenTo(this.model, 'change:coordinates', function() {this.updateGeometryFromCoords()});
+        },
+        render: function() {
     		// no op
     	},
+    	updateGeometryFromCoords: function(){
+    	    var coords = this.model.get('point');
+            var xcoords = transform(coords);
+            this.olFeature.getGeometry().setCoordinates(xcoords);
+        },
     	updateCoordsFromGeometry: function(geometry) {
             var coords = inverse(geometry.flatCoordinates);
-            this.featureObj.set('point',coords);
-            this.featureObj.trigger('coordsChanged');
-            this.featureObj.save();
+            this.model.set('point',coords);
+            this.model.trigger('coordsChanged');
+            this.model.save();
+        }, 
+        destroy: function() {
+            this.model.destroy({
+                data: { 'uuid': this.model.uuid },
+                success: function(model, response) {
+                    if(!_.isUndefined(this.model.collection)) {
+                        this.model.collection.remove(feature);
+                    }
+                }, 
+                error: function() {
+                    console.log("Error in deleting a feature");
+                }
+            });
         }
     });
 
     app.views.LineStringEditView = app.views.LineStringView.extend({
-    	render: function() {
+        initialize: function(options){
+            app.views.LineStringView.prototype.initialize.call(this, options);
+            this.listenTo(this.model, 'change:coordinates', function() {this.updateGeometryFromCoords()});
+        },
+        render: function() {
     		// no op
     	},
+    	updateGeometryFromCoords: function(){
+    	    var coords = this.model.get('lineString');
+            var xcoords = transformList(coords);
+            this.olFeature.getGeometry().setCoordinates(xcoords,'XY');
+        },
     	updateCoordsFromGeometry: function(geometry) {
-            var coords = inverseList(geometry.flatCoordinates);
-            this.featureObj.set('lineString',coords);
-            this.featureObj.trigger('coordsChanged');
-            this.featureObj.save();
+            var coords = inverseFlatList(geometry.flatCoordinates);
+            this.model.set('lineString',coords);
+            this.model.trigger('coordsChanged');
+            this.model.save();
         }
     });
 
     app.views.GroundOverlayEditView = app.views.GroundOverlayView.extend({
+        initialize: function(options){
+            app.views.GroundOverlayView.prototype.initialize.call(this, options);
+            this.listenTo(this.model, 'change:coordinates', function() {this.updateGeometryFromCoords()});
+        },
         render: function() {
             //no op
         },
+        updateGeometryFromCoords: function(){
+            var coords = this.model.get('polygon');
+            var xcoords = transformList(coords);
+            var geom = this.olFeature.getGeometry();
+            geom.setCoordinates([xcoords],'XY');
+        },
         updateCoordsFromGeometry: function(geometry) {
-            var coords = inverseList(geometry.flatCoordinates);
-            this.featureObj.set('polygon',coords);
-            this.featureObj.trigger('coordsChanged');
-            this.featureObj.save();
+            var coords = inverseFlatList(geometry.flatCoordinates);
+            this.model.set('polygon',coords);
+            this.model.trigger('coordsChanged');
+            this.model.save();
         }
     });
 

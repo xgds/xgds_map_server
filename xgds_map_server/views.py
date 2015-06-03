@@ -134,7 +134,6 @@ def getMapEditorPage(request, layerID=None):
                               )
 
 
-import pydevd
 def getFeatureCoordinates(data, type):
     coords = None
     if type == 'Point':
@@ -144,7 +143,6 @@ def getFeatureCoordinates(data, type):
     elif type == 'LineString':
         coords = data['lineString'] or data.get('lineString')
     else:
-        pydevd.settrace('128.102.237.251')
         print "invalid feature type specified in json"
     return coords
 
@@ -165,7 +163,6 @@ def setFeatureCoordinates(feature, coords, type):
     elif type == 'LineString':
         feature.lineString = geosLineString(coords)
     else:
-        pydevd.settrace('128.102.237.251')
         print "invalid feature type specified in json"
     feature.save()
     return None
@@ -246,7 +243,6 @@ def saveOrDeleteFeature(request, uuid=None):
         coords = getFeatureCoordinates(data, featureType)
         errorText = setFeatureCoordinates(feature, coords, featureType)
         if errorText:
-            pydevd.settrace('128.102.237.251')
             return HttpResponse(json.dumps({'failed': errorText}), content_type='application/json')
 
         if data.get('popup', None) is not None:

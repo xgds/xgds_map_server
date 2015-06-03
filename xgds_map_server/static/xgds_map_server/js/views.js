@@ -268,7 +268,7 @@ app.views.FeatureCoordinatesView = Backbone.Marionette.ItemView.extend({
 		this.model.save();
 		
 		//TODO: change the location of feature on the map.
-		app.vent.trigger('updateFeaturePosition',  this.model);
+		this.model.trigger('change:coordinates');
 	},
 	serializeData: function() {
 		var data = this.model.toJSON();
