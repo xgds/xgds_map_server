@@ -118,7 +118,7 @@ class AbstractMap(AbstractMapNode):
 
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
-        result = super(AbstractMapNode, self).getTreeJson()
+        result = super(AbstractMap, self).getTreeJson()
         result["selected"] = self.visible
         return result
 
@@ -149,7 +149,7 @@ class KmlMap(AbstractMap):
 
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
-        result = super(AbstractMap, self).getTreeJson()
+        result = super(KmlMap, self).getTreeJson()
         result["data"]["openable"] = self.openable
         result["data"]["kmlFile"] = settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + self.kmlFile
         if self.localFile:
@@ -178,7 +178,7 @@ class MapTile(AbstractMap):
 
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
-        result = super(AbstractMap, self).getTreeJson()
+        result = super(MapTile, self).getTreeJson()
         result["data"]["tileURL"] = self.getXYZTileSourceUrl()
         return result
 
@@ -201,7 +201,7 @@ class MapLayer(AbstractMap):
 
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
-        result = super(AbstractMap, self).getTreeJson()
+        result = super(MapLayer, self).getTreeJson()
         result["data"]["layerJSON"] = reverse('mapLayerJSON', kwargs={'layerID': self.uuid})
         return result
 
@@ -217,11 +217,8 @@ class MapCollection(AbstractMap):
 
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
-        result = super(AbstractMap, self).getTreeJson()
+        result = super(MapCollection, self).getTreeJson()
         result["data"]["collectionJSON"] = reverse('mapCollectionJSON', kwargs={'mapCollectionID': self.uuid})
-#         result["data"]["collectionJSON"] = reverse('xgds_data_displayRecord', kwargs={'displayModuleName': 'xgds_data',
-#                                                                                       'displayModelName': 'Collection',
-#                                                                                       'rid': self.collection.id}) + '?format=json'
         return result
 
 
@@ -237,7 +234,7 @@ class MapSearch(AbstractMap):
 
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
-        result = super(AbstractMap, self).getTreeJson()
+        result = super(MapSearch, self).getTreeJson()
         result["data"]["refresh"] = self.refreshRate
         result["data"]["searchResultsJSON"] = reverse('data_searchResultsJSON', kwargs={'collectionID': self.requestLog.id})
         return result

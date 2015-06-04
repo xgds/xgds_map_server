@@ -303,7 +303,7 @@ def setNodeVisibility(request):
             node = MAP_NODE_MANAGER.get(uuid=nodeUuid)
             node.visible = visible
             node.save()
-            print "saved visibility for " + node.uuid + ' and visible is ' + node.visible + ' and post is ' + request.POST['visible']
+#             print "saved visibility for " + node.uuid + ' and visible is ' + str(node.visible) + ' and post is ' + str(request.POST['visible'])
             return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
         except:
             return HttpResponse(json.dumps({'error': 'Set Visibility Failed'}), content_type='application/json')

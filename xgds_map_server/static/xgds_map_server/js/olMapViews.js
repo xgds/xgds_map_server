@@ -408,13 +408,13 @@ $(function() {
                     zIndex: Infinity
                 });
                 app.styles['label'] = {
-                        font: '14px Calibri,sans-serif',
+                        font: '12px Calibri,sans-serif',
                         fill: new ol.style.Fill({
                             color: 'yellow'
                         }),
                         stroke: new ol.style.Stroke({
                             color: 'black',
-                            width: 2
+                            width: 1
                         }),
                         offsetY: -20
                 };
@@ -457,7 +457,11 @@ $(function() {
             this.options = options || {};
             this.group = this.options.group;
             this.node = this.options.node; // may be undefined
-            this.visible = false;
+            if (_.isUndefined(this.node.selected)){
+                this.visible = false;
+            } else {
+                this.visible = this.node.selected;
+            }
             this.checkRequired();
             this.constructMapElements();
             this.render();
@@ -499,7 +503,12 @@ $(function() {
             this.options = options || {};
             this.group = this.options.group;
             this.node = this.options.node; // may be undefined
-            this.visible = false;
+            if (_.isUndefined(this.options.visible)){
+                this.visible = false;
+            } else {
+                this.visible = this.options.visible;
+            }
+            
             this.checkRequired();
             this.on( "readyToDraw", this.finishInitialization, this);
             this.initializeFeaturesJson();
@@ -617,7 +626,11 @@ $(function() {
             if (!options.mapLayerGroup && !options.mapLayerJsonURL) {
                 throw 'Missing a required option!';
             }
-            this.visible = false;
+            if (_.isUndefined(this.options.visible)){
+                this.visible = false;
+            } else {
+                this.visible = this.options.visible;
+            }
             this.node = this.options.node; // may be undefined
             this.drawBelow = false;
             this.features = [];
