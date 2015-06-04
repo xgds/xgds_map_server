@@ -42,7 +42,8 @@ XGDS_MAP_SERVER_GDAL2TILES = "/xgds_map_server/bin/gdal2tiles.py"
 XGDS_MAP_SERVER_LOGO_PATTERNS = []
 
 # include this in your siteSettings.py BOWER_INSTALLED_APPS
-XGDS_MAP_SERVER_BOWER_INSTALLED_APPS = ('backbone#1.1.2',
+XGDS_MAP_SERVER_BOWER_INSTALLED_APPS = ('sprintf.js',
+                                        'backbone#1.1.2',
                                         'marionette',
                                         'backbone-relational',
                                         'backbone-forms',
