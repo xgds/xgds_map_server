@@ -87,22 +87,31 @@ app.views.FancyTreeView = Backbone.View.extend({
                 select: function(event, data) {
                     if (!_.isUndefined(data.node.data.kmlFile)){
                         if (_.isUndefined(data.node.mapView)) {
-                            // make a new one
                             app.vent.trigger('kmlNode:create', data.node);
                         } else {
                             data.node.mapView.render();
                         }
                     } else if (!_.isUndefined(data.node.data.layerJSON)){
                         if (_.isUndefined(data.node.mapLayerView)) {
-                            // make a new one
                             app.vent.trigger('mapLayerNode:create', data.node);
                         } else {
                             data.node.mapLayerView.render();
                         }
                     } else if (!_.isUndefined(data.node.data.tileURL)){
                         if (_.isUndefined(data.node.mapView)) {
-                            // make a new one
                             app.vent.trigger('tileNode:create', data.node);
+                        } else {
+                            data.node.mapView.render();
+                        }
+                    } else if (!_.isUndefined(data.node.data.collectionJSON)){
+                        if (_.isUndefined(data.node.mapView)) {
+                            app.vent.trigger('collectionNode:create', data.node);
+                        } else {
+                            data.node.mapView.render();
+                        }
+                    } else if (!_.isUndefined(data.node.data.searchURL)){
+                        if (_.isUndefined(data.node.mapView)) {
+                            app.vent.trigger('searchNode:create', data.node);
                         } else {
                             data.node.mapView.render();
                         }

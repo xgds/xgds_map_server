@@ -98,6 +98,13 @@ function getExtens(coordinates){
 $(function() {
     app.views = app.views || {};
 
+    // hashmaps to look up the different types of layers
+    app.kmlMap = {}; 
+    app.mapLayerMap = {};
+    app.tileMap = {};
+    app.collectionMap = {};
+    app.searchMap = {};
+
     app.views.OLMapView = Backbone.View.extend({
             el: "#map",
             initialize: function(options) {
@@ -150,6 +157,12 @@ $(function() {
                 app.vent.on('tileNode:create', function(node) {
                     this.createTileView(node);
                 }, this);
+                app.vent.on('searchNode:create', function(node) {
+                    this.createSearchView(node);
+                }, this);
+                app.vent.on('collectionNode:create', function(node) {
+                    this.createCollectionView(node);
+                }, this);
             },
             
             postMapCreation: function() {
@@ -161,9 +174,11 @@ $(function() {
             },
             
             buildLayersForMap: function() {
-                this.kmlGroup = new ol.layer.Group();
-                this.mapLayerGroup = new ol.layer.Group();
                 this.tileGroup = new ol.layer.Group();
+                this.mapLayerGroup = new ol.layer.Group();
+                this.kmlGroup = new ol.layer.Group();
+                this.collectionGroup = new ol.layer.Group();
+                this.searchGroup = new ol.layer.Group();
                 this.layersForMap = [
                  new ol.layer.Tile({
                      source: new ol.source.MapQuest({layer: 'osm'})
@@ -171,6 +186,8 @@ $(function() {
                  this.tileGroup,
                  this.mapLayerGroup,
                  this.kmlGroup,
+                 this.collectionGroup,
+                 this.searchGroup
                  ]
             },
             
@@ -206,10 +223,6 @@ $(function() {
                     dataType: 'json',
                     success: $.proxy(function(data) {
                         app.treeData = data;
-                        // temporary hashmaps
-                        app.kmlMap = {}; 
-                        app.mapLayerMap = {};
-                        app.tileMap = {};
                         this.layersInitialized = true;
                         app.vent.trigger('treeData:loaded');
                         this.initializeMapLayers(app.treeData[0]);
@@ -243,6 +256,20 @@ $(function() {
                         } else {
                             var foundTile = app.tileMap[node.key];
                             foundTile.render();
+                        }
+                    } else if (!_.isUndefined(node.data.collectionJSON)){
+                        if (_.isUndefined(app.collectionMap[node.key])){
+                            app.collectionMap[node.key] = this.createCollectionView(node);
+                        } else {
+                            var foundCollection = app.collectionMap[node.key];
+                            foundCollection.render();
+                        }
+                    } else if (!_.isUndefined(node.data.searchURL)){
+                        if (_.isUndefined(app.searchMap[node.key])){
+                            app.searchMap[node.key] = this.createSearchView(node);
+                        } else {
+                            var foundSearch = app.searchMap[node.key];
+                            foundSearch.render();
                         }
                     }
                 }
@@ -283,6 +310,24 @@ $(function() {
               });
               node.mapView = tileView;
               return tileView;
+            },
+            createCollectionView: function(node){
+                var collectionView = new app.views.CollectionView({
+                    node: node,
+                    group: this.collectionGroup,
+                    collectionJSON: node.data.collectionJSON
+                });
+                node.mapView = collectionView;
+                return collectionView;
+            },
+            createSearchView: function(node){
+                var searchView = new app.views.SearchView({
+                    node: node,
+                    group: this.searchGroup,
+                    searchURL: node.data.searchURL
+                });
+                node.mapView = searchView;
+                return searchView;
             },
             updateMapLayers: function() {
                 if (!_.isUndefined(app.tree)){
@@ -413,7 +458,6 @@ $(function() {
             this.group = this.options.group;
             this.node = this.options.node; // may be undefined
             this.visible = false;
-            
             this.checkRequired();
             this.constructMapElements();
             this.render();
@@ -449,6 +493,36 @@ $(function() {
             }
         }
     });
+    
+    app.views.DelayTreeMapElement = app.views.TreeMapElement.extend({
+        initialize: function(options) {
+            this.options = options || {};
+            this.group = this.options.group;
+            this.node = this.options.node; // may be undefined
+            this.visible = false;
+            this.checkRequired();
+            this.on( "readyToDraw", this.finishInitialization, this);
+            this.initializeFeaturesJson();
+        },
+        finishInitialization: function() {
+            this.constructMapFeatures();
+            this.render();
+        },
+        initializeFeaturesJson: function() {
+            var _this = this;
+            $.getJSON(this.getJSONURL(), function(data){
+                _this.cacheJSON(data);
+                _this.trigger('readyToDraw');
+            });
+        },
+        getJSONURL: function() {
+            // override this
+        },
+        cacheJSON: function(data){
+            // override this
+        }
+    });
+    
     app.views.KmlLayerView = app.views.TreeMapElement.extend({
         initialize: function(options) {
             this.kmlFile = options.kmlFile;
@@ -498,7 +572,43 @@ $(function() {
                 });
             }
         }
-        
+    });
+    
+    app.views.CollectionView = app.views.DelayTreeMapElement.extend({
+        // We render the collection as a group of layers, each layer has the rendering
+        // of all the collected objects with the same type.
+        checkRequired: function() {
+            if (!this.options.collectionJSON) {
+                throw 'Missing collection JSON option!';
+            }
+            app.views.TreeMapElement.prototype.checkRequired.call(this);
+        },
+        getJSONURL: function() {
+            return this.options.collectionJSON;
+        },
+        cacheJSON: function(data){
+            this.objectsJson = data;
+        },
+        constructMapFeatures: function() {
+            this.mapElement = new ol.layer.Group({name:this.options.name});
+            this.collectionGroup = this.mapElement;
+            this.map = {};
+            for (i = 0; i < this.objectsJson.length; i++){
+                var object = this.objectsJson[i];
+                var theClass = window[object.type];
+                if (!_.isUndefined(theClass) && !_.isUndefined(theClass.constructElements)) {
+                    if (_.isUndefined(this.map[object.type])){
+                        this.map[object.type] = [];
+                    }
+                    this.map[object.type].push(object);
+                }
+            }
+            for (var key in this.map){
+                var theClass = window[key];
+                var newLayer = theClass.constructElements(this.map[key]);
+                this.collectionGroup.getLayers().push(newLayer);
+            }
+        }
     });
     
     app.views.MapLayerView = Backbone.View.extend({
@@ -534,9 +644,9 @@ $(function() {
             if (_.isUndefined(this.layerGroup)){
                 this.layerGroup = new ol.layer.Group({name:this.mapLayerJson.name});
             };
-            var mlview = this;
-            $.each(mlview.mapLayerJson.features, function( index, value ) {
-                    mlview.createFeature(value);
+            var _this = this;
+            $.each(this.mapLayerJson.features, function( index, value ) {
+                    _this.createFeature(value);
               });
         },
         createFeature: function(featureJson){

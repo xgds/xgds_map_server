@@ -91,7 +91,8 @@ def getMapServerIndexPage(request):
     templates = get_map_tree_templates()
     return render_to_response('MapView.html',
                               {'settings': settings,
-                               'templates': templates},
+                               'templates': templates,
+                               'app': 'xgds_map_server/js/simpleMapApp.js'},
                               context_instance=RequestContext(request))
 
 
@@ -131,6 +132,7 @@ def getMapEditorPage(request, layerID=None):
     return render_to_response("MapEditor.html",
                               RequestContext(request, {'templates': templates,
                                                        'settings': settings,
+                                                       'app': 'xgds_map_server/js/app.js',
                                                        'saveMaplayerUrl': reverse('saveMaplayer'),
                                                        'mapLayerDict': json.dumps(mapLayerDict, indent=4, cls=GeoDjangoEncoder)
                                                        }),
