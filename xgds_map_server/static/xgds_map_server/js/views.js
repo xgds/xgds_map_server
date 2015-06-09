@@ -25,7 +25,7 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
         'click #btn-saveas': function() { this.showSaveAsDialog(); },
         'click #btn-undo': function() { app.Actions.undo(); },
         'click #btn-redo': function() { app.Actions.redo(); },
-        'click #btn-save': function() { app.vent.trigger('saveAll')},
+        'click #btn-save': function() { this.saveEntireLayer();},
         'click #btn-delete': function() {window.location.href=app.options.deleteUrl}
     },
 
@@ -37,6 +37,7 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
         this.listenTo(app.vent, 'redoNotEmpty', this.enableRedo);
         this.listenTo(app.mapLayer, 'sync', function(model) {this.updateSaveStatus('sync')});
         this.listenTo(app.mapLayer, 'error', function(model) {this.updateSaveStatus('error')});
+        // todo listento sync of features
     },
 
     onShow: function() {
@@ -153,6 +154,14 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
 
     getFeatureModelUrl: function(feature) {
     	console.log("feature to be used for url is ", feature);
+    },
+    
+    saveEntireLayer: function(){
+        var theFeatures = app.mapLayer.get('feature');
+        for (i = 0; i < theFeatures.models.length; i++){
+            theFeatures.models[i].save();
+        }
+        app.mapLayer.save();
     },
     
     showSaveAsDialog: function() {
