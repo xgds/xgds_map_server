@@ -45,7 +45,7 @@ from django.contrib.gis.geos import LinearRing as geosLinearRing
 
 
 from xgds_map_server import settings
-from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapSearch, MapCollection, MAP_NODE_MANAGER
+from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapSearch, MapCollection, MAP_NODE_MANAGER, MAP_MANAGER
 from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
 from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm, MapSearchForm, MapCollectionForm
 from geocamUtil.geoEncoder import GeoDjangoEncoder
@@ -972,6 +972,17 @@ def getRootNode():
         return roots[0]
 
 
+def getSelectedNodesJSON(request):
+    """ json for fancy tree for selected nodes
+    """
+    node_dict = []
+    nodes = MAP_MANAGER.filter(deleted=False, visible=True)
+    for node in nodes:
+        node_dict.append(node.getTreeJson())
+    json_data = json.dumps(node_dict, indent=4, cls=GeoDjangoEncoder)
+    return HttpResponse(content=json_data,
+                        content_type="application/json")
+
 @never_cache
 def getFancyTreeJSON(request):
     """
@@ -1000,10 +1011,10 @@ def addGroupToFancyJSON(group, map_tree_json):
         del group_json['data']['href']
         group_json['expanded'] = True
 
-    nodes = MAP_NODE_MANAGER.filter(parent=group)
+    nodes = MAP_NODE_MANAGER.filter(parent=group, deleted=False).order_by('name')
     for node in nodes:
-        if node.deleted:
-            continue
+#         if node.deleted:
+#             continue
         if node.__class__.__name__ == MapGroup.__name__:
             sub_nodes.append(addGroupToFancyJSON(node, [])[0])
         else:

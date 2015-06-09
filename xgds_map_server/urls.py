@@ -54,6 +54,7 @@ urlpatterns = patterns(
      {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']},
      'mapListJSON'),
     (r'^treejson/', views.getFancyTreeJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapTreeJSON'),
+    (r'^selectedjson/', views.getSelectedNodesJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapSelectedJSON'),
     (r'^mapLayerJSON/(?P<layerID>[\w-]+)/', views.getMapLayerJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapLayerJSON'),
     # HTML detail view of map
     (r'^detail/(?P<mapID>[\w-]+)/', views.getMapDetailPage,

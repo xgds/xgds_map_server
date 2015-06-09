@@ -90,15 +90,7 @@ class MapGroup(AbstractMapNode):
 
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
-        """ for some reason you cannot call super on this one """
-        result = {"title": self.name,
-                  "key": self.uuid,
-                  "tooltip": self.description,
-                  "data": {"parentId": None,
-                           "href": self.getEditHref()}
-                  }
-        if self.parent:
-            result['data']['parentId'] = self.parent.uuid
+        result = super(MapGroup, self).getTreeJson()
         result["folder"] = True
         return result
 
@@ -237,6 +229,25 @@ class MapSearch(AbstractMap):
         result = super(MapSearch, self).getTreeJson()
         result["data"]["refresh"] = self.refreshRate
         result["data"]["searchResultsJSON"] = reverse('data_searchResultsJSON', kwargs={'collectionID': self.requestLog.id})
+        return result
+
+
+class MapLink(AbstractMap):
+    """
+    A layer that encapsulates an url that gives json objects
+    """
+    url = models.CharField('url', max_length=512)
+    refreshRate = models.IntegerField(default=0)  # refresh rate in seconds, 0 = no refresh
+
+    def getEditHref(self):
+        """ since we create map link ourselves do not provide a facility to edit them.
+        """
+        return ""
+
+    def getTreeJson(self):
+        """ Get the json block that the fancy tree needs to render this node """
+        result = super(MapLink, self).getTreeJson()
+        result["data"]["json"] = self.url
         return result
 
 
@@ -419,4 +430,7 @@ STYLE_MANAGER = ModelCollectionManager(AbstractStyle,
                                         DrawingStyle,
                                         GroundOverlayStyle])
 
-MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile, MapCollection])
+MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile, MapCollection, MapLink])
+
+# this manager does not include groups
+MAP_MANAGER = ModelCollectionManager(AbstractMap, [MapLayer, KmlMap, MapTile, MapCollection, MapLink])

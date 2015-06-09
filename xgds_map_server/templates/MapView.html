@@ -42,6 +42,7 @@
 
 {% block jsInit %}
 	appOptions = {
+		selectedLayerUrl: "{{ settings.XGDS_MAP_SERVER_SELECTED_LAYER_URL }}",
 		layerFeedUrl: "{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}",
 		siteFrame: {{ settings.XGDS_CURRENT_SITEFRAME|safe }},
 		XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: {{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }},

@@ -62,8 +62,10 @@
   
 
 {% block scripts %}
-    {# javascript 'planner_app' #}
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery/dist/jquery.min.js'></script>
+	{{ block.super }}
+   	{% include "MapJS.html" %}
+
+    <!-- <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery/dist/jquery.min.js'></script>
      <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-migrate/index.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-ui/jquery-ui.min.js'></script>
 	<script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-cookie/jquery.cookie.js'></script>
@@ -73,19 +75,22 @@
     
     <script type="text/javascript" src='{{ EXTERNAL_URL }}handlebars/handlebars.min.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}backbone/backbone.js'></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}backbone-relational/backbone-relational.js'></script>
+     -->
+     <script type="text/javascript" src='{{ EXTERNAL_URL }}backbone-relational/backbone-relational.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}backbone-forms/distribution/backbone-forms.min.js'></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}marionette/lib/backbone.marionette.min.js'></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}string-format/string-format.js'></script>
+    <!-- <script type="text/javascript" src='{{ EXTERNAL_URL }}marionette/lib/backbone.marionette.min.js'></script>
+     -->
+     <script type="text/javascript" src='{{ EXTERNAL_URL }}string-format/string-format.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}usng/usng.js'></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}proj4/dist/proj4.js'></script>
-
+<!--     <script type="text/javascript" src='{{ EXTERNAL_URL }}proj4/dist/proj4.js'></script>
  	<script src="{{EXTERNAL_URL}}ol3/build/ol-debug.js" type="text/javascript"></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}ol3-popup/src/ol3-popup.js'></script>
+    -->
 
-    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/app.js'></script>    
+<!--     <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/app.js'></script>    
    	<script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/fancyTreeView.js'></script>
    	<script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/olMapViews.js'></script>
+ -->    
     <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/geo.js'></script>
     <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/forms.js'></script>
     <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/models.js'></script>
@@ -104,6 +109,7 @@
 {% block jsInit %}
     appOptions = {
         offline: {{ settings.XGDS_PLANNER_OFFLINE|yesno:"true,false" }},
+ 		selectedLayerUrl: "{{ settings.XGDS_MAP_SERVER_SELECTED_LAYER_URL }}",
         layerFeedUrl: "{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}",
         XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: {{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }},
         dataUrl: "{{ settings.DATA_URL }}",

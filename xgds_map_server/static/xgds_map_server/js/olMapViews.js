@@ -98,12 +98,8 @@ function getExtens(coordinates){
 $(function() {
     app.views = app.views || {};
 
-    // hashmaps to look up the different types of layers
-    app.kmlMap = {}; 
-    app.mapLayerMap = {};
-    app.tileMap = {};
-    app.collectionMap = {};
-    app.searchMap = {};
+    // map to look up the different layers since we want to initialize them before the tree shows up
+    app.nodeMap = {}; 
 
     app.views.OLMapView = Backbone.View.extend({
             el: "#map",
@@ -148,21 +144,34 @@ $(function() {
                 app.vent.on('layers:loaded', this.initializeMapData);
                 app.vent.on('tree:loaded', this.updateMapLayers);
                 app.vent.trigger('layers:loaded');
-                app.vent.on('kmlNode:create', function(node) {
-                    this.createKmlLayerView(node);
+                
+                app.vent.on('mapNode:create', function(node) {
+                    this.createNode(node);
                 }, this);
-                app.vent.on('mapLayerNode:create', function(node) {
-                    this.createMapLayerView(node);
-                }, this);
-                app.vent.on('tileNode:create', function(node) {
-                    this.createTileView(node);
-                }, this);
-                app.vent.on('searchNode:create', function(node) {
-                    this.createSearchView(node);
-                }, this);
-                app.vent.on('collectionNode:create', function(node) {
-                    this.createCollectionView(node);
-                }, this);
+            },
+            
+            createNode: function(node){
+                if (!_.isUndefined(app.nodeMap[node.key])){
+                    // render it
+                    var foundView = app.nodeMap[node.key];
+                    foundView.node = node;
+                    node.mapView = foundView;
+                    foundView.render();
+                } else {
+                    if (node.data.type == "KmlMap"){
+                        app.nodeMap[node.key] = this.createKmlLayerView(node);
+                    } else if (node.data.type == "MapLayer"){
+                        app.nodeMap[node.key] = this.createMapLayerView(node);
+                    } else if (node.data.type == "MapTile"){
+                        app.nodeMap[node.key] = this.createTileView(node);
+                    } else if (node.data.type == "MapCollection"){
+                        app.nodeMap[node.key] = this.createCollectionView(node);
+                    } else if (node.data.type == "MapSearch"){
+                        app.nodeMap[node.key] = this.createSearchView(node);
+                    } else if (node.data.type == "MapLink"){
+                        app.nodeMap[node.key] = this.createMapLinkView(node);
+                    }
+                }
             },
             
             postMapCreation: function() {
@@ -179,6 +188,7 @@ $(function() {
                 this.kmlGroup = new ol.layer.Group();
                 this.collectionGroup = new ol.layer.Group();
                 this.searchGroup = new ol.layer.Group();
+                this.mapLinkGroup = new ol.layer.Group();
                 this.layersForMap = [
                  new ol.layer.Tile({
                      source: new ol.source.MapQuest({layer: 'osm'})
@@ -186,6 +196,7 @@ $(function() {
                  this.tileGroup,
                  this.mapLayerGroup,
                  this.kmlGroup,
+                 this.mapLinkGroup,
                  this.collectionGroup,
                  this.searchGroup
                  ]
@@ -231,47 +242,9 @@ $(function() {
                 }
             },
             // read through the json data and turn on layers that should be on
-            initializeMapLayers: function(node, index, collection) {               
-            	if (node.selected){
-                   // create the kml layer view and store the layer in a map so we can get it later
-                    if (!_.isUndefined(node.data.kmlFile)){
-                        if (!endsWith(node.data.kmlFile, "kmz")) {
-                            if (_.isUndefined(app.kmlMap[node.key])){
-                                app.kmlMap[node.key] = this.createKmlLayerView(node);
-                            } else {
-                                var foundKml = app.kmlMap[node.key];
-                                foundKml.render();
-                            }
-                        }
-                    } else if (!_.isUndefined(node.data.layerJSON)){
-                        if (_.isUndefined(app.mapLayerMap[node.key])){
-                            app.mapLayerMap[node.key] = this.createMapLayerView(node);
-                        } else {
-                            var foundLayer = app.mapLayerMap[node.key];
-                            foundLayer.render();
-                        }
-                    } else if (!_.isUndefined(node.data.tileURL)){
-                        if (_.isUndefined(app.tileMap[node.key])){
-                            app.tileMap[node.key] = this.createTileView(node);
-                        } else {
-                            var foundTile = app.tileMap[node.key];
-                            foundTile.render();
-                        }
-                    } else if (!_.isUndefined(node.data.collectionJSON)){
-                        if (_.isUndefined(app.collectionMap[node.key])){
-                            app.collectionMap[node.key] = this.createCollectionView(node);
-                        } else {
-                            var foundCollection = app.collectionMap[node.key];
-                            foundCollection.render();
-                        }
-                    } else if (!_.isUndefined(node.data.searchURL)){
-                        if (_.isUndefined(app.searchMap[node.key])){
-                            app.searchMap[node.key] = this.createSearchView(node);
-                        } else {
-                            var foundSearch = app.searchMap[node.key];
-                            foundSearch.render();
-                        }
-                    }
+            initializeMapLayers: function(node, index, collection) {
+                if (node.selected){
+                    this.createNode(node);
                 }
                 if (!_.isUndefined(node.children)){
                     var olview = this;
@@ -300,6 +273,7 @@ $(function() {
                     mapLayerGroup: this.mapLayerGroup
                 });
                 node.mapLayerView = mapLayerView;
+                node.mapView = node.mapLayerView;
                 return mapLayerView;
             },
             createTileView: function(node) {
@@ -329,38 +303,22 @@ $(function() {
                 node.mapView = searchView;
                 return searchView;
             },
+            createMapLinkView: function(node){
+                var searchView = new app.views.MapLinkView({
+                    node: node,
+                    group: this.mapLinkGroup,
+                    url: node.data.json
+                });
+                node.mapView = searchView;
+                return searchView;
+            },
             updateMapLayers: function() {
                 if (!_.isUndefined(app.tree)){
                     var selectedNodes = app.tree.getSelectedNodes();
                     selectedNodes.forEach(function(node){
-                        if (!_.isUndefined(node.data.kmlFile) && _.isUndefined(node.mapView)){
-                            if (!endsWith(node.data.kmlFile, "kmz")) {
-                                var kmlLayerView = app.kmlMap[node.key];
-                                if (!_.isUndefined(kmlLayerView)){
-                                    kmlLayerView.node = node;
-                                    node.mapView = kmlLayerView;
-                                } else {
-                                    app.kmlMap[node.key] = this.createKmlLayerView(node);
-                                }
-                            }
-                        } else if (!_.isUndefined(node.data.layerJSON) && _.isUndefined(node.mapLayerView)){
-                            var mapLayerView = app.mapLayerMap[node.key];
-                            if (!_.isUndefined(mapLayerView)){
-                                mapLayerView.node = node;
-                                node.mapLayerView = mapLayerView;
-                            } else {
-                                app.mapLayerMap[node.key] = this.createMapLayerView(node);
-                            }
-                        } else if (!_.isUndefined(node.data.tileURL) && _.isUndefined(node.mapView)){
-                            var tileView = app.tileMap[node.key];
-                            if (!_.isUndefined(tileView)){
-                                tileView.node = node;
-                                node.mapView = tileView;
-                            } else {
-                                app.tileMap[node.key] = this.createTileView(node);
-                            }
+                        if (_.isUndefined(node.mapView)){
+                            this.createNode(node);
                         }
-                        
                     }, this);
                 }
             },
@@ -449,6 +407,13 @@ $(function() {
                         this.popup.hide();
                     }
                   }, this);
+            },
+            
+            getMapExtent: function() {
+                // get the current map extent, you can use this in searches.
+                var extent = this.map.getView().calculateExtent(this.map.getSize());
+                extent = ol.proj.transformExtent(extent, 'EPSG:3857', 'EPSG:4326');
+                return extent;
             }
         });
     
@@ -460,7 +425,7 @@ $(function() {
             if (_.isUndefined(this.node.selected)){
                 this.visible = false;
             } else {
-                this.visible = this.node.selected;
+                this.visible = !this.node.selected;  // the first time we need to set it opposite so rendering works
             }
             this.checkRequired();
             this.constructMapElements();
@@ -579,6 +544,45 @@ $(function() {
                         url: this.tileURL
                     })
                 });
+            }
+        }
+    });
+    
+    
+    app.views.MapLinkView = app.views.DelayTreeMapElement.extend({
+        // We render the collection as a group of layers, each layer has the rendering
+        // of all the collected objects with the same type.
+        checkRequired: function() {
+            if (!this.options.url) {
+                throw 'Missing url option!';
+            }
+            app.views.TreeMapElement.prototype.checkRequired.call(this);
+        },
+        getJSONURL: function() {
+            var extens = app.map.getMapExtent();
+            return this.options.url + "?extens=" + extens;
+        },
+        cacheJSON: function(data){
+            this.objectsJson = data;
+        },
+        constructMapFeatures: function() {
+            this.mapElement = new ol.layer.Group({name:this.options.name});
+            this.collectionGroup = this.mapElement;
+            this.map = {};
+            for (i = 0; i < this.objectsJson.length; i++){
+                var object = this.objectsJson[i];
+                var theClass = window[object.type];
+                if (!_.isUndefined(theClass) && !_.isUndefined(theClass.constructElements)) {
+                    if (_.isUndefined(this.map[object.type])){
+                        this.map[object.type] = [];
+                    }
+                    this.map[object.type].push(object);
+                }
+            }
+            for (var key in this.map){
+                var theClass = window[key];
+                var newLayer = theClass.constructElements(this.map[key]);
+                this.collectionGroup.getLayers().push(newLayer);
             }
         }
     });

@@ -85,36 +85,11 @@ app.views.FancyTreeView = Backbone.View.extend({
                     var win = window.open(data.node.data.href, '_edit');
                 },
                 select: function(event, data) {
-                    if (!_.isUndefined(data.node.data.kmlFile)){
-                        if (_.isUndefined(data.node.mapView)) {
-                            app.vent.trigger('kmlNode:create', data.node);
-                        } else {
-                            data.node.mapView.render();
-                        }
-                    } else if (!_.isUndefined(data.node.data.layerJSON)){
-                        if (_.isUndefined(data.node.mapLayerView)) {
-                            app.vent.trigger('mapLayerNode:create', data.node);
-                        } else {
-                            data.node.mapLayerView.render();
-                        }
-                    } else if (!_.isUndefined(data.node.data.tileURL)){
-                        if (_.isUndefined(data.node.mapView)) {
-                            app.vent.trigger('tileNode:create', data.node);
-                        } else {
-                            data.node.mapView.render();
-                        }
-                    } else if (!_.isUndefined(data.node.data.collectionJSON)){
-                        if (_.isUndefined(data.node.mapView)) {
-                            app.vent.trigger('collectionNode:create', data.node);
-                        } else {
-                            data.node.mapView.render();
-                        }
-                    } else if (!_.isUndefined(data.node.data.searchURL)){
-                        if (_.isUndefined(data.node.mapView)) {
-                            app.vent.trigger('searchNode:create', data.node);
-                        } else {
-                            data.node.mapView.render();
-                        }
+                    // new simpler way
+                    if (_.isUndefined(data.node.mapView)){
+                        app.vent.trigger('mapNode:create', data.node);
+                    } else {
+                        data.node.mapView.render();
                     }
                   },
                   persist: {
