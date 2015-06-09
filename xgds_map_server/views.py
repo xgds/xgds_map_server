@@ -673,7 +673,8 @@ def getDeleteNodePage(request, nodeID):
     HTML view to delete map
     """
     try:
-        map_obj = MAP_NODE_MANAGER.objects.get(uuid=mapID)
+        map_objs = MAP_NODE_MANAGER.filter(uuid=nodeID)
+        map_obj = map_objs[0]
     except:
         raise Http404
 
@@ -1062,8 +1063,8 @@ def getMapTree():
     ''' This is left here to support older kml feed views '''
     groups = MapGroup.objects.filter(deleted=0)
     kmlMaps = KmlMap.objects.filter(deleted=0)
-    layers = MapLayer.objects.filter(deleted=0)
-    tiles = MapTile.objects.filter(deleted=0)
+#     layers = MapLayer.objects.filter(deleted=0)
+#     tiles = MapTile.objects.filter(deleted=0)
 
     groupLookup = dict([(group.uuid, group) for group in groups])
 
@@ -1073,8 +1074,8 @@ def getMapTree():
     for group in groups:
         group.subGroups = []
         group.subMaps = []
-        group.subLayers = []
-        group.subTiles = []
+#         group.subLayers = []
+#         group.subTiles = []
 
     for subGroup in groups:
         if subGroup.parent:
@@ -1086,15 +1087,15 @@ def getMapTree():
             parent = groupLookup[subMap.parent.uuid]
             parent.subMaps.append(subMap)
 
-    for subLayer in layers:
-        if subLayer.parent:
-            parent = groupLookup[subLayer.parent.uuid]
-            parent.subLayers.append(subLayer)
-
-    for subTile in tiles:
-        if subTile.parent:
-            parent = groupLookup[subTile.parent.uuid]
-            parent.subTiles.append(subTile)
+#     for subLayer in layers:
+#         if subLayer.parent:
+#             parent = groupLookup[subLayer.parent.uuid]
+#             parent.subLayers.append(subLayer)
+# 
+#     for subTile in tiles:
+#         if subTile.parent:
+#             parent = groupLookup[subTile.parent.uuid]
+#             parent.subTiles.append(subTile)
 
     rootMapList = [g for g in groups if g.parent is None]
     if len(rootMapList) != 0:

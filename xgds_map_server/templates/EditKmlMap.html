@@ -11,7 +11,7 @@
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
 {% include "MapForm.html" %}
 <input type="submit" id="saveButton" value="{% if fromSave %}Success!{% else %}Save{% endif %}" />
-<a href="{%  url 'nodeDelete' map_obj.uuid %}"> {% if map_obj.deleted %}Undelete{% else %}Delete{% endif %}" </a>
+<a href="{%  url 'nodeDelete' map_obj.uuid %}" class="mybutton"> {% if map_obj.deleted %}Undelete{% else %}Delete{% endif %}</a>
 </form>
 {% endblock %}
 
