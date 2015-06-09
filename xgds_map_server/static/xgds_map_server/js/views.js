@@ -24,7 +24,9 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
         'click #btn-addFeatures': function() { app.vent.trigger('mapmode', 'addFeatures'); this.updateTip('add');},
         'click #btn-saveas': function() { this.showSaveAsDialog(); },
         'click #btn-undo': function() { app.Actions.undo(); },
-        'click #btn-redo': function() { app.Actions.redo(); }
+        'click #btn-redo': function() { app.Actions.redo(); },
+        'click #btn-save': function() { app.vent.trigger('saveAll')},
+        'click #btn-delete': function() {window.location.href=app.options.deleteUrl}
     },
 
     initialize: function() {

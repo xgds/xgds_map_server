@@ -134,6 +134,7 @@ def getMapEditorPage(request, layerID=None):
                                                        'settings': settings,
                                                        'app': 'xgds_map_server/js/app.js',
                                                        'saveMaplayerUrl': reverse('saveMaplayer'),
+                                                       'uuid': mapLayer.uuid,
                                                        'mapLayerDict': json.dumps(mapLayerDict, indent=4, cls=GeoDjangoEncoder)
                                                        }),
                               )

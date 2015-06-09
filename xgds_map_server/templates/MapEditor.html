@@ -111,6 +111,7 @@
         offline: {{ settings.XGDS_PLANNER_OFFLINE|yesno:"true,false" }},
  		selectedLayerUrl: "{{ settings.XGDS_MAP_SERVER_SELECTED_LAYER_URL }}",
         layerFeedUrl: "{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}",
+        deleteUrl: "{% url 'nodeDelete' uuid %}",
         XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: {{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }},
         dataUrl: "{{ settings.DATA_URL }}",
         readOnly: {{ editable|yesno:"false,true" }},
