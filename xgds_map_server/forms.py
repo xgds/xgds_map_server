@@ -67,15 +67,25 @@ class MapTileForm(AbstractMapForm):
         exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed']
 
 
+class CollectionModelChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.name
+
+
 class MapCollectionForm(AbstractMapForm):
-    collection = forms.ModelChoiceField(queryset=Collection.objects.all().order_by('name'), empty_label=None)
+    collection = CollectionModelChoiceField(queryset=Collection.objects.all().order_by('name'), empty_label=None)
 
     class Meta(AbstractMapForm.Meta):
         model = MapCollection
 
 
+class SearchModelChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return obj.name
+
+
 class MapSearchForm(AbstractMapForm):
-    requestLog = forms.ModelChoiceField(queryset=RequestLog.objects.all(), empty_label=None)
+    requestLog = SearchModelChoiceField(queryset=RequestLog.objects.all(), empty_label=None)
 
     class Meta(AbstractMapForm.Meta):
         model = MapSearch
