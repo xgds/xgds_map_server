@@ -558,9 +558,30 @@ $(function() {
             }
             app.views.TreeMapElement.prototype.checkRequired.call(this);
         },
+        finishInitialization: function() {
+            app.views.DelayTreeMapElement.prototype.finishInitialization.call(this);
+            this.setupMapMoveCallback();
+            this.registerSSEListener();
+        },
+        setupMapMoveCallback() {
+            //TODO implement
+            if (this.options.data.mapBounded){
+                
+            }
+        },
+        registerSSEListener() {
+            //TODO implement
+            if (!_.isUndefined(this.options.data.sseUrl)) {
+                
+            }
+        },
         getJSONURL: function() {
-            var extens = app.map.getMapExtent();
-            return this.options.url + "?extens=" + extens;
+            if (this.options.data.mapBounded){
+                var extens = app.map.getMapExtent();
+                return this.options.url + "/" + extens;
+            } else {
+                return this.options.url;
+            }
         },
         cacheJSON: function(data){
             this.objectsJson = data;

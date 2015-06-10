@@ -236,8 +236,10 @@ class MapLink(AbstractMap):
     """
     A layer that encapsulates an url that gives json objects
     """
-    url = models.CharField('url', max_length=512)
-    refreshRate = models.IntegerField(default=0)  # refresh rate in seconds, 0 = no refresh
+    url = models.CharField('url', max_length=512)  # url to give map renderable json objects
+    childNodesUrl = models.CharField('childNodesUrl', max_length=512)  # if the tree should have child nodes, return the json for the children from this url
+    sseUrl = models.CharField('sseUrl', max_length=512)  # url for sse data
+    mapBounded = models.BooleanField(blank=True, default=False)  # true if you want to pass the map extens to the query and redo search with the extens
 
     def getEditHref(self):
         """ since we create map link ourselves do not provide a facility to edit them.
@@ -248,6 +250,9 @@ class MapLink(AbstractMap):
         """ Get the json block that the fancy tree needs to render this node """
         result = super(MapLink, self).getTreeJson()
         result["data"]["json"] = self.url
+        result["data"]["childNodesUrl"] = self.childNodesUrl
+        result["data"]["mapBounded"] = self.mapBounded
+        result["data"]["sseUrl"] = self.sseUrl
         return result
 
 
