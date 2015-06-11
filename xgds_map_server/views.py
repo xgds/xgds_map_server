@@ -970,13 +970,12 @@ def getMapCollectionJSON(request, mapCollectionID):
     return HttpResponse(content=json_data,
                         content_type="application/json")
 
-import pydevd
+
 def getMapSearchJSON(request, mapSearchID):
     mapSearch = MapSearch.objects.get(uuid=mapSearchID)
     requestLog = mapSearch.requestLog
     json_data = None
     if requestLog:
-        pydevd.settrace('192.168.1.64')
         rerequest = requestLog.recreateRequest(request)
         view, args, kwargs = resolve(requestLog.path)
         kwargs['request'] = rerequest
