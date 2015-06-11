@@ -560,18 +560,25 @@ $(function() {
         },
         finishInitialization: function() {
             app.views.DelayTreeMapElement.prototype.finishInitialization.call(this);
-            this.setupMapMoveCallback();
             this.registerSSEListener();
         },
-        setupMapMoveCallback() {
-            //TODO implement
-            if (this.node.data.mapBounded){
-                
+        clearDataAndFeatures() {
+            this.collectionGroup.getLayers().clear();
+            for (var key in this.map){
+                this.map[key] = [];
             }
+            delete this.objectsJson;
+        },
+        mapMoveHandler: function(e) {
+              this.handleMapMove();
+        },
+        handleMapMove() {
+            this.clearDataAndFeatures();
+            this.initializeFeaturesJson();
         },
         registerSSEListener() {
             //TODO implement
-            if (!_.isUndefined(this.options.data.sseUrl)) {
+            if (!_.isUndefined(this.options.node.sseUrl)) {
                 
             }
         },
@@ -587,9 +594,11 @@ $(function() {
             this.objectsJson = data;
         },
         constructMapFeatures: function() {
-            this.mapElement = new ol.layer.Group({name:this.options.name});
-            this.collectionGroup = this.mapElement;
-            this.map = {};
+            if (_.isUndefined(this.mapElement)){
+                this.mapElement = new ol.layer.Group({name:this.options.name});
+                this.collectionGroup = this.mapElement;
+                this.map = {};
+            }
             for (i = 0; i < this.objectsJson.length; i++){
                 var object = this.objectsJson[i];
                 var theClass = window[object.type];
@@ -605,6 +614,29 @@ $(function() {
                 var newLayer = theClass.constructElements(this.map[key]);
                 this.collectionGroup.getLayers().push(newLayer);
             }
+        },
+        show: function() {
+            if (this.node.data.mapBounded){
+                if (!this.visible){
+                    // start listening because we just changed state
+                    var _this = this;
+                    app.map.map.on("moveend",  _this.mapMoveHandler, _this);
+                    this.handleMapMove();
+                }
+            }
+            app.views.TreeMapElement.prototype.show.call(this);
+            
+        },
+        hide: function() {
+            if (this.node.data.mapBounded){
+                if (this.visible){
+                    // stop listening because we are about to change state
+                    var _this = this;
+                    app.map.map.un("moveend",  _this.mapMoveHandler, _this);
+                }
+            }
+            app.views.TreeMapElement.prototype.hide.call(this);
+            
         }
     });
     
