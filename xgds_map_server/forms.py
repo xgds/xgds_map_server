@@ -85,7 +85,7 @@ class SearchModelChoiceField(forms.ModelChoiceField):
 
 
 class MapSearchForm(AbstractMapForm):
-    requestLog = SearchModelChoiceField(queryset=RequestLog.objects.all(), empty_label=None)
+    requestLog = forms.ModelChoiceField(queryset=RequestLog.objects.all(), empty_label=None)
 
     class Meta(AbstractMapForm.Meta):
         model = MapSearch
