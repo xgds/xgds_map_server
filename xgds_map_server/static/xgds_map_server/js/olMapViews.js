@@ -286,7 +286,7 @@ $(function() {
               return tileView;
             },
             createCollectionView: function(node){
-                var collectionView = new app.views.CollectionView({
+                var collectionView = new app.views.MapCollectionView({
                     node: node,
                     group: this.collectionGroup,
                     collectionJSON: node.data.collectionJSON
@@ -295,22 +295,22 @@ $(function() {
                 return collectionView;
             },
             createSearchView: function(node){
-                var searchView = new app.views.SearchView({
+                var searchView = new app.views.MapSearchView({
                     node: node,
                     group: this.searchGroup,
-                    searchURL: node.data.searchURL
+                    url: node.data.searchJSON
                 });
                 node.mapView = searchView;
                 return searchView;
             },
             createMapLinkView: function(node){
-                var searchView = new app.views.MapLinkView({
+                var linkView = new app.views.MapLinkView({
                     node: node,
                     group: this.mapLinkGroup,
                     url: node.data.json
                 });
-                node.mapView = searchView;
-                return searchView;
+                node.mapView = linkView;
+                return linkView;
             },
             updateMapLayers: function() {
                 if (!_.isUndefined(app.tree)){
@@ -493,9 +493,57 @@ $(function() {
             // override this
         },
         cacheJSON: function(data){
-            // override this
+            this.objectsJson = data;
         }
     });
+    
+    app.views.MapBoundsDelayTreeMapElement = app.views.DelayTreeMapElement.extend({
+        finishInitialization: function() {
+            app.views.DelayTreeMapElement.prototype.finishInitialization.call(this);
+            this.registerSSEListener();
+        },
+        clearDataAndFeatures() {
+            this.mapElement.getLayers().clear();
+            delete this.objectsJson;
+        },
+        mapMoveHandler: function(e) {
+              this.handleMapMove();
+        },
+        handleMapMove() {
+            this.clearDataAndFeatures();
+            this.initializeFeaturesJson();
+        },
+        registerSSEListener() {
+            //TODO implement
+            if (!_.isUndefined(this.options.node.sseUrl)) {
+                
+            }
+        },
+        show: function() {
+            if (this.node.data.mapBounded){
+                if (!this.visible){
+                    // start listening because we just changed state
+                    var _this = this;
+                    app.map.map.on("moveend",  _this.mapMoveHandler, _this);
+                    this.handleMapMove();
+                }
+            }
+            app.views.TreeMapElement.prototype.show.call(this);
+            
+        },
+        hide: function() {
+            if (this.node.data.mapBounded){
+                if (this.visible){
+                    // stop listening because we are about to change state
+                    var _this = this;
+                    app.map.map.un("moveend",  _this.mapMoveHandler, _this);
+                }
+            }
+            app.views.TreeMapElement.prototype.hide.call(this);
+            
+        }
+    });
+    
     
     app.views.KmlLayerView = app.views.TreeMapElement.extend({
         initialize: function(options) {
@@ -549,7 +597,7 @@ $(function() {
     });
     
     
-    app.views.MapLinkView = app.views.DelayTreeMapElement.extend({
+    app.views.MapLinkView = app.views.MapBoundsDelayTreeMapElement.extend({
         // We render the collection as a group of layers, each layer has the rendering
         // of all the collected objects with the same type.
         checkRequired: function() {
@@ -558,29 +606,11 @@ $(function() {
             }
             app.views.TreeMapElement.prototype.checkRequired.call(this);
         },
-        finishInitialization: function() {
-            app.views.DelayTreeMapElement.prototype.finishInitialization.call(this);
-            this.registerSSEListener();
-        },
         clearDataAndFeatures() {
-            this.collectionGroup.getLayers().clear();
             for (var key in this.map){
                 this.map[key] = [];
             }
-            delete this.objectsJson;
-        },
-        mapMoveHandler: function(e) {
-              this.handleMapMove();
-        },
-        handleMapMove() {
-            this.clearDataAndFeatures();
-            this.initializeFeaturesJson();
-        },
-        registerSSEListener() {
-            //TODO implement
-            if (!_.isUndefined(this.options.node.sseUrl)) {
-                
-            }
+            app.views.MapBoundsDelayTreeMapElement.prototype.clearDataAndFeatures.call(this);
         },
         getJSONURL: function() {
             if (this.node.data.mapBounded){
@@ -589,9 +619,6 @@ $(function() {
             } else {
                 return this.options.url;
             }
-        },
-        cacheJSON: function(data){
-            this.objectsJson = data;
         },
         constructMapFeatures: function() {
             if (_.isUndefined(this.mapElement)){
@@ -614,33 +641,10 @@ $(function() {
                 var newLayer = theClass.constructElements(this.map[key]);
                 this.collectionGroup.getLayers().push(newLayer);
             }
-        },
-        show: function() {
-            if (this.node.data.mapBounded){
-                if (!this.visible){
-                    // start listening because we just changed state
-                    var _this = this;
-                    app.map.map.on("moveend",  _this.mapMoveHandler, _this);
-                    this.handleMapMove();
-                }
-            }
-            app.views.TreeMapElement.prototype.show.call(this);
-            
-        },
-        hide: function() {
-            if (this.node.data.mapBounded){
-                if (this.visible){
-                    // stop listening because we are about to change state
-                    var _this = this;
-                    app.map.map.un("moveend",  _this.mapMoveHandler, _this);
-                }
-            }
-            app.views.TreeMapElement.prototype.hide.call(this);
-            
         }
     });
     
-    app.views.CollectionView = app.views.DelayTreeMapElement.extend({
+    app.views.MapCollectionView = app.views.DelayTreeMapElement.extend({
         // We render the collection as a group of layers, each layer has the rendering
         // of all the collected objects with the same type.
         checkRequired: function() {
@@ -673,6 +677,17 @@ $(function() {
                 var theClass = window[key];
                 var newLayer = theClass.constructElements(this.map[key]);
                 this.collectionGroup.getLayers().push(newLayer);
+            }
+        }
+    });
+    
+    app.views.MapSearchView = app.views.MapLinkView.extend({
+        getJSONURL: function() {
+            if (this.node.data.mapBounded){
+                var extens = app.map.getMapExtent();
+                return this.options.url + "/" + extens;
+            } else {
+                return this.options.url;
             }
         }
     });

@@ -219,7 +219,7 @@ class MapSearch(AbstractMap):
     A layer that repsresents a search which can be refreshing
     """
     requestLog = models.ForeignKey(RequestLog)
-    refreshRate = models.IntegerField(default=0)  # refresh rate in seconds, 0 = no refresh
+    mapBounded = models.BooleanField(blank=True, default=False)  # true if you want to pass the map extens to the query and redo search with the extens
 
     def getEditHref(self):
         return reverse('mapEditMapSearch', kwargs={'mapSearchID': self.uuid})
@@ -227,8 +227,8 @@ class MapSearch(AbstractMap):
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
         result = super(MapSearch, self).getTreeJson()
-        result["data"]["refresh"] = self.refreshRate
-        result["data"]["searchResultsJSON"] = reverse('data_searchResultsJSON', kwargs={'collectionID': self.requestLog.id})
+        result["data"]["searchJSON"] = reverse('mapSearchJSON', kwargs={'mapSearchID': self.uuid})
+#         result["data"]["searchResultsJSON"] = reverse('data_searchResultsJSON', kwargs={'collectionID': self.requestLog.id})
         return result
 
 
@@ -435,7 +435,7 @@ STYLE_MANAGER = ModelCollectionManager(AbstractStyle,
                                         DrawingStyle,
                                         GroundOverlayStyle])
 
-MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile, MapCollection, MapLink])
+MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile, MapCollection, MapSearch, MapLink])
 
 # this manager does not include groups
-MAP_MANAGER = ModelCollectionManager(AbstractMap, [MapLayer, KmlMap, MapTile, MapCollection, MapLink])
+MAP_MANAGER = ModelCollectionManager(AbstractMap, [MapLayer, KmlMap, MapTile, MapCollection, MapSearch, MapLink])

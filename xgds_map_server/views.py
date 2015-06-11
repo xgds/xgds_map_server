@@ -53,6 +53,11 @@ from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
 from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
 
 from geocamPycroraptor2.views import getPyraptordClient, stopPyraptordServiceIfRunning
+
+from xgds_data.views import searchHandoff, resultsIdentity
+from django.core.urlresolvers import resolve
+
+
 # pylint: disable=E1101,R0911
 
 latestRequestG = None
@@ -523,7 +528,6 @@ def getAddMapSearchPage(request):
             msearch.locked = form.cleaned_data['locked']
             msearch.visible = form.cleaned_data['visible']
             msearch.requestLog = form.cleaned_data['requestLog']
-            msearch.refreshRate = form.cleaned_data['refreshRate']
             msearch.save()
         else:
             return render_to_response("AddMapSearch.html",
@@ -564,7 +568,6 @@ def getEditMapSearchPage(request, mapSearchID):
             msearch.locked = form.cleaned_data['locked']
             msearch.visible = form.cleaned_data['visible']
             msearch.requestLog = form.cleaned_data['requestLog']
-            msearch.refreshRate = form.cleaned_data['refreshRate']
             msearch.save()
         else:
             return render_to_response("EditNode.html",
@@ -955,6 +958,29 @@ def getMapCollectionJSON(request, mapCollectionID):
     json_data = None
     if collection:
         contents = collection.resolvedContents()
+        dict_data = []
+        for content in contents:
+            if inspect.isroutine(content.toMapDict):
+                resultDict = content.toMapDict()
+            else:
+                resultDict = modelToDict(content)
+            dict_data.append(resultDict)
+        json_data = json.dumps(dict_data, indent=4, cls=DatetimeJsonEncoder)
+
+    return HttpResponse(content=json_data,
+                        content_type="application/json")
+
+import pydevd
+def getMapSearchJSON(request, mapSearchID):
+    mapSearch = MapSearch.objects.get(uuid=mapSearchID)
+    requestLog = mapSearch.requestLog
+    json_data = None
+    if requestLog:
+        pydevd.settrace('192.168.1.64')
+        rerequest = requestLog.recreateRequest(request)
+        view, args, kwargs = resolve(requestLog.path)
+        kwargs['request'] = rerequest
+        contents = searchHandoff(rerequest, kwargs['searchModuleName'], kwargs['searchModelName'], resultsIdentity, True)
         dict_data = []
         for content in contents:
             if inspect.isroutine(content.toMapDict):
