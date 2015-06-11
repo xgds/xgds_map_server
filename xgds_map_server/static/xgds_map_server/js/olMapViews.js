@@ -565,7 +565,7 @@ $(function() {
         },
         setupMapMoveCallback() {
             //TODO implement
-            if (this.options.data.mapBounded){
+            if (this.node.data.mapBounded){
                 
             }
         },
@@ -576,7 +576,7 @@ $(function() {
             }
         },
         getJSONURL: function() {
-            if (this.options.data.mapBounded){
+            if (this.node.data.mapBounded){
                 var extens = app.map.getMapExtent();
                 return this.options.url + "/" + extens;
             } else {
