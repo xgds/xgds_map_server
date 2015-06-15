@@ -176,6 +176,7 @@ $(function() {
             
             postMapCreation: function() {
                 this.handleResize();
+                this.createLiveSearchView();
                 var callback = app.options.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK;
                 if (callback != null) {
                     callback();
@@ -189,6 +190,8 @@ $(function() {
                 this.collectionGroup = new ol.layer.Group();
                 this.searchGroup = new ol.layer.Group();
                 this.mapLinkGroup = new ol.layer.Group();
+                this.liveSearchGroup = new ol.layer.Group();
+                
                 this.layersForMap = [
                  new ol.layer.Tile({
                      source: new ol.source.MapQuest({layer: 'osm'})
@@ -198,7 +201,8 @@ $(function() {
                  this.kmlGroup,
                  this.mapLinkGroup,
                  this.collectionGroup,
-                 this.searchGroup
+                 this.searchGroup,
+                 this.liveSearchGroup
                  ]
             },
             
@@ -311,6 +315,13 @@ $(function() {
                 });
                 node.mapView = linkView;
                 return linkView;
+            },
+            createLiveSearchView: function(node){
+                // This one is different, it listens for events telling it to show or hide json data retrieved from live searching.
+                var liveSearchView = new app.views.LiveSearchView({
+                    group: this.liveSearchGroup
+                });
+                return liveSearchView;
             },
             updateMapLayers: function() {
                 if (!_.isUndefined(app.tree)){
@@ -447,16 +458,12 @@ $(function() {
         },
         show: function() {
             if (!this.visible){
-                var mygroup = this.group;
-                var mylayers = mygroup.getLayers();
                 this.group.getLayers().push(this.mapElement);
                 this.visible = true;
             }
         },
         hide: function() {
             if (this.visible){
-                var mygroup = this.group;
-                var mylayers = mygroup.getLayers();
                 this.group.getLayers().remove(this.mapElement);
                 this.visible = false;
             }
@@ -623,7 +630,6 @@ $(function() {
         constructMapFeatures: function() {
             if (_.isUndefined(this.mapElement)){
                 this.mapElement = new ol.layer.Group({name:this.options.name});
-                this.collectionGroup = this.mapElement;
                 this.map = {};
             }
             for (i = 0; i < this.objectsJson.length; i++){
@@ -639,7 +645,7 @@ $(function() {
             for (var key in this.map){
                 var theClass = window[key];
                 var newLayer = theClass.constructElements(this.map[key]);
-                this.collectionGroup.getLayers().push(newLayer);
+                this.mapElement.getLayers().push(newLayer);
             }
         }
     });
@@ -661,7 +667,6 @@ $(function() {
         },
         constructMapFeatures: function() {
             this.mapElement = new ol.layer.Group({name:this.options.name});
-            this.collectionGroup = this.mapElement;
             this.map = {};
             for (i = 0; i < this.objectsJson.length; i++){
                 var object = this.objectsJson[i];
@@ -676,7 +681,7 @@ $(function() {
             for (var key in this.map){
                 var theClass = window[key];
                 var newLayer = theClass.constructElements(this.map[key]);
-                this.collectionGroup.getLayers().push(newLayer);
+                this.mapElement.getLayers().push(newLayer);
             }
         }
     });
@@ -689,6 +694,67 @@ $(function() {
             } else {
                 return this.options.url;
             }
+        }
+    });
+    
+    app.views.LiveSearchView = Backbone.View.extend({
+        initialize: function(options) {
+            this.options = options || {};
+            this.group = this.options.group;
+            app.vent.on('mapSearch:found', function(data) {
+                this.constructMapFeatures(data);
+            }, this);
+            app.vent.on('mapSearch:clear', function(e) {
+                this.clearDataAndFeatures();
+            }, this);
+        },
+        clearDataAndFeatures() {
+            if (!_.isUndefined(this.mapElement)){
+                this.hide();
+                for (var key in this.map){
+                    this.map[key] = [];
+                }
+                this.mapElement.getLayers().clear();
+                delete this.objectsJson;
+//            var _this = this;
+//            app.map.map.un("moveend",  _this.mapMoveHandler, _this);
+            }
+        },
+        constructMapFeatures: function(data) {
+            if (_.isUndefined(this.mapElement)){
+                this.mapElement = new ol.layer.Group({name:"liveSearch"});
+                this.map = {};
+            }
+            this.clearDataAndFeatures();
+            this.objectsJson = data
+            for (i = 0; i < this.objectsJson.length; i++){
+                var object = this.objectsJson[i];
+                var theClass = window[object.type];
+                if (!_.isUndefined(theClass) && !_.isUndefined(theClass.constructElements)) {
+                    if (_.isUndefined(this.map[object.type])){
+                        this.map[object.type] = [];
+                    }
+                    this.map[object.type].push(object);
+                }
+            }
+            for (var key in this.map){
+                var theClass = window[key];
+                var newLayer = theClass.constructElements(this.map[key]);
+                this.mapElement.getLayers().push(newLayer);
+            }
+            this.show();
+//            var _this = this;
+//            app.map.map.on("moveend",  _this.mapMoveHandler, _this);
+        },
+        mapMoveHandler: function(e) {
+            var extens = app.map.getMapExtent();
+            app.vent.trigger('mapMoved', extens);
+        },
+        show: function() {
+            this.group.getLayers().push(this.mapElement);
+        },
+        hide: function() {
+            this.group.getLayers().remove(this.mapElement);
         }
     });
     
