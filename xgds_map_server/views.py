@@ -971,6 +971,18 @@ def getMapCollectionJSON(request, mapCollectionID):
                         content_type="application/json")
 
 
+def getMapJsonDict(contents):
+    dict_data = []
+    for content in contents:
+        if inspect.isroutine(content.toMapDict):
+            resultDict = content.toMapDict()
+        else:
+            resultDict = modelToDict(content)
+        dict_data.append(resultDict)
+    json_data = json.dumps(dict_data, indent=4, cls=DatetimeJsonEncoder)
+    return json_data
+
+
 def getMapSearchJSON(request, mapSearchID):
     mapSearch = MapSearch.objects.get(uuid=mapSearchID)
     requestLog = mapSearch.requestLog
@@ -980,15 +992,21 @@ def getMapSearchJSON(request, mapSearchID):
         view, args, kwargs = resolve(requestLog.path)
         kwargs['request'] = rerequest
         contents = searchHandoff(rerequest, kwargs['searchModuleName'], kwargs['searchModelName'], resultsIdentity, True)
-        dict_data = []
-        for content in contents:
-            if inspect.isroutine(content.toMapDict):
-                resultDict = content.toMapDict()
-            else:
-                resultDict = modelToDict(content)
-            dict_data.append(resultDict)
-        json_data = json.dumps(dict_data, indent=4, cls=DatetimeJsonEncoder)
+        json_data = getMapJsonDict(contents)
 
+    return HttpResponse(content=json_data,
+                        content_type="application/json")
+
+
+def searchWithinMap(request):
+    """ do a dynamic search within the map, not from a saved search.
+    Note this uses formsets because xgds_data is based around formsets. """
+    postData = request.GET
+    modelClass = str(postData['modelClass'])
+    left, sep, right = modelClass.rpartition(".")
+    contents = searchHandoff(request, left, right, resultsIdentity, True)
+    #contents = searchHandoff(request, 'plrpExplorer', 'Note', resultsIdentity, True)
+    json_data = getMapJsonDict(contents)
     return HttpResponse(content=json_data,
                         content_type="application/json")
 

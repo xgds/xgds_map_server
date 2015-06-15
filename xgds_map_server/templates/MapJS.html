@@ -14,5 +14,5 @@
     <script type="text/javascript" src='{{ EXTERNAL_URL }}ol3-popup/src/ol3-popup.js'></script>
    	<script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/olMapViews.js'></script>
    	{% for key, value in settings.XGDS_MAP_SERVER_JS_MAP.items %}
-   		<script type="text/javascript" src='{{STATIC_URL}}{{ value }}'></script>
+   		<script type="text/javascript" src='{{STATIC_URL}}{{ value.ol }}|safe'></script>
    	{% endfor %}

@@ -71,6 +71,9 @@ XGDS_MAP_SERVER_PIPELINE_JS = {'custom_map': {'source_filenames': ('xgds_map_ser
 # extra JavaScript callback to call after the map is loaded.
 XGDS_MAP_SERVER_MAP_LOADED_CALLBACK = 'null'
 
-# dict of models to javascript files to render the models on the map.
+# dict of models to  a dict of javascript files to render the models on the map and the model class
+# for example
+# XGDS_MAP_SERVER_JS_MAP['Note'] = {'ol': 'plrpExplorer/js/olNoteMap.js',
+#                                  'model': 'plrpExplorer.Note'}
 # these models should ideally have a toMapDict method that returns the dict you would want to use to render the model.
 XGDS_MAP_SERVER_JS_MAP = {}

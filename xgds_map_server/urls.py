@@ -77,6 +77,7 @@ urlpatterns = patterns(
     (r'^editMapCollection/(?P<mapCollectionID>[\w-]+)/', views.getEditMapCollectionPage, {}, 'mapEditMapCollection'),
     (r'^mapCollectionJSON/(?P<mapCollectionID>[\w-]+)/', views.getMapCollectionJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapCollectionJSON'),
     (r'^mapSearchJSON/(?P<mapSearchID>[\w-]+)/', views.getMapSearchJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapSearchJSON'),
+    (r'^doMapSearch/', views.searchWithinMap, {}, 'doMapSearch'),
 
     # HTML view to confirm deletion of view
     (r'^delete/(?P<nodeID>[\w-]+)/', views.getDeleteNodePage, {}, 'nodeDelete'),
@@ -97,6 +98,5 @@ urlpatterns = patterns(
 
     # By default if you just load the app you should see the list
     (r'^feed/(?P<feedname>.*)', views.getMapFeed,
-     {'readOnly': True, 'loginRequired': False, 'securityTags': ['kml', 'readOnly']},
-     'xgds_map_server_feed'),
+     {'readOnly': True, 'loginRequired': False, 'securityTags': ['kml', 'readOnly']},'xgds_map_server_feed'),
 )
