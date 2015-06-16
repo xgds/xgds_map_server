@@ -76,27 +76,6 @@ app.views.SearchResultsView = Backbone.Marionette.ItemView.extend({
     initialize: function(options){
         this.region = this.options.region;
     },
-    listenToTableChanges: function() {
-        var _this = this;
-        this.$("#searchResultsTable").on( 'page.dt', { _this : this }, function (event) {
-            var _this = event.data._this;
-            _this.filterMapData();
-        } );
-        this.$("#searchResultsTable").on( 'search.dt', { _this : this }, function (event) {
-            var _this = event.data._this;
-            _this.filterMapData();
-        } );
-    },
-    filterMapData: function() {
-        var thedt = this.theDataTable;
-        var rowData = thedt.$('tr', {"page": "current", "filter": "applied"} );
-        var data = [];
-        $.each(rowData, function(index, value){
-           data.push(thedt.fnGetData(value)); 
-        });
-        app.vent.trigger("mapSearch:clear");
-        app.vent.trigger("mapSearch:found", data);  
-    },
     updateContents: function(data) {
         if (data.length > 0){
             if (!_.isUndefined(this.theDataTable)) {
@@ -104,8 +83,8 @@ app.views.SearchResultsView = Backbone.Marionette.ItemView.extend({
                 this.theDataTable.fnAddData(data);
             } else {
                 this.theTable = this.$("#searchResultsTable");
-                var columns = Object.keys(data[0]);
-                var columnHeaders = columns.map(function(col){
+                this.columns = Object.keys(data[0]);
+                var columnHeaders = this.columns.map(function(col){
                     return { data: col}
                 });
                 var dataTableObj = {
@@ -124,11 +103,47 @@ app.views.SearchResultsView = Backbone.Marionette.ItemView.extend({
                             "lengthMenu": "Display _MENU_"
                         }
                 }
+                this.setupColumnHeaders();
                 this.theDataTable = this.theTable.dataTable( dataTableObj );
                 this.listenToTableChanges();
                 this.filterMapData();
             }
         }
+    },
+    setupColumnHeaders: function() {
+      this.theTable.append('<thead class="table_header"><tr id="columnRow"></tr></thead>');
+      var columnRow = this.$('#columnRow');
+      $.each(this.columns, function(index, col){
+          columnRow.append("<th>"+ col +"</th>");
+      });
+    },
+    listenToTableChanges: function() {
+        var _this = this;
+        this.$("#searchResultsTable").on( 'page.dt', { _this : this }, function (event) {
+            var _this = event.data._this;
+            _this.filterMapData();
+        });
+        this.$("#searchResultsTable").on( 'search.dt', { _this : this },  function (event) {
+            var _this = event.data._this;
+            _this.filterMapData();
+        });
+    },
+    unListenToTableChanges: function() {
+        this.$("#searchResultsTable").off( 'page.dt');
+        this.$("#searchResultsTable").off( 'search.dt');
+    },
+    filterMapData: function() {
+        var thedt = this.theDataTable;
+        var rowData = thedt.$('tr', {"page": "current", "filter": "applied"} );
+        var data = [];
+        $.each(rowData, function(index, value){
+            var datum = thedt.fnGetData(value);
+            if (!_.isUndefined(datum)){
+                data.push(datum);
+            }
+        });
+        app.vent.trigger("mapSearch:clear");
+        app.vent.trigger("mapSearch:found", data);  
     },
     calcDataTableHeight : function() {
         var h =  Math.floor($(window).height()*.4);
@@ -136,6 +151,7 @@ app.views.SearchResultsView = Backbone.Marionette.ItemView.extend({
     },
     reset: function() {
         if (!_.isUndefined(this.theDataTable)) {
+            this.unListenToTableChanges();
             this.theDataTable.fnDestroy();
             this.theDataTable = undefined;
             this.$('#searchResultsTable').empty();
