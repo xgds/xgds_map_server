@@ -20,12 +20,14 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         } else {
             this.template = Handlebars.compile(source);
         }
+        
     },
     onRender: function() {
         var theKeys = Object.keys(app.options.searchModels);
         this.$el.html(this.template({
             searchModels: theKeys
         }));
+//        this.searchResultsRegion = new app.views.HideableRegion({el: this.$('#searchResultsDiv')});
         this.searchResultsView = new app.views.SearchResultsView({template:'#template-search-results', 
                                                                   region: this.searchResultsRegion})
         this.searchResultsRegion.show(this.searchResultsView);
@@ -114,8 +116,9 @@ app.views.SearchResultsView = Backbone.Marionette.ItemView.extend({
     },
     reset: function() {
         if (!_.isUndefined(this.theDataTable)) {
-            this.theDataTable.destroy();
+            this.theDataTable.fnDestroy();
             this.theDataTable = undefined;
+            this.$('#searchResultsTable').empty();
         }
     }
 });
