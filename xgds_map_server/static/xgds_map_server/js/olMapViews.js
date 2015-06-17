@@ -683,7 +683,9 @@ $(function() {
             for (var key in this.map){
                 var theClass = window[key];
                 var newLayer = theClass.constructElements(this.map[key]);
-                this.mapElement.getLayers().push(newLayer);
+                if (newLayer !== null){
+                    this.mapElement.getLayers().push(newLayer);
+                }
             }
         }
     });
@@ -742,7 +744,9 @@ $(function() {
             for (var key in this.map){
                 var theClass = window[key];
                 var newLayer = theClass.constructElements(this.map[key]);
-                this.mapElement.getLayers().push(newLayer);
+                if (newLayer !== null){
+                    this.mapElement.getLayers().push(newLayer);
+                }
             }
             this.show();
 //            var _this = this;
