@@ -56,7 +56,7 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
             dataType: 'json',
             data: postData,
             success: $.proxy(function(data) {
-                this.searchResultsView.updateContents(data);
+                this.searchResultsView.updateContents(this.selectedModel, data);
             }, this),
             error: $.proxy(function(data){
                 app.vent.trigger("mapSearch:clear");
@@ -76,7 +76,7 @@ app.views.SearchResultsView = Backbone.Marionette.ItemView.extend({
     initialize: function(options){
         this.region = this.options.region;
     },
-    updateContents: function(data) {
+    updateContents: function(selectedModel, data) {
         if (data.length > 0){
             if (!_.isUndefined(this.theDataTable)) {
                 this.theDataTable.fnClearTable();
@@ -84,6 +84,7 @@ app.views.SearchResultsView = Backbone.Marionette.ItemView.extend({
             } else {
                 this.theTable = this.$("#searchResultsTable");
                 this.columns = Object.keys(data[0]);
+                this.columns = _.difference(this.columns, app.options.searchModels[selectedModel].hiddenColumns);
                 var columnHeaders = this.columns.map(function(col){
                     return { data: col}
                 });
