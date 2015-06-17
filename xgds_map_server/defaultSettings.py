@@ -14,11 +14,16 @@
 #specific language governing permissions and limitations under the License.
 # __END_LICENSE__
 
+import os
+
 XGDS_MAP_SERVER_MEDIA_SUBDIR = 'xgds_map_server/'
 XGDS_MAP_SERVER_DATA_SUBDIR = 'xgds_map_server/'
 XGDS_MAP_SERVER_GEOTIFF_SUBDIR = XGDS_MAP_SERVER_DATA_SUBDIR + 'geoTiff/'
 
 XGDS_MAP_SERVER_TEMPLATE_DEBUG = True  # If this is true, handlebars templates will not be cached.
+XGDS_MAP_SERVER_HANDLEBARS_DIRS = [os.path.join('xgds_map_server', 'templates', 'handlebars'),
+                                   os.path.join('xgds_map_server', 'templates', 'handlebars', 'search')]
+
 
 XGDS_MAP_SERVER_OVERLAY_IMAGES_DIR = XGDS_MAP_SERVER_DATA_SUBDIR + "MapOverlayImages"
 

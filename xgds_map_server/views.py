@@ -26,6 +26,7 @@ import datetime
 import zipfile
 import inspect
 
+from django.forms.formsets import formset_factory
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.shortcuts import render_to_response
@@ -51,6 +52,8 @@ from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileFo
 from geocamUtil.geoEncoder import GeoDjangoEncoder
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
 from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
+from geocamUtil.loader import LazyGetModelByName
+from xgds_data.forms import SearchForm, SpecializedForm
 
 from geocamPycroraptor2.views import getPyraptordClient, stopPyraptordServiceIfRunning
 
@@ -62,38 +65,35 @@ from django.core.urlresolvers import resolve
 
 latestRequestG = None
 
-HANDLEBARS_TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), 'templates/handlebars')
 _template_cache = None
 
 XGDS_MAP_SERVER_GEOTIFF_PATH = os.path.join(settings.DATA_ROOT, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR)
 
 
-def get_handlebars_templates(inp=HANDLEBARS_TEMPLATES_DIR):
+def get_handlebars_templates(source):
     global _template_cache
     if settings.XGDS_MAP_SERVER_TEMPLATE_DEBUG or not _template_cache:
         templates = {}
-        for template_file in glob.glob(os.path.join(inp, '*.handlebars')):
-            with open(template_file, 'r') as infile:
-                template_name = os.path.splitext(os.path.basename(template_file))[0]
-                templates[template_name] = infile.read()
+        for thePath in source:
+            inp = os.path.join(settings.PROJ_ROOT, 'apps', thePath)
+            for template_file in glob.glob(os.path.join(inp, '*.handlebars')):
+                with open(template_file, 'r') as infile:
+                    template_name = os.path.splitext(os.path.basename(template_file))[0]
+                    templates[template_name] = infile.read()
         _template_cache = templates
     return _template_cache
 
 
-def get_map_tree_templates(inp=HANDLEBARS_TEMPLATES_DIR):
-    fullCache = get_handlebars_templates()
-    filenames = ['layer-tree']
-    reducedCache = {}
-    for template_file in filenames:
-        reducedCache[template_file] = fullCache[template_file]
-    return reducedCache
+def get_map_tree_templates(source):
+    fullCache = get_handlebars_templates(source)
+    return {'layer-tree': fullCache['layer-tree']}
 
 
 def getMapServerIndexPage(request):
     """
     An actual map, with the tree.
     """
-    templates = get_map_tree_templates()
+    templates = get_map_tree_templates(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     return render_to_response('MapView.html',
                               {'settings': settings,
                                'templates': templates,
@@ -127,8 +127,20 @@ def getMapTreePage(request):
                               context_instance=RequestContext(request))
 
 
+def getSearchForms():
+    # get the dictionary of forms for searches
+    forms = {}
+    for key, entry in settings.XGDS_MAP_SERVER_JS_MAP.iteritems():
+        theClass = LazyGetModelByName(entry['model'])
+        theForm = SpecializedForm(SearchForm, theClass.get())
+        theFormSetMaker = formset_factory(theForm, extra=0)
+        theFormSet = theFormSetMaker(initial=[{'modelClass': entry['model']}])
+        forms[key] = [theFormSet, entry['model']]
+    return forms
+
+
 def getMapEditorPage(request, layerID=None):
-    templates = get_handlebars_templates()
+    templates = get_handlebars_templates(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     if layerID:
         mapLayer = MapLayer.objects.get(uuid=layerID)
         mapLayerDict = mapLayer.toDict()
@@ -137,6 +149,7 @@ def getMapEditorPage(request, layerID=None):
     return render_to_response("MapEditor.html",
                               RequestContext(request, {'templates': templates,
                                                        'settings': settings,
+                                                       'searchForms': getSearchForms(),
                                                        'app': 'xgds_map_server/js/app.js',
                                                        'saveMaplayerUrl': reverse('saveMaplayer'),
                                                        'uuid': mapLayer.uuid,

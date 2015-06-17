@@ -695,7 +695,8 @@ app.views.TabNavView = Backbone.Marionette.LayoutView.extend({
     viewMap: {
     	'info': app.views.LayerInfoTabView,
     	'features': app.views.FeaturesTabView,
-    	'layers': app.views.FancyTreeView
+    	'layers': app.views.FancyTreeView,
+        'search': app.views.SearchView,
     },
 
     initialize: function() {

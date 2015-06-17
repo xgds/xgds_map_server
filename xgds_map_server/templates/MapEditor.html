@@ -59,50 +59,28 @@
     
 </div>
 {% endblock content %}
-  
 
 {% block scripts %}
 	{{ block.super }}
    	{% include "MapJS.html" %}
-
-    <!-- <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery/dist/jquery.min.js'></script>
-     <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-migrate/index.js'></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-ui/jquery-ui.min.js'></script>
-	<script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-cookie/jquery.cookie.js'></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}fancytree/dist/jquery.fancytree.js'></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}fancytree/dist/src/jquery.fancytree.persist.js'></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}lodash/lodash.min.js'></script>
-    
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}handlebars/handlebars.min.js'></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}backbone/backbone.js'></script>
-     -->
-     <script type="text/javascript" src='{{ EXTERNAL_URL }}backbone-relational/backbone-relational.js'></script>
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}backbone-relational/backbone-relational.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}backbone-forms/distribution/backbone-forms.min.js'></script>
-    <!-- <script type="text/javascript" src='{{ EXTERNAL_URL }}marionette/lib/backbone.marionette.min.js'></script>
-     -->
-     <script type="text/javascript" src='{{ EXTERNAL_URL }}string-format/string-format.js'></script>
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}string-format/string-format.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}usng/usng.js'></script>
-<!--     <script type="text/javascript" src='{{ EXTERNAL_URL }}proj4/dist/proj4.js'></script>
- 	<script src="{{EXTERNAL_URL}}ol3/build/ol-debug.js" type="text/javascript"></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}ol3-popup/src/ol3-popup.js'></script>
-    -->
 
-<!--     <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/app.js'></script>    
-   	<script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/fancyTreeView.js'></script>
-   	<script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/olMapViews.js'></script>
- -->    
     <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/geo.js'></script>
     <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/forms.js'></script>
     <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/models.js'></script>
     <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/views.js'></script>
     <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/olMapEditorViews.js'></script>
-
    	
     {% for template_name, template in templates.items %}
 		<script type="text/handlebars" id="template-{{template_name}}">
 		{{template|safe}}
 		</script>
     {% endfor %}
+    {% include "xgds_map_server/SearchForms.html" with searchForms=searchForms %}
+    
     {% javascript 'custom_map' %}
 {% endblock scripts %}
 
@@ -117,7 +95,8 @@
         readOnly: {{ editable|yesno:"false,true" }},
         mapLayerDict: {{ mapLayerDict|safe }},
         siteFrame: {{ settings.XGDS_CURRENT_SITEFRAME|safe }},
-        saveMaplayerUrl: "{{ saveMaplayerUrl }}"
+        saveMaplayerUrl: "{{ saveMaplayerUrl }}",
+        searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }}
     };
 	
 	$(function(){

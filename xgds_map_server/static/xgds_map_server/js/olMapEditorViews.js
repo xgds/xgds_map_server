@@ -20,7 +20,6 @@ $(function() {
     app.views.OLEditMapView =  app.views.OLMapView.extend({
         initialize: function(options) {
             app.views.OLMapView.prototype.initialize.call(this);
-            // set up tabs
             app.State.tabsContainer = $('#tabs');
             app.State.tabsLeftMargin = parseFloat(app.State.tabsContainer.css('margin-left'));
             app.vent.on('layers:loaded', this.initializeMapEditor);

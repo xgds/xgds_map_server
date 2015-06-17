@@ -142,7 +142,6 @@ app.views.SearchResultsView = Backbone.Marionette.ItemView.extend({
                 data.push(datum);
             }
         });
-        app.vent.trigger("mapSearch:clear");
         app.vent.trigger("mapSearch:found", data);  
     },
     calcDataTableHeight : function() {
