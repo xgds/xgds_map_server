@@ -55,7 +55,7 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         this.saveSearchForm = $( "#save-search-dialog" ).find("form");
         this.dialog = $( "#save-search-dialog" ).dialog({
             autoOpen: false,
-            height: 450,
+            height: 375,
             width: 550,
             modal: true,
             buttons: {
