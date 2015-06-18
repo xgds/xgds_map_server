@@ -54,7 +54,7 @@ XGDS_MAP_SERVER_BOWER_INSTALLED_APPS = ('sprintf.js',
                                         'backbone-relational',
                                         'backbone-forms',
                                         'fancytree',
-                                        'ol3',
+                                        'openlayers3=https://github.com/openlayers/ol3/releases/download/v3.6.0/v3.6.0-dist.zip',
                                         'ol3-popup'
                                         )
 

@@ -51,6 +51,7 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         });
     },
     setupSaveSearchDialog: function() {
+        document.getElementById("save-search-dialog").style.visibility = "visible";
         var _this = this;
         this.saveSearchForm = $( "#save-search-dialog" ).find("form");
         this.dialog = $( "#save-search-dialog" ).dialog({
@@ -86,8 +87,12 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
             dataType: 'json',
             data: postData,
             success: $.proxy(function(data) {
-                this.searchResultsView.updateContents(this.selectedModel, data);
-                this.clearMessage();
+                if (_.isUndefined(data) || data.length === 0){
+                    this.setMessage("None found.");
+                } else {
+                    this.searchResultsView.updateContents(this.selectedModel, data);
+                    this.clearMessage();
+                }
             }, this),
             error: $.proxy(function(data){
                 app.vent.trigger("mapSearch:clear");
