@@ -190,7 +190,7 @@ $(function() {
             this.currentModeName = modeName;
         },
         
-        addDrawInteraction(typeSelect) {
+        addDrawInteraction: function(typeSelect) {
 			this.featureAdder = new ol.interaction.Draw({
 				features: this.featureOverlay.getFeatures(),
 				type:  /** @type {ol.geom.GeometryType} */ (typeSelect),

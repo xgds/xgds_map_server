@@ -509,18 +509,18 @@ $(function() {
             app.views.DelayTreeMapElement.prototype.finishInitialization.call(this);
             this.registerSSEListener();
         },
-        clearDataAndFeatures() {
+        clearDataAndFeatures: function() {
             this.mapElement.getLayers().clear();
             delete this.objectsJson;
         },
         mapMoveHandler: function(e) {
               this.handleMapMove();
         },
-        handleMapMove() {
+        handleMapMove: function() {
             this.clearDataAndFeatures();
             this.initializeFeaturesJson();
         },
-        registerSSEListener() {
+        registerSSEListener: function() {
             //TODO implement
             if (!_.isUndefined(this.options.node.sseUrl)) {
                 
@@ -613,7 +613,7 @@ $(function() {
             }
             app.views.TreeMapElement.prototype.checkRequired.call(this);
         },
-        clearDataAndFeatures() {
+        clearDataAndFeatures: function() {
             for (var key in this.map){
                 this.map[key] = [];
             }
@@ -712,7 +712,7 @@ $(function() {
                 this.clearDataAndFeatures();
             }, this);
         },
-        clearDataAndFeatures() {
+        clearDataAndFeatures: function() {
             if (!_.isUndefined(this.mapElement)){
                 this.hide();
                 for (var key in this.map){
