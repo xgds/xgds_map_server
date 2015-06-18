@@ -151,6 +151,7 @@ def getMapEditorPage(request, layerID=None):
     return render_to_response("MapEditor.html",
                               RequestContext(request, {'templates': templates,
                                                        'settings': settings,
+                                                       'saveSearchForm': MapSearchForm(),
                                                        'searchForms': getSearchForms(),
                                                        'app': 'xgds_map_server/js/app.js',
                                                        'saveMaplayerUrl': reverse('saveMaplayer'),
@@ -1036,7 +1037,7 @@ def saveSearchWithinMap(request):
     msearch = MapSearch()
     msearch.name = postData['mapSearchName']
     msearch.description = postData['mapSearchDescription']
-    msearch.parent = MapGroup.objects.get(uuid='mg4'); #postData['mapSearchParent']
+    msearch.parent = MapGroup.objects.get(uuid=postData['mapSearchParent'])
     msearch.creator = request.user.username
     msearch.creation_time = datetime.datetime.now()
     msearch.deleted = False

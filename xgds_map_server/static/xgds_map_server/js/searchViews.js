@@ -3,7 +3,7 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
     events: {
         'click #getSearchFormButton': 'setupSearchForm',
         'click #doSearch': 'doSearch',
-        'click #doSaveSearch': 'doSaveSearch'
+        'click #doSaveSearch': 'openSaveDialog'
     },
     regions: {
         modelChoiceRegion: '#modelChoiceDiv',
@@ -30,6 +30,7 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         this.searchResultsView = new app.views.SearchResultsView({template:'#template-search-results', 
                                                                   region: this.searchResultsRegion})
         this.searchResultsRegion.show(this.searchResultsView);
+        this.setupSaveSearchDialog();
     },
     setupSearchForm: function() {
         var newModel = this.$("#searchModelSelector").val();
@@ -38,6 +39,7 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
                 return;
             }
         }
+        this.clearMessage();
         app.vent.trigger("mapSearch:clear");
         this.searchResultsView.reset();
         this.selectedModel = newModel;
@@ -48,16 +50,44 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
             event.preventDefault();
         });
     },
+    setupSaveSearchDialog: function() {
+        var _this = this;
+        this.saveSearchForm = $( "#save-search-dialog" ).find("form");
+        this.dialog = $( "#save-search-dialog" ).dialog({
+            autoOpen: false,
+            height: 450,
+            width: 550,
+            modal: true,
+            buttons: {
+              "Save": function() {
+                  _this.doSaveSearch()
+              },
+              "Cancel": function() {
+                  _this.dialog.dialog( "close" );
+              }
+            },
+            close: function() {
+              _this.saveSearchForm[0].reset();
+            }
+          });
+       
+        this.saveSearchForm.on( "submit", function( event ) {
+            event.preventDefault();
+            _this.doSaveSearch();
+          });
+    },
     doSearch: function() {
         var theForm = this.$("#form-"+this.selectedModel);
         var postData = theForm.serializeArray();
         postData.push({'name':'modelClass', 'value':app.options.searchModels[this.selectedModel].model});
+        this.setMessage("Searching...");
         $.ajax({
             url: '/xgds_map_server/doMapSearch',
             dataType: 'json',
             data: postData,
             success: $.proxy(function(data) {
                 this.searchResultsView.updateContents(this.selectedModel, data);
+                this.clearMessage();
             }, this),
             error: $.proxy(function(data){
                 app.vent.trigger("mapSearch:clear");
@@ -66,27 +96,39 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
             }, this)
           });
     },
+    openSaveDialog: function() {
+        this.dialog.dialog("open");
+    },
     doSaveSearch: function() {
         var theForm = this.$("#form-"+this.selectedModel);
         var postData = theForm.serializeArray();
         postData.push({'name':'modelClass', 'value':app.options.searchModels[this.selectedModel].model});
-        postData.push({'name':'mapSearchName', "value": "msName"});
-        postData.push({'name':'mapSearchDescription', "value": "describey"});
-        postData.push({'name':'mapSearchParent', "value": "mg4"});
+        var searchName = this.saveSearchForm.find("#id_name").val();
+        
+        // TODO remove any lat long bounds for saving
+        postData.push({'name':'mapSearchName', "value": searchName});
+        postData.push({'name':'mapSearchDescription', "value": this.saveSearchForm.find("#id_description").val()});
+        postData.push({'name':'mapSearchParent', "value": this.saveSearchForm.find("#id_parent").val()});
         $.ajax({
             url: '/xgds_map_server/saveMapSearch',
             dataType: 'json',
             data: postData,
             success: $.proxy(function(data) {
-                this.setMessage("saved");
+                this.dialog.dialog( "close" );
+                this.setMessage("Search " + searchName + " saved");
             }, this),
             error: $.proxy(function(data){
+                $( "#save-search-dialog" ).find("#saveSearchError").text("Search not saved.  Name is required.");
                 this.setMessage("Search not saved.");
             }, this)
           });
     },
     setMessage: function(msg){
-        console.log(msg);
+        this.$el.find('#message').text(msg);
+    },
+    clearMessage: function(msg){
+        this.$el.find('#message').empty();
+        this.$el.find('#message').append("<br/>");
     }
 });
 

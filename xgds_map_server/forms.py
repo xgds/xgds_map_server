@@ -38,7 +38,7 @@ class AbstractMapForm(forms.ModelForm):
 #         model = self.getModel()
         widgets = {
             # Note: no practical way to retrieve max lengths from Map model
-            'name': forms.TextInput(attrs={'size': 80}),
+            'name': forms.TextInput(attrs={'size': 50}),
             'description': forms.Textarea(attrs={'cols': 50, 'rows': 7})
         }
         exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted']
@@ -79,13 +79,8 @@ class MapCollectionForm(AbstractMapForm):
         model = MapCollection
 
 
-class SearchModelChoiceField(forms.ModelChoiceField):
-    def label_from_instance(self, obj):
-        return obj.name
-
-
 class MapSearchForm(AbstractMapForm):
-    requestLog = forms.ModelChoiceField(queryset=RequestLog.objects.all(), empty_label=None)
 
     class Meta(AbstractMapForm.Meta):
         model = MapSearch
+        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'requestLog', 'locked', 'visible', 'mapBounded']
