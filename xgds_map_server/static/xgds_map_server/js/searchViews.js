@@ -2,7 +2,8 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
     template: '#template-search',
     events: {
         'click #getSearchFormButton': 'setupSearchForm',
-        'click #doSearch': 'doSearch'
+        'click #doSearch': 'doSearch',
+        'click #doSaveSearch': 'doSaveSearch'
     },
     regions: {
         modelChoiceRegion: '#modelChoiceDiv',
@@ -60,12 +61,32 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
             }, this),
             error: $.proxy(function(data){
                 app.vent.trigger("mapSearch:clear");
-                this.showDataError(data);
+                this.searchResultsView.reset();
+                this.setMessage("Search failed.")
             }, this)
           });
     },
-    clearSearch: function() {
-        
+    doSaveSearch: function() {
+        var theForm = this.$("#form-"+this.selectedModel);
+        var postData = theForm.serializeArray();
+        postData.push({'name':'modelClass', 'value':app.options.searchModels[this.selectedModel].model});
+        postData.push({'name':'mapSearchName', "value": "msName"});
+        postData.push({'name':'mapSearchDescription', "value": "describey"});
+        postData.push({'name':'mapSearchParent', "value": "mg4"});
+        $.ajax({
+            url: '/xgds_map_server/saveMapSearch',
+            dataType: 'json',
+            data: postData,
+            success: $.proxy(function(data) {
+                this.setMessage("saved");
+            }, this),
+            error: $.proxy(function(data){
+                this.setMessage("Search not saved.");
+            }, this)
+          });
+    },
+    setMessage: function(msg){
+        console.log(msg);
     }
 });
 

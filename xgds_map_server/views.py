@@ -30,7 +30,7 @@ from django.forms.formsets import formset_factory
 from django.views.decorators.csrf import csrf_protect
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.shortcuts import render_to_response
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, HttpRequest
 from django.http import HttpResponseServerError
 from django.http import HttpResponseRedirect
 from django.http import HttpResponseBadRequest
@@ -53,6 +53,8 @@ from geocamUtil.geoEncoder import GeoDjangoEncoder
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
 from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
 from geocamUtil.loader import LazyGetModelByName
+from xgds_data.models import RequestLog, ResponseLog
+from xgds_data.dlogging import recordList, recordRequest
 from xgds_data.forms import SearchForm, SpecializedForm
 
 from geocamPycroraptor2.views import getPyraptordClient, stopPyraptordServiceIfRunning
@@ -1004,11 +1006,44 @@ def getMapSearchJSON(request, mapSearchID):
         rerequest = requestLog.recreateRequest(request)
         view, args, kwargs = resolve(requestLog.path)
         kwargs['request'] = rerequest
-        contents = searchHandoff(rerequest, kwargs['searchModuleName'], kwargs['searchModelName'], resultsIdentity, True)
+        modelClass = str(rerequest.GET['modelClass'])
+        left, sep, right = modelClass.rpartition(".")
+        contents = searchHandoff(rerequest, left, right, resultsIdentity, True)
         json_data = getMapJsonDict(contents)
 
     return HttpResponse(content=json_data,
                         content_type="application/json")
+
+
+def handoffIdentity(request, results):
+    return request, results
+
+
+def saveSearchWithinMap(request):
+    """ Save the submitted search as a map layer.
+    This does not include any paging or filtering."""
+    postData = request.GET
+    modelClass = str(postData['modelClass'])
+    left, sep, right = modelClass.rpartition(".")
+
+    reqlog = recordRequest(request)
+    req, results = searchHandoff(request, left, right, handoffIdentity, True)
+    reslog = ResponseLog.create(request=reqlog)
+    reslog.save()
+    recordList(reslog, results)
+
+    # make the search node for the map
+    msearch = MapSearch()
+    msearch.name = postData['mapSearchName']
+    msearch.description = postData['mapSearchDescription']
+    msearch.parent = MapGroup.objects.get(uuid='mg4'); #postData['mapSearchParent']
+    msearch.creator = request.user.username
+    msearch.creation_time = datetime.datetime.now()
+    msearch.deleted = False
+    msearch.requestLog = reqlog
+    msearch.save()
+
+    return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
 
 
 def searchWithinMap(request):
@@ -1018,7 +1053,6 @@ def searchWithinMap(request):
     modelClass = str(postData['modelClass'])
     left, sep, right = modelClass.rpartition(".")
     contents = searchHandoff(request, left, right, resultsIdentity, True)
-    #contents = searchHandoff(request, 'plrpExplorer', 'Note', resultsIdentity, True)
     json_data = getMapJsonDict(contents)
     return HttpResponse(content=json_data,
                         content_type="application/json")

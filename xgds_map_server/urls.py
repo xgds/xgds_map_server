@@ -78,6 +78,7 @@ urlpatterns = patterns(
     (r'^mapCollectionJSON/(?P<mapCollectionID>[\w-]+)/', views.getMapCollectionJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapCollectionJSON'),
     (r'^mapSearchJSON/(?P<mapSearchID>[\w-]+)/', views.getMapSearchJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapSearchJSON'),
     (r'^doMapSearch/', views.searchWithinMap, {}, 'doMapSearch'),
+    (r'^saveMapSearch/', views.saveSearchWithinMap, {}, 'saveMapSearch'),
 
     # HTML view to confirm deletion of view
     (r'^delete/(?P<nodeID>[\w-]+)/', views.getDeleteNodePage, {}, 'nodeDelete'),
