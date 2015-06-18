@@ -294,7 +294,9 @@ $(function() {
             geom.setCoordinates([xcoords], 'XY');
     	},
     	updateCoordsFromGeometry: function(geometry) {
-            var coords = inverseFlatList(geometry.flatCoordinates);
+            var coords = inverseFlatList(geometry.getCoordinates().reduce(function(a, b) {
+                return a.concat(b);
+            }));
             this.model.set('polygon',coords);
             this.model.trigger('coordsChanged');
             this.model.save();
@@ -315,7 +317,7 @@ $(function() {
             this.olFeature.getGeometry().setCoordinates(xcoords);
         },
     	updateCoordsFromGeometry: function(geometry) {
-            var coords = inverse(geometry.flatCoordinates);
+            var coords = inverse(geometry.getCoordinates());
             this.model.set('point',coords);
             this.model.trigger('coordsChanged');
             this.model.save();
@@ -349,7 +351,9 @@ $(function() {
             this.olFeature.getGeometry().setCoordinates(xcoords,'XY');
         },
     	updateCoordsFromGeometry: function(geometry) {
-            var coords = inverseFlatList(geometry.flatCoordinates);
+            var coords = inverseFlatList(geometry.getCoordinates().reduce(function(a, b) {
+                return a.concat(b);
+            }));
             this.model.set('lineString',coords);
             this.model.trigger('coordsChanged');
             this.model.save();
@@ -371,7 +375,9 @@ $(function() {
             geom.setCoordinates([xcoords],'XY');
         },
         updateCoordsFromGeometry: function(geometry) {
-            var coords = inverseFlatList(geometry.flatCoordinates);
+            var coords = inverseFlatList(geometry.getCoordinates().reduce(function(a, b) {
+                return a.concat(b);
+            }));
             this.model.set('polygon',coords);
             this.model.trigger('coordsChanged');
             this.model.save();

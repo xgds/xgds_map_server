@@ -277,7 +277,14 @@ var app = (function($, _, Backbone) {
             // create a new backbone feature object from the user drawings on map.
             var geom = olFeature.getGeometry();
             var type = geom.getType();
-            var coords = geom.flatCoordinates;
+            var coords;
+            if (type === "Point"){
+                coords = geom.getCoordinates();
+            } else {
+                coords = geom.getCoordinates().reduce(function(a, b) {
+                return a.concat(b);
+            });
+            }
             var featureObj = new app.models.Feature();
             var mapLayer = app.mapLayer;
             featureObj.set('type', type);

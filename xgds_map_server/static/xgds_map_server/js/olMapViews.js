@@ -566,15 +566,16 @@ $(function() {
         constructMapElements: function() {
             if (_.isUndefined(this.mapElement)){
                 this.mapElement = new ol.layer.Vector({
+                    /* when we have ol 3.5.0 change to this
                     source: new ol.source.KML({
                         projection: KML_PROJECTION,
                         url: this.kmlFile
                     })
-                    /* when we have ol 3.5.0 change to this
+                    */
                     source: new ol.source.Vector({
                         url: this.kmlFile,
                         format: new ol.format.KML()
-                    }) */
+                    }) 
                 });
             }
         }
