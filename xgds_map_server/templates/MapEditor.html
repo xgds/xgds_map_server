@@ -56,8 +56,6 @@
 		<tr></tr>
 		</table>
 	</div>
-    {% include "xgds_map_server/MapSearchDialog.html" with saveSearchForm=saveSearchForm %}
-    
 </div>
 {% endblock content %}
 
@@ -81,6 +79,7 @@
 		</script>
     {% endfor %}
     {% include "xgds_map_server/SearchForms.html" with searchForms=searchForms %}
+    {% include "xgds_map_server/MapSearchDialog.html" with saveSearchForm=saveSearchForm %}
     
     {% javascript 'custom_map' %}
 {% endblock scripts %}
