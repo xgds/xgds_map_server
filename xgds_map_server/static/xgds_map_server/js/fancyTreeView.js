@@ -81,6 +81,12 @@ app.views.FancyTreeView = Backbone.View.extend({
                 extensions: ["persist"],
                 source: app.treeData,
                 checkbox: true,
+                lazyLoad: function(event, data){
+                    data.result = $.ajax({
+                      url: data.node.data.childNodesUrl,
+                      dataType: "json"
+                    });
+                },
                 dblclick: function(event, data) {
                     var win = window.open(data.node.data.href, '_edit');
                 },

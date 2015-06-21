@@ -254,6 +254,7 @@ class MapLink(AbstractMap):
         if self.childNodesUrl:
             result["data"]["childNodesUrl"] = self.childNodesUrl
             result['folder'] = True
+            result['lazy'] = True
         result["data"]["mapBounded"] = self.mapBounded
         result["data"]["sseUrl"] = self.sseUrl
         return result
