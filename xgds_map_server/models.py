@@ -249,8 +249,11 @@ class MapLink(AbstractMap):
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
         result = super(MapLink, self).getTreeJson()
-        result["data"]["json"] = self.url
-        result["data"]["childNodesUrl"] = self.childNodesUrl
+        if self.url:
+            result["data"]["json"] = self.url
+        if self.childNodesUrl:
+            result["data"]["childNodesUrl"] = self.childNodesUrl
+            result['folder'] = True
         result["data"]["mapBounded"] = self.mapBounded
         result["data"]["sseUrl"] = self.sseUrl
         return result
