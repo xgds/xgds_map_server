@@ -84,7 +84,19 @@ app.views.FancyTreeView = Backbone.View.extend({
                 lazyLoad: function(event, data){
                     data.result = $.ajax({
                       url: data.node.data.childNodesUrl,
-                      dataType: "json"
+                      dataType: "json",
+                      success: $.proxy(function(data) {
+                          if (!_.isUndefined(data) && data.length > 0){
+                              $.each(data, function(index, datum){
+                                  app.vent.trigger('mapNode:create', datum);
+                                  if (!_.isUndefined(datum.children)){
+                                      $.each(datum.children, function(index, child){
+                                          app.vent.trigger('mapNode:create', child);
+                                      });
+                                  }
+                              });
+                          }
+                      }, this),
                     });
                 },
                 dblclick: function(event, data) {
