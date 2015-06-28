@@ -8,10 +8,6 @@
 {% block contents %}
 {{ block.super }}
 <h3>Add Kml</h3>
-The files you specify here will be available in the planner as a layer and in Google Earth via a map feed.
-WARNING: Right now we do not support kmz files, nor do we support ground overlay in kml.
-You can create ground overlays in Map Layers.</br>  
-
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
 {% include "MapForm.html" %}
 <input type="submit" value="Create" />
