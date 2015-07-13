@@ -850,6 +850,9 @@ $(function() {
             }
         },
         show: function() {
+            if (_.isUndefined(this.layerGroup)){
+                return;
+            }
             if (!this.visible){
                 if (this.drawBelow){
                     this.mapLayerGroup.getLayers().insertAt(0,this.layerGroup);
