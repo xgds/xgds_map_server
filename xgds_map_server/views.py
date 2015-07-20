@@ -57,7 +57,8 @@ from xgds_data.models import RequestLog, ResponseLog
 from xgds_data.dlogging import recordList, recordRequest
 from xgds_data.forms import SearchForm, SpecializedForm
 
-from geocamPycroraptor2.views import getPyraptordClient, stopPyraptordServiceIfRunning
+if settings.PYRAPTORD_SERVICE:
+    from geocamPycroraptor2.views import getPyraptordClient, stopPyraptordServiceIfRunning
 
 from xgds_data.views import searchHandoff, resultsIdentity
 from django.core.urlresolvers import resolve
@@ -1382,7 +1383,7 @@ def processTiles(request, uuid):
                       source.filename,
                       outPath))
 
-        if settings.PYRAPTORD_SERVICE is True:
+        if settings.PYRAPTORD_SERVICE:
             pyraptord = getPyraptordClient('pyraptord')
             tileSvc = '%s_gdal2tiles' % source.filename
             serviceNames.append(tileSvc)
