@@ -58,7 +58,8 @@ XGDS_MAP_SERVER_BOWER_INSTALLED_APPS = ('sprintf.js',
                                         'fancytree',
                                         'jquery-cookie=git://github.com/carhartl/jquery-cookie.git'
                                         'openlayers3=https://github.com/openlayers/ol3/releases/download/v3.6.0/v3.6.0-dist.zip',
-                                        'ol3-popup'
+                                        'ol3-popup',
+                                        'proj4',
                                         )
 
 # if you want to have a custom javascript included in your maps, override this in siteSettings.
