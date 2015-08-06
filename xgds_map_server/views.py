@@ -45,7 +45,7 @@ from django.contrib.gis.geos import Polygon as geosPolygon
 from django.contrib.gis.geos import LinearRing as geosLinearRing
 
 
-from xgds_map_server import settings
+from django.conf import settings
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapSearch, MapCollection, MAP_NODE_MANAGER, MAP_MANAGER
 from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
 from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm, MapSearchForm, MapCollectionForm

@@ -17,7 +17,7 @@
 from django import forms
 
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapCollection, MapSearch
-from xgds_map_server import settings
+from django.conf import settings
 from xgds_data.models import Collection, RequestLog
 from geocamUtil.extFileField import ExtFileField
 

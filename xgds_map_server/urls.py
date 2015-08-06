@@ -16,7 +16,7 @@
 
 from django.conf.urls import *  # pylint: disable=W0401
 
-from xgds_map_server import settings
+from django.conf import settings
 from xgds_map_server import views
 
 urlpatterns = patterns(

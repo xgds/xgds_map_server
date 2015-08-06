@@ -21,7 +21,7 @@ import os
 from django.core.urlresolvers import reverse
 from django.db import models
 from django.contrib.gis.db import models
-from xgds_map_server import settings
+from django.conf import settings
 from geocamUtil.models.UuidField import UuidField
 from geocamUtil.models.managers import ModelCollectionManager
 from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson

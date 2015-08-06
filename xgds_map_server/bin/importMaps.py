@@ -32,7 +32,7 @@ import os
 import re
 
 from xgds_map_server.models import Map, MapGroup
-from xgds_map_server import settings
+from django.conf import settings
 
 
 def getName(path):
