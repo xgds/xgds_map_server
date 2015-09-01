@@ -420,7 +420,7 @@ def getAddTilePage(request):
     if request.method == 'POST':
         tile_form = MapTileForm(request.POST, request.FILES)
         if tile_form.is_valid():
-            mapTile = MapTile()
+            mapTile = MapTile(sourceFile=request.FILES['sourceFile'])
             mapTile.name = tile_form.cleaned_data['name']
             mapTile.description = tile_form.cleaned_data['description']
             mapTile.creator = request.user.username
@@ -431,8 +431,7 @@ def getAddTilePage(request):
             if 'sourceFile' in request.FILES:
                 tile_form.save()
             mapTile.save()
-            # todo test
-#             processTiles(request, mapTile.uuid)
+            processTiles(request, mapTile.uuid)
         else:
             return render_to_response("AddNode.html",
                                       {'form': tile_form,
@@ -1357,12 +1356,11 @@ def processTiles(request, uuid):
 
     sourceFiles = []
     sourceFile = mapTile.sourceFile
-    outPath = os.path.join(settings.PROJ_ROOT, mapTile.getTilePath())
-    #TODO for some reason this is giving a path like /data/bla and it is wrong
+    outPath = os.path.join(settings.PROJ_ROOT, mapTile.getTilePath()[1:])
     if not os.path.exists(outPath):
         os.makedirs(outPath)
     if sourceFile.name.endswith('.tif') or sourceFile.name.endswith('.tiff'):
-        sourceFiles[0] = sourceFile.name
+        sourceFiles.append(sourceFile.name)
     elif sourceFile.name.endsWith('.zip'):
         fh = sourceFile.open('rb')
         z = zipfile.ZipFile(fh)
@@ -1377,21 +1375,23 @@ def processTiles(request, uuid):
     serviceNames = []
     for source in sourceFiles:
         tileCmd = ('%s -z 12-20 --resampling=cubic %s %s'
-                   % (settings.XGDS_MAP_SERVER_GDAL2TILES,
-                      source.filename,
+                   % (os.path.join(settings.PROJ_ROOT, "apps", settings.XGDS_MAP_SERVER_GDAL2TILES),
+                      os.path.join(settings.DATA_ROOT,source),
                       outPath))
+        print "Map Tile command: %s" % tileCmd
 
-        if settings.PYRAPTORD_SERVICE:
+        geotiffSubdir = os.path.join(settings.DATA_ROOT, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR)
+        if settings.PYRAPTORD_SERVICE is True:
             pyraptord = getPyraptordClient('pyraptord')
-            tileSvc = '%s_gdal2tiles' % source.filename
+            tileSvc = '%s_gdal2tiles' % source
             serviceNames.append(tileSvc)
             stopPyraptordServiceIfRunning(pyraptord, tileSvc)
             pyraptord.updateServiceConfig(tileSvc,
                                           {'command': tileCmd,
-                                           'cwd': settings.XGDS_MAP_SERVER_GEOTIFF_PATH})
+                                           'cwd': geotiffSubdir})
             pyraptord.restart(tileSvc)
         else:
-            os.chdir(settings.XGDS_MAP_SERVER_GEOTIFF_PATH)
+            os.chdir(geotiffSubdir)
             os.system(tileCmd)
 
     #TODO mark processed only if it worked
@@ -1400,6 +1400,6 @@ def processTiles(request, uuid):
 #             statusDict = pyraptord.getStatus(tileSvc)
 #             if statusDict['STATUS'] = 'success':
 #                 remove from list
-    mapTile.setProcessed(True)
+    mapTile.processed = True
     mapTile.save()
 

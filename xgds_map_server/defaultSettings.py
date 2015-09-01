@@ -38,7 +38,7 @@ XGDS_MAP_SERVER_LAYER_FEED_URL = "/xgds_map_server/treejson/"
 XGDS_MAP_SERVER_SELECTED_LAYER_URL = "/xgds_map_server/selectedjson/"
 
 # path to script to turn geotiffs into tiles, via gdal with our patch
-XGDS_MAP_SERVER_GDAL2TILES = "/xgds_map_server/bin/gdal2tiles.py"
+XGDS_MAP_SERVER_GDAL2TILES = "xgds_map_server/bin/gdal2tiles.py"
 
 
 # A list of regex strings. If the name of a Map object matches one of
