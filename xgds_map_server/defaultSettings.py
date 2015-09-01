@@ -48,14 +48,14 @@ XGDS_MAP_SERVER_GDAL2TILES = "/xgds_map_server/bin/gdal2tiles.py"
 XGDS_MAP_SERVER_LOGO_PATTERNS = []
 
 # include this in your siteSettings.py BOWER_INSTALLED_APPS
-XGDS_MAP_SERVER_BOWER_INSTALLED_APPS = ('sprintf.js',
+XGDS_MAP_SERVER_BOWER_INSTALLED_APPS = ('sprintf.js=sprintf.js',
                                         'lodash',
                                         'handlebars=git://github.com/components/handlebars.js.git',
                                         'backbone#1.1.2',
-                                        'marionette',
+                                        'marionette=marionette',
                                         'backbone-relational',
                                         'backbone-forms',
-                                        'fancytree',
+                                        'fancytree=fancytree',
                                         'jquery-cookie=git://github.com/carhartl/jquery-cookie.git',
                                         'openlayers3=https://github.com/openlayers/ol3/releases/download/v3.6.0/v3.6.0-dist.zip',
                                         'ol3-popup',
