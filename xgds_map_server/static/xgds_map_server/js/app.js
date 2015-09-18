@@ -480,11 +480,11 @@ var app = (function($, _, Backbone) {
         	if (type == "Point") {
     			feature.set("point", inverse(coordinates));
     		} else if (type == "Polygon") {
-    			feature.set('polygon', inverseFlatList(coordinates));
+    			feature.set('polygon', inverseList(coordinates));
     		} else if (type == "LineString") {
-                feature.set('lineString', inverseFlatList(coordinates));
+                feature.set('lineString', inverseList(coordinates));
     		} else if (type == "GroundOverlay") {
-                feature.set('polygon', inverseFlatList(coordinates));
+                feature.set('polygon', inverseList(coordinates));
             }
     	},
         

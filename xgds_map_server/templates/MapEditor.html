@@ -81,10 +81,14 @@
     {% include "xgds_map_server/MapSearchDialog.html" with saveSearchForm=saveSearchForm %}
     
     {% javascript 'custom_map' %}
+    
 {% endblock scripts %}
 
 {% block jsInit %}
     appOptions = {
+ 		DEFAULT_COORD_SYSTEM: "{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}",
+ 		SETUP_COORD_SYSTEM: {{ settings.XGDS_MAP_SERVER_MAP_SETUP_COORD_SYSTEM }},
+		DEFAULT_COORD_SYSTEM_CENTER: {{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM_CENTER }},
         offline: {{ settings.XGDS_PLANNER_OFFLINE|yesno:"true,false" }},
  		selectedLayerUrl: "{{ settings.XGDS_MAP_SERVER_SELECTED_LAYER_URL }}",
         layerFeedUrl: "{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}",

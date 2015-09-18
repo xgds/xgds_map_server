@@ -15,6 +15,9 @@
 // __END_LICENSE__
 
 var DEG2RAD = Math.PI / 180.0;
+var SPHERICAL_MERCATOR = 'EPSG:3857';
+var LONG_LAT =  'EPSG:4326';
+var DEFAULT_COORD_SYSTEM = SPHERICAL_MERCATOR;
 
 // take a list of tuples and return a flat list
 function flatten(coords){
@@ -26,9 +29,9 @@ function flatten(coords){
     return result;
 }
 
-// transform coords from lon lat to spherical mercator (ol map coords) 
+// transform coords from lon lat to default coordinate system (ol map coords) 
 function transform(coords){
-    return ol.proj.transform(coords, 'EPSG:4326',   'EPSG:3857');    
+    return ol.proj.transform(coords, LONG_LAT,   DEFAULT_COORD_SYSTEM);    
 }
 
 function transformFlatList(coords){
@@ -52,7 +55,7 @@ function transformList(coords){
 }
 
 function inverse(coords){
-    return ol.proj.transform(coords, 'EPSG:3857', 'EPSG:4326');    
+    return ol.proj.transform(coords, DEFAULT_COORD_SYSTEM, LONG_LAT);    
 }
 
 function inverseList(coords){
@@ -79,7 +82,6 @@ function endsWith(str, suffix) {
     return str.indexOf(suffix, str.length - suffix.length) !== -1;
 }
 
-var KML_PROJECTION = ol.proj.get('EPSG:3857');
 
 function getExtens(coordinates){
     var xValues = [];
@@ -118,6 +120,13 @@ $(function() {
                 app.State.pageInnerWidth = app.State.pageContainer.innerWidth();
                 var horizOrigin = this.$el.width();
 
+                if (!_.isUndefined(app.options.DEFAULT_COORD_SYSTEM) && app.options.DEFAULT_COORD_SYSTEM != SPHERICAL_MERCATOR){
+                	if (!_.isUndefined(app.options.SETUP_COORD_SYSTEM)){
+                		DEFAULT_COORD_SYSTEM = app.options.DEFAULT_COORD_SYSTEM;
+                		app.options.SETUP_COORD_SYSTEM(app.options.DEFAULT_COORD_SYSTEM);
+                	}
+                }
+                
                 this.$el.bind('resize', this.handleResize);
                 app.vent.on('doMapResize', this.handleResize);
                 // also bind to window to adjust on window size change
@@ -130,8 +139,9 @@ $(function() {
                     target: 'map',
                     layers: this.layersForMap,
                     view: new ol.View({
-                        // we will center the view later
-                        zoom: 15
+                        // we will center the view later with updateBbox
+                        zoom: 3,
+                        projection: ol.proj.get(DEFAULT_COORD_SYSTEM)
                     })
                   });
                 this.updateBbox();
@@ -193,6 +203,30 @@ $(function() {
                 this.liveSearchGroup = new ol.layer.Group();
                 
                 this.layersForMap = [
+//                 new ol.layer.Tile( {
+////                	 extent: [-13884991, 2870341, -7455066, 6338219],
+//                	 source: new ol.source.TileWMS({url:'http://onmoon.jpl.nasa.gov/wms.cgi',
+//                		 							params: {'LAYERS': 'msa', 'TILED': true},
+//                		 							serverType: 'geoserver'})
+////                 }),
+//                 new ol.layer.Tile( {
+//                	 extent: [-1001743, -1762468, 1051858, 1771393],
+//                	 source: new ol.source.TileWMS({url:'http://wms.lroc.asu.edu/lroc',
+//                		 							params: {'projection': 'SP_STEREO', 'c_lon': -14.192, 'c_lat':-86.33, 'x':0, 'y':0, 'resolution':3474.8, 'layers':'LUNA_WAC_GLOBAL'},
+//                		 	                        projection: ol.proj.get(DEFAULT_COORD_SYSTEM)
+//                	 							  })
+//                 }),
+//                 new ol.layer.Tile( {
+//                	 extent: [87890.000, -31406.000, 117740.000, -22012.000],
+//                	 minResolution: 2,
+//                	 maxResolution: 128,
+//                	 source: new ol.source.XYZ({
+//                         url: '/data/xgds_map_server/geoTiff/lunar-tile/{z}/{x}/{-y}.png',
+//                         projection: ol.proj.get(DEFAULT_COORD_SYSTEM)
+//                     })
+//                 }),
+//                 
+                 
                  new ol.layer.Tile({
                      source: new ol.source.MapQuest({layer: 'osm'})
                  }),
@@ -220,14 +254,29 @@ $(function() {
             },
             
             updateBbox: function() {
+            	var destinationTransform = ol.proj.get(DEFAULT_COORD_SYSTEM);
+            	var coords = null;
+            	
                 // move to bounding box site settings
-                var siteFrame = app.options.siteFrame;
-                if (siteFrame != undefined) {
-                    proj4.defs('siteFrame', '+proj=utm +zone=' + siteFrame.zone + ' +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
-                    var coords = ol.proj.transform([siteFrame.east0, siteFrame.north0], 'siteFrame',   'EPSG:3857');
-                    var view = this.map.getView();
+            	if (!_.isUndefined(app.options.DEFAULT_COORD_SYSTEM_CENTER)) {
+                    coords = app.options.DEFAULT_COORD_SYSTEM_CENTER;
+            	} else if (!_.isUndefined(app.options.siteFrame)){
+            		var foundProjection = ol.proj.get('siteFrame');
+            		if (_.isUndefined(foundProjection)){
+            			proj4.defs('siteFrame', '+proj=utm +zone=' + app.options.siteFrame.zone + ' +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
+            			var siteFrameProjection = new ol.proj.Projection({
+            				code: 'siteFrame',
+            				units: 'm'
+            			});
+            			ol.proj.addProjection(siteFrameProjection);
+            		}
+                     coords = ol.proj.transform([siteFrame.east0, siteFrame.north0], 'siteFrame',   destinationTransform);
+            	}
+               
+            	if (!_.isUndefined(coords)){
+            		var view = this.map.getView();
                     view.setCenter(coords);
-                }
+            	}
                },
             
             // load map tree ahead of time to load layers into map
@@ -423,7 +472,7 @@ $(function() {
             getMapExtent: function() {
                 // get the current map extent, you can use this in searches.
                 var extent = this.map.getView().calculateExtent(this.map.getSize());
-                extent = ol.proj.transformExtent(extent, 'EPSG:3857', 'EPSG:4326');
+                extent = ol.proj.transformExtent(extent, DEFAULT_COORD_SYSTEM, LONG_LAT);
                 return extent;
             }
         });
@@ -550,8 +599,10 @@ $(function() {
             
         }
     });
-    
-    
+  
+    //TODO set this up once coord system is in place
+//    var KML_PROJECTION = ol.proj.get(DEFAULT_COORD_SYSTEM);
+
     app.views.KmlLayerView = app.views.TreeMapElement.extend({
         initialize: function(options) {
             this.kmlFile = options.kmlFile;
@@ -566,12 +617,6 @@ $(function() {
         constructMapElements: function() {
             if (_.isUndefined(this.mapElement)){
                 this.mapElement = new ol.layer.Vector({
-                    /* when we have ol 3.5.0 change to this
-                    source: new ol.source.KML({
-                        projection: KML_PROJECTION,
-                        url: this.kmlFile
-                    })
-                    */
                     source: new ol.source.Vector({
                         url: this.kmlFile,
                         format: new ol.format.KML()
@@ -936,7 +981,7 @@ $(function() {
                 source: new ol.source.ImageStatic({
                     url: this.featureJson.image,
                     size: [this.featureJson.width, this.featureJson.height],
-                    imageExtent: ol.extent.applyTransform(extens , ol.proj.getTransform("EPSG:4326", "EPSG:3857"))
+                    imageExtent: ol.extent.applyTransform(extens , ol.proj.getTransform("EPSG:4326", DEFAULT_COORD_SYSTEM))
                 }),
                 style: this.getStyles()
             });
@@ -997,7 +1042,7 @@ $(function() {
             var coords = this.featureJson.polygon;
             this.olFeature = new ol.Feature({
                 name: this.featureJson.name,
-                geometry: new ol.geom.Polygon([coords]).transform('EPSG:4326', 'EPSG:3857')
+                geometry: new ol.geom.Polygon([coords]).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
             });
             return this.olFeature;
         }, 
@@ -1023,7 +1068,7 @@ $(function() {
         constructFeature: function() {
             this.olFeature = new ol.Feature({
                 name: this.featureJson.name,
-                geometry: new ol.geom.LineString(this.featureJson.lineString).transform('EPSG:4326', 'EPSG:3857')
+                geometry: new ol.geom.LineString(this.featureJson.lineString).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
             });
             return this.olFeature;
         }, 

@@ -75,10 +75,15 @@ $(function() {
       		app.vent.on('updateFeaturePosition', this.updateFeaturePosition, this);
     	},
     	createFeatureOverlay: function() {
-            this.featureOverlay = new ol.FeatureOverlay({
-	      		  style: app.util.getDefaultStyle()
+    		this.olFeatures = new ol.Collection();
+            this.featureOverlay = new ol.layer.Vector({
+            		map: this.options.map,
+            		source: new ol.source.Vector({
+            			features: this.olFeatures,
+            			useSpatialIndex: false,
+            		}),
+	      		  	style: app.util.getDefaultStyle()
 	      		});
-            this.featureOverlay.setMap(this.options.map);
     	},
     	initializeFeaturesJson: function() {
             this.trigger('readyToDraw');
@@ -136,7 +141,7 @@ $(function() {
                     var view = event.target.get('view');
                     view.updateCoordsFromGeometry(geometry);
                 });
-                this.featureOverlay.addFeature(featureObj.olFeature);
+                this.olFeatures.push(featureObj.olFeature);
                 this.features.push(newFeatureView);
             }
         },
@@ -147,7 +152,7 @@ $(function() {
         	var _this = this;
         	_.each(features, function(feature){
         		var olFeature = feature.olFeature;
-        		_this.featureOverlay.removeFeature(olFeature);
+        		_this.olFeatures.pop(olFeature);
         	});
         },
         
@@ -158,10 +163,10 @@ $(function() {
         		olFeature.setGeometry(newPoint);
         	} else if (type == 'Polygon') {
         		var coords = this.feature.get('polygon')
-        		var newPolygon = new ol.geom.Polygon([coords]).transform('EPSG:4326', 'EPSG:3857');
+        		var newPolygon = new ol.geom.Polygon([coords]).transform(LONG_LAT, DEFAULT_COORD_SYSTEM);
         		olFeature.setGeometry(newPolygon);
         	} else if (type == 'LineString') {
-        		var newLineString = new ol.geom.LineString(feature.get('lineString')).transform('EPSG:4326', 'EPSG:3857');
+        		var newLineString = new ol.geom.LineString(feature.get('lineString')).transform(LONG_LAT, DEFAULT_COORD_SYSTEM);
         		olFeature.setGeometry(newLineString);
         	} 
         	
@@ -192,7 +197,7 @@ $(function() {
         
         addDrawInteraction: function(typeSelect) {
 			this.featureAdder = new ol.interaction.Draw({
-				features: this.featureOverlay.getFeatures(),
+				features: this.olFeatures,
 				type:  /** @type {ol.geom.GeometryType} */ (typeSelect),
 				deleteCondition: function(event) {
                     return ol.events.condition.shiftKeyOnly(event) &&
@@ -237,7 +242,7 @@ $(function() {
         		app.State.popupsEnabled = false;
         		if (_.isUndefined(this.repositioner)) {
         			this.repositioner = new ol.interaction.Modify({
-        				features: this.featureOverlay.getFeatures(),
+        				features: this.olFeatures,
         				deleteCondition: function(event) {
         					return ol.events.condition.shiftKeyOnly(event) &&
         						ol.events.condition.singleClick(event);
@@ -246,7 +251,7 @@ $(function() {
         		} 
     			this.map.addInteraction(this.repositioner);
     			this.pointDeleter = new ol.interaction.Select({
-                    layers: [this.featureOverlay.getFeatures()], //[this.layerGroup.getLayers()],
+                    layers: [this.olFeatures], 
 //                    style: new ol.style.Style({
 //                        image: new ol.style.Circle({
 //                          radius: 12,
@@ -294,7 +299,7 @@ $(function() {
             geom.setCoordinates([xcoords], 'XY');
     	},
     	updateCoordsFromGeometry: function(geometry) {
-            var coords = inverseFlatList(geometry.getCoordinates().reduce(function(a, b) {
+            var coords = inverseList(geometry.getCoordinates().reduce(function(a, b) {
                 return a.concat(b);
             }));
             this.model.set('polygon',coords);
@@ -351,7 +356,7 @@ $(function() {
             this.olFeature.getGeometry().setCoordinates(xcoords,'XY');
         },
     	updateCoordsFromGeometry: function(geometry) {
-            var coords = inverseFlatList(geometry.getCoordinates().reduce(function(a, b) {
+            var coords = inverseList(geometry.getCoordinates().reduce(function(a, b) {
                 return a.concat(b);
             }));
             this.model.set('lineString',coords);
@@ -375,7 +380,7 @@ $(function() {
             geom.setCoordinates([xcoords],'XY');
         },
         updateCoordsFromGeometry: function(geometry) {
-            var coords = inverseFlatList(geometry.getCoordinates().reduce(function(a, b) {
+            var coords = inverseList(geometry.getCoordinates().reduce(function(a, b) {
                 return a.concat(b);
             }));
             this.model.set('polygon',coords);
