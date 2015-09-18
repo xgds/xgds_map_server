@@ -202,42 +202,15 @@ $(function() {
                 this.mapLinkGroup = new ol.layer.Group();
                 this.liveSearchGroup = new ol.layer.Group();
                 
-                this.layersForMap = [
-//                 new ol.layer.Tile( {
-////                	 extent: [-13884991, 2870341, -7455066, 6338219],
-//                	 source: new ol.source.TileWMS({url:'http://onmoon.jpl.nasa.gov/wms.cgi',
-//                		 							params: {'LAYERS': 'msa', 'TILED': true},
-//                		 							serverType: 'geoserver'})
-////                 }),
-//                 new ol.layer.Tile( {
-//                	 extent: [-1001743, -1762468, 1051858, 1771393],
-//                	 source: new ol.source.TileWMS({url:'http://wms.lroc.asu.edu/lroc',
-//                		 							params: {'projection': 'SP_STEREO', 'c_lon': -14.192, 'c_lat':-86.33, 'x':0, 'y':0, 'resolution':3474.8, 'layers':'LUNA_WAC_GLOBAL'},
-//                		 	                        projection: ol.proj.get(DEFAULT_COORD_SYSTEM)
-//                	 							  })
-//                 }),
-//                 new ol.layer.Tile( {
-//                	 extent: [87890.000, -31406.000, 117740.000, -22012.000],
-//                	 minResolution: 2,
-//                	 maxResolution: 128,
-//                	 source: new ol.source.XYZ({
-//                         url: '/data/xgds_map_server/geoTiff/lunar-tile/{z}/{x}/{-y}.png',
-//                         projection: ol.proj.get(DEFAULT_COORD_SYSTEM)
-//                     })
-//                 }),
-//                 
-                 
-                 new ol.layer.Tile({
-                     source: new ol.source.MapQuest({layer: 'osm'})
-                 }),
-                 this.tileGroup,
-                 this.mapLayerGroup,
-                 this.kmlGroup,
-                 this.mapLinkGroup,
-                 this.collectionGroup,
-                 this.searchGroup,
-                 this.liveSearchGroup
-                 ]
+                this.layersForMap = getInitialLayers();
+                
+                this.layersForMap.push(this.tileGroup);
+                this.layersForMap.push(this.mapLayerGroup);
+                this.layersForMap.push(this.kmlGroup);
+                this.layersForMap.push(this.mapLinkGroup);
+                this.layersForMap.push(this.collectionGroup);
+                this.layersForMap.push(this.searchGroup);
+                this.layersForMap.push(this.liveSearchGroup);
             },
             
             handleResize: function() {

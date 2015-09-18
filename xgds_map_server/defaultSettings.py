@@ -69,9 +69,11 @@ XGDS_MAP_SERVER_BOWER_INSTALLED_APPS = ('sprintf.js=sprintf.js',
 #                                                 }
 #                               }
 # IMPORTANT: we are expecting something named custom_map so don't rename it.
+# SUPER IMPORTANT: we also need to define a getInitialLayers() method in javascript so if you are not making your own, keep including the initial_layers.js to include OSM.
 # and then include it in PIPELINE_JS ie
 # PIPELINE_JS.update(XGDS_MAP_SERVER_PIPELINE_JS)
-XGDS_MAP_SERVER_PIPELINE_JS = {'custom_map': {'source_filenames': ('xgds_map_server/js/custom_map.js'),
+XGDS_MAP_SERVER_PIPELINE_JS = {'custom_map': {'source_filenames': ('xgds_map_server/js/custom_map.js',
+                                                                   'xgds_map_server/js/initial_layers.js'),
                                               'output_filename': 'js/custom_map.js',
                                               }
                                }
@@ -79,6 +81,7 @@ XGDS_MAP_SERVER_PIPELINE_JS = {'custom_map': {'source_filenames': ('xgds_map_ser
 # XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: The fully qualified name of an
 # extra JavaScript callback to call after the map is loaded.
 XGDS_MAP_SERVER_MAP_LOADED_CALLBACK = 'null'
+
 
 # dict of models to  a dict of javascript files to render the models on the map and the model class
 # for example
