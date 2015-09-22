@@ -49,7 +49,7 @@ XGDS_MAP_SERVER_LOGO_PATTERNS = []
 
 # include this in your siteSettings.py BOWER_INSTALLED_APPS
 XGDS_MAP_SERVER_BOWER_INSTALLED_APPS = ('sprintf.js=sprintf.js',
-                                        'lodash',
+                                        'lodash#3.10.0',
                                         'handlebars=git://github.com/components/handlebars.js.git',
                                         'backbone#1.1.2',
                                         'marionette=marionette',
