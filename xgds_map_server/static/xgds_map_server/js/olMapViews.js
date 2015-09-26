@@ -954,7 +954,7 @@ $(function() {
                 source: new ol.source.ImageStatic({
                     url: this.featureJson.image,
                     size: [this.featureJson.width, this.featureJson.height],
-                    imageExtent: ol.extent.applyTransform(extens , ol.proj.getTransform("EPSG:4326", DEFAULT_COORD_SYSTEM))
+                    imageExtent: ol.extent.applyTransform(extens , ol.proj.getTransform(LONG_LAT, DEFAULT_COORD_SYSTEM))
                 }),
                 style: this.getStyles()
             });
