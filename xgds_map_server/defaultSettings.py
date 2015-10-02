@@ -80,7 +80,7 @@ XGDS_MAP_SERVER_PIPELINE_JS = {'custom_map': {'source_filenames': ('xgds_map_ser
 
 # XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: The fully qualified name of an
 # extra JavaScript callback to call after the map is loaded.
-XGDS_MAP_SERVER_MAP_LOADED_CALLBACK = 'null'
+XGDS_MAP_SERVER_MAP_LOADED_CALLBACK = 'xgds_map.coordinator.init'
 
 
 # dict of models to  a dict of javascript files to render the models on the map and the model class
