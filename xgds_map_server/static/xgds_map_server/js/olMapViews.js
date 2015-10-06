@@ -243,7 +243,7 @@ $(function() {
             			});
             			ol.proj.addProjection(siteFrameProjection);
             		}
-                     coords = ol.proj.transform([siteFrame.east0, siteFrame.north0], 'siteFrame',   destinationTransform);
+                     coords = ol.proj.transform([app.options.siteFrame.east0, app.options.siteFrame.north0], 'siteFrame',   destinationTransform);
             	}
                
             	if (!_.isUndefined(coords)){
