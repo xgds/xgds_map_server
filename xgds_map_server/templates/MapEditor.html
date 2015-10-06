@@ -66,7 +66,6 @@
     <script type="text/javascript" src='{{ EXTERNAL_URL }}string-format/string-format.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}usng/usng.js'></script>
 
-    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/geo.js'></script>
     <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/forms.js'></script>
     <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/models.js'></script>
     <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/views.js'></script>
@@ -82,10 +81,13 @@
     
     {% javascript 'custom_map' %}
     
+    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/geo.js'></script>
+    
 {% endblock scripts %}
 
 {% block jsInit %}
-    appOptions = {
+    var appOptions = {
+    	BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
  		DEFAULT_COORD_SYSTEM: "{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}",
  		SETUP_COORD_SYSTEM: {{ settings.XGDS_MAP_SERVER_MAP_SETUP_COORD_SYSTEM }},
 		DEFAULT_COORD_SYSTEM_CENTER: {{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM_CENTER }},
