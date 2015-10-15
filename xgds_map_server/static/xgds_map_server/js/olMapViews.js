@@ -120,8 +120,10 @@ $(function() {
                 app.State.pageInnerWidth = app.State.pageContainer.innerWidth();
                 var horizOrigin = this.$el.width();
 
-                if (!_.isUndefined(app.options.DEFAULT_COORD_SYSTEM) && app.options.DEFAULT_COORD_SYSTEM != SPHERICAL_MERCATOR){
-                	if (!_.isUndefined(app.options.SETUP_COORD_SYSTEM)){
+                var DEFAULT_ZOOM = app.options.DEFAULT_ZOOM;
+
+                if (!_.isEmpty(app.options.DEFAULT_COORD_SYSTEM) && app.options.DEFAULT_COORD_SYSTEM != SPHERICAL_MERCATOR){
+                	if (!_.isEmpty(app.options.SETUP_COORD_SYSTEM)){
                 		DEFAULT_COORD_SYSTEM = app.options.DEFAULT_COORD_SYSTEM;
                 		app.options.SETUP_COORD_SYSTEM(app.options.DEFAULT_COORD_SYSTEM);
                 	}
@@ -140,7 +142,7 @@ $(function() {
                     layers: this.layersForMap,
                     view: new ol.View({
                         // we will center the view later with updateBbox
-                        zoom: 3,
+                        zoom: DEFAULT_ZOOM,
                         projection: ol.proj.get(DEFAULT_COORD_SYSTEM)
                     })
                   });
@@ -231,9 +233,9 @@ $(function() {
             	var coords = null;
             	
                 // move to bounding box site settings
-            	if (!_.isUndefined(app.options.DEFAULT_COORD_SYSTEM_CENTER)) {
+            	if (!_.isEmpty(app.options.DEFAULT_COORD_SYSTEM_CENTER)) {
                     coords = app.options.DEFAULT_COORD_SYSTEM_CENTER;
-            	} else if (!_.isUndefined(app.options.siteFrame)){
+            	} else if (!_.isEmpty(app.options.siteFrame)){
             		var foundProjection = ol.proj.get('siteFrame');
             		if (_.isUndefined(foundProjection)){
             			proj4.defs('siteFrame', '+proj=utm +zone=' + app.options.siteFrame.zone + ' +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
