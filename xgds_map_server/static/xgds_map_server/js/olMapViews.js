@@ -123,7 +123,7 @@ $(function() {
                 var DEFAULT_ZOOM = app.options.DEFAULT_ZOOM;
 
                 if (!_.isEmpty(app.options.DEFAULT_COORD_SYSTEM) && app.options.DEFAULT_COORD_SYSTEM != SPHERICAL_MERCATOR){
-                	if (!_.isEmpty(app.options.SETUP_COORD_SYSTEM)){
+                	if (!_.isNull(app.options.SETUP_COORD_SYSTEM)){
                 		DEFAULT_COORD_SYSTEM = app.options.DEFAULT_COORD_SYSTEM;
                 		app.options.SETUP_COORD_SYSTEM(app.options.DEFAULT_COORD_SYSTEM);
                 	}
