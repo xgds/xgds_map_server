@@ -57,7 +57,7 @@ XGDS_MAP_SERVER_BOWER_INSTALLED_APPS = ('sprintf.js=sprintf.js',
                                         'backbone-forms',
                                         'fancytree=fancytree',
                                         'jquery-cookie=git://github.com/carhartl/jquery-cookie.git',
-                                        'openlayers3=https://github.com/openlayers/ol3/releases/download/v3.10.1/v3.10.1-dist.zip', 
+                                        'openlayers3=https://github.com/tamarmot/ol3/releases/download/v3.10.2/ol.zip', #https://github.com/openlayers/ol3/releases/download/v3.10.1/v3.10.1-dist.zip', 
                                         'ol3-popup',
                                         'proj4',
                                         )
