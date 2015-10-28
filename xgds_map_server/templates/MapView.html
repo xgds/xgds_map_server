@@ -22,6 +22,7 @@
   @import url('{{EXTERNAL_URL}}ol3-popup/src/ol3-popup.css');
   @import url('{{ EXTERNAL_URL }}fancytree/dist/skin-lion/ui.fancytree.min.css');
   @import url('{{ STATIC_URL }}xgds_map_server/css/fancytree_custom.css');
+  @import url('{{ STATIC_URL }}xgds_map_server/css/xgds_map_server.css');
   #map {
   	 margin-top: 25px;
  	 height: 400px;
@@ -37,7 +38,12 @@
 		{{template|safe}}
 	</script>
     {% endfor %}
-    {% javascript 'custom_map' %}
+    {# javascript 'custom_map' #}
+    <script type="text/javascript" src='{{STATIC_URL}}rpApp/js/uploadJson.js'></script>
+    <script type="text/javascript" src='{{STATIC_URL}}rpApp/js/showMapCoords.js'></script>
+    <script type="text/javascript" src='{{STATIC_URL}}rpApp/js/initial_layers.js'></script>
+    <script type="text/javascript" src='{{STATIC_URL}}rpApp/js/constraintChecker.js'></script>
+    
 {% endblock scripts %}
 
 {% block jsInit %}
@@ -47,6 +53,8 @@
 		SETUP_COORD_SYSTEM: {{ settings.XGDS_MAP_SERVER_MAP_SETUP_COORD_SYSTEM }},
 		DEFAULT_COORD_SYSTEM_CENTER: {{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM_CENTER }},
 		DEFAULT_ZOOM: {{ settings.XGDS_MAP_SERVER_DEFAULT_ZOOM }},
+		DEFAULT_ROTATION: {{ settings.XGDS_MAP_SERVER_DEFAULT_ROTATION }},
+		SHOW_NORTH_EAST: {{ settings.XGDS_MAP_SERVER_SHOW_NORTH_EAST}},
 		selectedLayerUrl: "{{ settings.XGDS_MAP_SERVER_SELECTED_LAYER_URL }}",
 		layerFeedUrl: "{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}",
 		siteFrame: {{ settings.XGDS_CURRENT_SITEFRAME|safe }},
