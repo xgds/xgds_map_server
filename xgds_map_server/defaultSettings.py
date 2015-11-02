@@ -57,7 +57,7 @@ XGDS_MAP_SERVER_BOWER_INSTALLED_APPS = ('sprintf.js=sprintf.js',
                                         'backbone-forms',
                                         'fancytree=fancytree',
                                         'jquery-cookie=git://github.com/carhartl/jquery-cookie.git',
-                                        'openlayers3=https://github.com/tamarmot/ol3/releases/download/v3.10.2/ol.zip', #https://github.com/openlayers/ol3/releases/download/v3.10.1/v3.10.1-dist.zip', 
+                                        'openlayers3=https://github.com/tamarmot/ol3/releases/download/v3.10.3/ol.zip', #https://github.com/openlayers/ol3/releases/download/v3.10.1/v3.10.1-dist.zip', 
                                         'ol3-popup',
                                         'proj4',
                                         )
@@ -96,6 +96,6 @@ XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM = 'EPSG:3857'
 XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM_CENTER = 'null'
 XGDS_MAP_SERVER_DEFAULT_ZOOM = 9
 XGDS_MAP_SERVER_DEFAULT_ROTATION = 0    # to set the default rotation for the map view if it is not 0.  In radians.
-XGDS_MAP_SERVER_SHOW_NORTH_EAST = 'false' # to show north and east arrows
+XGDS_MAP_SERVER_SHOW_COMPASS = 'false' # to show compass control
 XGDS_MAP_SERVER_MAP_SETUP_COORD_SYSTEM = 'null'
 XGDS_MAP_SERVER_BODY_RADIUS_METERS = 6371010

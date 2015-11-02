@@ -148,11 +148,13 @@ $(function() {
                             rotation: DEFAULT_ROTATION
                         })
                       };
-                if (app.options.SHOW_NORTH_EAST){
-                	mapOptions['controls'] =  ol.control.defaults().extend([this.buildNorthEastControl()
-//                	                                                        new ol.control.Rotate({className:'compass-control',
-//                		                                                                           label: '  '})
-                	                                                        ]);
+                if (app.options.SHOW_COMPASS){
+                	mapOptions['controls'] =  [this.buildCompassControl(),
+                	                           new ol.control.Zoom(),
+                	                           new ol.control.ScaleLine()];
+                } else {
+                	mapOptions['controls'] =  [new ol.control.Zoom(),
+                	                           new ol.control.ScaleLine()];
                 }
                 this.map = new ol.Map(mapOptions);
                 this.updateBbox();
@@ -223,132 +225,70 @@ $(function() {
                 this.layersForMap.push(this.searchGroup);
                 this.layersForMap.push(this.liveSearchGroup);
                 
-//                if (app.options.SHOW_NORTH_EAST) {
-//                	this.layersForMap = this.layersForMap.concat(this.buildNorthEastLines());
-//                }
             },
             
-            buildNorthEastControl: function() {
-            	ol.control.Compass = function(opt_options) {
-
-            		  var options = opt_options ? opt_options : {};
-
-            		  var className = options.className ?
-            		      options.className : 'compass-control';
-
-            		  this.label_ = goog.dom.createDom('IMG', {'src': '/static/xgds_map_server/icons/northing.png'});
-
-            		  var tipLabel = options.tipLabel ? options.tipLabel : 'Reset rotation';
-
-            		  var button = goog.dom.createDom('BUTTON', {
-            		    'class': className + '-reset',
-            		    'type' : 'button',
-            		    'title': tipLabel
-            		  }, this.label_);
-
-            		  goog.events.listen(button, goog.events.EventType.CLICK,
-            		      ol.control.Rotate.prototype.handleClick_, false, this);
-
-            		  var cssClasses = className + ' ' + ol.css.CLASS_UNSELECTABLE + ' ' +
-            		      ol.css.CLASS_CONTROL;
-            		  var element = goog.dom.createDom('DIV', cssClasses, button);
-
-            		  var render = options.render ? options.render : ol.control.Rotate.render;
-
-            		  goog.base(this, {
-            		    element: element,
-            		    render: render,
-            		    target: options.target
-            		  });
-
-            		  /**
-            		   * @type {number}
-            		   * @private
-            		   */
-            		  this.duration_ = options.duration ? options.duration : 250;
-
-            		  /**
-            		   * @type {boolean}
-            		   * @private
-            		   */
-            		  this.autoHide_ = options.autoHide !== undefined ? options.autoHide : true;
-
-            		  /**
-            		   * @private
-            		   * @type {number|undefined}
-            		   */
-            		  this.rotation_ = undefined;
-
-            		  if (this.autoHide_) {
-            		    goog.dom.classlist.add(this.element, ol.css.CLASS_HIDDEN);
-            		  }
-
-            		};
-            	goog.inherits(ol.control.Compass, ol.control.Rotate);
-            	return new ol.control.Compass({autoHide:false});
-            },
-            
-            buildNorthEastLines: function() {
-            	var lineStyle = new ol.style.Style({
-                    stroke: new ol.style.Stroke({
-                        color: '#ffcc33',
-                        width: 4
-                      })
-            	});
-            	
-            	var getEndStyle = function(direction){
-            		if (direction === 'N'){
-            			var rotation = -1.5708;
-            		} else {
-            			rotation = 0;
-            		}
-            		var arrowStyle = new ol.style.Style({
-                		image: new ol.style.Icon({
-                	        src: '/static/xgds_map_server/icons/arrow.png',
-                	        anchor: [0.75, 0.5],
-                	        rotateWithView: false,
-                	        rotation: rotation
-                	      })
-                	});
-                	var labelStyle =  new ol.style.Style({
-                		text: new ol.style.Text({font: '16px Calibri,sans-serif,bold',
-                								 fill: new ol.style.Fill({
-                									   color: '#ffcc33'
-                								 }),
-                								 offsetX: 20,
-                								 stroke: new ol.style.Stroke({
-                									 color: 'black',
-                									 width: 2
-                								 }),
-                								 text: direction})
-                	});
-                	return [arrowStyle, labelStyle];
+            buildCompassControl: function() {
+            		
+            	/**
+            	 * Update the rotate control element.
+            	 * @param {ol.MapEvent} mapEvent Map event.
+            	 * @this {ol.control.Rotate}
+            	 * @api
+            	 */
+            	var compassRender = function(mapEvent) {
+            	  var frameState = mapEvent.frameState;
+            	  if (!frameState) {
+            	    return;
+            	  }
+            	  var rotation = frameState.viewState.rotation;
+            	  rotation = rotation - 1.5708;  // rotate back 90 degrees because this icon is pointing to the right
+            	  rotation = rotation - app.options.DEFAULT_ROTATION;
+            	  if (rotation != this.rotation_) {
+            	    var transform = 'rotate(' + rotation + 'rad)';
+            	    if (this.autoHide_) {
+            	      goog.dom.classlist.enable(
+            	          this.element, ol.css.CLASS_HIDDEN, rotation === 0);
+            	    }
+            	    var label = this.element.children[0].children[0];
+            	    label.style.msTransform = transform;
+            	    label.style.webkitTransform = transform;
+            	    label.style.transform = transform;
+            	  }
+            	  this.rotation_ = rotation;
             	};
             	
-            	var result = [
-            	new ol.layer.Vector( {
-			    	name: "northwards",
-			    	source: new ol.source.Vector({
-			    			features: [new ol.Feature({geometry: new ol.geom.LineString([[-16.90865748582111, -86.6],
-			                                                      [-16.90865748582111, -86.4]]).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)}),
-			                           new ol.Feature({geometry: new ol.geom.Point([-16.90865748582111, -86.4]).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)})]
-			    	})
-			    }),
-			    new ol.layer.Vector( {
-			    	name: "eastwards",
-			    	source: new ol.source.Vector({
-			    			features: [new ol.Feature({geometry: new ol.geom.LineString([[-16.90865748582111, -86.6],
-			                                                      [-15.0, -86.6]]).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)}),
-			                           new ol.Feature({geometry:  new ol.geom.Point([-15.0, -86.6]).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)})]
-			                           })
-			    })
-            	];
-            	result[0].getSource().getFeatures()[0].setStyle(lineStyle);
-            	result[0].getSource().getFeatures()[1].setStyle(getEndStyle('N'));
-            	result[1].getSource().getFeatures()[0].setStyle(lineStyle);
-            	result[1].getSource().getFeatures()[1].setStyle(getEndStyle('E'));
+            	var compassResetNorth = function() {
+            	  var map = this.getMap();
+            	  var view = map.getView();
+            	  if (!view) {
+            	    // the map does not have a view, so we can't act
+            	    // upon it
+            	    return;
+            	  }
+            	  var currentRotation = view.getRotation();
+            	  if (currentRotation !== undefined) {
+            	    if (this.duration_ > 0) {
+            	      currentRotation = currentRotation % (2 * Math.PI);
+            	      if (currentRotation < -Math.PI) {
+            	        currentRotation += 2 * Math.PI;
+            	      }
+            	      if (currentRotation > Math.PI) {
+            	        currentRotation -= 2 * Math.PI;
+            	      }
+            	      map.beforeRender(ol.animation.rotate({
+            	        rotation: currentRotation,
+            	        duration: this.duration_,
+            	        easing: ol.easing.easeOut
+            	      }));
+            	    }
+            	    view.setRotation(app.options.DEFAULT_ROTATION);
+            	  }
+            	};
             	
-            	return result;
+            	return new ol.control.Rotate({autoHide:false,
+            		                           render: compassRender,
+            		                           resetNorth: compassResetNorth,
+            		                           label: '\u27A4'});
             },
             
             handleResize: function() {
