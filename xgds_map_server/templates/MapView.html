@@ -37,11 +37,7 @@
 		{{template|safe}}
 	</script>
     {% endfor %}
-    {# javascript 'custom_map' #}
-    <script type="text/javascript" src='{{STATIC_URL}}rpApp/js/uploadJson.js'></script>
-    <script type="text/javascript" src='{{STATIC_URL}}rpApp/js/showMapCoords.js'></script>
-    <script type="text/javascript" src='{{STATIC_URL}}rpApp/js/initial_layers.js'></script>
-    <script type="text/javascript" src='{{STATIC_URL}}rpApp/js/constraintChecker.js'></script>
+    {% javascript 'custom_map' %}
     
 {% endblock scripts %}
 
