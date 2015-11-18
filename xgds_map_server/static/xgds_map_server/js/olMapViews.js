@@ -138,15 +138,17 @@ $(function() {
                 this.buildLayersForMap();
                 this.layersInitialized = false;
                 
+                app.mapView = new ol.View({
+                    // we will center the view later with updateBbox
+                    zoom: DEFAULT_ZOOM,
+                    projection: ol.proj.get(DEFAULT_COORD_SYSTEM),
+                    rotation: DEFAULT_ROTATION
+                });
+                
                 var mapOptions = {
                         target: 'map',
                         layers: this.layersForMap,
-                        view: new ol.View({
-                            // we will center the view later with updateBbox
-                            zoom: DEFAULT_ZOOM,
-                            projection: ol.proj.get(DEFAULT_COORD_SYSTEM),
-                            rotation: DEFAULT_ROTATION
-                        })
+                        view: app.mapView
                       };
                 if (app.options.SHOW_COMPASS){
                 	mapOptions['controls'] =  [this.buildCompassControl(),
@@ -803,11 +805,30 @@ $(function() {
             this.options = options || {};
             this.group = this.options.group;
             app.vent.on('mapSearch:found', function(data) {
-                this.constructMapFeatures(data);
+        	if (data.length > 0){
+        	    this.constructMapFeatures(data);
+        	}
             }, this);
             app.vent.on('mapSearch:clear', function(e) {
                 this.clearDataAndFeatures();
             }, this);
+            app.vent.on('mapSearch:fit', function(e){
+        	this.fitSearch();
+            }, this);
+        },
+        getExtent: function() {
+            if (this.mapElement != undefined && this.mapElement.getLayers().getLength() > 0){
+        	return this.mapElement.getLayers().item(0).getSource().getExtent();
+            } else {
+        	return null;
+            }
+        },
+        fitSearch: function() {
+            var extent = this.getExtent();
+            if (extent != null){
+        	app.mapView.fit(this.getExtent(), app.map.map.getSize());
+        	app.mapView.setZoom(app.options.DEFAULT_ZOOM);
+            }
         },
         clearDataAndFeatures: function() {
             if (!_.isUndefined(this.mapElement)){
@@ -846,6 +867,7 @@ $(function() {
                 }
             }
             this.show();
+            app.vent.trigger('mapSearch:drewFeatures');
 //            var _this = this;
 //            app.map.map.on("moveend",  _this.mapMoveHandler, _this);
         },
