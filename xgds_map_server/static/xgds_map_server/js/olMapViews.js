@@ -813,21 +813,24 @@ $(function() {
                 this.clearDataAndFeatures();
             }, this);
             app.vent.on('mapSearch:fit', function(e){
-        	this.fitSearch();
+        	this.fitExtent();
             }, this);
         },
         getExtent: function() {
             if (this.mapElement != undefined && this.mapElement.getLayers().getLength() > 0){
-        	return this.mapElement.getLayers().item(0).getSource().getExtent();
+        	var extent = ol.extent.createEmpty();
+        	this.mapElement.getLayers().forEach(function(layer) {
+        	  ol.extent.extend(extent, layer.getSource().getExtent());
+        	});
+        	return extent;
             } else {
         	return null;
             }
         },
-        fitSearch: function() {
+        fitExtent: function() {
             var extent = this.getExtent();
             if (extent != null){
         	app.mapView.fit(this.getExtent(), app.map.map.getSize());
-        	app.mapView.setZoom(app.options.DEFAULT_ZOOM);
             }
         },
         clearDataAndFeatures: function() {
