@@ -228,7 +228,7 @@ class MapSearch(AbstractMap):
         """ Get the json block that the fancy tree needs to render this node """
         result = super(MapSearch, self).getTreeJson()
         result["data"]["searchJSON"] = reverse('mapSearchJSON', kwargs={'mapSearchID': self.uuid})
-#         result["data"]["searchResultsJSON"] = reverse('data_searchResultsJSON', kwargs={'collectionID': self.requestLog.id})
+#         result["data"]["searchResultsJSON"] = reverse('data_searchResultsJSON', kwargs={'collectionID': self.requestLog.pk})
         return result
 
 

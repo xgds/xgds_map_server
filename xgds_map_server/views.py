@@ -144,7 +144,7 @@ def getSearchForms():
 def getMapEditorPage(request, layerID=None):
     templates = get_handlebars_templates(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     if layerID:
-        mapLayer = MapLayer.objects.get(uuid=layerID)
+        mapLayer = MapLayer.objects.get(pk=layerID)
         mapLayerDict = mapLayer.toDict()
     else:
         return HttpResponse(json.dumps({'error': 'Map layer is not valid'}), content_type='application/json')
@@ -258,7 +258,7 @@ def saveOrDeleteFeature(request, uuid=None):
         if request.method == "POST":
             feature = createFeatureObject(featureType)
         elif request.method == "PUT":  # grab existing feature
-            feature = FEATURE_MANAGER.filter(uuid=uuid)
+            feature = FEATURE_MANAGER.filter(pk=uuid)
             if feature:
                 feature = feature[0]
             else:
@@ -285,7 +285,7 @@ def saveOrDeleteFeature(request, uuid=None):
 
     elif request.method == "DELETE":
         try:
-            features = FEATURE_MANAGER.filter(uuid=uuid)
+            features = FEATURE_MANAGER.filter(pk=uuid)
         except:
             print "cannot find features "
         feature = features[0]
@@ -302,8 +302,8 @@ def moveNode(request):
         try:
             nodeUuid = request.POST['nodeUuid']
             parentUuid = request.POST['parentUuid']
-            parent = MapGroup.objects.get(uuid=parentUuid)
-            node = MAP_NODE_MANAGER.get(uuid=nodeUuid)
+            parent = MapGroup.objects.get(pk=parentUuid)
+            node = MAP_NODE_MANAGER.get(pk=nodeUuid)
             node.parent = parent
             node.save()
             return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
@@ -321,7 +321,7 @@ def setNodeVisibility(request):
                 visible = True
             else:
                 visible = False
-            node = MAP_NODE_MANAGER.get(uuid=nodeUuid)
+            node = MAP_NODE_MANAGER.get(pk=nodeUuid)
             node.visible = visible
             node.save()
 #             print "saved visibility for " + node.uuid + ' and visible is ' + str(node.visible) + ' and post is ' + str(request.POST['visible'])
@@ -456,7 +456,7 @@ def getEditTilePage(request, tileID):
     """
     fromSave = False
     try:
-        mapTile = MapTile.objects.get(uuid=tileID)
+        mapTile = MapTile.objects.get(pk=tileID)
     except MapTile.DoesNotExist:
         raise Http404
     except MapTile.MultipleObjectsReturned:
@@ -562,7 +562,7 @@ def getEditMapSearchPage(request, mapSearchID):
     title = "Edit Map Search"
     fromSave = False
     try:
-        msearch = MapSearch.objects.get(uuid=mapSearchID)
+        msearch = MapSearch.objects.get(pk=mapSearchID)
     except MapSearch.DoesNotExist:
         raise Http404
     except MapSearch.MultipleObjectsReturned:
@@ -646,7 +646,7 @@ def getEditMapCollectionPage(request, mapCollectionID):
     title = "Edit Map Collection"
     fromSave = False
     try:
-        mcollection = MapCollection.objects.get(uuid=mapCollectionID)
+        mcollection = MapCollection.objects.get(pk=mapCollectionID)
     except MapCollection.DoesNotExist:
         raise Http404
     except MapCollection.MultipleObjectsReturned:
@@ -691,7 +691,7 @@ def getDeleteNodePage(request, nodeID):
     HTML view to delete map
     """
     try:
-        map_objs = MAP_NODE_MANAGER.filter(uuid=nodeID)
+        map_objs = MAP_NODE_MANAGER.filter(pk=nodeID)
         map_obj = map_objs[0]
     except:
         raise Http404
@@ -726,7 +726,7 @@ def getDeleteFolderPage(request, groupID):
     HTML view to delete a folder
     """
     try:
-        map_group = MapGroup.objects.get(uuid=groupID)
+        map_group = MapGroup.objects.get(pk=groupID)
     except MapGroup.DoesNotExist:
         raise Http404
     except MapGroup.MultipleObjectsReturned:
@@ -766,7 +766,7 @@ def getFolderDetailPage(request, groupID):
     fromSave = False
 
     try:
-        map_group = MapGroup.objects.get(uuid=groupID)
+        map_group = MapGroup.objects.get(pk=groupID)
     except MapGroup.DoesNotExist:
         raise Http404
     except KmlMap.MultipleObjectsReturned:
@@ -806,7 +806,7 @@ def getMapDetailPage(request, mapID):
     """
     fromSave = False
     try:
-        map_obj = KmlMap.objects.get(uuid=mapID)
+        map_obj = KmlMap.objects.get(pk=mapID)
     except KmlMap.DoesNotExist:
         raise Http404
     except KmlMap.MultipleObjectsReturned:
@@ -949,7 +949,7 @@ def addGroupToJSON(group, map_tree, request):
 
 
 def getMapLayerJSON(request, layerID):
-    mapLayer = MapLayer.objects.get(uuid=layerID)
+    mapLayer = MapLayer.objects.get(pk=layerID)
     mapLayer_json = {"title": mapLayer.name,
                      "key": mapLayer.uuid,
                      "selected": mapLayer.visible,
@@ -967,7 +967,7 @@ def getMapLayerJSON(request, layerID):
 
 
 def getMapCollectionJSON(request, mapCollectionID):
-    mapCollection = MapCollection.objects.get(uuid=mapCollectionID)
+    mapCollection = MapCollection.objects.get(pk=mapCollectionID)
     collection = mapCollection.collection
     json_data = None
     if collection:
@@ -998,7 +998,7 @@ def getMapJsonDict(contents):
 
 
 def getMapSearchJSON(request, mapSearchID):
-    mapSearch = MapSearch.objects.get(uuid=mapSearchID)
+    mapSearch = MapSearch.objects.get(pk=mapSearchID)
     requestLog = mapSearch.requestLog
     json_data = None
     if requestLog:
@@ -1035,7 +1035,7 @@ def saveSearchWithinMap(request):
     msearch = MapSearch()
     msearch.name = postData['mapSearchName']
     msearch.description = postData['mapSearchDescription']
-    msearch.parent = MapGroup.objects.get(uuid=postData['mapSearchParent'])
+    msearch.parent = MapGroup.objects.get(pk=postData['mapSearchParent'])
     msearch.creator = request.user.username
     msearch.creation_time = datetime.datetime.now()
     msearch.deleted = False
@@ -1350,7 +1350,7 @@ def getMapFeedAll(request):
 # TODO this is totally untested
 def processTiles(request, uuid):
     try:
-        mapTile = MapTile.objects.get(uuid=uuid)
+        mapTile = MapTile.objects.get(pk=uuid)
     except:
         return
 
