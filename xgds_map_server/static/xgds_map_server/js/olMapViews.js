@@ -432,7 +432,7 @@ $(function() {
                 return liveSearchView;
             },
             updateMapLayers: function() {
-                if (!_.isUndefined(app.tree)){
+                if (!_.isUndefined(app.tree) && !_.isEmpty(app.tree)){
                     var selectedNodes = app.tree.getSelectedNodes();
                     selectedNodes.forEach(function(node){
                         if (_.isUndefined(node.mapView)){
