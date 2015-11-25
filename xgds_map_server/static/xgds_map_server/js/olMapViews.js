@@ -18,6 +18,7 @@ var DEG2RAD = Math.PI / 180.0;
 var SPHERICAL_MERCATOR = 'EPSG:3857';
 var LONG_LAT =  'EPSG:4326';
 var DEFAULT_COORD_SYSTEM = SPHERICAL_MERCATOR;
+var mapResizeTimeout;
 
 // take a list of tuples and return a flat list
 function flatten(coords){
@@ -294,8 +295,13 @@ $(function() {
             },
             
             handleResize: function() {
-                var view = this.map.getView();
-                this.map.updateSize();
+        	if ( mapResizeTimeout ) {
+        	    clearTimeout(mapResizeTimeout);
+        	}
+        	mapResizeTimeout = setTimeout( function() {
+        	    var view = app.map.map.getView();
+        	    app.map.map.updateSize();
+        	}, 100);
             },
             
             handleWindowResize: function() {
