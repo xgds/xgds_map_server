@@ -3,8 +3,12 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to xgds_map_server's documentation!
-===========================================
+xgds_map_server documentation
+=============================
+
+xgds_map_server is an xGDS module for OpenLayers and KML support for maps.  It is meant to be used as part of an xGDS Django Application.
+It supports import and map layer editing and management.
+
 
 Contents:
 
