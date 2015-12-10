@@ -418,11 +418,6 @@ app.views.FeatureElementItemView = app.views.FeatureListItemView.extend({
     },
     serializeData: function() {
         var data = app.views.FeatureListItemView.prototype.serializeData.call(this, arguments);
-        if (this.model.get('type') == 'Station') {
-            data.timing = app.util.minutesToHMS("dummy duration");
-        } else {
-            data.timing = '+' + app.util.minutesToHMS("dummy duration");
-        }
         return data;
     }
 

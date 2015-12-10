@@ -194,7 +194,6 @@ $(function() {
             this.currentMode = mode;
             this.currentModeName = modeName;
         },
-        
         addDrawInteraction: function(typeSelect) {
 			this.featureAdder = new ol.interaction.Draw({
 				features: this.olFeatures,
