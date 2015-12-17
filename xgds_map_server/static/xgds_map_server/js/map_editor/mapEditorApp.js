@@ -246,24 +246,6 @@ var app = (function($, _, Backbone) {
     ** Global utility functions
     */
     app.util = {
-	    getDefaultStyle: function() {
-	    	var defaultStyle = new ol.style.Style({
-    		    fill: new ol.style.Fill({
-    		      color: 'rgba(255, 255, 255, 0.2)'
-    		    }),
-    		    stroke: new ol.style.Stroke({
-    		      color: '#ffcc33',
-    		      width: 2
-    		    }),
-    		    image: new ol.style.Circle({
-    		      radius: 7,
-    		      fill: new ol.style.Fill({
-    		        color: '#ffcc33'
-    		      })
-    		    })
-    		  });
-	    	return defaultStyle;
-	    },
         indexBy: function(list, keyProp) {
             // Return an object that indexes the objects in a list by their key property.
             // keyProp should be a string.

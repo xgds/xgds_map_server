@@ -82,7 +82,7 @@ $(function() {
             			features: this.olFeatures,
             			useSpatialIndex: false,
             		}),
-	      		  	style: app.util.getDefaultStyle()
+	      		  	style: olStyles.getDefaultStyle()
 	      		});
     	},
     	initializeFeaturesJson: function() {

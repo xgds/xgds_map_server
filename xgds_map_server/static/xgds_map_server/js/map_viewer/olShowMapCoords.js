@@ -14,6 +14,8 @@
 // specific language governing permissions and limitations under the License.
 //__END_LICENSE__
 
+//DESCRIPTION: Prints lat lon under the map when you move the cursor on the map. It's OL specific.
+
 var xgds_map = xgds_map || {};
 
 xgds_map.getCoords = function(coords){

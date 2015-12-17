@@ -273,11 +273,15 @@ app.views.FeatureCoordinatesView = Backbone.Marionette.ItemView.extend({
 		var coordIndex = e.target.id;
 		var coordValue = e.target.value;
 		coordValue = coordValue.split(',');
+		if (coordValue.length != 2) { // show error msg if user does not enter a valid coord pair.
+			$("#coords-error-" + coordIndex).html("Each coordinate must be a lon, lat pair.").css("color", "red");
+			return;
+		}
+		//TODO: check that user entered a number.
 		var newX = parseFloat(coordValue[0]);
 		var newY = parseFloat(coordValue[1]);
 		app.util.updateFeatureCoordinate(this.model.get('type'), this.model, newX, newY, coordIndex);
 		this.model.save();
-		
 		//TODO: change the location of feature on the map.
 		this.model.trigger('change:coordinates');
 	},

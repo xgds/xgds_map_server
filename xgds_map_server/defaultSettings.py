@@ -20,7 +20,7 @@ XGDS_MAP_SERVER_MEDIA_SUBDIR = 'xgds_map_server/'
 XGDS_MAP_SERVER_DATA_SUBDIR = 'xgds_map_server/'
 XGDS_MAP_SERVER_GEOTIFF_SUBDIR = XGDS_MAP_SERVER_DATA_SUBDIR + 'geoTiff/'
 
-XGDS_MAP_SERVER_DEFAULT_BACKBONE_APP = 'xgds_map_server/js/simpleMapApp.js'
+XGDS_MAP_SERVER_DEFAULT_BACKBONE_APP = 'xgds_map_server/js/map_viewer/mapViewerApp.js'
 XGDS_MAP_SERVER_TEMPLATE_DEBUG = True  # If this is true, handlebars templates will not be cached.
 XGDS_MAP_SERVER_HANDLEBARS_DIRS = [os.path.join('xgds_map_server', 'templates', 'handlebars'),
                                    os.path.join('xgds_map_server', 'templates', 'handlebars', 'search')]
@@ -70,11 +70,11 @@ XGDS_MAP_SERVER_BOWER_INSTALLED_APPS = ('sprintf.js=sprintf.js',
 #                                                 }
 #                               }
 # IMPORTANT: we are expecting something named custom_map so don't rename it.
-# SUPER IMPORTANT: we also need to define a getInitialLayers() method in javascript so if you are not making your own, keep including the initial_layers.js to include OSM.
+# SUPER IMPORTANT: we also need to define a getInitialLayers() method in javascript so if you are not making your own, keep including the olInitialLayers.js to include OSM.
 # and then include it in PIPELINE_JS ie
 # PIPELINE_JS.update(XGDS_MAP_SERVER_PIPELINE_JS)
 XGDS_MAP_SERVER_PIPELINE_JS = {'custom_map': {'source_filenames': ('xgds_map_server/js/custom_map.js',
-                                                                   'xgds_map_server/js/initial_layers.js'),
+                                                                   'xgds_map_server/js/map_viewer/olInitialLayers.js'),
                                               'output_filename': 'js/custom_map.js',
                                               }
                                }

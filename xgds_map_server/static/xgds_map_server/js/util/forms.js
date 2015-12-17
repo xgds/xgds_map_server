@@ -14,23 +14,46 @@
 // specific language governing permissions and limitations under the License.
 //__END_LICENSE__
 
+// DESCRIPTION: Helper that binds a form editor to a class.
+
 (function(Form) {
     // No, backbone forms, 0 is not a safe default for number fields
     Form.editors.Number = Form.editors.Number.extend({
         defaultValue: null
     });
 
+    Form.editors.DateTime = Form.editors.Text.extend({
+    	initialize: function(options) {
+            // Call parent constructor
+            Backbone.Form.editors.Base.prototype.initialize.call(this, options);
+
+            // Custom setup code.
+            if (_.isUndefined(options.editable) || options.editable == False) {
+            	this.$el.datetimepicker({'controlType': 'select',
+                    'timeFormat':'HH:mm:ssZ',
+                    'dateFormat':'yy-mm-dd',
+                    'oneLine': true,
+                    'showTimezone': false,
+                    'timezone': '-0000',
+                    'separator': 'T'
+                   });
+            }
+            
+        }
+        
+    });
+    
     Form.editors.HMS = Form.editors.Text.extend({
         defaultValue: 0,
         getValue: function() {
             var value = this.$el.val();
-            return value === '' ? null : app.util.HMSToMinutes(value);
+            return value === '' ? null : app.util.HMSToSeconds(value);
         },
 
         setValue: function(value) {
             value = (function() {
                 if (_.isNumber(value)) return  value;
-                if (_.isString(value) && value != '') return  parseFloat(value, 10);
+                if (_.isString(value) && value != '') return  parseInt(value, 10);
                 return 0;
             })();
 
@@ -38,7 +61,7 @@
                 value = 0;
             }
 
-            Form.editors.Text.prototype.setValue.call(this, app.util.minutesToHMS(value));
+            Form.editors.Text.prototype.setValue.call(this, app.util.secondsToHMS(value));
         }
     });
 

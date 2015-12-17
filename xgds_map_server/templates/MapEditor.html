@@ -63,13 +63,13 @@
    	{% include "MapJS.html" %}
     <script type="text/javascript" src='{{ EXTERNAL_URL }}backbone-relational/backbone-relational.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}backbone-forms/distribution/backbone-forms.min.js'></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}string-format/string-format.js'></script>
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}string-format/lib/string-format.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}usng/usng.js'></script>
 
-    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/forms.js'></script>
-    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/models.js'></script>
-    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/views.js'></script>
-    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/olMapEditorViews.js'></script>
+    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/util/forms.js'></script>
+    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/map_editor/mapEditorModels.js'></script>
+    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/map_editor/mapEditorViews.js'></script>
+    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/map_editor/olMapEditorViews.js'></script>
    	
     {% for template_name, template in templates.items %}
 		<script type="text/handlebars" id="template-{{template_name}}">
@@ -81,7 +81,7 @@
     
     {% javascript 'custom_map' %}
     
-    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/geo.js'></script>
+    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/util/geo.js'></script>
     
 {% endblock scripts %}
 

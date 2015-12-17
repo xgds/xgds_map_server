@@ -14,16 +14,10 @@
 // specific language governing permissions and limitations under the License.
 //__END_LICENSE__
 
-app.views = app.views || {};
+// DESCRIPTION -- define & override the initial openlayers hardcoded base layers
 
-app.views.HideableRegion = Backbone.Marionette.Region.extend({
-    close: function() {
-        Backbone.Marionette.Region.prototype.reset.call(this);
-//        this.ensureEl();
-//        this.$el.hide();
-    },
-    show: function(view) {
-        Backbone.Marionette.Region.prototype.show.call(this, view);
-        this.$el.show();
-    }
-});
+getInitialLayers = function() {
+	return [new ol.layer.Tile({
+                     source: new ol.source.MapQuest({layer: 'osm'})
+                 })]
+}

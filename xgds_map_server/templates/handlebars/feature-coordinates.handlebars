@@ -1,6 +1,7 @@
 <form class="bbf-form" id="feature-coordinates-form">
 <ul>
   {{#each coords}}
+  	<div class="coords-error-msg" id="coords-error-{{@index}}"></div>
   	<li>
 	<input class="featureCoords" id="{{@index}}" type="text" value="{{this}}" size="45"/>
   	</li>

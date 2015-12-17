@@ -17,7 +17,6 @@
 var geo = geo || {};
 $(function() {
 
-    var EARTH_RADIUS_METERS = 6371010;
     var DEG2RAD = Math.PI / 180.0;
     var RAD2DEG = 180.0 / Math.PI;
 
@@ -29,8 +28,8 @@ $(function() {
     */
     geo.addMeters = function(latlng, xy) {
         var latRad = latlng.lat * DEG2RAD;
-        var latDiff = xy.y / EARTH_RADIUS_METERS;
-        var lngDiff = xy.x / (Math.cos(latRad) * EARTH_RADIUS_METERS);
+        var latDiff = xy.y / app.options.BODY_RADIUS_METERS;
+        var lngDiff = xy.x / (Math.cos(latRad) * app.options.BODY_RADIUS_METERS);
         return {
             lat: latlng.lat + RAD2DEG * latDiff,
             lng: latlng.lng + RAD2DEG * lngDiff
@@ -49,8 +48,8 @@ $(function() {
         var lonDiff = (a.lng - b.lng) * DEG2RAD;
         var lat = 0.5 * (a.lat + b.lat) * DEG2RAD;
         return {
-            x: Math.cos(lat) * EARTH_RADIUS_METERS * lonDiff,
-            y: EARTH_RADIUS_METERS * latDiff
+            x: Math.cos(lat) * app.options.BODY_RADIUS_METERS * lonDiff,
+            y: app.options.BODY_RADIUS_METERS * latDiff
         };
     };
 

@@ -176,6 +176,10 @@ $(function() {
                 }, this);
             },
             
+            buildStyles: function() {
+            	olStyles.buildStyles();
+            },
+            
             createNode: function(node){
                 if (!_.isUndefined(app.nodeMap[node.key])){
                     // render it
@@ -442,61 +446,6 @@ $(function() {
                 }
             },
             
-            buildStyles: function() {
-                if (_.isUndefined(app.styles)){
-                    app.styles = new Object();
-                }
-//                styles['#msn_ylw-pushpin2'] = new ol.style.Style({
-//                    image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
-//                        anchor: [0.5, 46],
-//                        anchorXUnits: 'fraction',
-//                        anchorYUnits: 'pixels',
-//                        opacity: 0.75,
-//                        scale: 0.5,
-//                        src: '/static/xgds_map_server/icons/ylw-pushpin.png'
-//                      }))
-//                    });
-             // hardcode some styles for now
-                app.styles['point'] =  new ol.style.Style({
-                    image: new ol.style.Circle({
-                        radius: 5,
-                        fill: new ol.style.Fill({
-                          color: 'rgba(255, 255, 0, 0.1)'
-                        }),
-                        stroke: new ol.style.Stroke({color: 'red', width: 1})
-                      })
-                    });
-                app.styles['polygon'] = new ol.style.Style({
-                    stroke: new ol.style.Stroke({
-                        color: 'blue',
-                        width: 3
-                      }),
-                      fill: new ol.style.Fill({
-                        color: 'rgba(0, 0, 255, 0.2)'
-                      })
-                    });
-                app.styles['lineString'] = new ol.style.Style({
-                    stroke: new ol.style.Stroke({
-                        color: 'orange',
-                        width: 3
-                      })
-                    });
-                app.styles['groundOverlay'] =  new ol.style.Style({
-                    zIndex: Infinity
-                });
-                app.styles['label'] = {
-                        font: '12px Calibri,sans-serif',
-                        fill: new ol.style.Fill({
-                            color: 'yellow'
-                        }),
-                        stroke: new ol.style.Stroke({
-                            color: 'black',
-                            width: 1
-                        }),
-                        offsetY: -20
-                };
-            },
-
             render: function() {
                 this.updateMapLayers();
             },
@@ -1038,7 +987,7 @@ $(function() {
         },
         getTextStyle: function() {
             if (this.featureJson.showLabel) {
-                var theText = new ol.style.Text(app.styles['label']);
+                var theText = new ol.style.Text(olStyles.styles['label']);
                 theText.setText(this.featureJson.name);
                 this.textStyle = new ol.style.Style({
                     text: theText
@@ -1072,7 +1021,7 @@ $(function() {
             return this.imageLayer;
         },
         getStyle: function() {
-            return app.styles['groundOverlay'];
+            return olStyles.styles['groundOverlay'];
         }
         
     });
@@ -1129,7 +1078,7 @@ $(function() {
             return this.olFeature;
         }, 
         getStyle: function() {
-            return app.styles['polygon'];
+            return olStyles.styles['polygon'];
         }
     });
     
@@ -1142,7 +1091,7 @@ $(function() {
             return this.olFeature;
         }, 
         getStyle: function() {
-            return app.styles['point'];
+            return olStyles.styles['point'];
         }
     });
     
@@ -1155,7 +1104,7 @@ $(function() {
             return this.olFeature;
         }, 
         getStyle: function() {
-            return app.styles['lineString'];
+            return olStyles.styles['lineString'];
         }
     });
     
