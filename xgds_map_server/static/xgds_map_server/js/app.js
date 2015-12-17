@@ -278,13 +278,15 @@ var app = (function($, _, Backbone) {
             var geom = olFeature.getGeometry();
             var type = geom.getType();
             var coords;
-            if (type === "Point"){
+            
+            if ((type === "Point") || (type === "LineString")){
                 coords = geom.getCoordinates();
             } else {
                 coords = geom.getCoordinates().reduce(function(a, b) {
-                return a.concat(b);
-            });
+                	return a.concat(b);
+                });
             }
+            
             var featureObj = new app.models.Feature();
             var mapLayer = app.mapLayer;
             featureObj.set('type', type);
@@ -478,7 +480,7 @@ var app = (function($, _, Backbone) {
         	// transform user drawn coordinates from spherical mercator to lon lat
         	var tCoords = null;
         	if (type == "Point") {
-    			feature.set("point", inverse(coordinates));
+    			feature.set("point", inverseTransform(coordinates));
     		} else if (type == "Polygon") {
     			feature.set('polygon', inverseList(coordinates));
     		} else if (type == "LineString") {
@@ -519,7 +521,7 @@ var app = (function($, _, Backbone) {
                 return [lonLat.lon, lonLat.lat];
             } else if (alternateCrs.type == 'proj4') {
                 var proj = proj4(alternateCrs.properties.projection);
-                return proj.inverse(coords);
+                return proj.inverseTransform(coords);
             } else {
                 console.warn('Alternate CRS unknown');
                 return coords;

@@ -55,7 +55,7 @@ function transformList(coords){
     return result;
 }
 
-function inverse(coords){
+function inverseTransform(coords){
     return ol.proj.transform(coords, DEFAULT_COORD_SYSTEM, LONG_LAT);    
 }
 
@@ -64,7 +64,7 @@ function inverseList(coords){
     var result = [];
     for (i = 0; i < coords.length; i = i + 1){
         var coord = coords[i];
-        result.push(inverse(coord));
+        result.push(inverseTransform(coord));
     }
     return result;
 }
@@ -74,7 +74,7 @@ function inverseFlatList(coords){
     var result = [];
     for (i = 0; i < coords.length; i = i + 2){
         var coord = [coords[i], coords[i+1]];
-        result.push(inverse(coord));
+        result.push(inverseTransform(coord));
     }
     return result;
 }

@@ -321,7 +321,7 @@ $(function() {
             this.olFeature.getGeometry().setCoordinates(xcoords);
         },
     	updateCoordsFromGeometry: function(geometry) {
-            var coords = inverse(geometry.getCoordinates());
+            var coords = inverseTransform(geometry.getCoordinates());
             this.model.set('point',coords);
             this.model.trigger('coordsChanged');
             this.model.save();
