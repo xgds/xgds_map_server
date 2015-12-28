@@ -269,17 +269,20 @@ app.views.FeatureCoordinatesView = Backbone.Marionette.ItemView.extend({
 		"change input.featureCoords": "coordsChanged"
 	},
 	coordsChanged: function(e) {
-		//update this.model (feature)
-		var coordIndex = e.target.id;
+		var coordIndex = parseInt(e.target.id);
 		var coordValue = e.target.value;
+		$("#coords-error-" + coordIndex).empty(); // clear the error msg
 		coordValue = coordValue.split(',');
 		if (coordValue.length != 2) { // show error msg if user does not enter a valid coord pair.
 			$("#coords-error-" + coordIndex).html("Each coordinate must be a lon, lat pair.").css("color", "red");
 			return;
-		}
-		//TODO: check that user entered a number.
+		} 
 		var newX = parseFloat(coordValue[0]);
 		var newY = parseFloat(coordValue[1]);
+		if (isNaN(newX) || isNaN(newY)) { // show error msg if coord is not a number.
+			$("#coords-error-" + coordIndex).html("Coordinate must be a number").css("color", "red");
+			return;
+		}
 		app.util.updateFeatureCoordinate(this.model.get('type'), this.model, newX, newY, coordIndex);
 		this.model.save();
 		//TODO: change the location of feature on the map.
@@ -290,6 +293,9 @@ app.views.FeatureCoordinatesView = Backbone.Marionette.ItemView.extend({
 		var coordinates = null;
 		if (data.type == 'Polygon') {
 			coordinates = data.polygon;
+			// note: ol polygon coords list both start and end pts, which are the same.
+			// so don't create a div for the last coord.
+			coordinates.pop(); // remove last elem
 		} else if (data.type == 'LineString') {
 			coordinates = data.lineString;
 		} else if (data.type == 'Point') {

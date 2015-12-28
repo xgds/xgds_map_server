@@ -260,7 +260,6 @@ var app = (function($, _, Backbone) {
             var geom = olFeature.getGeometry();
             var type = geom.getType();
             var coords;
-            
             if ((type === "Point") || (type === "LineString")){
                 coords = geom.getCoordinates();
             } else {
@@ -268,7 +267,6 @@ var app = (function($, _, Backbone) {
                 	return a.concat(b);
                 });
             }
-            
             var featureObj = new app.models.Feature();
             var mapLayer = app.mapLayer;
             featureObj.set('type', type);
@@ -450,6 +448,11 @@ var app = (function($, _, Backbone) {
         	} else if (type == 'Polygon') {
         		var polygon = feature.get('polygon');
         		polygon[index] = [newX, newY];
+        		//note: ol polygon coords list both start and end point (which are the same). 
+        		// so when start pt changes, update the end point.
+        		if (index == 0) {
+        			polygon[-1] = [newX, newY];
+        		}
         		feature.set('polygon', polygon);
         	} else if (type == 'LineString') {
         		var lineString = feature.get('lineString');
