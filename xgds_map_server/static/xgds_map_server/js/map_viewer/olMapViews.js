@@ -32,7 +32,7 @@ function flatten(coords){
 
 // transform coords from lon lat to default coordinate system (ol map coords) 
 function transform(coords){
-    return ol.proj.transform(coords, LONG_LAT,   DEFAULT_COORD_SYSTEM);    
+    return ol.proj.transform(coords, LONG_LAT,  DEFAULT_COORD_SYSTEM);    
 }
 
 function transformFlatList(coords){
@@ -136,6 +136,7 @@ $(function() {
                 // also bind to window to adjust on window size change
                 $(window).bind('resize', this.handleWindowResize);
                 
+                
                 this.buildLayersForMap();
                 this.layersInitialized = false;
                 
@@ -174,6 +175,22 @@ $(function() {
                 app.vent.on('mapNode:create', function(node) {
                     this.createNode(node);
                 }, this);
+                
+                // bind the location radio btn change to zoom
+                $("input[name=location_radio]:radio").bind("change", {
+                	mapview: this.map.getView()
+                }, function(event) {
+                	var zoomlevel = 5;
+                	var coords = null;
+                	if ($(this).val() == 'COTM') {
+                		console.log("COTM");
+                		coords = transform([-113.516542, 43.416634]);
+                	} else {
+                		console.log("MU");
+                		coords = transform([-155.201704, 19.367729]);
+                	}
+                	event.data.mapview.setCenter(coords, zoomlevel);
+                });
             },
             
             buildStyles: function() {

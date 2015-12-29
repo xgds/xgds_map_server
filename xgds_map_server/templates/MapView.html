@@ -4,6 +4,18 @@
 {% block contents %}
 <div id="application">
 	<div id="toolbar" class="row">
+	  <div class="location">
+		  <label class="radio" for="radio1">
+		    <input name="location_radio" id="zoom_to_cotm" value="COTM" type="radio">
+		    <span></span> Craters of the Moon, Idaho
+		  </label>
+	  </div>
+	  <div class="location">
+		  <label class="radio checked" for="radio2">
+		    <input name="location_radio" id="zoom_to_mauna_ulu" value="MU" type="radio" checked="checked">
+		    <span></span> Mauna Ulu, Hawaii
+		  </label>
+	  </div>
     </div>
 	<div class="row">
         <div id="map" class="six columns"></div>
