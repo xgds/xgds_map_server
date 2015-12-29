@@ -2,9 +2,21 @@
 <ul>
   {{#each coords}}
   	<div class="coords-error-msg" id="coords-error-{{@index}}"></div>
-  	<li>
-	<input class="featureCoords" id="{{@index}}" type="text" value="{{this}}" size="45"/>
-  	</li>
+	{{#if ../polygon}}
+  		{{#if @last}}
+	  		<li>
+			<input class="featureCoords" id="{{@index}}" type="text" value="{{this}}" size="45" hidden />
+		  	</li>
+		{{else}}
+	  		<li>
+			<input class="featureCoords" id="{{@index}}" type="text" value="{{this}}" size="45" />
+		  	</li>
+	  	{{/if}}
+  	{{else}}
+	  	<li>
+		<input class="featureCoords" id="{{@index}}" type="text" value="{{this}}" size="45"/>
+	  	</li>
+  	{{/if}}
   {{/each}}
 </ul>
 </form>

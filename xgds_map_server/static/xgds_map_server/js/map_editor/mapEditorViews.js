@@ -235,6 +235,131 @@ app.views.LayerInfoTabView = Backbone.Marionette.ItemView.extend({
 	}
 });
 
+
+app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
+	template: '#template-features-view',
+    regions: {
+        //Column Headings
+        colhead1: '#colhead1',
+        colhead2: '#colhead2',
+        colhead3: '#colhead3',
+        
+        //Column content
+        col1: '#col1',
+        col2: {
+            selector: '#col2',
+            regionType: app.views.HideableRegion
+        },
+		col3: {
+		    selector: '#col3',
+		    regionType: app.views.HideableRegion
+		}
+    },
+	
+    initialize: function() {
+    	this.listenTo(app.vent, 'showFeature', this.showFeature, this);
+        this.listenTo(app.vent, 'showNothing', this.showNothing, this);
+        this.listenTo(app.vent, 'showStyle', this.showStyle, this);
+        this.listenTo(app.vent, 'showCoordinates', this.showCoordinates, this);
+    },
+    
+    clearColumns: function() {
+    	// Clears 2nd and 3rd columns
+        this.col2.reset();
+        this.col3.reset();
+    },
+    
+    onClose: function() {
+    	this.stopListening();
+    },
+    
+    onRender: function() {
+        try {
+            this.colhead1.close();
+            this.col1.close();
+            this.clearColumns()
+        } catch (err) { 
+        	
+        }
+    	var headerView = new app.views.FeaturesHeaderView({});
+    	this.colhead1.show(headerView);
+
+    	// view that shows list of feature elements
+    	var featureCollectionView = new app.views.FeatureCollectionView ({
+			collection: app.mapLayer.get('feature')
+    	});
+    	
+    	try {
+    		this.col1.show(featureCollectionView);
+    	} catch (exception) {
+    		console.log(exception)
+    	}
+    },
+    
+    showFeature: function(itemModel) {
+    	// clear columns
+    	try{
+    		this.col3.reset();
+    		this.colhead2.reset();
+    	} catch (ex) {
+    	}
+    	
+    	var headerView = new app.views.FeaturePropertiesHeaderView({
+    		model: itemModel
+    	});
+    	
+    	this.colhead2.show(headerView);
+    	this.col2.reset();
+    	this.colhead3.reset();
+    	
+    	var view = new app.views.FeaturePropertiesView({model: itemModel});
+    	this.col2.show(view);
+    },
+    
+    showStyle: function(model){
+    	try {
+    		this.col3.reset();
+    		this.colhead3.reset();
+    	} catch (ex) {
+    	}
+    	var headerView = new app.views.FeatureStyleHeader({model: model});
+    	this.colhead3.show(headerView);
+    	if (model.get('type') == 'Polygon') {
+    		var view = new app.views.FeaturePolygonStyleForm({model: model});
+    	} else if (model.get('type') == 'Point') {
+    		var view = new app.views.FeaturePointStyleForm({model: model});
+    	} else if (model.get('type') == 'LineString') {
+    		var view = new app.views.FeatureLinestringStyleForm({model: model});
+    	} 	
+    	this.col3.show(view);
+        this.col3.reset();
+    }, 
+    
+    showCoordinates: function(model){
+    	try {
+    		this.colhead3.close();
+    	} catch (ex) {
+    	}
+    	var headerView = new app.views.FeatureCoordinatesHeader({model: model});
+    	this.colhead3.show(headerView);
+		var view = new app.views.FeatureCoordinatesView({model: model});
+    	this.col3.show(view);
+    },
+    
+    showNothing: function() {
+        // clear the columns
+        try {
+            this.col2.close();
+            this.col3.close();
+            this.colhead2.close();
+            this.colhead3.close();
+        } catch (ex) {
+            
+        }
+    }
+});
+
+
 /**
  * Model this after PropertiesForm in plan so that the model is immediately updated.
  */
@@ -291,17 +416,16 @@ app.views.FeatureCoordinatesView = Backbone.Marionette.ItemView.extend({
 	serializeData: function() {
 		var data = this.model.toJSON();
 		var coordinates = null;
+		var markPolygon = false;
 		if (data.type == 'Polygon') {
 			coordinates = data.polygon;
-			// note: ol polygon coords list both start and end pts, which are the same.
-			// so don't create a div for the last coord.
-			coordinates.pop(); // remove last elem
+			markPolygon = true;
 		} else if (data.type == 'LineString') {
 			coordinates = data.lineString;
 		} else if (data.type == 'Point') {
 			coordinates = [data.point];
 		}
-		return {coords: coordinates};
+		return {coords: coordinates, polygon: markPolygon};
 	}, 
 });
 
@@ -379,7 +503,10 @@ app.views.NoFeaturesView = Backbone.Marionette.ItemView.extend({
 });
 
 
-app.views.FeatureListItemView = Backbone.Marionette.ItemView.extend({
+app.views.FeatureElementView = Backbone.Marionette.ItemView.extend({
+	/**
+	 * This view represents each feature element (each row in the first column).
+	 */
     // The list item is a simple enough DOM subtree that we'll let the view build its own root element.
     tagName: 'li',
     initialize: function(options) {
@@ -405,18 +532,6 @@ app.views.FeatureListItemView = Backbone.Marionette.ItemView.extend({
     },
     events: {
         click: function() {
-            this.expand();
-        }
-    },
-    modelEvents: {
-        'change': 'render'
-    }
-});
-
-
-app.views.FeatureElementItemView = app.views.FeatureListItemView.extend({
-    events: {
-        click: function() {
             app.State.metaExpanded = true;
             app.State.featureSelected = undefined;
             this.expand();
@@ -426,18 +541,22 @@ app.views.FeatureElementItemView = app.views.FeatureListItemView.extend({
     isSelected: function(evt) {
         return this.$el.find('input.select').is(':checked');
     },
-    serializeData: function() {
-        var data = app.views.FeatureListItemView.prototype.serializeData.call(this, arguments);
-        return data;
+    modelEvents: {
+        'change': 'render'
+    },
+    getSelectedStyles: function() {
+    	return olStyles.styles['selected_' + this.model.get('type').toLowerCase()];
     }
-
 });
 
 
 app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
+	/**
+	 * This view shows list of feature elements (entire first column)
+	 */
 	tagName: 'ul',
 	className: 'feature-list',
-	childView: app.views.FeatureElementItemView,
+	childView: app.views.FeatureElementView,
 	emptyView: app.views.NoFeaturesView,
 	initialize: function(options) {
 		this.options = options || {};
@@ -454,12 +573,24 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
 		/*
 		 * This gets called when a feature is expanded (shows chevron) 
 		 */
+		// if there is a previously selected feature, revert the style to default.
 		app.State.featureSelected = childView.model;
-		console.log("Currently this feature is selected: ", app.State.featureSelected);
-    },   
-    onClose: function() {
+
+		// change the style of the selected polygon.
+		app.State.featureSelected.olFeature.setStyle(childView.getSelectedStyles());
+
+		// reset the styles of all feature items that are not currently expanded/selected.
+		//TODO: this loops over all features each time user selects a feature. Is there a more optimal way??
+		this.children.each(function(view) {
+			if ((view != childView)) {
+				view.model.olFeature.setStyle(null);
+			}
+		});
+		
+	},   
+    onClose: function(){
         this.children.each(function(view) {
-            view.close();
+        	console.log(view);
         });
     },
     duplicateSelectedFeatures: function() {
@@ -506,124 +637,6 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
 });
 
 
-app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
-	template: '#template-features-view',
-    regions: {
-        //Column Headings
-        colhead1: '#colhead1',
-        colhead2: '#colhead2',
-        colhead3: '#colhead3',
-        
-        //Column content
-        col1: '#col1',
-        col2: {
-            selector: '#col2',
-            regionType: app.views.HideableRegion
-        },
-		col3: {
-		    selector: '#col3',
-		    regionType: app.views.HideableRegion
-		}
-    },
-	
-    initialize: function() {
-    	this.listenTo(app.vent, 'showFeature', this.showFeature, this);
-        this.listenTo(app.vent, 'showNothing', this.showNothing, this);
-        this.listenTo(app.vent, 'showStyle', this.showStyle, this);
-        this.listenTo(app.vent, 'showCoordinates', this.showCoordinates, this);
-    },
-    
-    onClose: function() {
-    	this.stopListening();
-    },
-    
-    onRender: function() {
-        try {
-            this.colhead1.close();
-            this.col1.close();
-            this.col2.close();
-        } catch (err) { 
-        	
-        }
-    	var headerView = new app.views.FeaturesHeaderView({});
-    	this.colhead1.show(headerView);
-
-    	//create a sub view that shows all features 
-    	//and show on col1 (this.col1.show(subview)) <-- see planner PlanSequenceView.
-    	var featureCollectionView = new app.views.FeatureCollectionView ({
-			collection: app.mapLayer.get('feature')
-    	});
-    	
-    	try {
-    		this.col1.show(featureCollectionView);
-    	} catch (exception) {
-    		console.log(exception)
-    	}
-    },
-    
-    showFeature: function(itemModel) {
-    	try{
-    		this.col3.close();
-    		this.colhead2.close();
-    	} catch (ex) {
-    	}
-    	var headerView = new app.views.FeaturePropertiesHeaderView({
-    		model: itemModel
-    	});
-    	this.colhead2.show(headerView);
-    	try {
-    		this.col2.close();
-    	} catch(ex) {
-    	}
-    	var view = new app.views.FeaturePropertiesView({model: itemModel});
-    	this.col2.show(view);
-    },
-    showStyle: function(model){
-    	try {
-    		this.colhead3.close();
-    	} catch (ex) {
-    	}
-    	var headerView = new app.views.FeatureStyleHeader({model: model});
-    	this.colhead3.show(headerView);
-    	if (model.get('type') == 'Polygon') {
-    		var view = new app.views.FeaturePolygonStyleForm({model: model});
-    	} else if (model.get('type') == 'Point') {
-    		var view = new app.views.FeaturePointStyleForm({model: model});
-    	} else if (model.get('type') == 'LineString') {
-    		var view = new app.views.FeatureLinestringStyleForm({model: model});
-    	} 	
-    	this.col3.show(view);
-        try {
-            this.col3.close();
-        } catch (ex) {
-        }
-    }, 
-    showCoordinates: function(model){
-    	try {
-    		this.colhead3.close();
-    	} catch (ex) {
-    	}
-    	var headerView = new app.views.FeatureCoordinatesHeader({model: model});
-    	this.colhead3.show(headerView);
-		var view = new app.views.FeatureCoordinatesView({model: model});
-    	this.col3.show(view);
-        try {
-            this.col3.close();
-        } catch (ex) {
-        }
-    },
-    showNothing: function() {
-        // clear the columns
-        try {
-            this.col2.close();
-            this.col3.close();
-            this.colhead2.close();
-            this.colhead3.close();
-        } catch (ex) {
-            
-        }
-    }
-});
 
 
 app.views.makeExpandable = function(view, expandClass) {

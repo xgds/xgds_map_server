@@ -37,6 +37,15 @@ olStyles.buildStyles = function() {
 		      })
 		    })
 		  });
+    olStyles.styles['selected_point'] =  new ol.style.Style({
+        image: new ol.style.Circle({
+            radius: 7,
+            fill: new ol.style.Fill({
+              color: 'rgba(255, 0, 0, 0.1)'
+            }),
+            stroke: new ol.style.Stroke({color: 'red', width: 1})
+          })
+        });
     olStyles.styles['point'] =  new ol.style.Style({
         image: new ol.style.Circle({
             radius: 5,
@@ -46,6 +55,15 @@ olStyles.buildStyles = function() {
             stroke: new ol.style.Stroke({color: 'red', width: 1})
           })
         });
+    olStyles.styles['selected_polygon'] = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: 'red',
+            width: 5
+          }),
+          fill: new ol.style.Fill({
+            color: 'rgba(0, 0, 255, 0.2)'
+          })
+        });
     olStyles.styles['polygon'] = new ol.style.Style({
         stroke: new ol.style.Stroke({
             color: 'blue',
@@ -53,6 +71,12 @@ olStyles.buildStyles = function() {
           }),
           fill: new ol.style.Fill({
             color: 'rgba(0, 0, 255, 0.2)'
+          })
+        });
+    olStyles.styles['selected_linestring'] = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: 'red',
+            width: 5
           })
         });
     olStyles.styles['lineString'] = new ol.style.Style({
