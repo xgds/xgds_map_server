@@ -176,8 +176,8 @@ $(function() {
                     this.createNode(node);
                 }, this);
                 
-                // bind the location radio btn change to zoom
-                $("input[name=location_radio]:radio").bind("change", {
+                // bind location dropdown change to zoom
+                $("select[class=location_dropdown]").bind("change", {
                 	mapview: this.map.getView()
                 }, function(event) {
                 	var zoomlevel = 5;
