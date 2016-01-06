@@ -181,14 +181,12 @@ $(function() {
                 	mapview: this.map.getView()
                 }, function(event) {
 	            	var sel=$("#id_siteFrame").val();
-	            	
-	            	
 	            	var destinationTransform = ol.proj.get(DEFAULT_COORD_SYSTEM);
-	            	var coords = null;
 	            	var zoomlevel = 5;
-	            	var east = siteFrames[sel]['east0'];
-	            	var north = siteFrames[sel]['north0'];
+	            	var easting = siteFrames[sel]['east0'];
+	            	var northing = siteFrames[sel]['north0'];
 	            	var zone = siteFrames[sel]['zone'];
+	            	var coords = null;
 	            	
 	                // move to bounding box site settings
 	            	var foundProjection = ol.proj.get('siteFrame');
@@ -200,7 +198,8 @@ $(function() {
 	            		});
 	            		ol.proj.addProjection(siteFrameProjection);
 	            	}
-	            	coords = ol.proj.transform([east, north], 'siteFrame',   destinationTransform);
+
+	            	coords = ol.proj.transform([easting, northing], ol.proj.get('siteFrame'),   destinationTransform);
 	            	
 	            	event.data.mapview.setCenter(coords, zoomlevel);
                 });
