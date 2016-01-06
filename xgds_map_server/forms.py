@@ -21,6 +21,8 @@ from django.conf import settings
 from xgds_data.models import Collection, RequestLog
 from geocamUtil.extFileField import ExtFileField
 
+from geocamUtil.forms.SiteframeChoiceField import SiteframeChoiceField
+
 # pylint: disable=C1001
 
 
@@ -84,3 +86,7 @@ class MapSearchForm(AbstractMapForm):
     class Meta(AbstractMapForm.Meta):
         model = MapSearch
         exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'requestLog', 'locked', 'visible', 'mapBounded']
+    
+
+class SelectSiteFrameForm(forms.Form):
+    siteFrame = SiteframeChoiceField(required=True, label=settings.XGDS_MAP_SERVER_SITE_MONIKER)

@@ -28,15 +28,12 @@
 </style>
 
 <div id="application" >
-	<div class="picker">
-		<select class="location_dropdown">
-			<option value="#" disabled>Zoom to location…</option>
-			<option id="zoom_to_cotm" value="COTM">Craters of the Moon,
-				Idaho</option>
-			<option id="zoom_to_mauna_ulu" value="MU">Mauna Ulu, Hawaii</option>
-		</select>
-	</div>
-
+	<div class="row">
+        <div id="overmap" class="six columns">
+        {{selectSiteFrameForm}}
+        </div>
+        <div id="overlayers" class="six columns"></div>
+    </div>
 	<div id="toolbar" class="row"></div>
 	<div class="row">
 		<div id="editingDiv" class="five columns">

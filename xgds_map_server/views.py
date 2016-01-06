@@ -56,6 +56,7 @@ from geocamUtil.loader import LazyGetModelByName
 from xgds_data.models import RequestLog, ResponseLog
 from xgds_data.dlogging import recordList, recordRequest
 from xgds_data.forms import SearchForm, SpecializedForm
+from geocamUtil.forms.SiteframeChoiceField import SiteframeChoiceField
 
 if settings.PYRAPTORD_SERVICE:
     from geocamPycroraptor2.views import getPyraptordClient, stopPyraptordServiceIfRunning
@@ -63,6 +64,7 @@ if settings.PYRAPTORD_SERVICE:
 from xgds_data.views import searchHandoff, resultsIdentity
 from django.core.urlresolvers import resolve
 
+from forms import SelectSiteFrameForm
 
 # pylint: disable=E1101,R0911
 
@@ -99,6 +101,7 @@ def getMapServerIndexPage(request):
     templates = get_map_tree_templates(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     return render_to_response('MapView.html',
                               {'templates': templates,
+                               'selectSiteFrameForm': SelectSiteFrameForm(initial={'siteFrame': '5Q'}),
                                'app': 'xgds_map_server/js/map_viewer/mapViewerApp.js'},
                               context_instance=RequestContext(request))
 
@@ -155,7 +158,7 @@ def getMapEditorPage(request, layerID=None):
                                                        'app': 'xgds_map_server/js/map_editor/mapEditorApp.js',
                                                        'saveMaplayerUrl': reverse('saveMaplayer'),
                                                        'uuid': mapLayer.uuid,
-                                                       'mapLayerDict': json.dumps(mapLayerDict, indent=4, cls=GeoDjangoEncoder)
+                                                       'mapLayerDict': json.dumps(mapLayerDict, indent=4, cls=GeoDjangoEncoder),
                                                        }),
                               )
 

@@ -177,19 +177,32 @@ $(function() {
                 }, this);
                 
                 // bind location dropdown change to zoom
-                $("select[class=location_dropdown]").bind("change", {
+                $("select[id=id_siteFrame]").bind("change", {
                 	mapview: this.map.getView()
                 }, function(event) {
-                	var zoomlevel = 5;
-                	var coords = null;
-                	if ($(this).val() == 'COTM') {
-                		console.log("COTM");
-                		coords = transform([-113.516542, 43.416634]);
-                	} else {
-                		console.log("MU");
-                		coords = transform([-155.201704, 19.367729]);
-                	}
-                	event.data.mapview.setCenter(coords, zoomlevel);
+	            	var sel=$("#id_siteFrame").val();
+	            	
+	            	
+	            	var destinationTransform = ol.proj.get(DEFAULT_COORD_SYSTEM);
+	            	var coords = null;
+	            	var zoomlevel = 5;
+	            	var east = siteFrames[sel]['east0'];
+	            	var north = siteFrames[sel]['north0'];
+	            	var zone = siteFrames[sel]['zone'];
+	            	
+	                // move to bounding box site settings
+	            	var foundProjection = ol.proj.get('siteFrame');
+	            	if (_.isUndefined(foundProjection)){
+	            		proj4.defs('siteFrame', '+proj=utm +zone=' + zone + ' +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
+	            		var siteFrameProjection = new ol.proj.Projection({
+	            			code: 'siteFrame',
+	            			units: 'm'
+	            		});
+	            		ol.proj.addProjection(siteFrameProjection);
+	            	}
+	            	coords = ol.proj.transform([east, north], 'siteFrame',   destinationTransform);
+	            	
+	            	event.data.mapview.setCenter(coords, zoomlevel);
                 });
             },
             

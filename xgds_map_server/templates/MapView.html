@@ -4,15 +4,13 @@
 {% block contents %}
 <div id="application">
 	<div id="toolbar" class="row">
-		<div class="picker">
-			<select class="location_dropdown">
-				<option value="#" disabled>Zoom to location…</option>
-				<option id="zoom_to_cotm" value="COTM">Craters of the Moon,
-					Idaho</option>
-				<option id="zoom_to_mauna_ulu" value="MU">Mauna Ulu, Hawaii</option>
-			</select>
-		</div>
 	</div>
+	<div class="row">
+        <div id="overmap" class="six columns">
+        {{selectSiteFrameForm}}
+        </div>
+        <div id="overlayers" class="six columns"></div>
+    </div>
 	<div class="row">
         <div id="map" class="six columns"></div>
         <div id="layers" class="six columns"></div>
@@ -50,6 +48,7 @@
 {% endblock scripts %}
 
 {% block jsInit %}
+	var siteFrames = {{settings.XGDS_SITEFRAMES|safe}};
 	var appOptions = {
 		BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
 		DEFAULT_COORD_SYSTEM: "{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}",
