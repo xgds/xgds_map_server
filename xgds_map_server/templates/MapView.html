@@ -7,7 +7,9 @@
 	</div>
 	<div class="row">
         <div id="overmap" class="six columns">
-        {{selectSiteFrameForm}}
+        {% if settings.XGDS_SITEFRAMES|length > 1 %}	
+        	{{selectSiteFrameForm}}
+        {% endif %}
         </div>
         <div id="overlayers" class="six columns"></div>
     </div>

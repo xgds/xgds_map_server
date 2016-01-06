@@ -153,6 +153,7 @@ def getMapEditorPage(request, layerID=None):
         return HttpResponse(json.dumps({'error': 'Map layer is not valid'}), content_type='application/json')
     return render_to_response("MapEditor.html",
                               RequestContext(request, {'templates': templates,
+                                                       'selectSiteFrameForm': SelectSiteFrameForm(initial={'siteFrame': '5Q'}),
                                                        'saveSearchForm': MapSearchForm(),
                                                        'searchForms': getSearchForms(),
                                                        'app': 'xgds_map_server/js/map_editor/mapEditorApp.js',

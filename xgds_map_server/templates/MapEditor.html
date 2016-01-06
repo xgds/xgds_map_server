@@ -28,13 +28,15 @@
 </style>
 
 <div id="application" >
+	<div id="toolbar" class="row"></div>
 	<div class="row">
         <div id="overmap" class="six columns">
-        {{selectSiteFrameForm}}
+        {% if settings.XGDS_SITEFRAMES|length > 1 %}	
+        	{{selectSiteFrameForm}}
+        {% endif %}
         </div>
         <div id="overlayers" class="six columns"></div>
     </div>
-	<div id="toolbar" class="row"></div>
 	<div class="row">
 		<div id="editingDiv" class="five columns">
     		<div id="editingTools"></div>
@@ -90,6 +92,7 @@
 {% endblock scripts %}
 
 {% block jsInit %}
+	var siteFrames = {{settings.XGDS_SITEFRAMES|safe}};
     var appOptions = {
     	BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
  		DEFAULT_COORD_SYSTEM: "{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}",
