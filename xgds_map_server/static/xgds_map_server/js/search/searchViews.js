@@ -67,26 +67,33 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         });
     },
     setupSaveSearchDialog: function() {
+	//FOR NOW this is commented out, problem with latest jquery
         document.getElementById("save-search-dialog").style.visibility = "visible";
         var _this = this;
-        this.saveSearchForm = $( "#save-search-dialog" ).find("form");
-        this.dialog = $( "#save-search-dialog" ).dialog({
+//	$( "#save-search-dialog" ).show();
+//        this.saveSearchForm = $( "#save-search-dialog" ).find("form");
+	/*this.dialog = $( "#save-search-dialog" ).dialog({
             autoOpen: false,
             height: 375,
             width: 550,
             modal: true,
-            buttons: {
-              "Save": function() {
+            buttons: [{
+		text: "Save",
+	 	click: function() {
                   _this.doSaveSearch()
+		}
               },
-              "Cancel": function() {
+		{
+		 text: "Cancel",
+		 click: function() {
                   _this.dialog.dialog( "close" );
               }
-            },
-            close: function() {
+            }],
+            close: function(event, ui) {
               _this.saveSearchForm[0].reset();
             }
           });
+*/
        
         this.saveSearchForm.on( "submit", function( event ) {
             event.preventDefault();
