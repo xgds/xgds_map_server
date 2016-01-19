@@ -46,7 +46,6 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         this.searchResultsView = new app.views.SearchResultsView({template:'#template-search-results', 
                                                                   region: this.searchResultsRegion})
         this.searchResultsRegion.show(this.searchResultsView);
-        this.setupSaveSearchDialog();
     },
     setupSearchForm: function() {
         var newModel = this.$("#searchModelSelector").val();
@@ -68,37 +67,35 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
     },
     setupSaveSearchDialog: function() {
 	//FOR NOW this is commented out, problem with latest jquery
-        document.getElementById("save-search-dialog").style.visibility = "visible";
+//        document.getElementById("save-search-dialog").style.visibility = "visible";
         var _this = this;
-//	$( "#save-search-dialog" ).show();
-        this.saveSearchForm = $( "#save-search-dialog" ).find("form");
-	/*this.dialog = $( "#save-search-dialog" ).dialog({
-            autoOpen: false,
-            height: 375,
-            width: 550,
-            modal: true,
-            buttons: [{
-		text: "Save",
-	 	click: function() {
-                  _this.doSaveSearch()
-		}
-              },
-		{
-		 text: "Cancel",
-		 click: function() {
-                  _this.dialog.dialog( "close" );
-              }
-            }],
-            close: function(event, ui) {
-              _this.saveSearchForm[0].reset();
-            }
-          });
-*/
-       
+        
+        if (this.dialog === undefined) {
+        	this.saveSearchForm = $( "#save-search-dialog" ).find("form");
+        	this.dialog = $( "#save-search-dialog" ).dialog({
+        		autoOpen: false,
+        		height: 375,
+        		width: 550,
+        		modal: true,
+        		buttons: [{text: "Save",
+        				   click: function() {
+        					   _this.doSaveSearch()
+        				   }
+        				  },
+        				  {text: "Cancel",
+        				   click: function() {
+        					   _this.dialog.dialog( "close" );
+        				   }
+        				  }],
+        	    close: function(event, ui) {
+        	    	_this.saveSearchForm[0].reset();
+        	    }
+        	});
         this.saveSearchForm.on( "submit", function( event ) {
             event.preventDefault();
             _this.doSaveSearch();
           });
+        }
     },
     doSearch: function() {
         var theForm = this.$("#form-"+this.selectedModel);
@@ -114,6 +111,7 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
                     this.setMessage("None found.");
                 } else {
                     this.searchResultsView.updateContents(this.selectedModel, data);
+                    this.setupSaveSearchDialog();
                     this.clearMessage();
                 }
             }, this),
@@ -125,6 +123,7 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
           });
     },
     openSaveDialog: function() {
+    	this.setupSaveSearchDialog();
         this.dialog.dialog("open");
     },
     doSaveSearch: function() {
