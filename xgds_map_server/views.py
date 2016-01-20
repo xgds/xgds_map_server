@@ -413,7 +413,7 @@ def getAddLayerPage(request):
                                    'error': False},
                                   context_instance=RequestContext(request))
 
-
+@csrf_protect
 def getAddTilePage(request):
     """
     HTML view to create a new map tile
