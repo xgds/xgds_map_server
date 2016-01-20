@@ -15,8 +15,11 @@
 #__END_LICENSE__
 
 from django.conf.urls import *  # pylint: disable=W0401
+from django.contrib.auth.decorators import login_required
 
 from django.conf import settings
+from resumable.views import ResumableUploadView
+
 from xgds_map_server import views
 
 urlpatterns = patterns(
@@ -103,4 +106,5 @@ urlpatterns = patterns(
     # By default if you just load the app you should see the list
     (r'^feed/(?P<feedname>.*)', views.getMapFeed,
      {'readOnly': True, 'loginRequired': False, 'securityTags': ['kml', 'readOnly']},'xgds_map_server_feed'),
+    url('^uploadGeoTiff/$', login_required(ResumableUploadView.as_view()), name='uploadGeoTiff'),
 )

@@ -15,9 +15,12 @@
 #__END_LICENSE__
 
 from django import forms
+from django.conf import settings
+from django.core.urlresolvers import reverse
+
+from resumable.fields import ResumableFileField
 
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapCollection, MapSearch
-from django.conf import settings
 from xgds_data.models import Collection, RequestLog
 from geocamUtil.extFileField import ExtFileField
 
@@ -62,7 +65,12 @@ class MapLayerForm(AbstractMapForm):
 
 
 class MapTileForm(AbstractMapForm):
-    sourceFile = ExtFileField(ext_whitelist=(".tif", ".tiff", ".zip"))
+    
+    sourceFile = ResumableFileField(allowed_mimes=("image/tiff",),
+                                    upload_url=lambda: reverse('uploadGeoTiff'),
+                                    chunks_dir=getattr(settings, 'FILE_UPLOAD_TEMP_DIR'),
+                                    label="File"
+                                    )
 
     class Meta(AbstractMapForm.Meta):
         model = MapGroup

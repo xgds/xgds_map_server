@@ -1,0 +1,45 @@
+{% extends "MapBase.html" %}
+{% load staticfiles %}
+
+{% block cssExtras %}
+<style scoped>
+input[type='file'] {
+  color: transparent;
+}</style>
+{% endblock cssExtras %}
+
+{% block contents %}
+{{ block.super }}
+{% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
+<h2>{{ title }}</h2>
+Upload a geotiff file to create a map tile layer.<br/>
+Processing of GeoTiff files can take some time, please allow 30 minutes after the upload finishes.<br/>
+<strong>You cannot click the Create button until your upload finishes.</strong>
+<form action="#" enctype="multipart/form-data" method="post">
+{% csrf_token %}
+{{ form.as_p }}
+<input type="submit" value="Create" id="create_button" disabled="disabled"/>
+</form>
+{% endblock %}
+
+{% block scripts %}
+    {{ block.super }}
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}resumable/resumable.js'></script>
+    <script type="text/javascript" src='{{ STATIC_URL }}resumable/js/django-resumable.js'></script>
+{% endblock scripts %}
+
+{% block jsInit %}
+document.addEventListener("DOMContentLoaded", function () {
+    "use strict";
+    var dj;
+    if (new Resumable().support) {
+        dj = new DjangoResumable({'onFileSuccess':function (r, file, message, el, progress, filePath, fileName) {
+    		"use strict";
+    		filePath.setAttribute('value', file.size + '_' + file.fileName);
+    		fileName.innerHTML = file.fileName;
+    		progress.style.display = 'none';
+    		$("#create_button").removeAttr("disabled");
+		}});
+    }
+});
+{% endblock jsInit %}

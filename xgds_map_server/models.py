@@ -22,10 +22,12 @@ from django.core.urlresolvers import reverse
 from django.db import models
 from django.contrib.gis.db import models
 from django.conf import settings
+
 from geocamUtil.models.UuidField import UuidField
 from geocamUtil.models.managers import ModelCollectionManager
 from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
 from xgds_data.models import Collection, RequestLog
+
 
 # from Carbon.TextEdit import WIDTHHook
 # from aetypes import Boolean

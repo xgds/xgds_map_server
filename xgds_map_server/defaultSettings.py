@@ -19,6 +19,8 @@ import os
 XGDS_MAP_SERVER_MEDIA_SUBDIR = 'xgds_map_server/'
 XGDS_MAP_SERVER_DATA_SUBDIR = 'xgds_map_server/'
 XGDS_MAP_SERVER_GEOTIFF_SUBDIR = XGDS_MAP_SERVER_DATA_SUBDIR + 'geoTiff/'
+XGDS_MAP_SERVER_GEOTIFF_UPLOAD_SUBDIR = XGDS_MAP_SERVER_GEOTIFF_SUBDIR + 'upload/'
+# FILE_UPLOAD_TEMP_DIR = XGDS_MAP_SERVER_GEOTIFF_SUBDIR + 'temp/'
 
 XGDS_MAP_SERVER_DEFAULT_BACKBONE_APP = 'xgds_map_server/js/map_viewer/mapViewerApp.js'
 XGDS_MAP_SERVER_TEMPLATE_DEBUG = True  # If this is true, handlebars templates will not be cached.
@@ -61,6 +63,7 @@ XGDS_MAP_SERVER_BOWER_INSTALLED_APPS = ('sprintf.js=sprintf.js',
                                         'openlayers3=https://github.com/tamarmot/ol3/releases/download/v3.10.3/ol.zip', #https://github.com/openlayers/ol3/releases/download/v3.10.1/v3.10.1-dist.zip', 
                                         'ol3-popup',
                                         'proj4',
+                                        'resumable=git://github.com/23/resumable.js.git'
                                         )
 
 # if you want to have a custom javascript included in your maps, override this in siteSettings.

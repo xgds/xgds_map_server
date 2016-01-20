@@ -43,9 +43,8 @@ from django.contrib.gis.geos import Point as geosPoint
 from django.contrib.gis.geos import LineString as geosLineString
 from django.contrib.gis.geos import Polygon as geosPolygon
 from django.contrib.gis.geos import LinearRing as geosLinearRing
-
-
 from django.conf import settings
+
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapSearch, MapCollection, MAP_NODE_MANAGER, MAP_MANAGER
 from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
 from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm, MapSearchForm, MapCollectionForm
@@ -419,12 +418,12 @@ def getAddTilePage(request):
     """
     HTML view to create a new map tile
     """
-    instruction = "Upload a geotiff or zip of multiple geotiff files to create a map tile layer."
     title = "Add Map Tile"
     if request.method == 'POST':
         tile_form = MapTileForm(request.POST, request.FILES)
         if tile_form.is_valid():
-            mapTile = MapTile(sourceFile=request.FILES['sourceFile'])
+            sourceFile = tile_form.cleaned_data['sourceFile']
+            mapTile = MapTile(sourceFile=sourceFile)
             mapTile.name = tile_form.cleaned_data['name']
             mapTile.description = tile_form.cleaned_data['description']
             mapTile.creator = request.user.username
@@ -432,24 +431,20 @@ def getAddTilePage(request):
             mapTile.deleted = False
             mapGroupName = tile_form.cleaned_data['parent']
             mapTile.parent = MapGroup.objects.get(name=mapGroupName)
-            if 'sourceFile' in request.FILES:
-                tile_form.save()
             mapTile.save()
             processTiles(request, mapTile.uuid)
         else:
-            return render_to_response("AddNode.html",
+            return render_to_response("AddTile.html",
                                       {'form': tile_form,
                                        'error': True,
-                                       "instruction": instruction,
                                        "title": title},
                                       context_instance=RequestContext(request))
         return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
     else:
         tile_form = MapTileForm()
-        return render_to_response("AddNode.html",
+        return render_to_response("AddTile.html",
                                   {'form': tile_form,
                                    'error': False,
-                                   'instruction': instruction,
                                    'title': title},
                                   context_instance=RequestContext(request))
 
