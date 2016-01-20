@@ -17,12 +17,12 @@
 from django import forms
 from django.conf import settings
 from django.core.urlresolvers import reverse
+from django.forms.fields import IntegerField
 
 from resumable.fields import ResumableFileField
 
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapCollection, MapSearch
 from xgds_data.models import Collection, RequestLog
-from geocamUtil.extFileField import ExtFileField
 
 from geocamUtil.forms.SiteframeChoiceField import SiteframeChoiceField
 
@@ -65,6 +65,9 @@ class MapLayerForm(AbstractMapForm):
 
 
 class MapTileForm(AbstractMapForm):
+    
+    minZoom = IntegerField(initial=12, label="Min Zoom")
+    maxZoom = IntegerField(initial=20, label="Max Zoom (UAV=22, Satellite=20)")
     
     sourceFile = ResumableFileField(allowed_mimes=("image/tiff",),
                                     upload_url=lambda: reverse('uploadGeoTiff'),

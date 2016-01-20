@@ -432,7 +432,7 @@ def getAddTilePage(request):
             mapGroupName = tile_form.cleaned_data['parent']
             mapTile.parent = MapGroup.objects.get(name=mapGroupName)
             mapTile.save()
-            processTiles(request, mapTile.uuid)
+            processTiles(request, mapTile.uuid, tile_form.cleaned_data['minZoom'], tile_form.cleaned_data['maxZoom'])
         else:
             return render_to_response("AddTile.html",
                                       {'form': tile_form,
@@ -1347,7 +1347,7 @@ def getMapFeedAll(request):
 
 
 # TODO this is totally untested
-def processTiles(request, uuid):
+def processTiles(request, uuid, minZoom, maxZoom):
     try:
         mapTile = MapTile.objects.get(pk=uuid)
     except:
@@ -1373,9 +1373,10 @@ def processTiles(request, uuid):
 
     serviceNames = []
     for source in sourceFiles:
-#         tileCmd = ('%s -z 12-20 --resampling=cubic %s %s'
-        tileCmd = ('%s --resampling=cubic %s %s'
+        tileCmd = ('%s -z %d-%d --resampling=cubic %s %s'
                    % (os.path.join(settings.PROJ_ROOT, "apps", settings.XGDS_MAP_SERVER_GDAL2TILES),
+                      minZoom,
+                      maxZoom,
                       os.path.join(settings.DATA_ROOT,source),
                       outPath))
         print "Map Tile command: %s" % tileCmd
