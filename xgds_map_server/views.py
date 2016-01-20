@@ -1373,7 +1373,8 @@ def processTiles(request, uuid):
 
     serviceNames = []
     for source in sourceFiles:
-        tileCmd = ('%s -z 12-20 --resampling=cubic %s %s'
+#         tileCmd = ('%s -z 12-20 --resampling=cubic %s %s'
+        tileCmd = ('%s --resampling=cubic %s %s'
                    % (os.path.join(settings.PROJ_ROOT, "apps", settings.XGDS_MAP_SERVER_GDAL2TILES),
                       os.path.join(settings.DATA_ROOT,source),
                       outPath))
