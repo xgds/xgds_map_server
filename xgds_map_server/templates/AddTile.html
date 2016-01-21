@@ -14,10 +14,11 @@ input[type='file'] {
 <h2>{{ title }}</h2>
 Upload a geotiff file to create a map tile layer.<br/>
 Processing of GeoTiff files can take some time, please allow 30 minutes after the upload finishes.<br/>
-<strong>You cannot click the Create button until your upload finishes.</strong>
 <form action="#" enctype="multipart/form-data" method="post">
 {% csrf_token %}
 {{ form.as_p }}
+<br/>
+<strong>You cannot click the Create button until your upload finishes.</strong>
 <input type="submit" value="Create" id="create_button" disabled="disabled"/>
 </form>
 {% endblock %}
