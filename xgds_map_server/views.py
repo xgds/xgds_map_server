@@ -16,18 +16,25 @@
 
 # Create your views here.
 from cStringIO import StringIO
+import threading
 import json
 import re
 import glob
+import string
 import logging
 import urllib
 import os
 import datetime
 import zipfile
 import inspect
+import subprocess
+from subprocess import Popen, PIPE
 
+from django.core import mail
+#from django.http import StreamingHttpResponse
 from django.forms.formsets import formset_factory
 from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import condition
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.shortcuts import render_to_response
 from django.http import HttpResponse, Http404, HttpRequest
@@ -56,6 +63,7 @@ from xgds_data.models import RequestLog, ResponseLog
 from xgds_data.dlogging import recordList, recordRequest
 from xgds_data.forms import SearchForm, SpecializedForm
 from geocamUtil.forms.SiteframeChoiceField import SiteframeChoiceField
+from apps.geocamUtil.usng.usngGrid import outDirG
 
 if settings.PYRAPTORD_SERVICE:
     from geocamPycroraptor2.views import getPyraptordClient, stopPyraptordServiceIfRunning
@@ -414,6 +422,7 @@ def getAddLayerPage(request):
                                   context_instance=RequestContext(request))
 
 @csrf_protect
+@condition(etag_func=None)
 def getAddTilePage(request):
     """
     HTML view to create a new map tile
@@ -430,9 +439,10 @@ def getAddTilePage(request):
             mapTile.creation_time = datetime.datetime.now()
             mapTile.deleted = False
             mapGroupName = tile_form.cleaned_data['parent']
-            mapTile.parent = MapGroup.objects.get(name=mapGroupName)
+            foundParents = MapGroup.objects.filter(name=mapGroupName)
+            mapTile.parent = foundParents[0] #TODO better handle same name folder
             mapTile.save()
-            processTiles(request, mapTile.uuid, tile_form.cleaned_data['minZoom'], tile_form.cleaned_data['maxZoom'])
+            processTiles(request, mapTile.uuid, tile_form.cleaned_data['minZoom'], tile_form.cleaned_data['maxZoom'], mapTile)
         else:
             return render_to_response("AddTile.html",
                                       {'form': tile_form,
@@ -1345,14 +1355,61 @@ def getMapFeedAll(request):
     resp['Content-Disposition'] = 'attachment; filename=all.kml'
     return resp
 
+process_tile_email_template = string.Template(
+"""
 
-# TODO this is totally untested
-def processTiles(request, uuid, minZoom, maxZoom):
-    try:
-        mapTile = MapTile.objects.get(pk=uuid)
-    except:
+Your map tile $mapTileName has finished processing.
+
+Output: 
+$out
+
+Errors:
+$err
+
+"""
+)
+def processTileSuccess(email, mapTile, out, err):
+    # TODO we don't know if it worked
+    print "PROCESS TILE finished for " + mapTile.name
+    print out
+    print err
+    mapTile.processed = True
+    mapTile.save()
+    mail.send_mail(
+        "Map tile has finished processing " + mapTile.name,
+        process_tile_email_template.substitute({
+                    'mapTileName': mapTile.name,
+                    'out': out,
+                    'err': err
+                }),
+        settings.SERVER_EMAIL,
+        [email],
+    )
+   
+    
+def popenAndCall(tileCmd, email, mapTile):
+    """
+    Runs the given args in a subprocess.Popen, and then calls the function
+    onExit when the subprocess completes.
+    onExit is a callable object, and popenArgs is a list/tuple of args that 
+    would give to subprocess.Popen.
+    """
+    def runInThread(tileCmd, email, mapTile):
+        print "about to kick off " + tileCmd
+        proc = Popen([tileCmd], shell=True, stdout=PIPE, stderr=PIPE)
+        print "process Started"
+        out, err = proc.communicate()
+#         proc.wait()
+        processTileSuccess(email, mapTile, out, err)
         return
+    
+    thread = threading.Thread(target=runInThread, args=(tileCmd, email, mapTile))
+    thread.start()
+    # returns immediately after the thread starts
+    return thread
 
+#TODO implement celery
+def processTiles(request, uuid, minZoom, maxZoom, mapTile):
     sourceFiles = []
     sourceFile = mapTile.sourceFile
     outPath = os.path.join(settings.PROJ_ROOT, mapTile.getTilePath()[1:])
@@ -1371,7 +1428,6 @@ def processTiles(request, uuid, minZoom, maxZoom):
                 sourceFiles.append(os.path.join(unzipPath, name))
             fh.close()
 
-    serviceNames = []
     for source in sourceFiles:
         tileCmd = ('%s -z %d-%d --resampling=cubic %s %s'
                    % (os.path.join(settings.PROJ_ROOT, "apps", settings.XGDS_MAP_SERVER_GDAL2TILES),
@@ -1381,26 +1437,14 @@ def processTiles(request, uuid, minZoom, maxZoom):
                       outPath))
         print "Map Tile command: %s" % tileCmd
 
-        geotiffSubdir = os.path.join(settings.DATA_ROOT, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR)
-        if settings.PYRAPTORD_SERVICE is True:
-            pyraptord = getPyraptordClient('pyraptord')
-            tileSvc = '%s_gdal2tiles' % source
-            serviceNames.append(tileSvc)
-            stopPyraptordServiceIfRunning(pyraptord, tileSvc)
-            pyraptord.updateServiceConfig(tileSvc,
-                                          {'command': tileCmd,
-                                           'cwd': geotiffSubdir})
-            pyraptord.restart(tileSvc)
-        else:
-            os.chdir(geotiffSubdir)
-            os.system(tileCmd)
+#         os.chdir(geotiffSubdir)
+#             p = Popen(['cd ' + geotiffSubdir, tileCmd], stdout=PIPE, stderr=PIPE) 
+#             stdout, stderr = p.communicate()
+        popenAndCall(tileCmd, request.user.email, mapTile)
+#         p = Popen([tileCmd], stdout=PIPE, stderr=PIPE) 
+#             mapTile.processed = True
+#             p.terminate()
+#             os.system(tileCmd)
 
-    #TODO mark processed only if it worked
-#     if settings.PYRAPTORD_SERVICE is True:
-#         for tileSvc in serviceNames:
-#             statusDict = pyraptord.getStatus(tileSvc)
-#             if statusDict['STATUS'] = 'success':
-#                 remove from list
-    mapTile.processed = True
-    mapTile.save()
+    
 
