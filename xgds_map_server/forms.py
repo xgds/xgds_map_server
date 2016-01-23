@@ -76,8 +76,15 @@ class MapTileForm(AbstractMapForm):
                                     )
 
     class Meta(AbstractMapForm.Meta):
-        model = MapGroup
+        model = MapTile
         exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed']
+
+
+class EditMapTileForm(AbstractMapForm):
+    
+    class Meta(AbstractMapForm.Meta):
+        model = MapTile
+        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed', 'sourceFile']
 
 
 class CollectionModelChoiceField(forms.ModelChoiceField):

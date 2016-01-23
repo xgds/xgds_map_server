@@ -17,6 +17,7 @@
 import re
 import json
 import os
+import shutil
 
 from django.core.urlresolvers import reverse
 from django.db import models
@@ -164,7 +165,7 @@ class MapTile(AbstractMap):
         return result
 
     def getTilePath(self):
-        result = os.path.join(settings.DATA_URL, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR, self.name)
+        result = os.path.join(settings.DATA_URL, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR, self.name.replace(' ', '_'))
         return result
 
     def getEditHref(self):
@@ -175,6 +176,12 @@ class MapTile(AbstractMap):
         result = super(MapTile, self).getTreeJson()
         result["data"]["tileURL"] = self.getXYZTileSourceUrl()
         return result
+    
+    def rename(self, newName):
+        oldPath = os.path.join(settings.PROJ_ROOT, self.getTilePath()[1:])
+        self.name = newName
+        newPath = os.path.join(settings.PROJ_ROOT, self.getTilePath()[1:])
+        shutil.move(oldPath, newPath)
 
 
 class MapLayer(AbstractMap):

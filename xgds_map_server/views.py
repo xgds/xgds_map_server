@@ -54,7 +54,7 @@ from django.conf import settings
 
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapSearch, MapCollection, MAP_NODE_MANAGER, MAP_MANAGER
 from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
-from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm, MapSearchForm, MapCollectionForm
+from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm, MapSearchForm, MapCollectionForm, EditMapTileForm
 from geocamUtil.geoEncoder import GeoDjangoEncoder
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
 from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
@@ -474,20 +474,19 @@ def getEditTilePage(request, tileID):
 
     # handle post data before loading everything
     if request.method == 'POST':
-        tile_form = MapTileForm(request.POST, request.FILES)
+        tile_form = EditMapTileForm(request.POST, request.FILES)
         if tile_form.is_valid():
-            mapTile.name = tile_form.cleaned_data['name']
+            newname = tile_form.cleaned_data['name']
+            if mapTile.name != newname:
+                mapTile.rename(newname)
             mapTile.modifier = request.user.username
             mapTile.modification_time = datetime.datetime.now()
             mapTile.description = tile_form.cleaned_data['description']
-            mapTile.openable = tile_form.cleaned_data['openable']
+            mapTile.locked = tile_form.cleaned_data['locked']
             mapTile.visible = tile_form.cleaned_data['visible']
             mapTile.parent = tile_form.cleaned_data['parent']
-            if 'sourceFile' in request.FILES:
-                tile_form.save()
             mapTile.save()
-            fromSave = True
-            #TODO handle retiling or changing the path to the tiles ...
+            return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
         else:
             return render_to_response("EditNode.html",
                                       {"form": tile_form,
@@ -498,7 +497,7 @@ def getEditTilePage(request, tileID):
                                       context_instance=RequestContext(request))
 
     # return form page with current form data
-    tile_form = MapTileForm(instance=mapTile,)
+    tile_form = EditMapTileForm(instance=mapTile,)
     return render_to_response("EditNode.html",
                               {"form": tile_form,
                                "title": "Edit Map Tile",
