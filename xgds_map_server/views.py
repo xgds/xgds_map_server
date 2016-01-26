@@ -157,7 +157,7 @@ def getMapEditorPage(request, layerID=None):
         mapLayer = MapLayer.objects.get(pk=layerID)
         mapLayerDict = mapLayer.toDict()
     else:
-        return HttpResponse(json.dumps({'error': 'Map layer is not valid'}), content_type='application/json')
+        return HttpResponse(json.dumps({'error': 'Map layer is not valid'}), content_type='application/json', status=406)
     return render_to_response("MapEditor.html",
                               RequestContext(request, {'templates': templates,
                                                        'selectSiteFrameForm': SelectSiteFrameForm(initial={'siteFrame': '5Q'}),
@@ -166,59 +166,60 @@ def getMapEditorPage(request, layerID=None):
                                                        'app': 'xgds_map_server/js/map_editor/mapEditorApp.js',
                                                        'saveMaplayerUrl': reverse('saveMaplayer'),
                                                        'uuid': mapLayer.uuid,
-                                                       'mapLayerDict': json.dumps(mapLayerDict, indent=4, cls=GeoDjangoEncoder),
+                                                       'mapLayerDict': json.dumps(mapLayerDict, cls=GeoDjangoEncoder),
+                                                       'layerName': mapLayer.name
                                                        }),
                               )
 
 
-def getFeatureCoordinates(data, type):
+def getFeatureCoordinates(data, typeName):
     coords = None
-    if type == 'Point':
+    if typeName == 'Point':
         coords = data['point'] or data.get('point')
-    elif type == 'Polygon':
+    elif typeName == 'Polygon':
         coords = data['polygon'] or data.get('polygon')
-    elif type == 'LineString':
+    elif typeName == 'LineString':
         coords = data['lineString'] or data.get('lineString')
     else:
         print "invalid feature type specified in json"
     return coords
 
 
-def setFeatureCoordinates(feature, coords, type):
+def setFeatureCoordinates(feature, coords, typeName):
     """
     Reference: http://stackoverflow.com/questions/1504288/adding-a-polygon-directly-in-geodjango-postgis
     """
-    if type == 'Point':
+    if typeName == 'Point':
         feature.point = geosPoint(coords)
-    elif type == 'Polygon':
+    elif typeName == 'Polygon':
         try:
             internalCoords = geosLinearRing(coords)
         except:
             return "GEOS_ERROR: IllegalArgumentException: Points of LinearRing do not form a closed linestring!"
         externalCoords = geosLinearRing(coords)
         feature.polygon = geosPolygon(internalCoords, externalCoords)
-    elif type == 'LineString':
+    elif typeName == 'LineString':
         feature.lineString = geosLineString(coords)
     else:
-        print "invalid feature type specified in json"
-    feature.save()
+        return "invalid feature type specified in json " + typeName
+#     feature.save()
     return None
 
 
-def createFeatureObject(type):
+def createFeatureObject(typeName):
     """
     create feature object.
     """
     feature = None
-    if type == 'Point':
+    if typeName == 'Point':
         feature = Point()
-    elif type == 'Polygon':
+    elif typeName == 'Polygon':
         feature = Polygon()
-    elif type == 'LineString':
+    elif typeName == 'LineString':
         feature = LineString()
-    elif type == 'Drawing':
+    elif typeName == 'Drawing':
         feature = Drawing()
-    elif type == 'GroundOverlay':
+    elif typeName == 'GroundOverlay':
         feature = GroundOverlay()
     else:
         print "invalid feature type specified in json"
@@ -235,13 +236,16 @@ def saveMaplayer(request):
         try:
             mapLayer = MapLayer.objects.get(uuid = uuid)
         except:
-            return HttpResponse(json.dumps({'failed': 'MapLayer of uuid of %s cannot be found' % uuid}), content_type='application/json')
+            return HttpResponse(json.dumps({'failed': 'MapLayer of uuid of %s cannot be found' % uuid}), content_type='application/json', status=406)
         mapLayer.name = data.get('name', "")
         mapLayer.description = data.get('description', "")
+        mapLayer.modification_time = datetime.datetime.utcnow()
+        mapLayer.modifier = request.user.first_name + " " + request.user.last_name
         mapLayer.save()
 
-        return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
-    return HttpResponse(json.dumps({'failed': 'Must be a POST but got %s instead' % request.method}), content_type='application/json')
+        #TODO have to return 
+        return HttpResponse(json.dumps(mapLayer.toDict(), cls=GeoDjangoEncoder), content_type='application/json')
+    return HttpResponse(json.dumps({'failed': 'Must be a POST but got %s instead' % request.method}), content_type='application/json', status=406)
 
 
 def saveOrDeleteFeature(request, uuid=None):
@@ -258,29 +262,33 @@ def saveOrDeleteFeature(request, uuid=None):
         # use the data to create a feature object.
         featureType = data.get('type', "")
         featureName = data.get('name', "")
-        mapLayerName = data.get('mapLayerName', "")
-        try:
-            mapLayer = MapLayer.objects.get(name=mapLayerName)
-        except:
-            return HttpResponse(json.dumps({'failed': 'MapLayerName of %s cannot be found' % mapLayerName}), content_type='application/json')
-
+        mapLayerUuid = data.get('mapLayer', None)
+        if mapLayerUuid:
+            try:
+                mapLayer = MapLayer.objects.get(pk=mapLayerUuid)
+            except:
+                mapLayerName = data.get('mapLayerName', "")
+                try:
+                    mapLayer = MapLayer.objects.get(name=mapLayerName)
+                except:
+                    return HttpResponse(json.dumps({'failed': 'MapLayerName of %s cannot be found' % mapLayerName}), content_type='application/json', status=406)
+        
         feature = None
-
-        if request.method == "POST":
+        
+        if uuid:
+            try:
+                feature = FEATURE_MANAGER.get(pk=uuid)
+            except:
+                return HttpResponse(json.dumps({'failed': 'feature of uuid: %s cannot be found' % uuid}), content_type='application/json', status=406)
+        else:
             feature = createFeatureObject(featureType)
-        elif request.method == "PUT":  # grab existing feature
-            feature = FEATURE_MANAGER.filter(pk=uuid)
-            if feature:
-                feature = feature[0]
-            else:
-                return HttpResponse(json.dumps({'failed': 'feature of uuid: %s cannot be found' % uuid}), content_type='application/json')
+
         # update the feature attributes
         feature.name = featureName
         feature.mapLayer = mapLayer
-        coords = getFeatureCoordinates(data, featureType)
-        errorText = setFeatureCoordinates(feature, coords, featureType)
+        errorText = setFeatureCoordinates(feature, getFeatureCoordinates(data, featureType), featureType)
         if errorText:
-            return HttpResponse(json.dumps({'failed': errorText}), content_type='application/json')
+            return HttpResponse(json.dumps({'failed': errorText}), content_type='application/json', status=406)
 
         if data.get('popup', None) is not None:
             feature.popup = data.get('popup', None)
@@ -291,7 +299,8 @@ def saveOrDeleteFeature(request, uuid=None):
         if data.get('description', None) is not None:
             feature.description = data.get('description', None)
         feature.save()
-        return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
+        return HttpResponse(json.dumps(feature.toDict(), cls=GeoDjangoEncoder), content_type='application/json')
+#         return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
 #         return HttpResponse(json.dumps({'success': 'true', 'type': 'save'}), content_type='application/json')
 
     elif request.method == "DELETE":
@@ -300,12 +309,12 @@ def saveOrDeleteFeature(request, uuid=None):
         except:
             print "cannot find features "
         feature = features[0]
-        print "about to delete a feature with uuid %s" % uuid
+#         print "about to delete a feature with uuid %s" % uuid
         feature.delete()
         return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
 #         return HttpResponse(json.dumps({'success': 'true', 'type': 'delete'}), content_type='application/json')
 
-    return HttpResponse(json.dumps({'failed': 'Must be a POST but got %s instead' % request.method}), content_type='application/json')
+    return HttpResponse(json.dumps({'failed': 'Must be a POST but got %s instead' % request.method}), content_type='application/json', status=406)
 
 
 def moveNode(request):
@@ -319,8 +328,8 @@ def moveNode(request):
             node.save()
             return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
         except:
-            return HttpResponse(json.dumps({'error': 'Move Failed'}), content_type='application/json')
-    return HttpResponse(json.dumps({'failed': 'Must be a POST'}), content_type='application/json')
+            return HttpResponse(json.dumps({'error': 'Move Failed'}), content_type='application/json', status=406)
+    return HttpResponse(json.dumps({'failed': 'Must be a POST'}), content_type='application/json', status=406)
 
 
 def setNodeVisibility(request):
@@ -338,8 +347,8 @@ def setNodeVisibility(request):
 #             print "saved visibility for " + node.uuid + ' and visible is ' + str(node.visible) + ' and post is ' + str(request.POST['visible'])
             return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
         except:
-            return HttpResponse(json.dumps({'error': 'Set Visibility Failed'}), content_type='application/json')
-    return HttpResponse(json.dumps({'failed': 'Must be a POST'}), content_type='application/json')
+            return HttpResponse(json.dumps({'error': 'Set Visibility Failed'}), content_type='application/json', status=406)
+    return HttpResponse(json.dumps({'failed': 'Must be a POST'}), content_type='application/json', status=406)
 
 
 def getAddKmlPage(request):

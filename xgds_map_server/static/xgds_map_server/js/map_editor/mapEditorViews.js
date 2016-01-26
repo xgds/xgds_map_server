@@ -152,10 +152,6 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
         }
     },
 
-    getFeatureModelUrl: function(feature) {
-    	console.log("feature to be used for url is ", feature);
-    },
-    
     saveEntireLayer: function(){
         var theFeatures = app.mapLayer.get('feature');
         for (i = 0; i < theFeatures.models.length; i++){
@@ -651,7 +647,6 @@ app.views.makeExpandable = function(view, expandClass) {
         return;
     }
     
-    console.log("inside make expandable");
     var expandable = {
         expand: function() {
             this.trigger('expand');

@@ -5,7 +5,7 @@
 {% include "map_subnav.html" %}
 {% endblock %}
 
-{% block siteSection %}Edit {{ plan_name }}{% endblock %}
+{% block siteSection %}Edit {{ layerName }}{% endblock %}
 
 
 {% block content %}
@@ -107,7 +107,7 @@
         deleteUrl: "{% url 'nodeDelete' uuid %}",
         XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: {{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }},
         dataUrl: "{{ settings.DATA_URL }}",
-        readOnly: {{ editable|yesno:"false,true" }},
+        readOnly: {{ mapLayerDict.locked|yesno:"false,true" }},
         mapLayerDict: {{ mapLayerDict|safe }},
         siteFrame: {{ settings.XGDS_CURRENT_SITEFRAME|safe }},
         saveMaplayerUrl: "{{ saveMaplayerUrl }}",

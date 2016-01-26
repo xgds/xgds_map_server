@@ -44,7 +44,7 @@ app.models = app.models || {};
 		            	  createModels: true,
 		            	  reverseRelation: {
 		            		  key: 'mapLayer',
-		            		  includeInJSON: false
+		            		  includeInJSON: 'uuid'
 		            	  }
 		              }
          ],
@@ -59,21 +59,16 @@ app.models = app.models || {};
 	 */
 	models.Feature = Backbone.RelationalModel.extend({
 		idAttribute: 'uuid',
-//		url: function() {
-//			return app.options.saveOrDeleteFeatureUrl;
-//		},
-        toString: function() {
-        	var name = this.get('name');
-            return name;
-        },
+		urlRoot: '/xgds_map_server/feature',
+                toString: function() {
+                	var name = this.get('name');
+                    return name;
+                },
 		toJSON: toJsonWithFilters
 	});
 
 	models.FeatureCollection = Backbone.Collection.extend({
 		model: models.Feature,
-		url: function() {
-			return '/xgds_map_server/feature';
-		},
 		initialize: function() {
 		},
 		removeFeature: function(featureModel) {

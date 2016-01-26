@@ -39,14 +39,11 @@ urlpatterns = patterns(
     # (r'^list/', views.getMapListPage,
     # {'readOnly': True, 'securityTags': ['readOnly']},
     # 'mapList'),
-    # for saving feature json to db
-    (r'^feature$', views.saveOrDeleteFeature, {}, 
-     'saveOrDeleteFeature'),
-    (r'^feature/(?P<uuid>[\w-]+)$', views.saveOrDeleteFeature, {}, 
-     'saveOrDeleteFeature'),
-    # for saving feature json to db
-    (r'^saveMaplayer.json$', views.saveMaplayer, {}, 
-     'saveMaplayer'),
+    # for saving single map feature from map layer, or creating new one
+    (r'^feature$', views.saveOrDeleteFeature, {}, 'saveOrDeleteFeature'),
+    (r'^feature/(?P<uuid>[\w-]+)$', views.saveOrDeleteFeature, {}, 'saveOrDeleteFeature'),
+    # for saving map layer itself
+    (r'^saveMaplayer.json$', views.saveMaplayer, {}, 'saveMaplayer'),
     # HTML tree of maps
     (r'^maptree/', views.getMapTreePage,
      {'readOnly': True, 'securityTags': ['readOnly']},
