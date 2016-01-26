@@ -296,14 +296,24 @@ $(function() {
             var xcoords = transformList(coords);
             var geom = this.olFeature.getGeometry();
             geom.setCoordinates([xcoords], 'XY');
+            this.olFeature.changed();
     	},
     	updateCoordsFromGeometry: function(geometry) {
             var coords = inverseList(geometry.getCoordinates().reduce(function(a, b) {
                 return a.concat(b);
             }));
-            this.model.set('polygon',coords);
-            this.model.trigger('coordsChanged');
-            this.model.save();
+            var oldCoords = this.model.get('polygon');
+            if (!arrayEquals(coords, oldCoords)){
+        	// make sure first and last are the same, figure out which one changed
+        	if (coords[0] != coords[coords.length - 1]){
+        	    if (coords[0] != oldCoords[0] ) {
+        		coords[coords.length-1] = coords[0];
+        	    }
+        	}
+        	this.model.set('polygon',coords);
+        	this.model.trigger('coordsChanged');
+        	this.model.save();
+            }
     	}
     });
 
@@ -319,12 +329,15 @@ $(function() {
     	    var coords = this.model.get('point');
             var xcoords = transform(coords);
             this.olFeature.getGeometry().setCoordinates(xcoords);
+            this.olFeature.changed();
         },
     	updateCoordsFromGeometry: function(geometry) {
             var coords = inverseTransform(geometry.getCoordinates());
-            this.model.set('point',coords);
-            this.model.trigger('coordsChanged');
-            this.model.save();
+            if (!arrayEquals(coords, this.model.get('point'))){
+        	this.model.set('point',coords);
+        	this.model.trigger('coordsChanged');
+        	this.model.save();
+            }
         }, 
         destroy: function() {
             this.model.destroy({
@@ -353,14 +366,17 @@ $(function() {
     	    var coords = this.model.get('lineString');
             var xcoords = transformList(coords);
             this.olFeature.getGeometry().setCoordinates(xcoords,'XY');
+            this.olFeature.changed();
         },
     	updateCoordsFromGeometry: function(geometry) {
             var coords = inverseList(geometry.getCoordinates().reduce(function(a, b) {
                 return a.concat(b);
             }));
-            this.model.set('lineString',coords);
-            this.model.trigger('coordsChanged');
-            this.model.save();
+            if (!arrayEquals(coords, this.model.get('lineString'))){
+        	this.model.set('lineString',coords);
+        	this.model.trigger('coordsChanged');
+        	this.model.save();
+            }
         }
     });
 
@@ -377,6 +393,7 @@ $(function() {
             var xcoords = transformList(coords);
             var geom = this.olFeature.getGeometry();
             geom.setCoordinates([xcoords],'XY');
+            this.olFeature.changed();
         },
         updateCoordsFromGeometry: function(geometry) {
             var coords = inverseList(geometry.getCoordinates().reduce(function(a, b) {
