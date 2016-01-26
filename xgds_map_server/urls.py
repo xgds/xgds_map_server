@@ -48,10 +48,9 @@ urlpatterns = patterns(
     (r'^maptree/', views.getMapTreePage,
      {'readOnly': True, 'securityTags': ['readOnly']},
      'mapTree'),
-    # Open Map Editor on a particular map layer
-    (r'^mapeditor/(?P<layerID>[\w-]+)/', views.getMapEditorPage,
-     {},
-     'mapEditLayer'),
+    # Open Map Editor on a map layer
+    (r'^mapeditor/(?P<layerID>[\w-]+)/', views.getMapEditorPage,{},'mapEditLayer'),
+    (r'^maplayer/kml/(?P<layerID>[\w-]+)/', views.getMapLayerKML,{},'mapLayerKML'),
     # JSON tree of maps, formatted for jstree
     (r'^listjson/', views.getMapTreeJSON,
      {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']},

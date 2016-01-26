@@ -61,8 +61,7 @@ app.models = app.models || {};
 		idAttribute: 'uuid',
 		urlRoot: '/xgds_map_server/feature',
                 toString: function() {
-                	var name = this.get('name');
-                    return name;
+                    return this.get('name');
                 },
 		toJSON: toJsonWithFilters
 	});

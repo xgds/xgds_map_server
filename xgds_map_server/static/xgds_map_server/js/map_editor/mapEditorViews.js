@@ -16,6 +16,19 @@
 
 app.views = app.views || {};
 
+app.views.LinksView = Backbone.Marionette.ItemView.extend({
+    template: '#template-layer-links',
+    initialize: function() {
+        var source = $(this.template).html();
+        this.template = Handlebars.compile(source);
+    },
+    render: function() {
+        this.$el.html(this.template({
+            layerUuid: app.mapLayer.get('uuid')
+        }));
+    }
+});
+
 app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
     template: '#template-toolbar',
     events: {
@@ -333,12 +346,12 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
     
     showCoordinates: function(model){
     	try {
-    		this.colhead3.close();
+    	    this.colhead3.close();
     	} catch (ex) {
     	}
     	var headerView = new app.views.FeatureCoordinatesHeader({model: model});
     	this.colhead3.show(headerView);
-		var view = new app.views.FeatureCoordinatesView({model: model});
+	var view = new app.views.FeatureCoordinatesView({model: model});
     	this.col3.show(view);
     },
     
@@ -389,6 +402,9 @@ app.views.FeatureCoordinatesView = Backbone.Marionette.ItemView.extend({
 	events: {
 		"change input.featureCoords": "coordsChanged"
 	},
+	initialize: function() {
+	  this.listenTo(this.model, 'coordsChanged', this.render);
+	},
 	coordsChanged: function(e) {
 		var coordIndex = parseInt(e.target.id);
 		var coordValue = e.target.value;
@@ -406,20 +422,19 @@ app.views.FeatureCoordinatesView = Backbone.Marionette.ItemView.extend({
 		}
 		app.util.updateFeatureCoordinate(this.model.get('type'), this.model, newX, newY, coordIndex);
 		this.model.save();
-		//TODO: change the location of feature on the map.
 		this.model.trigger('change:coordinates');
 	},
 	serializeData: function() {
-		var data = this.model.toJSON();
 		var coordinates = null;
 		var markPolygon = false;
-		if (data.type == 'Polygon') {
-			coordinates = data.polygon;
+		var type = this.model.get('type');
+		if (type == 'Polygon') {
+			coordinates = this.model.get('polygon');
 			markPolygon = true;
-		} else if (data.type == 'LineString') {
-			coordinates = data.lineString;
-		} else if (data.type == 'Point') {
-			coordinates = [data.point];
+		} else if (type == 'LineString') {
+			coordinates = this.model.get('lineString');
+		} else if (type == 'Point') {
+			coordinates = [this.model.get('point')];
 		}
 		return {coords: coordinates, polygon: markPolygon};
 	}, 
@@ -602,18 +617,7 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
     	var features = app.request('selectedFeatures');
     	var selectParent = null;
     	_.each(features, function(feature) {
-    		feature.destroy({
-    			data: { 'uuid': feature.uuid },
-    			success: function(model, response) {
-    				if(!_.isUndefined(feature.collection)) {
-    	    			feature.collection.remove(feature);
-    	    		}
-    			}, 
-    			error: function() {
-    				console.log("Error in deleting a feature");
-    			}
-    		});
-    		
+    	    app.vent.trigger('deleteFeature', feature);
     	});
     }, 
     
@@ -710,6 +714,7 @@ app.views.TabNavView = Backbone.Marionette.LayoutView.extend({
     	'features': app.views.FeaturesTabView,
     	'layers': app.views.FancyTreeView,
         'search': app.views.SearchView,
+        'links': app.views.LinksView
     },
 
     initialize: function() {

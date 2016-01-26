@@ -212,7 +212,7 @@ var app = (function($, _, Backbone) {
     app.vent.on('all', function(eventname, args) {
     	
     });
-
+    
     app.addInitializer(_.bind(Backbone.history.start, Backbone.history));
 
     /*
@@ -254,6 +254,19 @@ var app = (function($, _, Backbone) {
                 obj[item[keyProp]] = item;
             });
             return obj;
+        },
+        deleteFeature: function(feature){
+            feature.destroy({
+			data: { 'uuid': feature.uuid },
+			success: function(model, response) {
+				if(!_.isUndefined(feature.collection)) {
+	    			feature.collection.remove(feature);
+	    		}
+			}, 
+			error: function() {
+				console.log("Error in deleting a feature");
+			}
+		});
         },
         createBackboneFeatureObj: function(olFeature) {
             // create a new backbone feature object from the user drawings on map.
@@ -514,6 +527,10 @@ var app = (function($, _, Backbone) {
         }
 
     };
+    
+    app.vent.on('deleteFeature', function(feature){
+	app.util.deleteFeature(feature);
+    });
 
     return app;
 

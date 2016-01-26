@@ -407,8 +407,8 @@ def getAddLayerPage(request):
             map_layer = MapLayer()
             map_layer.name = layer_form.cleaned_data['name']
             map_layer.description = layer_form.cleaned_data['description']
-            map_layer.creator = request.user.username
-            map_layer.modifier = request.user.username
+            map_layer.creator = request.user.first_name + " " +  request.user.last_name
+            map_layer.modifier = map_layer.creator
             map_layer.creation_time = datetime.datetime.now()
             map_layer.modification_time = datetime.datetime.now()
             map_layer.deleted = False

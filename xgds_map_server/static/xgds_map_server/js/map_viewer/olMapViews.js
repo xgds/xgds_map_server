@@ -889,7 +889,7 @@ $(function() {
             this.initializeFeaturesJson();
         },
         finishInitialization: function() {
-            this.createFeatureOverlay();
+            this.createFeaturesLayer();
             this.constructFeatures();
             this.render();
         },
@@ -900,7 +900,7 @@ $(function() {
                 thisMapLayerView.trigger('readyToDraw');
             });
         },
-        createFeatureOverlay: function() {
+        createFeaturesLayer: function() {
         	// override in child view
         },
         constructFeatures: function() {
