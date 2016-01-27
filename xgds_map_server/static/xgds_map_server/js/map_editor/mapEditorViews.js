@@ -494,7 +494,6 @@ app.views.FeaturesHeaderView = Backbone.Marionette.ItemView.extend({
      */
 	template: '#template-features-header',
 	events: {
-		'click #btn-duplicate': function() { app.vent.trigger('duplicateSelectedFeatures', this.model)},
 		'click #btn-delete': function() { app.vent.trigger('deleteSelectedFeatures', this.model)},
 	}
 });
@@ -604,15 +603,6 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
         	console.log(view);
         });
     },
-    duplicateSelectedFeatures: function() {
-        var features = app.request('selectedFeatures');
-        var selectParent = null;
-        _.each(features, function(feature) {
-            //HERETAMAR figure out how to clone a feature
-            var olFeature = feature.clone();
-            var featureObj = app.util.createBackboneFeatureObj(olFeature);
-        });
-    }, 
     deleteSelectedFeatures: function(){
     	var features = app.request('selectedFeatures');
     	var selectParent = null;

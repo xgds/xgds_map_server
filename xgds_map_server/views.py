@@ -1455,4 +1455,7 @@ def processTiles(request, uuid, minZoom, maxZoom, mapTile):
 #             os.system(tileCmd)
 
     
+def getMapLayerKML(request, layerID):
+    #TODO implement
+    pass
 
