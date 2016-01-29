@@ -176,8 +176,8 @@ var app = (function($, _, Backbone) {
 			var featureObj = new app.models.Feature(featureJson);
 			featureObj.json = featureJson;
 			featureObj.set('mapLayer', app.mapLayer);  // set up the relationship.
-	    	featureObj.set('mapLayerName', app.mapLayer.get('name'));
-	    	featureObj.set('uuid', featureJson.uuid);
+			featureObj.set('mapLayerName', app.mapLayer.get('name'));
+			featureObj.set('uuid', featureJson.uuid);
 		});
 		
         app.map = new app.views.OLEditMapView({
@@ -300,7 +300,7 @@ var app = (function($, _, Backbone) {
             return featureObj;
         },
         getFeatureWithName: function(name) {
-          var features = app.mapLayer.get('features');
+          var features = app.mapLayer.get('feature').toArray();
           var foundFeature = undefined;
           for (var i=0; i< features.length; i++){
               var feature = features[i];
@@ -333,19 +333,21 @@ var app = (function($, _, Backbone) {
         },
         initializeIndices: function() {
             var index = 0;
-            var features = app.mapLayer.get('features');
+            var features = app.mapLayer.get('feature').toArray();
             app.featureIndex = [];
             app.featureIndex['Polygon'] = 0;
             app.featureIndex['Point'] = 0;
             app.featureIndex['LineString'] = 0;
             app.featureIndex['GroundOverlay'] = 0;
             _.each(features, function(feature) {
-                var type = feature.type;
-                if (_.isUndefined(app.featureIndex[type])){
-                    app.featureIndex[type] = 0;
-                } else {
-                    app.featureIndex[type] = app.featureIndex[type] + 1;
-                }
+        	if (feature != undefined){
+                    var type = feature.type;
+                    if (_.isUndefined(app.featureIndex[type])){
+                        app.featureIndex[type] = 0;
+                    } else {
+                        app.featureIndex[type] = app.featureIndex[type] + 1;
+                    }
+        	}
             }); 
             app.indicesInitialized = true;
         },

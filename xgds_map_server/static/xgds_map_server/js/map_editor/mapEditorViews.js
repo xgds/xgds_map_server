@@ -166,10 +166,10 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
     },
 
     saveEntireLayer: function(){
-//        var theFeatures = app.mapLayer.get('feature');
-//        for (i = 0; i < theFeatures.models.length; i++){
-//            theFeatures.models[i].save();
-//        }
+        var theFeatures = app.mapLayer.get('feature');
+        for (i = 0; i < theFeatures.models.length; i++){
+            theFeatures.models[i].save();
+        }
         app.mapLayer.save();
     },
     
