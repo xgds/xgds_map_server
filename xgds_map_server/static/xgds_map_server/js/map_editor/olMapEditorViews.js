@@ -107,10 +107,10 @@ $(function() {
 	    if (_.isUndefined(this.layerGroup)){
 		this.layerGroup = new ol.layer.Group({name: app.mapLayer.get('name')});
 	    };
-	    var mlview = this;
+	    var _this = this;
 	    var unconstructedFeatures = app.mapLayer.get('feature');
 	    _.each(unconstructedFeatures.models, function(featureObj){
-		mlview.createFeature(featureObj);
+		_this.createFeature(featureObj);
 	    });
 	},
 	createFeature: function(featureObj){

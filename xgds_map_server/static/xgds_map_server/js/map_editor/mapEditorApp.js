@@ -288,7 +288,7 @@ var app = (function($, _, Backbone) {
             featureObj.set('type', type);
             featureObj.set('description', " ");
             app.util.transformAndSetCoordinates(type, featureObj, coords);
-            var featureName = app.util.generateFeatureName(mapLayer, type);
+            var featureName = app.util.generateFeatureName(type);
             featureObj.set('name', featureName);
             featureObj.set('popup', false);
             featureObj.set('visible', true);
@@ -299,14 +299,29 @@ var app = (function($, _, Backbone) {
             featureObj.save();
             return featureObj;
         },
-        generateFeatureName: function(mapLayer, type) {
+        getFeatureWithName: function(name) {
+          var features = app.mapLayer.get('features');
+          var foundFeature = undefined;
+          features.every(function(feature) {
+              if (feature.name == name){
+        	  foundFeature = feature;
+        	  return;
+              }
+          });
+          return foundFeature;
+        },
+        generateFeatureName: function(type) {
         	// create a name based type and an index
-//        	var key = mapLayer.get('name').replace(/ /g,"");
         	var key = type.substring(0,4);
         	if (type === 'Point'){
         	    key = key + 't';
         	}
-        	return key + app.util.pad(this.getNextIndex(type), 3, 0);
+        	var suggestion = key + app.util.pad(this.getNextIndex(type), 3, 0);
+        	while (this.getFeatureWithName(suggestion) != undefined){
+        	    suggestion = key + app.util.pad(this.getNextIndex(type), 3, 0);
+        	}
+        	return suggestion;
+                    
         },
         getNextIndex: function(type){
             if (!app.indicesInitialized){

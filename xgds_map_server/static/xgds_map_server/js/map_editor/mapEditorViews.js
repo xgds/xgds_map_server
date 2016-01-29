@@ -255,6 +255,7 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
         this.listenTo(app.vent, 'showNothing', this.showNothing, this);
         this.listenTo(app.vent, 'showStyle', this.showStyle, this);
         this.listenTo(app.vent, 'showCoordinates', this.showCoordinates, this);
+        this.listenTo(app.vent, 'deleteSelectedFeatures', this.clearColumns, this);
     },
     
     clearColumns: function() {
