@@ -497,9 +497,9 @@ $(function() {
                         });
                     if (!_.isUndefined(feature)) {
                         var popup = feature['popup'];
-                        if (!_.isUndefined(popup) && !_.isNull(popup)){
-                            this.popup.show(evt.coordinate, '<div><h3>' + feature.get('name') + '</h3><p>' + popup + '</p></div>');
-                        }
+//                        if (!_.isUndefined(popup) && !_.isNull(popup)){
+                        this.popup.show(evt.coordinate, '<div><h3>' + feature.get('name') + '</h3><p>' + popup + '</p></div>');
+//                        }
                     } else {
                         this.popup.hide();
                     }
@@ -1088,10 +1088,7 @@ $(function() {
         	}
         },
         getPopupContent: function() {
-            if (this.featureJson.popup) {
-                return this.featureJson.description;
-            }
-            return null;
+            return this.featureJson.description;
         },
         getLayer: function() {
             return this.vectorLayer;

@@ -131,7 +131,7 @@ $(function() {
             app.util.transformAndSetCoordinates(type, featureObj, coords);
             var featureName = app.util.generateFeatureName(type);
             featureObj.set('name', featureName);
-            featureObj.set('popup', false);
+            featureObj.set('popup', true);
             featureObj.set('visible', true);
             featureObj.set('showLabel', false);
             var mapLayer = app.mapLayer;
