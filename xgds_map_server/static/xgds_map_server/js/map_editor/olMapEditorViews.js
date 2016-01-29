@@ -113,37 +113,74 @@ $(function() {
 		_this.createFeature(featureObj);
 	    });
 	},
+	createBackboneFeatureObj: function(olFeature) {
+            // create a new backbone feature object from the user drawings on map.
+            var geom = olFeature.getGeometry();
+            var type = geom.getType();
+            var coords;
+            if ((type === "Point") || (type === "LineString")){
+                coords = geom.getCoordinates();
+            } else {
+                coords = geom.getCoordinates().reduce(function(a, b) {
+                	return a.concat(b);
+                });
+            }
+            var featureObj = new app.models.Feature();
+            featureObj.set('type', type);
+            featureObj.set('description', " ");
+            app.util.transformAndSetCoordinates(type, featureObj, coords);
+            var featureName = app.util.generateFeatureName(type);
+            featureObj.set('name', featureName);
+            featureObj.set('popup', false);
+            featureObj.set('visible', true);
+            featureObj.set('showLabel', false);
+            var mapLayer = app.mapLayer;
+            featureObj.set('mapLayer', mapLayer);
+            featureObj.set('mapLayerName', mapLayer.get('name'));
+            featureObj.olFeature =  olFeature;
+            var _this = this;
+            featureObj.save( {}, {wait: true, 
+        			  success: function () {_this.initializeFeatureObjViews(featureObj, type)}});
+            
+            return featureObj;
+        },
 	createFeature: function(featureObj){
 	    var newFeatureView;
-	    var featureJson = featureObj.json;
-	    switch (featureJson['type']){
+	    this.initializeFeatureObjViews(featureObj, featureObj.json['type']);
+	},
+	initializeFeatureObjViews(featureObj, type){
+	    switch (type){
 	    case 'GroundOverlay':
 		newFeatureView = new app.views.GroundOverlayEditView({
 		    model: featureObj,
+		    olFeature: featureObj.olFeature,
 		    layerGroup: this.layerGroup,
-		    featureJson: featureJson
+		    featureJson: featureObj.attributes
 		});
 		this.drawBelow = true;
 		break;
 	    case 'Polygon':
 		newFeatureView = new app.views.PolygonEditView({
 		    model: featureObj,
+		    olFeature: featureObj.olFeature,
 		    layerGroup: this.layerGroup,
-		    featureJson: featureJson
+		    featureJson: featureObj.attributes
 		});
 		break;
 	    case 'Point':
 		newFeatureView = new app.views.PointEditView({
 		    model: featureObj,
+		    olFeature: featureObj.olFeature,
 		    layerGroup: this.layerGroup,
-		    featureJson: featureJson
+		    featureJson: featureObj.attributes
 		});
 		break;
 	    case 'LineString':
 		newFeatureView = new app.views.LineStringEditView({
 		    model: featureObj,
+		    olFeature: featureObj.olFeature,
 		    layerGroup: this.layerGroup,
-		    featureJson: featureJson
+		    featureJson: featureObj.attributes
 		});
 		break;
 	    } 
@@ -165,7 +202,6 @@ $(function() {
 		this.features.push(newFeatureView);
 	    }
 	},
-
 	updateFeaturePosition: function(feature) {
 	    var olFeature = feature.olFeature;
 	    if (type == 'Point') {
@@ -218,7 +254,7 @@ $(function() {
 		}
 	    }, this);
 	    this.featureAdder.on('drawend', function(event) { // finished drawing this feature
-		var featureObj = app.util.createBackboneFeatureObj(event.feature);
+		var featureObj = this.createBackboneFeatureObj(event.feature);
 	    }, this);
 	    this.map.addInteraction(this.featureAdder);
 	},

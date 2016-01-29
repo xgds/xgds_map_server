@@ -271,34 +271,34 @@ var app = (function($, _, Backbone) {
 			}
 		});
         },
-        createBackboneFeatureObj: function(olFeature) {
-            // create a new backbone feature object from the user drawings on map.
-            var geom = olFeature.getGeometry();
-            var type = geom.getType();
-            var coords;
-            if ((type === "Point") || (type === "LineString")){
-                coords = geom.getCoordinates();
-            } else {
-                coords = geom.getCoordinates().reduce(function(a, b) {
-                	return a.concat(b);
-                });
-            }
-            var featureObj = new app.models.Feature();
-            var mapLayer = app.mapLayer;
-            featureObj.set('type', type);
-            featureObj.set('description', " ");
-            app.util.transformAndSetCoordinates(type, featureObj, coords);
-            var featureName = app.util.generateFeatureName(type);
-            featureObj.set('name', featureName);
-            featureObj.set('popup', false);
-            featureObj.set('visible', true);
-            featureObj.set('showLabel', false);
-            featureObj.set('mapLayer', mapLayer);
-            featureObj.set('mapLayerName', mapLayer.get('name'));
-            featureObj.olFeature =  olFeature;
-            featureObj.save();
-            return featureObj;
-        },
+//        createBackboneFeatureObj: function(olFeature) {
+//            // create a new backbone feature object from the user drawings on map.
+//            var geom = olFeature.getGeometry();
+//            var type = geom.getType();
+//            var coords;
+//            if ((type === "Point") || (type === "LineString")){
+//                coords = geom.getCoordinates();
+//            } else {
+//                coords = geom.getCoordinates().reduce(function(a, b) {
+//                	return a.concat(b);
+//                });
+//            }
+//            var featureObj = new app.models.Feature();
+//            var mapLayer = app.mapLayer;
+//            featureObj.set('type', type);
+//            featureObj.set('description', " ");
+//            app.util.transformAndSetCoordinates(type, featureObj, coords);
+//            var featureName = app.util.generateFeatureName(type);
+//            featureObj.set('name', featureName);
+//            featureObj.set('popup', false);
+//            featureObj.set('visible', true);
+//            featureObj.set('showLabel', false);
+//            featureObj.set('mapLayer', mapLayer);
+//            featureObj.set('mapLayerName', mapLayer.get('name'));
+//            featureObj.olFeature =  olFeature;
+//            featureObj.save();
+//            return featureObj;
+//        },
         getFeatureWithName: function(name) {
           var features = app.mapLayer.get('feature').toArray();
           var foundFeature = undefined;

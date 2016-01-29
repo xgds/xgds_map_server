@@ -982,6 +982,7 @@ $(function() {
             if (!options.layerGroup && !options.featureJson) {
                 throw 'Missing a required option!';
             }
+            this.olFeature = this.options.olFeature;
             this.layerGroup = this.options.layerGroup;
             this.featureJson = this.options.featureJson; 
             this.constructContent();
@@ -1099,11 +1100,13 @@ $(function() {
     
     app.views.PolygonView = app.views.VectorView.extend({
         constructFeature: function() {
-            var coords = this.featureJson.polygon;
-            this.olFeature = new ol.Feature({
-                name: this.featureJson.name,
-                geometry: new ol.geom.Polygon([coords]).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
-            });
+            if (this.olFeature == undefined){
+                var coords = this.featureJson.polygon;
+                this.olFeature = new ol.Feature({
+                    name: this.featureJson.name,
+                    geometry: new ol.geom.Polygon([coords]).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
+                });
+            }
             return this.olFeature;
         }, 
         getStyle: function() {
@@ -1113,10 +1116,12 @@ $(function() {
     
     app.views.PointView = app.views.VectorView.extend({
         constructFeature: function() {
-            this.olFeature = new ol.Feature({
-                name: this.featureJson.name,
-                geometry: new ol.geom.Point(transform(this.featureJson.point))
-            });
+            if (this.olFeature == undefined){
+        	this.olFeature = new ol.Feature({
+        	    name: this.featureJson.name,
+        	    geometry: new ol.geom.Point(transform(this.featureJson.point))
+        	});
+            }
             return this.olFeature;
         }, 
         getStyle: function() {
@@ -1126,10 +1131,12 @@ $(function() {
     
     app.views.LineStringView = app.views.VectorView.extend({
         constructFeature: function() {
-            this.olFeature = new ol.Feature({
-                name: this.featureJson.name,
-                geometry: new ol.geom.LineString(this.featureJson.lineString).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
-            });
+            if (this.olFeature == undefined){
+        	this.olFeature = new ol.Feature({
+        	    name: this.featureJson.name,
+        	    geometry: new ol.geom.LineString(this.featureJson.lineString).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
+        	});
+            }
             return this.olFeature;
         }, 
         getStyle: function() {

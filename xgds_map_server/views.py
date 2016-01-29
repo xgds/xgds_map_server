@@ -300,8 +300,6 @@ def saveOrDeleteFeature(request, uuid=None):
             feature.description = data.get('description', None)
         feature.save()
         return HttpResponse(json.dumps(feature.toDict(), cls=GeoDjangoEncoder), content_type='application/json')
-#         return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
-#         return HttpResponse(json.dumps({'success': 'true', 'type': 'save'}), content_type='application/json')
 
     elif request.method == "DELETE":
         try:
