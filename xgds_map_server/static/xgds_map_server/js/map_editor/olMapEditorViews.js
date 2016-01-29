@@ -150,9 +150,9 @@ $(function() {
 	    if (!_.isUndefined(newFeatureView)){
 		featureObj.olFeature = newFeatureView.getFeature();
 		featureObj.olFeature.set('model', featureObj);
-		featureObj.olFeature.set('view', newFeatureView);
-		featureObj.olFeature.on('change', function(event) {
-		    var geometry = event.target.get('geometry');
+		featureObj.olFeature.getGeometry().set('view', newFeatureView);
+		featureObj.olFeature.getGeometry().on('change', function(event) {
+		    var geometry = event.target;
 		    var view = event.target.get('view');
 		    view.updateCoordsFromGeometry(geometry);
 		});
@@ -394,9 +394,10 @@ $(function() {
 	    this.olFeature.changed();
 	},
 	updateCoordsFromGeometry: function(geometry) {
-	    var coords = inverseList(geometry.getCoordinates().reduce(function(a, b) {
+	    /*var coords = inverseList(geometry.getCoordinates().reduce(function(a, b) {
 		return a.concat(b);
-	    }));
+	    })); */
+	    var coords = inverseList(geometry.getCoordinates());
 	    if (!arrayEquals(coords, this.model.get('lineString'))){
 		this.model.set('lineString',coords);
 		this.model.trigger('coordsChanged');
