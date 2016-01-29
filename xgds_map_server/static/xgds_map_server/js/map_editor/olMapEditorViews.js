@@ -71,8 +71,10 @@ $(function() {
 		    _this.addDrawInteraction(_this.typeSelect);
 		});
 	    }, this);
-	    app.vent.on('deleteSelectedFeatures', this.deleteFeatureFromOverlay, this);
 	    app.vent.on('updateFeaturePosition', this.updateFeaturePosition, this);
+	    app.vent.on('deleteFeatureSuccess', function(killedFeature) {
+		this.olFeatures.pop(killedFeature.olFeature);
+	    }, this);
 	},
 	createFeaturesLayer: function() {
 	    this.olFeatures = new ol.Collection();
@@ -106,8 +108,8 @@ $(function() {
 		this.layerGroup = new ol.layer.Group({name: app.mapLayer.get('name')});
 	    };
 	    var mlview = this;
-	    var testFeatureObjects = app.mapLayer.get('feature');
-	    _.each(testFeatureObjects.models, function(featureObj){
+	    var unconstructedFeatures = app.mapLayer.get('feature');
+	    _.each(unconstructedFeatures.models, function(featureObj){
 		mlview.createFeature(featureObj);
 	    });
 	},
@@ -160,25 +162,8 @@ $(function() {
 		    this.olFeatures.push(featureObj.olFeature);
 		}*/
 		this.olFeatures.push(featureObj.olFeature);
-
 		this.features.push(newFeatureView);
 	    }
-	},
-
-	deleteFeatureFromOverlay: function() {
-	    // remove the selected features from the overlay
-	    var features = app.request('selectedFeatures');
-	    var _this = this;
-	    _.each(features, function(feature){
-		var olFeature = feature.olFeature;
-		/*if (feature.get('type') == 'Point'){
-		    _this.pointFeatures.pop(olFeature);
-		} else {
-		    _this.olFeatures.pop(olFeature);
-		}*/
-		_this.olFeatures.pop(olFeature);
-
-	    });
 	},
 
 	updateFeaturePosition: function(feature) {
@@ -295,7 +280,7 @@ $(function() {
 			}
 		    }, this);
 		    
-		    this.listenTo(app.vent, 'deleteFeature', function(killedFeature) {
+		    this.listenTo(app.vent, 'deleteFeatureSuccess', function(killedFeature) {
                         if (!_.isUndefined(killedFeature)){
                             var feature = killedFeature.olFeature;
                             if (!_.isUndefined(feature)){
@@ -343,8 +328,6 @@ $(function() {
 		return a.concat(b);
 	    }));
 	    var oldCoords = this.model.get('polygon');
-	    console.log('NEW COORDS LENGTH = ' + coords.length);
-	    console.log('OLD COORDS LENGTH = ' + oldCoords.length);
 	    if (!arrayEquals(coords, oldCoords)){
 		// make sure first and last are the same, figure out which one changed
 		if (coords[0] != coords[coords.length - 1]){

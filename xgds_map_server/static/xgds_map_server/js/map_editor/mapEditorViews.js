@@ -211,19 +211,6 @@ app.views.EditingToolsView = Backbone.Marionette.ItemView.extend({
     }
 });
 
-app.views.HideableRegion = Backbone.Marionette.Region.extend({
-    close: function() {
-        Backbone.Marionette.Region.prototype.close.call(this);
-        this.ensureEl();
-        this.$el.hide();
-    },
-    show: function(view) {
-        Backbone.Marionette.Region.prototype.show.call(this, view);
-        this.$el.show();
-    }
-});
-
-
 app.views.LayerInfoTabView = Backbone.Marionette.ItemView.extend({
 	template: '#template-layer-info',
 	initialize: function() {
@@ -256,12 +243,10 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
         //Column content
         col1: '#col1',
         col2: {
-            selector: '#col2',
-            regionType: app.views.HideableRegion
+            selector: '#col2'
         },
 		col3: {
-		    selector: '#col3',
-		    regionType: app.views.HideableRegion
+		    selector: '#col3'
 		}
     },
 	
@@ -604,7 +589,7 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
         });
     },
     deleteSelectedFeatures: function(){
-    	var features = app.request('selectedFeatures');
+    	var features = this.getSelectedFeatures(); 
     	var selectParent = null;
     	_.each(features, function(feature) {
     	    app.vent.trigger('deleteFeature', feature);

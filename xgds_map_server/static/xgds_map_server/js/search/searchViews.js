@@ -23,10 +23,8 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
     },
     regions: {
         modelChoiceRegion: '#modelChoiceDiv',
-        searchFormRegion: { selector: '#searchFormDiv',
-                            regionType: app.views.HideableRegion },
-        searchResultsRegion: { selector: '#searchResultsDiv',
-                               regionType: app.views.HideableRegion }
+        searchFormRegion: { selector: '#searchFormDiv' },
+        searchResultsRegion: { selector: '#searchResultsDiv' }
     },
     initialize: function() {
         var source = $(this.template).html();

@@ -256,12 +256,15 @@ var app = (function($, _, Backbone) {
             return obj;
         },
         deleteFeature: function(feature){
+//            feature.olFeature.un('change');
             feature.destroy({
 			data: { 'uuid': feature.uuid },
+			wait: true,
 			success: function(model, response) {
-				if(!_.isUndefined(feature.collection)) {
+			    if(!_.isUndefined(feature.collection)) {
 	    			feature.collection.remove(feature);
-	    		}
+	    		    }
+			    app.vent.trigger('deleteFeatureSuccess', feature);
 			}, 
 			error: function() {
 				console.log("Error in deleting a feature");
@@ -297,9 +300,12 @@ var app = (function($, _, Backbone) {
             return featureObj;
         },
         generateFeatureName: function(mapLayer, type) {
-        	// create a name based on maplayerName and type and an index
-        	var key = mapLayer.get('name').replace(/ /g,"");
-        	key = key + '_' + type;
+        	// create a name based type and an index
+//        	var key = mapLayer.get('name').replace(/ /g,"");
+        	var key = type.substring(0,4);
+        	if (type === 'Point'){
+        	    key = key + 't';
+        	}
         	return key + app.util.pad(this.getNextIndex(type), 3, 0);
         },
         getNextIndex: function(type){
