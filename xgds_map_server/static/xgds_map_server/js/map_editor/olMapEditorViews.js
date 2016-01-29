@@ -73,7 +73,7 @@ $(function() {
 	    }, this);
 	    app.vent.on('updateFeaturePosition', this.updateFeaturePosition, this);
 	    app.vent.on('deleteFeatureSuccess', function(killedFeature) {
-		this.olFeatures.pop(killedFeature.olFeature);
+		this.olFeatures.remove(killedFeature.olFeature);
 	    }, this);
 	},
 	createFeaturesLayer: function() {
@@ -284,10 +284,10 @@ $(function() {
                         if (!_.isUndefined(killedFeature)){
                             var feature = killedFeature.olFeature;
                             if (!_.isUndefined(feature)){
-//                        	this.pointDeleter.getFeatures().pop(feature);
-                                var killed = this.pointFeatures.pop(feature);
+//                        	this.pointDeleter.getFeatures().remove(feature);
+                                var killed = this.pointFeatures.remove(feature);
                                 if (killed != undefined){
-                                    this.pointDeleter.getFeatures().pop(feature);
+                                    this.pointDeleter.getFeatures().remove(feature);
                                     this.pointVector.changed();
                                 } else {
                                     this.olFeatures.remove(feature);

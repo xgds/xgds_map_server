@@ -302,12 +302,13 @@ var app = (function($, _, Backbone) {
         getFeatureWithName: function(name) {
           var features = app.mapLayer.get('features');
           var foundFeature = undefined;
-          features.every(function(feature) {
+          for (var i=0; i< features.length; i++){
+              var feature = features[i];
               if (feature.name == name){
         	  foundFeature = feature;
-        	  return;
+        	  break;
               }
-          });
+          }
           return foundFeature;
         },
         generateFeatureName: function(type) {
@@ -326,9 +327,6 @@ var app = (function($, _, Backbone) {
         getNextIndex: function(type){
             if (!app.indicesInitialized){
                 this.initializeIndices();
-            }
-            if (_.isUndefined(app.featureIndex[type])){
-                app.featureIndex[type] = 0;
             }
             app.featureIndex[type] = app.featureIndex[type] + 1;
             return app.featureIndex[type];
