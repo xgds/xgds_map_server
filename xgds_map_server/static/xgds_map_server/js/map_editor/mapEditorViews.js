@@ -249,7 +249,6 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
 		    selector: '#col3'
 		}
     },
-	
     initialize: function() {
     	this.listenTo(app.vent, 'showFeature', this.showFeature, this);
         this.listenTo(app.vent, 'showNothing', this.showNothing, this);
@@ -512,7 +511,8 @@ app.views.FeatureElementView = Backbone.Marionette.ItemView.extend({
     template: function(data) {
         //return '' + data.model.toString()+ ' <i/>';
     	var displayName = data.model.toString();
-        return '<input class="select" type="checkbox" id="id_' + displayName + '"/></i>&nbsp;<label style="display:inline-block;" for="id_' + displayName + '">' + displayName + '</label><i/>';
+    	var uuid = data.model.get('uuid');
+        return '<input class="select" type="checkbox" id="id_' + uuid + '"/></i>&nbsp;<label class="featureName" style="display:inline-block;" for="id_' + uuid + '">' + displayName + '</label><i/>';
     },
     serializeData: function() {
         var data = Backbone.Marionette.ItemView.prototype.serializeData.call(this, arguments);
@@ -527,21 +527,36 @@ app.views.FeatureElementView = Backbone.Marionette.ItemView.extend({
         };
     },
     events: {
-        click: function() {
+        'click .featureName': function() {
+            if (app.State.featureSelected != undefined){
+        	var checkbox = $('#id_' + app.State.featureSelected.get('uuid'));
+        	if (checkbox.prop('checked')){
+    			app.vent.trigger('selectFeature', app.State.featureSelected);
+        	} else {
+        	    app.vent.trigger('deselectFeature', app.State.featureSelected);
+        	}
+            }
+            app.vent.trigger('activeFeature', this.model);
             app.State.metaExpanded = true;
-            app.State.featureSelected = undefined;
+            app.State.featureSelected = this.model;
             this.expand();
             app.vent.trigger('showFeature', this.model);
-        }
+        },
+    	'click .select': function(evt) {
+        	if (app.State.featureSelected != this.model){
+        	    if (evt.target.checked){
+        		app.vent.trigger('selectFeature', this.model);
+        	    } else {
+        		app.vent.trigger('deselectFeature', this.model);
+        	    }
+        	}
+    	}
     },
     isSelected: function(evt) {
         return this.$el.find('input.select').is(':checked');
     },
     modelEvents: {
         'change': 'render'
-    },
-    getSelectedStyles: function() {
-    	return olStyles.styles['selected_' + this.model.get('type').toLowerCase()];
     }
 });
 
@@ -572,16 +587,6 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
 		// if there is a previously selected feature, revert the style to default.
 		app.State.featureSelected = childView.model;
 
-		// change the style of the selected polygon.
-		app.State.featureSelected.olFeature.setStyle(childView.getSelectedStyles());
-
-		// reset the styles of all feature items that are not currently expanded/selected.
-		//TODO: this loops over all features each time user selects a feature. Is there a more optimal way??
-		this.children.each(function(view) {
-			if ((view != childView)) {
-				view.model.olFeature.setStyle(null);
-			}
-		});
 		
 	},   
     onClose: function(){
@@ -598,17 +603,17 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
     }, 
     
     getSelectedFeatures: function() {
-    	var features = [];
-    	this.children.each(function(childView) {
-    		try {
-    			if (childView.isSelected()) {
-    				features.push(childView.model);
-    			}
-    		} catch (ex) {
-    			// pass
-    		}
-    	});
-    	return features;
+	var features = [];
+	this.children.each(function(childView) {
+	    try {
+		if (childView.isSelected()) {
+		    features.push(childView.model);
+		}
+	    } catch (ex) {
+		// pass
+	    }
+	});
+	return features;
     }
 });
 

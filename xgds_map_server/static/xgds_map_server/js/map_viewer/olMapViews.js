@@ -485,7 +485,9 @@ $(function() {
                 
                 // display popup on click
                 var theMap = this.map;
-                app.State.popupsEnabled = true;
+                if (app.State.popupsEnabled == undefined){
+                    app.State.popupsEnabled = true;
+                }
                 
                 this.map.on('click', function(evt) {
                     if (!app.State.popupsEnabled){
@@ -1058,6 +1060,7 @@ $(function() {
     
     app.views.VectorView = app.views.LayerFeatureView.extend({
         constructContent: function() {
+            this.basicStyle = olStyles.styles[this.model.get('type').toLowerCase()];
             this.feature = this.constructFeature();
             if (!_.isNull(this.feature)){
                 this.vectorLayer = new ol.layer.Vector({
@@ -1072,6 +1075,16 @@ $(function() {
             if (!_.isNull(popup)){
                 this.feature['popup'] = popup;
             }
+            this.model.on('setBasicStyle', function(basicStyle) {
+        	this.updateStyle(basicStyle);
+            }, this);
+        },
+        updateStyle: function(newBasicStyle){
+            this.basicStyle = newBasicStyle;
+            this.olFeature.setStyle(this.getStyles());
+        },
+        getStyle: function() {
+            return this.basicStyle;
         },
         constructFeature: function() {
             // override this in derived class
@@ -1105,10 +1118,8 @@ $(function() {
                 });
             }
             return this.olFeature;
-        }, 
-        getStyle: function() {
-            return olStyles.styles['polygon'];
         }
+        
     });
     
     app.views.PointView = app.views.VectorView.extend({
@@ -1120,9 +1131,6 @@ $(function() {
         	});
             }
             return this.olFeature;
-        }, 
-        getStyle: function() {
-            return olStyles.styles['point'];
         }
     });
     
@@ -1135,9 +1143,6 @@ $(function() {
         	});
             }
             return this.olFeature;
-        }, 
-        getStyle: function() {
-            return olStyles.styles['lineString'];
         }
     });
     

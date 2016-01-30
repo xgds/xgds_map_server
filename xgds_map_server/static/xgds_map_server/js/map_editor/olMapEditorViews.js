@@ -75,6 +75,15 @@ $(function() {
 	    app.vent.on('deleteFeatureSuccess', function(killedFeature) {
 		this.olFeatures.remove(killedFeature.olFeature);
 	    }, this);
+	    app.vent.on('selectFeature', function(feature){
+		feature.trigger('setBasicStyle', olStyles.styles['selected_' + feature.get('type').toLowerCase()]);
+	    }, this);
+	    app.vent.on('activeFeature', function(feature){
+		feature.trigger('setBasicStyle', olStyles.styles['active_' + feature.get('type').toLowerCase()]);
+	    }, this);
+	    app.vent.on('deselectFeature', function(feature){
+		feature.trigger('setBasicStyle', olStyles.styles[feature.get('type').toLowerCase()]);
+	    }, this);
 	},
 	createFeaturesLayer: function() {
 	    this.olFeatures = new ol.Collection();
@@ -84,8 +93,7 @@ $(function() {
 	    });
 	    this.featuresLayer = new ol.layer.Vector({
 		map: this.options.map,
-		source: this.featuresVector,
-		style: olStyles.getDefaultStyle()
+		source: this.featuresVector
 	    });
 	    /*
 	    this.pointFeatures = new ol.Collection();
@@ -198,8 +206,13 @@ $(function() {
 		} else {
 		    this.olFeatures.push(featureObj.olFeature);
 		}*/
-		this.olFeatures.push(featureObj.olFeature);
+		var last = this.olFeatures.item(this.olFeatures.getLength() - 1);
+		if (last != featureObj.olFeature){
+		    this.olFeatures.push(featureObj.olFeature);
+		}
+		newFeatureView.updateStyle(newFeatureView.basicStyle);
 		this.features.push(newFeatureView);
+
 	    }
 	},
 	updateFeaturePosition: function(feature) {
