@@ -153,7 +153,6 @@ $(function() {
             return featureObj;
         },
 	createFeature: function(featureObj){
-	    var newFeatureView;
 	    this.initializeFeatureObjViews(featureObj, featureObj.json['type']);
 	},
 	initializeFeatureObjViews(featureObj, type){
@@ -361,6 +360,10 @@ $(function() {
 	initialize: function(options){
 	    app.views.PolygonView.prototype.initialize.call(this, options);
 	    this.listenTo(this.model, 'change:coordinates', function() {this.updateGeometryFromCoords()});
+	    this.model.on('setBasicStyle', function(basicStyle) {
+	        	this.updateStyle(basicStyle);
+	            }, this);
+
 	},
 	render: function() {
 	    //no op
@@ -395,6 +398,10 @@ $(function() {
 	initialize: function(options){
 	    app.views.PointView.prototype.initialize.call(this, options);
 	    this.listenTo(this.model, 'change:coordinates', function() {this.updateGeometryFromCoords()});
+	    this.model.on('setBasicStyle', function(basicStyle) {
+        	this.updateStyle(basicStyle);
+            }, this);
+
 	},
 	render: function() {
 	    // no op
@@ -432,6 +439,10 @@ $(function() {
 	initialize: function(options){
 	    app.views.LineStringView.prototype.initialize.call(this, options);
 	    this.listenTo(this.model, 'change:coordinates', function() {this.updateGeometryFromCoords()});
+	    this.model.on('setBasicStyle', function(basicStyle) {
+        	this.updateStyle(basicStyle);
+            }, this);
+
 	},
 	render: function() {
 	    // no op
@@ -459,6 +470,10 @@ $(function() {
 	initialize: function(options){
 	    app.views.GroundOverlayView.prototype.initialize.call(this, options);
 	    this.listenTo(this.model, 'change:coordinates', function() {this.updateGeometryFromCoords()});
+	    this.model.on('setBasicStyle', function(basicStyle) {
+        	this.updateStyle(basicStyle);
+            }, this);
+
 	},
 	render: function() {
 	    //no op
