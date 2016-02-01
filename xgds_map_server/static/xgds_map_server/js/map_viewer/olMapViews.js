@@ -944,10 +944,13 @@ $(function() {
                 this.features.push(newFeature);
             }
         },
-        render: function() {
+        render: function(selected) {
+            if (_.isUndefined(selected)){
+        	selected = true;
+            }
             if (_.isUndefined(this.node)){
                 this.show();
-            } else if (this.node.selected){
+            } else if (selected){
                 this.show();            
             } else {
                 this.hide();

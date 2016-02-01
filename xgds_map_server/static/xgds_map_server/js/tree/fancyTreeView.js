@@ -107,7 +107,7 @@ app.views.FancyTreeView = Backbone.View.extend({
                     if (_.isUndefined(data.node.mapView)){
                         app.vent.trigger('mapNode:create', data.node);
                     } else {
-                        data.node.mapView.render();
+                        data.node.mapView.render(data.node.selected);
                     }
                   },
                   persist: {
