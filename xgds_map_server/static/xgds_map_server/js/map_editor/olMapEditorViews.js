@@ -31,21 +31,27 @@ $(function() {
 	    this.layersForMap.push(this.mapEditorGroup);
 	},
 	createMapEditorView: function() {
-	    var mapEditorView = new app.views.MapEditorView({
+	    this.mapEditorView = new app.views.MapEditorView({
 		mapLayerJson: {},
 		mapLayerGroup: this.mapEditorGroup,
 		map: this.map
 	    });
-	    return mapEditorView;
+	    return this.mapEditorView;
 	}, 
 	updateBbox: function() {
-	    app.views.OLMapView.prototype.updateBbox.call(this);
-	},
+            var features = app.mapLayer.get('feature');
+            if (_.isUndefined(this.mapEditorView) || _.isUndefined(features) || features.length == 0){
+        	app.views.OLMapView.prototype.updateBbox.call(this);
+            } else {
+        	this.mapEditorView.fitExtent();
+            }
+        },
 	render: function() {
 	    app.views.OLMapView.prototype.render.call(this);
 	    this.createMapEditorView();
 	    this.updateBbox();
 	}
+        
     });
 
     /*
@@ -89,7 +95,7 @@ $(function() {
 	    this.olFeatures = new ol.Collection();
 	    this.featuresVector = new ol.source.Vector({
 		features: this.olFeatures,
-		useSpatialIndex: false,
+		useSpatialIndex: true,
 	    });
 	    this.featuresLayer = new ol.layer.Vector({
 		map: this.options.map,
@@ -99,7 +105,7 @@ $(function() {
 	    this.pointFeatures = new ol.Collection();
 	    this.pointVector = new ol.source.Vector({
 		features: this.pointFeatures,
-		useSpatialIndex: false,
+		useSpatialIndex: true,
 	    });
 	    this.pointLayer = new ol.layer.Vector({
 		map: this.options.map,
@@ -107,6 +113,10 @@ $(function() {
 		style: olStyles.getDefaultStyle()
 	    }); */
 
+	},
+	fitExtent: function() {
+	    var extent = this.featuresVector.getExtent();
+	    this.map.getView().fit(extent, this.map.getSize());
 	},
 	initializeFeaturesJson: function() {
 	    this.trigger('readyToDraw');

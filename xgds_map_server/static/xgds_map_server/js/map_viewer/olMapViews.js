@@ -109,7 +109,6 @@ $(function() {
             initialize: function(options) {
                 this.options = options || {};
                 _.bindAll(this);
-                
                 var _this = this;
                 this.$el.resizable({
                     stop: function( event, ui ) {
@@ -499,9 +498,7 @@ $(function() {
                         });
                     if (!_.isUndefined(feature)) {
                         var popup = feature['popup'];
-//                        if (!_.isUndefined(popup) && !_.isNull(popup)){
                         this.popup.show(evt.coordinate, '<div><h3>' + feature.get('name') + '</h3><p>' + popup + '</p></div>');
-//                        }
                     } else {
                         this.popup.hide();
                     }

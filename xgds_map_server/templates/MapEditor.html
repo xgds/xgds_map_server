@@ -31,8 +31,10 @@
 	<div id="toolbar" class="row"></div>
 	<div class="row">
         <div id="overmap" class="six columns">
-        {% if settings.XGDS_SITEFRAMES|length > 1 %}	
+        {% if settings.XGDS_SITEFRAMES|length > 1 %}
+        	{% if mapLayerDict.features|length == 0 %}
         	{{selectSiteFrameForm}}
+        	{% endif %}
         {% endif %}
         </div>
         <div id="overlayers" class="six columns"></div>
