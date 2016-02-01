@@ -108,7 +108,7 @@ def getMapServerIndexPage(request):
     templates = get_map_tree_templates(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     return render_to_response('MapView.html',
                               {'templates': templates,
-                               'selectSiteFrameForm': SelectSiteFrameForm(initial={'siteFrame': '5Q'}),
+                               'selectSiteFrameForm': SelectSiteFrameForm(initial={'siteFrame': settings.XGDS_CURRENT_SITEFRAME['zone']}),
                                'app': 'xgds_map_server/js/map_viewer/mapViewerApp.js'},
                               context_instance=RequestContext(request))
 
@@ -160,7 +160,7 @@ def getMapEditorPage(request, layerID=None):
         return HttpResponse(json.dumps({'error': 'Map layer is not valid'}), content_type='application/json', status=406)
     return render_to_response("MapEditor.html",
                               RequestContext(request, {'templates': templates,
-                                                       'selectSiteFrameForm': SelectSiteFrameForm(initial={'siteFrame': '5Q'}),
+                                                       'selectSiteFrameForm': SelectSiteFrameForm(initial={'siteFrame': settings.XGDS_CURRENT_SITEFRAME['zone']}),
                                                        'saveSearchForm': MapSearchForm(),
                                                        'searchForms': getSearchForms(),
                                                        'app': 'xgds_map_server/js/map_editor/mapEditorApp.js',
