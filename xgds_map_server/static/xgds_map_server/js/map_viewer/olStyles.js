@@ -42,16 +42,16 @@ olStyles.buildStyles = function() {
             radius: 6,
             stroke: new ol.style.Stroke({color: 'cyan', width: 3}),
             fill: new ol.style.Fill({
-                color: 'rgba(0, 255, 255, 0.4)'
+                color: 'rgba(0, 255, 255, 1.0)'
               })
           })
         });
     olStyles.styles['active_point'] =  new ol.style.Style({
         image: new ol.style.Circle({
             radius: 6,
-            stroke: new ol.style.Stroke({color: 'red', width: 3}),
+            stroke: new ol.style.Stroke({color: 'white', width: 3}),
             fill: new ol.style.Fill({
-                color: 'rgba(255, 0, 0, 0.4)'
+                color: 'rgba(255, 0, 0, 1.0)'
               })
           })
           
@@ -59,9 +59,9 @@ olStyles.buildStyles = function() {
     olStyles.styles['point'] =  new ol.style.Style({
         image: new ol.style.Circle({
             radius: 6,
-            stroke: new ol.style.Stroke({color: 'blue', width: 2}),
+            stroke: new ol.style.Stroke({color: 'white', width: 2}),
             fill: new ol.style.Fill({
-                color: 'rgba(0, 0, 255, 0.4)'
+                color: 'rgba(0, 0, 255, 1.0)'
               })
           })
         });
