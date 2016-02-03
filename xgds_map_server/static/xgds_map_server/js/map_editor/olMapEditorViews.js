@@ -301,10 +301,10 @@ $(function() {
 	navigateMode: {
 	    // in this mode, user can only navigate around the map (all features are locked)
 	    enter: function() {
-		//no op
+	    	app.State.popupsEnabled = true;
 	    }, 
 	    exit: function() {
-		//no op
+	    	app.State.popupsEnabled = false;
 	    }
 	},
 	repositionMode: {

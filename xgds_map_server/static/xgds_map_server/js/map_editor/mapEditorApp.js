@@ -51,7 +51,7 @@ var app = (function($, _, Backbone) {
             this.tree = undefined;
             this.treeData = null;
             this.disableAddFeature = false;
-            this.popupsEnabled = false;
+            this.popupsEnabled = true;
         });
     });
 
