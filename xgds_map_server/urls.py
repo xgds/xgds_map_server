@@ -42,8 +42,7 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,
     url(r'^feature/(?P<uuid>[\w-]+)$', views.saveOrDeleteFeature, {},
         'saveOrDeleteFeature'),
     # for saving map layer itself
-    url(r'^saveMaplayer.json$', views.saveMaplayer, {}, 
-     'saveMaplayer'),
+    url(r'^saveMaplayer.json$', views.saveMaplayer, {}, 'saveMaplayer'),
     # HTML tree of maps
     url(r'^maptree/', views.getMapTreePage,
      {'readOnly': True, 'securityTags': ['readOnly']},
@@ -102,5 +101,5 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,
     # By default if you just load the app you should see the list
     url(r'^feed/(?P<feedname>.*)', views.getMapFeed,
      {'readOnly': True, 'loginRequired': False, 'securityTags': ['kml', 'readOnly']},'xgds_map_server_feed'),
-    url('^uploadGeoTiff/$', login_required(ResumableUploadView.as_view()), name='uploadGeoTiff'),
+    url(r'^uploadGeoTiff/$', login_required(ResumableUploadView.as_view()), name='uploadGeoTiff'),
 ]
