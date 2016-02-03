@@ -39,23 +39,30 @@ olStyles.buildStyles = function() {
 		  });
     olStyles.styles['selected_point'] =  new ol.style.Style({
         image: new ol.style.Circle({
-            radius: 7,
-            stroke: new ol.style.Stroke({color: 'cyan', width: 4})
+            radius: 6,
+            stroke: new ol.style.Stroke({color: 'cyan', width: 3}),
+            fill: new ol.style.Fill({
+                color: 'rgba(0, 255, 255, 0.4)'
+              })
           })
         });
     olStyles.styles['active_point'] =  new ol.style.Style({
         image: new ol.style.Circle({
-            radius: 7,
-            stroke: new ol.style.Stroke({color: 'red', width: 3})
-          }),
-          fill: new ol.style.Fill({
-              color: 'rgba(255, 0, 0, 0.2)'
-            })
+            radius: 6,
+            stroke: new ol.style.Stroke({color: 'red', width: 3}),
+            fill: new ol.style.Fill({
+                color: 'rgba(255, 0, 0, 0.4)'
+              })
+          })
+          
         });
     olStyles.styles['point'] =  new ol.style.Style({
         image: new ol.style.Circle({
-            radius: 7,
-            stroke: new ol.style.Stroke({color: 'blue', width: 2})
+            radius: 6,
+            stroke: new ol.style.Stroke({color: 'blue', width: 2}),
+            fill: new ol.style.Fill({
+                color: 'rgba(0, 0, 255, 0.4)'
+              })
           })
         });
     olStyles.styles['selected_polygon'] = new ol.style.Style({
