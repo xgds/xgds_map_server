@@ -38,11 +38,13 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,
     # {'readOnly': True, 'securityTags': ['readOnly']},
     # 'mapList'),
     # for saving single map feature from map layer, or creating new one
-    url(r'^feature$', views.saveOrDeleteFeature, {}, 'saveOrDeleteFeature'),
-    url(r'^feature/(?P<uuid>[\w-]+)$', views.saveOrDeleteFeature, {},
-        'saveOrDeleteFeature'),
+    url(r'^feature$', views.saveOrDeleteFeature, {}, 
+     'saveOrDeleteFeature'),
+    url(r'^feature/(?P<uuid>[\w-]+)$', views.saveOrDeleteFeature, {}, 
+     'saveOrDeleteFeature'),
     # for saving map layer itself
-    url(r'^saveMaplayer.json$', views.saveMaplayer, {}, 'saveMaplayer'),
+    url(r'^saveMaplayer.json$', views.saveMaplayer, {}, 
+     'saveMaplayer'),
     # HTML tree of maps
     url(r'^maptree/', views.getMapTreePage,
      {'readOnly': True, 'securityTags': ['readOnly']},
