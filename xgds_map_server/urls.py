@@ -15,7 +15,7 @@
 #__END_LICENSE__
 
 import django.views.static
-from django.conf.urls import *  # pylint: disable=W0401
+from django.conf.urls import url  # pylint: disable=W0401
 from django.contrib.auth.decorators import login_required
 
 from django.conf import settings
