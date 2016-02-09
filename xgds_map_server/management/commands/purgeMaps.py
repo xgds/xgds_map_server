@@ -24,7 +24,7 @@ class Command(BaseCommand):
     requires_model_validation = True
 
     @transaction.commit_manually
-    def handle_noargs(self, **options):
+    def handle(self, *args, **options):
         self.stdout.write("Looking for maps to delete...\n")
         for map_obj in Map.objects.all():
             if map_obj.deleted:
