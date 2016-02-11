@@ -501,6 +501,9 @@ $(function() {
                         if (_.isUndefined(popup) || _.isNull(popup)){
                             popup = feature.get('description');
                         }
+                        if (_.isUndefined(popup) || _.isNull(popup)){
+                        	popup = "";
+                        }
                         var location = "";
                         if (feature.getGeometry().getType() == "Point"){
                         	var coords = feature.getGeometry().getCoordinates();
