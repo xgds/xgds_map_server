@@ -14,17 +14,17 @@
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
 
-from django.core.management.base import NoArgsCommand
+from django.core.management.base import BaseCommand
 from django.db import transaction
 from xgds_map_server.models import Map, MapGroup
 
 
-class Command(NoArgsCommand):
+class Command(BaseCommand):
     help = 'Purge all maps and map groups with the delete flag set'
     requires_model_validation = True
 
     @transaction.commit_manually
-    def handle_noargs(self, **options):
+    def handle(self, *args, **options):
         self.stdout.write("Looking for maps to delete...\n")
         for map_obj in Map.objects.all():
             if map_obj.deleted:
