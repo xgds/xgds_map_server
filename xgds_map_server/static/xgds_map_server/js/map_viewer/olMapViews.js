@@ -501,7 +501,13 @@ $(function() {
                         if (_.isUndefined(popup) || _.isNull(popup)){
                             popup = feature.get('description');
                         }
-                        this.popup.show(evt.coordinate, '<div><h3>' + feature.get('name') + '</h3><p>' + popup + '</p></div>');
+                        var location = "";
+                        if (feature.getGeometry().getType() == "Point"){
+                        	var coords = feature.getGeometry().getCoordinates();
+                            var xcoords = inverseTransform(coords);
+                            location = "<br/>lat: " + xcoords[1] + "<br/>lon:" + xcoords[0];
+                        }
+                        this.popup.show(evt.coordinate, '<div><b>' + feature.get('name') + '</b><p>' + popup + location +  '</p></div>');
                     } else {
                         this.popup.hide();
                     }
