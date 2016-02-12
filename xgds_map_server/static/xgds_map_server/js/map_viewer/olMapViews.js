@@ -15,7 +15,8 @@
 //__END_LICENSE__
 
 var DEG2RAD = Math.PI / 180.0;
-var SPHERICAL_MERCATOR = 'EPSG:3857';
+var SPHERICAL_MERCATOR = 'EPSG:3857'; 
+var WGS_84 = 'EPSG:3395';
 var LONG_LAT =  'EPSG:4326';
 var DEFAULT_COORD_SYSTEM = SPHERICAL_MERCATOR;
 var mapResizeTimeout;
@@ -33,6 +34,10 @@ function flatten(coords){
 // transform coords from lon lat to default coordinate system (ol map coords) 
 function transform(coords){
     return ol.proj.transform(coords, LONG_LAT,  DEFAULT_COORD_SYSTEM);    
+}
+
+function transformFromProjection(coords, projection){
+	return ol.proj.transform(coords, projection, DEFAULT_COORD_SYSTEM);
 }
 
 function transformFlatList(coords){
@@ -115,6 +120,7 @@ $(function() {
                         _this.handleResize();
                     }
                   });
+                
                 // pre-set certain variables to speed up this code
                 app.State.pageContainer = this.$el.parent();
                 app.State.pageInnerWidth = app.State.pageContainer.innerWidth();
@@ -123,6 +129,7 @@ $(function() {
                 var DEFAULT_ZOOM = app.options.DEFAULT_ZOOM;
                 var DEFAULT_ROTATION = app.options.DEFAULT_ROTATION;
 
+                proj4.defs('EPSG:3395', '+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs');
                 if (!_.isEmpty(app.options.DEFAULT_COORD_SYSTEM) && app.options.DEFAULT_COORD_SYSTEM != SPHERICAL_MERCATOR){
                 	if (!_.isNull(app.options.SETUP_COORD_SYSTEM)){
                 		DEFAULT_COORD_SYSTEM = app.options.DEFAULT_COORD_SYSTEM;
@@ -177,31 +184,42 @@ $(function() {
                 
                 // bind location dropdown change to zoom
                 $("select[id=id_siteFrame]").bind("change", {
-                	mapview: this.map.getView()
+                	mapview: this.map.getView(),
+                	thisview: this
                 }, function(event) {
 	            	var sel=$("#id_siteFrame").val();
-	            	var destinationTransform = ol.proj.get(DEFAULT_COORD_SYSTEM);
-	            	var zoomlevel = 5;
-	            	var easting = siteFrames[sel]['east0'];
-	            	var northing = siteFrames[sel]['north0'];
-	            	var zone = siteFrames[sel]['zone'];
-	            	var coords = null;
-	            	
-	                // move to bounding box site settings
-	            	var foundProjection = ol.proj.get('siteFrame');
-	            	if (_.isUndefined(foundProjection)){
-	            		proj4.defs('siteFrame', '+proj=utm +zone=' + zone + ' +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
-	            		var siteFrameProjection = new ol.proj.Projection({
-	            			code: 'siteFrame',
-	            			units: 'm'
-	            		});
-	            		ol.proj.addProjection(siteFrameProjection);
-	            	}
-
-	            	coords = ol.proj.transform([easting, northing], ol.proj.get('siteFrame'),   destinationTransform);
-	            	
-	            	event.data.mapview.setCenter(coords, zoomlevel);
+	            	var projectionKey = event.data.thisview.getSiteFrameProjection(siteFrames[sel]);
+	            	coords = transformFromProjection([siteFrames[sel].east0, siteFrames[sel].north0], projectionKey);
+	            	event.data.mapview.setCenter(coords, 5);  // TOD0 hardcoding zoom level 5 for now ... would be good to fix
                 });
+            },
+            
+            getSiteFrameProjection: function(site){
+            	var easting = site['east0'];
+            	var northing = site['north0'];
+            	var zone = site['zoneNumber'];
+            	var south = site['south'];
+            	
+            	var projectionKey = "utm:" + zone;
+            	if (south == 1){
+            		projectionKey += "S";
+            	}
+            	var foundProjection = ol.proj.get(projectionKey);
+            	if (_.isUndefined(foundProjection)){
+            		var proj4js_def = '+proj=utm +zone=' + zone;
+            		if (south){
+            			proj4js_def += ' +south';
+            		}
+            		proj4js_def += ' +ellps=WGS84 +datum=WGS84 +units=m +no_defs';
+            		proj4.defs(projectionKey, proj4js_def);
+            		
+            		var newProjection = new ol.proj.Projection({
+        				code: projectionKey,
+        				units: 'm'
+        			});
+        			ol.proj.addProjection(newProjection);
+            	}
+            	return projectionKey;
             },
             
             buildStyles: function() {
@@ -345,23 +363,14 @@ $(function() {
             },
             
             updateBbox: function() {
-            	var destinationTransform = ol.proj.get(DEFAULT_COORD_SYSTEM);
             	var coords = null;
             	
                 // move to bounding box site settings
             	if (!_.isEmpty(app.options.DEFAULT_COORD_SYSTEM_CENTER)) {
                     coords = app.options.DEFAULT_COORD_SYSTEM_CENTER;
             	} else if (!_.isEmpty(app.options.siteFrame)){
-            		var foundProjection = ol.proj.get('siteFrame');
-            		if (_.isUndefined(foundProjection)){
-            			proj4.defs('siteFrame', '+proj=utm +zone=' + app.options.siteFrame.zone + ' +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs');
-            			var siteFrameProjection = new ol.proj.Projection({
-            				code: 'siteFrame',
-            				units: 'm'
-            			});
-            			ol.proj.addProjection(siteFrameProjection);
-            		}
-                     coords = ol.proj.transform([app.options.siteFrame.east0, app.options.siteFrame.north0], 'siteFrame',   destinationTransform);
+            		var projectionKey = this.getSiteFrameProjection(app.options.siteFrame);
+            		coords = transformFromProjection([app.options.siteFrame.east0, app.options.siteFrame.north0], projectionKey);
             	}
                
             	if (!_.isUndefined(coords)){
