@@ -449,7 +449,8 @@ def getAddTilePage(request):
             foundParents = MapGroup.objects.filter(name=mapGroupName)
             mapTile.parent = foundParents[0] #TODO better handle same name folder
             mapTile.save()
-            processTiles(request, mapTile.uuid, tile_form.cleaned_data['minZoom'], tile_form.cleaned_data['maxZoom'], mapTile)
+            processTiles(request, mapTile.uuid, tile_form.cleaned_data['minZoom'],
+                         tile_form.cleaned_data['maxZoom'], tile_form.cleaned_data['resampleMethod'], mapTile)
         else:
             return render_to_response("AddTile.html",
                                       {'form': tile_form,
@@ -1415,7 +1416,7 @@ def popenAndCall(tileCmd, email, mapTile):
     return thread
 
 #TODO implement celery
-def processTiles(request, uuid, minZoom, maxZoom, mapTile):
+def processTiles(request, uuid, minZoom, maxZoom, resampleMethod, mapTile):
     sourceFiles = []
     sourceFile = mapTile.sourceFile
     outPath = os.path.join(settings.PROJ_ROOT, mapTile.getTilePath()[1:])
@@ -1435,10 +1436,11 @@ def processTiles(request, uuid, minZoom, maxZoom, mapTile):
             fh.close()
 
     for source in sourceFiles:
-        tileCmd = ('%s -z %d-%d --resampling=cubic %s %s'
+        tileCmd = ('%s -z %d-%d --resampling=%s %s %s'
                    % (os.path.join(settings.PROJ_ROOT, "apps", settings.XGDS_MAP_SERVER_GDAL2TILES),
                       minZoom,
                       maxZoom,
+                      resampleMethod,
                       os.path.join(settings.DATA_ROOT,source),
                       outPath))
         print "Map Tile command: %s" % tileCmd

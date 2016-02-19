@@ -17,7 +17,7 @@
 from django import forms
 from django.conf import settings
 from django.core.urlresolvers import reverse
-from django.forms.fields import IntegerField
+from django.forms.fields import IntegerField, ChoiceField
 
 from resumable.fields import ResumableFileField
 
@@ -65,10 +65,11 @@ class MapLayerForm(AbstractMapForm):
 
 
 class MapTileForm(AbstractMapForm):
-    
     minZoom = IntegerField(initial=12, label="Min Zoom")
-    maxZoom = IntegerField(initial=20, label="Max Zoom (UAV=22, Satellite=20)")
-    
+    maxZoom = IntegerField(initial=20, label="Max Zoom (UAV=23, Satellite=20)")
+    resampleMethod = ChoiceField(choices=settings.XGDS_MAP_SERVER_GDAL_RESAMPLE_OPTIONS,
+                                 label="Resampling Method")
+
     sourceFile = ResumableFileField(allowed_mimes=("image/tiff",),
                                     upload_url=lambda: reverse('uploadGeoTiff'),
                                     chunks_dir=getattr(settings, 'FILE_UPLOAD_TEMP_DIR'),
