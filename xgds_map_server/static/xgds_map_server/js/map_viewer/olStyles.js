@@ -118,4 +118,9 @@ olStyles.buildStyles = function() {
             }),
             offsetY: -20
     };
+    olStyles.styles['vehicle'] = new ol.style.Style({
+      image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+          src: '/static/xgds_map_server/icons/robot_red_16.png'
+        }))
+      });
 }
