@@ -25,6 +25,8 @@ import logging
 import urllib
 import os
 import datetime
+import pytz
+
 import zipfile
 import inspect
 import subprocess
@@ -239,7 +241,7 @@ def saveMaplayer(request):
             return HttpResponse(json.dumps({'failed': 'MapLayer of uuid of %s cannot be found' % uuid}), content_type='application/json', status=406)
         mapLayer.name = data.get('name', "")
         mapLayer.description = data.get('description', "")
-        mapLayer.modification_time = datetime.datetime.utcnow()
+        mapLayer.modification_time = datetime.datetime.now(pytz.utc)
         mapLayer.modifier = request.user.first_name + " " + request.user.last_name
         mapLayer.save()
 
@@ -407,8 +409,8 @@ def getAddLayerPage(request):
             map_layer.description = layer_form.cleaned_data['description']
             map_layer.creator = request.user.first_name + " " +  request.user.last_name
             map_layer.modifier = map_layer.creator
-            map_layer.creation_time = datetime.datetime.now()
-            map_layer.modification_time = datetime.datetime.now()
+            map_layer.creation_time = datetime.datetime.now(pytz.utc)
+            map_layer.modification_time = datetime.datetime.now(pytz.utc)
             map_layer.deleted = False
             map_layer.locked = layer_form.cleaned_data['locked']
             map_layer.visible = layer_form.cleaned_data['visible']
@@ -443,7 +445,7 @@ def getAddTilePage(request):
             mapTile.name = tile_form.cleaned_data['name']
             mapTile.description = tile_form.cleaned_data['description']
             mapTile.creator = request.user.username
-            mapTile.creation_time = datetime.datetime.now()
+            mapTile.creation_time = datetime.datetime.now(pytz.utc)
             mapTile.deleted = False
             mapGroupName = tile_form.cleaned_data['parent']
             foundParents = MapGroup.objects.filter(name=mapGroupName)
@@ -488,7 +490,7 @@ def getEditTilePage(request, tileID):
             if mapTile.name != newname:
                 mapTile.rename(newname)
             mapTile.modifier = request.user.username
-            mapTile.modification_time = datetime.datetime.now()
+            mapTile.modification_time = datetime.datetime.now(pytz.utc)
             mapTile.description = tile_form.cleaned_data['description']
             mapTile.locked = tile_form.cleaned_data['locked']
             mapTile.visible = tile_form.cleaned_data['visible']
@@ -553,7 +555,7 @@ def getAddMapSearchPage(request):
             msearch.description = form.cleaned_data['description']
             msearch.parent = form.cleaned_data['parent']
             msearch.creator = request.user.username
-            msearch.creation_time = datetime.datetime.now()
+            msearch.creation_time = datetime.datetime.now(pytz.utc)
             msearch.deleted = False
             msearch.locked = form.cleaned_data['locked']
             msearch.visible = form.cleaned_data['visible']
@@ -594,7 +596,7 @@ def getEditMapSearchPage(request, mapSearchID):
             msearch.description = form.cleaned_data['description']
             msearch.parent = form.cleaned_data['parent']
             msearch.creator = request.user.username
-            msearch.creation_time = datetime.datetime.now()
+            msearch.creation_time = datetime.datetime.now(pytz.utc)
             msearch.locked = form.cleaned_data['locked']
             msearch.visible = form.cleaned_data['visible']
             msearch.requestLog = form.cleaned_data['requestLog']
@@ -633,7 +635,7 @@ def getAddMapCollectionPage(request):
             mcollection.description = form.cleaned_data['description']
             mcollection.parent = form.cleaned_data['parent']
             mcollection.creator = request.user.username
-            mcollection.creation_time = datetime.datetime.now()
+            mcollection.creation_time = datetime.datetime.now(pytz.utc)
             mcollection.deleted = False
             mcollection.locked = form.cleaned_data['locked']
             mcollection.visible = form.cleaned_data['visible']
@@ -677,7 +679,7 @@ def getEditMapCollectionPage(request, mapCollectionID):
             mcollection.description = form.cleaned_data['description']
             mcollection.parent = form.cleaned_data['parent']
             mcollection.creator = request.user.username
-            mcollection.creation_time = datetime.datetime.now()
+            mcollection.creation_time = datetime.datetime.now(pytz.utc)
             mcollection.locked = form.cleaned_data['locked']
             mcollection.visible = form.cleaned_data['visible']
             mcollection.save()
@@ -1053,7 +1055,7 @@ def saveSearchWithinMap(request):
     msearch.description = postData['mapSearchDescription']
     msearch.parent = MapGroup.objects.get(pk=postData['mapSearchParent'])
     msearch.creator = request.user.username
-    msearch.creation_time = datetime.datetime.now()
+    msearch.creation_time = datetime.datetime.now(pytz.utc)
     msearch.deleted = False
     msearch.requestLog = reqlog
     msearch.save()
