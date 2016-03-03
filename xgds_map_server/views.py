@@ -67,9 +67,6 @@ from xgds_data.forms import SearchForm, SpecializedForm
 from geocamUtil.forms.SiteframeChoiceField import SiteframeChoiceField
 from apps.geocamUtil.usng.usngGrid import outDirG
 
-if settings.PYRAPTORD_SERVICE:
-    from geocamPycroraptor2.views import getPyraptordClient, stopPyraptordServiceIfRunning
-
 from xgds_data.views import searchHandoff, resultsIdentity
 from django.core.urlresolvers import resolve
 
