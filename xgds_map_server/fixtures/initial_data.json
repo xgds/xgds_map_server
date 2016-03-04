@@ -11,10 +11,10 @@
 	"parent": "mg1"
 	}
 },
-{"pk":"kml4", "model":"xgds_map_server.KmlMap", "fields":
-	{"name":"Notes", 
-	 "description":"Today's notes set to show on map", 
-	 "kmlFile":"/notes/kml", 
+{"pk":"kml44", "model":"xgds_map_server.KmlMap", "fields":
+	{"name":"Live Position Tracks", 
+	 "description":"Current position and tracks", 
+	 "kmlFile":"/track/trackIndex.kml", 
 	 "openable":1, 
 	 "visible":0, 
 	 "parent": "mg1"

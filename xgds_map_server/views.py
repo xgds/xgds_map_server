@@ -54,7 +54,7 @@ from django.contrib.gis.geos import Polygon as geosPolygon
 from django.contrib.gis.geos import LinearRing as geosLinearRing
 from django.conf import settings
 
-from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapSearch, MapCollection, MAP_NODE_MANAGER, MAP_MANAGER
+from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapSearch, MapCollection, MapLink, MAP_NODE_MANAGER, MAP_MANAGER
 from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
 from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm, MapSearchForm, MapCollectionForm, EditMapTileForm
 from geocamUtil.geoEncoder import GeoDjangoEncoder
@@ -1142,14 +1142,14 @@ def deleteGroup(map_group, state):
     for group in MapGroup.objects.filter(parent=map_group.uuid):
         deleteGroup(group, state)
 
-
 def setMapProperties(m):
-    if (m.kmlFile.startswith('/') or
-            m.kmlFile.startswith('http://') or
-            m.kmlFile.startswith('https://')):
-        m.url = latestRequestG.build_absolute_uri(m.kmlFile)
+    url = m.getGoogleEarthUrl()
+    if (url.startswith('/') or
+            url.startswith('http://') or
+            url.startswith('https://')):
+        m.url = latestRequestG.build_absolute_uri(url)
     else:
-        m.url = latestRequestG.build_absolute_uri(settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + m.kmlFile)
+        m.url = latestRequestG.build_absolute_uri(url)
     if m.openable:
         m.listItemType = 'check'
     else:
@@ -1168,17 +1168,16 @@ def getMapTree():
     ''' This is left here to support older kml feed views '''
     groups = MapGroup.objects.filter(deleted=0)
     kmlMaps = KmlMap.objects.filter(deleted=0)
+#     links = MapLink.objects.filter(deleted=0)
 #     layers = MapLayer.objects.filter(deleted=0)
 #     tiles = MapTile.objects.filter(deleted=0)
 
     groupLookup = dict([(group.uuid, group) for group in groups])
 
-    for m in kmlMaps:
-        setMapProperties(m)
-
     for group in groups:
         group.subGroups = []
         group.subMaps = []
+        group.subLinks = []
 #         group.subLayers = []
 #         group.subTiles = []
 
@@ -1188,9 +1187,16 @@ def getMapTree():
             parent.subGroups.append(subGroup)
 
     for subMap in kmlMaps:
+        setMapProperties(subMap)
         if subMap.parent:
             parent = groupLookup[subMap.parent.uuid]
             parent.subMaps.append(subMap)
+    
+#     for subLink in links:
+#         setMapProperties(subLink)
+#         if subLink.parent:
+#             parent = groupLookup[subLink.parent.uuid]
+#             parent.subLinks.append(subLink)
 
 #     for subLayer in layers:
 #         if subLayer.parent:
@@ -1240,10 +1246,35 @@ def printGroupToKml(out, opts, node, level=0):
         printGroupToKml(out, opts, n, level + 1)
     for n in node.subMaps:
         printMapToKml(out, opts, n, level + 1)
+    for n in node.subLinks:
+        printMapToKml(out, opts, n, level + 1)
     out.write('</Folder>\n')
 
 
 def printMapToKml(out, opts, node, level=0):
+    # turn logo visibility off, as requested in url params.
+    if not opts['logo'] and node.isLogo:
+        node.visibility = 0
+
+    out.write("""
+<NetworkLink>
+  <name>%(name)s</name>
+  <visibility>%(visibility)s</visibility>\n
+  <Style>
+    <ListStyle>
+      <listItemType>%(listItemType)s</listItemType>
+    </ListStyle>
+  </Style>
+  <Link>
+    <href>%(url)s</href>
+    <refreshMode>onInterval</refreshMode>
+    <refreshInterval>14400</refreshInterval>
+  </Link>
+</NetworkLink>
+""" % vars(node))
+
+
+def printLinkToKml(out, opts, node, level=0):
     # turn logo visibility off, as requested in url params.
     if not opts['logo'] and node.isLogo:
         node.visibility = 0

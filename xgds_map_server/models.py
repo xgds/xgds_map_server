@@ -117,6 +117,13 @@ class AbstractMap(AbstractMapNode):
         result["selected"] = self.visible
         return result
 
+    def getUrl(self):
+        """ subclass must implement """
+        pass
+    
+    def getGoogleEarthUrl(self):
+        return self.getUrl()
+    
     class Meta:
         abstract = True
 
@@ -142,11 +149,27 @@ class KmlMap(AbstractMap):
         return any([r.search(self.name)
                     for r in LOGO_REGEXES])
 
+    def getGoogleEarthUrl(self):
+        if self.localFile:
+            return settings.DATA_URL + self.localFile
+        elif self.kmlFile:
+            if self.kmlFile[0] == '/':
+                return self.kmlFile
+            else:
+                return settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + self.kmlFile
+        return ''
+        
+    def getUrl(self):
+        if self.kmlFile:
+            return settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + self.kmlFile
+        elif self.localFile:
+            return self.localFile.url
+    
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
         result = super(KmlMap, self).getTreeJson()
         result["data"]["openable"] = self.openable
-        result["data"]["kmlFile"] = settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + self.kmlFile
+        result["data"]["kmlFile"] = self.getUrl()
         if self.localFile:
             result["data"]["localFile"] = self.localFile.url
         return result
@@ -159,6 +182,9 @@ class MapTile(AbstractMap):
     sourceFile = models.FileField(upload_to=settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR, max_length=256,
                                   null=True, blank=True)
     processed = models.BooleanField(default=False)
+    
+    def getUrl(self):
+        return self.getXYZTileSourceUrl()
 
     def getXYZTileSourceUrl(self):
         result = os.path.join(self.getTilePath(), '{z}/{x}/{-y}.png')
@@ -174,7 +200,7 @@ class MapTile(AbstractMap):
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
         result = super(MapTile, self).getTreeJson()
-        result["data"]["tileURL"] = self.getXYZTileSourceUrl()
+        result["data"]["tileURL"] = self.getUrl()
         return result
     
     def rename(self, newName):
@@ -212,6 +238,9 @@ class MapCollection(AbstractMap):
     A layer that encapsulates a collection of found objects.
     """
     collection = models.ForeignKey(Collection)
+    
+    def getUrl(self):
+        return reverse('mapCollectionJSON', kwargs={'mapCollectionID': self.uuid})
 
     def getEditHref(self):
         return reverse('mapEditMapCollection', kwargs={'mapCollectionID': self.uuid})
@@ -219,7 +248,7 @@ class MapCollection(AbstractMap):
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
         result = super(MapCollection, self).getTreeJson()
-        result["data"]["collectionJSON"] = reverse('mapCollectionJSON', kwargs={'mapCollectionID': self.uuid})
+        result["data"]["collectionJSON"] = self.getUrl()
         return result
 
 
@@ -230,13 +259,16 @@ class MapSearch(AbstractMap):
     requestLog = models.ForeignKey(RequestLog)
     mapBounded = models.BooleanField(blank=True, default=False)  # true if you want to pass the map extens to the query and redo search with the extens
 
+    def getUrl(self):
+        return reverse('mapSearchJSON', kwargs={'mapSearchID': self.uuid})
+
     def getEditHref(self):
         return reverse('mapEditMapSearch', kwargs={'mapSearchID': self.uuid})
 
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
         result = super(MapSearch, self).getTreeJson()
-        result["data"]["searchJSON"] = reverse('mapSearchJSON', kwargs={'mapSearchID': self.uuid})
+        result["data"]["searchJSON"] = self.getUrl()
 #         result["data"]["searchResultsJSON"] = reverse('data_searchResultsJSON', kwargs={'collectionID': self.requestLog.pk})
         return result
 
@@ -250,6 +282,16 @@ class MapLink(AbstractMap):
     sseUrl = models.CharField('sseUrl', max_length=512)  # url for sse data
     mapBounded = models.BooleanField(blank=True, default=False)  # true if you want to pass the map extens to the query and redo search with the extens
 
+    @property
+    def openable(self):
+        return self.childNodesUrl != None
+
+    def getUrl(self):
+        if self.url:
+            return self.url
+        elif self.childNodesUrl:
+            return self.childNodesUrl
+    
     def getEditHref(self):
         """ since we create map link ourselves do not provide a facility to edit them.
         """
