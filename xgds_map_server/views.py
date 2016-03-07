@@ -1002,12 +1002,13 @@ def getMapCollectionJSON(request, mapCollectionID):
 
 def getMapJsonDict(contents):
     dict_data = []
-    for content in contents:
-        if inspect.isroutine(content.toMapDict):
-            resultDict = content.toMapDict()
-        else:
-            resultDict = modelToDict(content)
-        dict_data.append(resultDict)
+    if contents:
+        for content in contents:
+            if inspect.isroutine(content.toMapDict):
+                resultDict = content.toMapDict()
+            else:
+                resultDict = modelToDict(content)
+            dict_data.append(resultDict)
     json_data = json.dumps(dict_data, indent=4, cls=DatetimeJsonEncoder)
     return json_data
 
