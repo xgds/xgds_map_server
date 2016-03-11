@@ -55,9 +55,14 @@ $(function() {
         	return [olStyles.styles['vehicle']];
         },
         updateVehicle: function(params) {
+        	if (params == null){
+        		return;
+        	}
         	// params is a map with location and rotation
         	this.setLocation(params.location);
-        	this.setRotation(params.rotation);
+        	if (params.rotation != null){
+        		this.setRotation(params.rotation);
+        	}
         },
         setLocation: function(newLocation) {
         	// must be in site frame coordinates
