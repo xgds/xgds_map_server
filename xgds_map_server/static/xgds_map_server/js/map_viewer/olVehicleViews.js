@@ -71,7 +71,8 @@ $(function() {
         },
         setRotation: function(newRotation) {
         	// in radians
-        	this.vectorLayer.getStyle()[0].getImage().setRotation(newRotation);
+        	var image = this.vectorLayer.getStyle()[0].getImage()
+        	image.setRotation(newRotation);
         	this.vectorLayer.changed();
         },
         render: function() {
