@@ -17,6 +17,7 @@
     <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/search/searchViews.js'></script>
     <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/map_viewer/olStyles.js'></script>
    	<script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/map_viewer/olMapViews.js'></script>
+   	<script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/map_viewer/olVehicleViews.js'></script>
    	{% for key, value in settings.XGDS_MAP_SERVER_JS_MAP.items %}
    		<script type="text/javascript" src='{{STATIC_URL}}{{ value.ol|safe }}'></script>
    	{% endfor %}
