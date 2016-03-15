@@ -8,6 +8,7 @@
 	 "kmlFile":"/xgds_planner2/planIndex.kml", 
 	 "openable":1, 
 	 "visible":0,
+	 "hasNetworkLink":1,
 	"parent": "mg1"
 	}
 },
@@ -17,6 +18,7 @@
 	 "kmlFile":"/track/trackIndex.kml", 
 	 "openable":1, 
 	 "visible":0, 
+	 "hasNetworkLink":1,
 	 "parent": "mg1"
 	 }
 },

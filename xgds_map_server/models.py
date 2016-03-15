@@ -136,6 +136,7 @@ class KmlMap(AbstractMap):
     localFile = models.FileField(upload_to=settings.XGDS_MAP_SERVER_MEDIA_SUBDIR, max_length=256,
                                  null=True, blank=True)
     openable = models.BooleanField(default=True)
+    hasNetworkLink = models.BooleanField(default=False) # if something has a network link, right now do not include it for openlayers
 
     def getEditHref(self):
         return reverse('mapDetail', kwargs={'mapID': self.uuid})
