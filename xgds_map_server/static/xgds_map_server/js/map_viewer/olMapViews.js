@@ -246,6 +246,8 @@ $(function() {
                         app.nodeMap[node.key] = this.createSearchView(node);
                     } else if (node.data.type == "MapLink"){
                         app.nodeMap[node.key] = this.createMapLinkView(node);
+                    } else {
+                    	this.createDynamicView(node);
                     }
                 }
             },
@@ -263,6 +265,7 @@ $(function() {
                 this.tileGroup = new ol.layer.Group();
                 this.mapLayerGroup = new ol.layer.Group();
                 this.kmlGroup = new ol.layer.Group();
+                this.dynamicGroup = new ol.layer.Group();
                 this.collectionGroup = new ol.layer.Group();
                 this.searchGroup = new ol.layer.Group();
                 this.mapLinkGroup = new ol.layer.Group();
@@ -273,6 +276,7 @@ $(function() {
                 this.layersForMap.push(this.tileGroup);
                 this.layersForMap.push(this.mapLayerGroup);
                 this.layersForMap.push(this.kmlGroup);
+                this.layersForMap.push(this.dynamicGroup);
                 this.layersForMap.push(this.mapLinkGroup);
                 this.layersForMap.push(this.collectionGroup);
                 this.layersForMap.push(this.searchGroup);
@@ -406,7 +410,26 @@ $(function() {
                       });
                 }
             }, 
-            
+            createDynamicView: function(node) {
+            	if (node.data.json != undefined) {
+            		$.ajax({
+                        url: node.data.json,
+                        dataType: 'json',
+                        success: $.proxy(function(data) {
+                        	var dynamicView = new app.views.DynamicView({
+                                node: node,
+                                data: data,
+                                name: node.key,
+                                group: this.dynamicGroup
+                            });
+                            node.mapView = dynamicView;
+                        }, this),
+                        error: $.proxy(function(data){
+                        	console.log("no data found for " + node.key);
+                        }, this)
+                      });
+            	}
+            },
             createKmlLayerView: function(node) {
                 //  create the kml layer view
                 // openlayers3 does not support kmz so right now we are not including those files.
@@ -684,6 +707,47 @@ $(function() {
         
     });
     
+    app.views.DynamicView = app.views.TreeMapElement.extend({
+    	initialize: function(options) {
+            this.data = options.data;
+            this.name = options.name;
+            app.views.TreeMapElement.prototype.initialize.call(this, options);
+        },
+        constructMapElements: function(){
+        	if (_.isUndefined(this.mapElement)){
+                this.mapElement = new ol.layer.Group({name:this.name});
+                this.map = {};
+            }
+            for (i = 0; i < this.data.length; i++){
+                var object = this.data[i];
+                var theClass = window[object.type];
+                if (!_.isUndefined(theClass) && !_.isUndefined(theClass.constructElements)) {
+                	if (_.isUndefined(this.map[object.type])){
+                		this.map[object.type] = [];
+                    }
+                	this.map[object.type].push(object);
+                }
+                for (var key in this.map){
+                    var theClass = window[key];
+                    var newLayer = theClass.constructElements(this.map[key]);
+                    if (newLayer !== null){
+                        this.mapElement.getLayers().push(newLayer);
+                    }
+                }
+            }
+        	this.show();
+        	app.vent.trigger('mapSearch:drewFeatures');
+        },
+        show: function() {
+            this.group.getLayers().push(this.mapElement);
+        },
+        hide: function() {
+            this.group.getLayers().remove(this.mapElement);
+        }
+    });
+    
+//  create a dynamic view that has a type registered in siteSettings
+	
     app.views.TileView = app.views.TreeMapElement.extend({
         initialize: function(options) {
             this.tileURL = options.tileURL;
@@ -850,10 +914,6 @@ $(function() {
             }
         },
         constructMapFeatures: function(data) {
-            if (_.isUndefined(this.mapElement)){
-                this.mapElement = new ol.layer.Group({name:"liveSearch"});
-                this.map = {};
-            }
             this.clearDataAndFeatures();
             this.objectsJson = data
             for (i = 0; i < this.objectsJson.length; i++){
