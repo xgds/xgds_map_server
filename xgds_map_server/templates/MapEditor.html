@@ -68,6 +68,7 @@
 
 {% block scripts %}
 	{{ block.super }}
+	{% include "xgds_core/timeJS.html" %}
    	{% include "MapJS.html" %}
     <script type="text/javascript" src='{{ EXTERNAL_URL }}backbone-relational/backbone-relational.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}backbone-forms/distribution/backbone-forms.min.js'></script>

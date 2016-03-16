@@ -39,6 +39,7 @@
 
 {% block scripts %}
 {{ block.super }}
+	{% include "xgds_core/timeJS.html" %}
    	{% include "MapJS.html" %}
    	{% for template_name, template in templates.items %}
 	<script type="text/handlebars" id="template-{{template_name}}">
