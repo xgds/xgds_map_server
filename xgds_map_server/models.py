@@ -168,6 +168,8 @@ class KmlMap(AbstractMap):
     
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
+        if self.hasNetworkLink:
+            return None
         result = super(KmlMap, self).getTreeJson()
         result["data"]["openable"] = self.openable
         result["data"]["kmlFile"] = self.getUrl()

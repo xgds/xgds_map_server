@@ -1125,7 +1125,9 @@ def addGroupToFancyJSON(group, map_tree_json):
         if node.__class__.__name__ == MapGroup.__name__:
             sub_nodes.append(addGroupToFancyJSON(node, [])[0])
         else:
-            sub_nodes.append(node.getTreeJson())
+            treeJson = node.getTreeJson()
+            if treeJson:
+                sub_nodes.append(treeJson)
     group_json['children'] = sub_nodes
     map_tree_json.append(group_json)
     return map_tree_json
