@@ -16,6 +16,9 @@
 
 import os
 
+# Use this if you want to replace the default OSM baselayer with something (like Bing) that needs a key
+XGDS_MAP_SERVER_MAP_API_KEY = ""
+
 XGDS_MAP_SERVER_MEDIA_SUBDIR = 'xgds_map_server/'
 XGDS_MAP_SERVER_DATA_SUBDIR = 'xgds_map_server/'
 XGDS_MAP_SERVER_GEOTIFF_SUBDIR = XGDS_MAP_SERVER_DATA_SUBDIR + 'geoTiff/'
