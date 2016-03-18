@@ -102,4 +102,8 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,
     url(r'^feed/(?P<feedname>.*)', views.getMapFeed,
      {'readOnly': True, 'loginRequired': False, 'securityTags': ['kml', 'readOnly']},'xgds_map_server_feed'),
     url(r'^uploadGeoTiff/$', login_required(ResumableUploadView.as_view()), name='uploadGeoTiff'),
+    url(r'^mapJson/(?P<object_name>[\w]+)/(?P<filter>[\w]+:[\w]+)$', views.getMappedObjectsJson, {'isLive':settings.GEOCAM_UTIL_LIVE_MODE}, 'xgds_map_server_objectsJson'),
+    url(r'^mapJson/(?P<object_name>[\w]+)/(?P<range>[\d]+)$', views.getMappedObjectsJson, {'isLive':settings.GEOCAM_UTIL_LIVE_MODE}, 'xgds_map_server_objectsJson_range'),
+    url(r'^mapJson/(?P<object_name>[\w]+)$', views.getMappedObjectsJson, {'range':0, 'isLive':settings.GEOCAM_UTIL_LIVE_MODE}, 'xgds_map_server_objectsJson_default'),
+
 ]
