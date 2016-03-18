@@ -152,7 +152,7 @@ class KmlMap(AbstractMap):
 
     def getGoogleEarthUrl(self):
         if self.localFile:
-            return settings.DATA_URL + self.localFile
+            return settings.DATA_URL + str(self.localFile)
         elif self.kmlFile:
             if self.kmlFile[0] == '/':
                 return self.kmlFile
