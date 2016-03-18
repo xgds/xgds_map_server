@@ -1492,3 +1492,75 @@ def getMapLayerKML(request, layerID):
     #TODO implement
     pass
 
+
+@never_cache
+def getMappedObjectsJson(request, object_name, filter=None, range=0, isLive=1):
+    """ Get the object json information to show in table or map views.
+    """
+    try:
+        THE_OBJECT = LazyGetModelByName(getattr(settings, object_name))
+        isLive = int(isLive)
+        if filter:
+            splits = str(filter).split(":")
+            filterDict = {splits[0]: splits[1]}
+
+        range = int(range)
+        if isLive or range:
+            if range==0:
+                range = 6
+            now = datetime.datetime.now(pytz.utc)
+            yesterday = now - datetime.timedelta(seconds=3600 * range)
+            if not filter:
+                objects = THE_OBJECT.get().objects.filter(creation_time__lte=now).filter(creation_time__gte=yesterday)
+            else:
+                allobjects = THE_OBJECT.get().objects.filter(**filterDict)
+                objects = allobjects.filter(creation_time__lte=now).filter(creation_time__gte=yesterday)
+        elif filter:
+            objects = THE_OBJECT.get().objects.filter(**filterDict)
+        else:
+            objects = THE_OBJECT.get().objects.all()
+    except:
+        return HttpResponse(json.dumps({'error': {'message': 'I think you passed in an invalid filter.',
+                                                  'filter': filter}
+                                        }),
+                            content_type='application/json')
+
+    if objects:
+        keepers = []
+        for o in objects:
+            resultDict = o.toMapDict()
+            keepers.append(resultDict)
+        json_data = json.dumps(keepers, indent=4, cls=DatetimeJsonEncoder)
+        return HttpResponse(content=json_data,
+                            content_type="application/json")
+    else:
+        return HttpResponse(json.dumps({'error': {'message': 'No objects found.',
+                                                  'filter': filter}
+                                        }),
+                            content_type='application/json')
+
+
+@never_cache
+def getMappedObjectsExtens(request, object_name, extens, today=False):
+    """ Get the note json information to show in the fancy tree. this gets all notes in the mapped area
+    """
+    splits = str(extens).split(',')
+    minLon = float(splits[0])
+    minLat = float(splits[1])
+    maxLon = float(splits[2])
+    maxLat = float(splits[3])
+
+    THE_OBJECT = LazyGetModelByName(getattr(settings, object_name))
+
+    queryString = THE_OBJECT.get().getMapBoundedQuery(minLon, minLat, maxLon, maxLat)
+    if queryString:
+        found_objects = THE_OBJECT.get().objects.raw(queryString)
+        if found_objects:
+            keepers = []
+            for o in found_objects:
+                resultDict = o.toMapDict()
+                keepers.append(resultDict)
+            json_data = json.dumps(keepers, indent=4, cls=DatetimeJsonEncoder)
+            return HttpResponse(content=json_data,
+                                content_type="application/json")
+        return ""
