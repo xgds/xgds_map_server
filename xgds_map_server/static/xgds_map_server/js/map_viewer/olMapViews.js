@@ -914,6 +914,11 @@ $(function() {
             }
         },
         constructMapFeatures: function(data) {
+        	if (_.isUndefined(this.mapElement)){
+        	    this.mapElement = new ol.layer.Group({name:"liveSearch"});
+        	    this.map = {};
+        	}
+
             this.clearDataAndFeatures();
             this.objectsJson = data
             for (i = 0; i < this.objectsJson.length; i++){
