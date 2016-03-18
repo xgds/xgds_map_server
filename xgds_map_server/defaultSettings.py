@@ -15,6 +15,7 @@
 #__END_LICENSE__
 
 import os
+from geocamUtil.SettingsUtil import getOrCreateArray, getOrCreateDict
 
 # Use this if you want to replace the default OSM baselayer with something (like Bing) that needs a key
 XGDS_MAP_SERVER_MAP_API_KEY = ""
@@ -54,21 +55,21 @@ XGDS_MAP_SERVER_GDAL_RESAMPLE_OPTIONS = [("lanczos", "Lanczos"), ("cubic", "Cubi
 # have visibility turned off.)
 XGDS_MAP_SERVER_LOGO_PATTERNS = []
 
-# include this in your siteSettings.py BOWER_INSTALLED_APPS
-XGDS_MAP_SERVER_BOWER_INSTALLED_APPS = ('sprintf.js=sprintf.js',
-                                        'lodash#3.10.0',
-                                        'handlebars=git://github.com/components/handlebars.js.git',
-                                        'backbone#1.1.2',
-                                        'marionette=marionette',
-                                        'backbone-relational',
-                                        'backbone-forms',
-                                        'fancytree=fancytree',
-                                        'jquery-cookie=git://github.com/carhartl/jquery-cookie.git',
-                                        'openlayers3=https://github.com/openlayers/ol3/releases/download/v3.14.0/v3.14.0-dist.zip',
-                                        'ol3-popup',
-                                        'proj4',
-                                        'resumable=git://github.com/23/resumable.js.git'
-                                        )
+BOWER_INSTALLED_APPS = getOrCreateArray('BOWER_INSTALLED_APPS')
+BOWER_INSTALLED_APPS += ['sprintf.js=sprintf.js',
+                         'lodash#3.10.0',
+                         'handlebars=git://github.com/components/handlebars.js.git',
+                         'backbone#1.1.2',
+                         'marionette=marionette',
+                         'backbone-relational',
+                         'backbone-forms',
+                         'fancytree=fancytree',
+                         'jquery-cookie=git://github.com/carhartl/jquery-cookie.git',
+                         'openlayers3=https://github.com/openlayers/ol3/releases/download/v3.14.0/v3.14.0-dist.zip',
+                         'ol3-popup',
+                         'proj4',
+                         'resumable=git://github.com/23/resumable.js.git'
+                         ]
 
 # if you want to have a custom javascript included in your maps, override this in siteSettings.
 # for example:
@@ -109,3 +110,6 @@ XGDS_MAP_SERVER_MAP_SETUP_COORD_SYSTEM = 'null'
 XGDS_MAP_SERVER_BODY_RADIUS_METERS = 6371010
 
 XGDS_MAP_SERVER_SITE_MONIKER = 'Site'
+
+XGDS_DATA_IMPORTS = getOrCreateDict('XGDS_DATA_IMPORTS')
+XGDS_DATA_IMPORTS['GeoTiff Map Tile'] = '/xgds_map_server/addTile'
