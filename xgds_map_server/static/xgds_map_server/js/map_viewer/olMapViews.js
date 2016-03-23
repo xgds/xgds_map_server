@@ -898,7 +898,7 @@ $(function() {
         fitExtent: function() {
             var extent = this.getExtent();
             if (extent != null){
-        	app.mapView.fit(this.getExtent(), app.map.map.getSize());
+        	app.mapView.fit(this.getExtent(), app.map.map.getSize(), options={maxZoom:19});
             }
         },
         clearDataAndFeatures: function() {
