@@ -21,6 +21,11 @@ var LONG_LAT =  'EPSG:4326';
 var DEFAULT_COORD_SYSTEM = SPHERICAL_MERCATOR;
 var mapResizeTimeout;
 
+function showOnMap(data){
+	app.vent.trigger("mapSearch:found", data);
+	app.vent.trigger('mapSearch:fit');
+}
+
 // take a list of tuples and return a flat list
 function flatten(coords){
     var result = [];
