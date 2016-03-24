@@ -395,10 +395,12 @@ $(function() {
                     url: app.options.layerFeedUrl,
                     dataType: 'json',
                     success: $.proxy(function(data) {
-                        app.treeData = data;
-                        this.layersInitialized = true;
-                        app.vent.trigger('treeData:loaded');
-                        this.initializeMapLayers(app.treeData[0]);
+                    	if (data != null){
+	                        app.treeData = data;
+	                        this.layersInitialized = true;
+	                        app.vent.trigger('treeData:loaded');
+	                        this.initializeMapLayers(app.treeData[0]);
+                    	}
                     }, this)
                   });
                 }
