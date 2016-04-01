@@ -14,7 +14,6 @@
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
 
-# Create your views here.
 from cStringIO import StringIO
 import threading
 import json
@@ -54,6 +53,8 @@ from django.contrib.gis.geos import Polygon as geosPolygon
 from django.contrib.gis.geos import LinearRing as geosLinearRing
 from django.conf import settings
 
+from xgds_core.views import get_handlebars_templates
+
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapSearch, MapCollection, MapLink, MAP_NODE_MANAGER, MAP_MANAGER
 from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
 from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm, MapSearchForm, MapCollectionForm, EditMapTileForm
@@ -76,24 +77,8 @@ from forms import SelectSiteFrameForm
 
 latestRequestG = None
 
-_template_cache = None
-
 XGDS_MAP_SERVER_GEOTIFF_PATH = os.path.join(settings.DATA_ROOT, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR)
-
-
-def get_handlebars_templates(source):
-    global _template_cache
-    if settings.XGDS_MAP_SERVER_TEMPLATE_DEBUG or not _template_cache:
-        templates = {}
-        for thePath in source:
-            inp = os.path.join(settings.PROJ_ROOT, 'apps', thePath)
-            for template_file in glob.glob(os.path.join(inp, '*.handlebars')):
-                with open(template_file, 'r') as infile:
-                    template_name = os.path.splitext(os.path.basename(template_file))[0]
-                    templates[template_name] = infile.read()
-        _template_cache = templates
-    return _template_cache
-
+SEARCH_FORMS = {}
 
 def get_map_tree_templates(source):
     fullCache = get_handlebars_templates(source)
@@ -140,18 +125,20 @@ def getMapTreePage(request):
 
 def getSearchForms():
     # get the dictionary of forms for searches
-    forms = {}
+    SEARCH_FORMS = {}
     for key, entry in settings.XGDS_MAP_SERVER_JS_MAP.iteritems():
         theClass = LazyGetModelByName(entry['model'])
         theForm = SpecializedForm(SearchForm, theClass.get())
         theFormSetMaker = formset_factory(theForm, extra=0)
         theFormSet = theFormSetMaker(initial=[{'modelClass': entry['model']}])
-        forms[key] = [theFormSet, entry['model']]
-    return forms
+        SEARCH_FORMS[key] = [theFormSet, entry['model']]
+    return SEARCH_FORMS
 
 
 def getMapEditorPage(request, layerID=None):
-    templates = get_handlebars_templates(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
+    fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
+    fullTemplateList.append(os.path.join('xgds_map_server', 'templates', 'handlebars', 'edit'))
+    templates = get_handlebars_templates(fullTemplateList)
     if layerID:
         mapLayer = MapLayer.objects.get(pk=layerID)
         mapLayerDict = mapLayer.toDict()
@@ -1564,3 +1551,25 @@ def getMappedObjectsExtens(request, object_name, extens, today=False):
             return HttpResponse(content=json_data,
                                 content_type="application/json")
         return ""
+
+def getSearchPage(request, modelName=None):
+    fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
+#     if modelName:
+#         searchForms = {modelName: getSearchForms()[modelName]}
+#         modelClass = searchForms[modelName][1]
+# #         modelClass = getattr(settings, modelSettingsName)
+#         fullTemplateList = fullTemplateList + settings.XGDS_CORE_TEMPLATE_DIRS[modelClass]
+#     else:
+    searchForms = getSearchForms()
+
+    templates = get_handlebars_templates(fullTemplateList)
+    
+    return render_to_response("xgds_map_server/mapSearch.html", 
+                              {'modelName': modelName,
+                              #'modelClass': modelClass,
+                               'templates': templates,
+                               'searchForms': searchForms,
+                               'selectSiteFrameForm': SelectSiteFrameForm(initial={'siteFrame': settings.XGDS_CURRENT_SITEFRAME['zone']}),
+                               'saveSearchForm': MapSearchForm(),
+                               'app': 'xgds_map_server/js/search/mapViewerSearchApp.js'},
+                              context_instance=RequestContext(request))

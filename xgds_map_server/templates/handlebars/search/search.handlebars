@@ -1,6 +1,6 @@
-<div id="searchContainer">
-	<div id="message" style="color:red;"><br/></div>
-	<div id="modelChoiceDiv">
+<div id="searchContainer" style="minHeight:100px">
+	<div id="message" style="color:red;" class='item auto'><br/></div>
+	<div id="modelChoiceDiv" class='item auto '>
 		Search for: 
 		<select id="searchModelSelector">
 		{{#each searchModels}}
@@ -8,7 +8,7 @@
 		{{/each}}
 		</select>
 		<button id="getSearchFormButton" class="small">Start</button>
+		<div id="searchFormDiv" ></div>
 	</div>
-	<div id="searchFormDiv"></div>
-	<div id="searchResultsDiv"></div>
+	<div id="searchResultsDiv" class='item auto '></div>
  </div>

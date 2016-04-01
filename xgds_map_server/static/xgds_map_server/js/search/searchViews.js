@@ -33,6 +33,7 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
                 return '';
             };
         } else {
+        	
             this.template = Handlebars.compile(source);
         }
     },
@@ -44,14 +45,19 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         this.searchResultsView = new app.views.SearchResultsView({template:'#template-search-results', 
                                                                   region: this.searchResultsRegion})
         this.searchResultsRegion.show(this.searchResultsView);
+        app.vent.trigger("repack");
+        
     },
     setupSearchForm: function() {
-        var newModel = this.$("#searchModelSelector").val();
-        if (!_.isUndefined(this.selectedModel)){
-            if (newModel == this.selectedModel){
-                return;
-            }
-        }
+    	var newModel = app.options.modelName;
+    	if (newModel === undefined || newModel == 'None'){
+    		newModel = this.$("#searchModelSelector").val();
+	        if (!_.isUndefined(this.selectedModel)){
+	            if (newModel == this.selectedModel){
+	                return;
+	            }
+	        }
+    	}
         this.clearMessage();
         app.vent.trigger("mapSearch:clear");
         this.searchResultsView.reset();
@@ -196,6 +202,7 @@ app.views.SearchResultsView = Backbone.Marionette.ItemView.extend({
                 this.theDataTable = this.theTable.dataTable( dataTableObj );
                 this.listenToTableChanges();
                 this.filterMapData();
+                app.vent.trigger("repack");
             }
         }
     },

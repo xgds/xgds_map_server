@@ -27,7 +27,6 @@ XGDS_MAP_SERVER_GEOTIFF_UPLOAD_SUBDIR = XGDS_MAP_SERVER_GEOTIFF_SUBDIR + 'upload
 # FILE_UPLOAD_TEMP_DIR = XGDS_MAP_SERVER_GEOTIFF_SUBDIR + 'temp/'
 
 XGDS_MAP_SERVER_DEFAULT_BACKBONE_APP = 'xgds_map_server/js/map_viewer/mapViewerApp.js'
-XGDS_MAP_SERVER_TEMPLATE_DEBUG = True  # If this is true, handlebars templates will not be cached.
 XGDS_MAP_SERVER_HANDLEBARS_DIRS = [os.path.join('xgds_map_server', 'templates', 'handlebars'),
                                    os.path.join('xgds_map_server', 'templates', 'handlebars', 'search')]
 
