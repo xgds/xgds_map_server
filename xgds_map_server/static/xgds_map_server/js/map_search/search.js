@@ -85,7 +85,7 @@ function constructImageView(json, viewPage) {
 	activateButtons(imageViewTemplate);
 	
 	if (!viewPage){
-	    onDelete(imageViewTemplate);
+		bindDeleteButtonCallback(imageViewTemplate);
 	    onNextOrPrev(imageViewTemplate);
 	}
 	

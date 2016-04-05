@@ -7,7 +7,7 @@
 
 {% block scripts %}
 {{block.super}}
-	<script language="javascript" type="text/javascript" src="{{ EXTERNAL_URL }}jqueryui-timepicker-addon/dist/jquery-ui-timepicker-addon.min.js"></script>
+	<script type="text/javascript" src="{{ EXTERNAL_URL }}jqueryui-timepicker-addon/dist/jquery-ui-timepicker-addon.min.js"></script>
 	<script type="text/javascript" src='{{ STATIC_URL }}xgds_core/js/datetimepickerUtils.js'></script>
     <script type="text/javascript" src="{{ STATIC_URL }}xgds_map_server/js/map_search/search.js"></script>
     {% for template_name, template in templates.items %}
@@ -16,7 +16,6 @@
 	</script>
     {% endfor %}
     {% include "xgds_map_server/SearchForms.html" with searchForms=searchForms %}
-    
 {% endblock scripts %}
 
 
@@ -47,45 +46,42 @@
         	app.vent.trigger('mapSearch:fit');
         });
         
-        {% block prePackery %}
-		{% endblock prePackery %}
+        {% block preLayout %}
+		{% endblock preLayout %}
 		
-    	initializePackery();
+    	initializeGridstack();
     	
     	{% block otherJSInit %}
-    		matchWidth('item_search','map');
 		{% endblock otherJSInit %}
-		
-		
 		
 	});
 	
 {% endblock %}
 
-{% block content %}
-	{% block packery %}
-	<div id="container">
-		<div id="map" class="item w2 auto freeAspect">
+{% block preMap %}
+<div id="searchDiv">
+</div> 
+{% endblock preMap %}
+
+{% block map %}
+		<div id="map-gridstack-item" class="grid-stack-item" 
+		data-gs-x="3" data-gs-y="0"
+        data-gs-width="3" data-gs-height="2" >
 			<i class="icon-lock-open pinDiv warning"></i>
 			{% if settings.XGDS_SITEFRAMES|length > 1 %}	
         		{{selectSiteFrameForm}}
         	{% endif %}
+			<div class="grid-stack-item-content" id="map"></div>
 		</div>
-		
-		<div id="searchDiv">
-		</div> 
-		
-		{% block firstPackery %}
-		{% endblock firstPackery %}
+{% endblock map %}
 		
 		
-		{% block lastPackery %}
-		{% endblock lastPackery %}
-		
-		
-		
-		<div id="layers" class="item auto freeAspect"></div>
-	</div> <!--  js packery container -->
-	</div> <!--  searchdiv -->
-	{% endblock packery %}
-{% endblock content %}
+{% block layers %}
+		<div id="map-gridstack-item" class="grid-stack-item" 
+		data-gs-x="3" data-gs-y="0"
+        data-gs-width="1" data-gs-height="3" >
+			<i class="icon-lock-open pinDiv warning"></i>
+			<div class="grid-stack-item-content" id="layers">
+			</div>
+		</div>
+{% endblock layers %}
