@@ -2,9 +2,7 @@
 
 {% block cssExtras %}
 {{ block.super }}
-<style type="text/css" title="currentStyle">
-	@import url('{{EXTERNAL_URL}}jqueryui-timepicker-addon/dist/jquery-ui-timepicker-addon.css');
-</style>
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}jqueryui-timepicker-addon/dist/jquery-ui-timepicker-addon.css" ></link>
 {% endblock cssExtras %}
 
 {% block scripts %}

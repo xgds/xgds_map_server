@@ -81,7 +81,7 @@ XGDS_MAP_SERVER_GEOTIFF_PATH = os.path.join(settings.DATA_ROOT, settings.XGDS_MA
 SEARCH_FORMS = {}
 
 def get_map_tree_templates(source):
-    fullCache = get_handlebars_templates(source)
+    fullCache = get_handlebars_templates(source, 'XGDS_MAP_SERVER_HANDLEBARS_DIRS')
     return {'layer-tree': fullCache['layer-tree']}
 
 
@@ -138,7 +138,7 @@ def getSearchForms():
 def getMapEditorPage(request, layerID=None):
     fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     fullTemplateList.append(os.path.join('xgds_map_server', 'templates', 'handlebars', 'edit'))
-    templates = get_handlebars_templates(fullTemplateList)
+    templates = get_handlebars_templates(fullTemplateList, 'XGDS_MAP_SERVER_MAP_EDITOR')
     if layerID:
         mapLayer = MapLayer.objects.get(pk=layerID)
         mapLayerDict = mapLayer.toDict()
@@ -1562,7 +1562,7 @@ def getSearchPage(request, modelName=None):
 #     else:
     searchForms = getSearchForms()
 
-    templates = get_handlebars_templates(fullTemplateList)
+    templates = get_handlebars_templates(fullTemplateList, 'XGDS_MAP_SERVER_HANDLEBARS_DIRS')
     
     return render_to_response("xgds_map_server/mapSearch.html", 
                               {'modelName': modelName,
