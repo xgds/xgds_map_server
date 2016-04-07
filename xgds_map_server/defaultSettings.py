@@ -94,7 +94,9 @@ XGDS_MAP_SERVER_MAP_LOADED_CALLBACK = 'xgds_map.coordinator.init'
 # dict of models to  a dict of javascript files to render the models on the map and the model class
 # for example
 # XGDS_MAP_SERVER_JS_MAP['Note'] = {'ol': 'plrpExplorer/js/olNoteMap.js',
-#                                  'model': 'plrpExplorer.Note'}
+#                                  'model': 'plrpExplorer.Note',
+#                                  'hiddenColumns': ['type', 'color', 'alpha', 'times', 'coords'], # you can exclude columns and include all others OR BETTER
+#                                  'columns': ['acquisition_time', 'acquisition_timezone', 'name', 'thumbnail_url']} # you can explicitly columns
 # these models should ideally have a toMapDict method that returns the dict you would want to use to render the model.
 XGDS_MAP_SERVER_JS_MAP = {}
 

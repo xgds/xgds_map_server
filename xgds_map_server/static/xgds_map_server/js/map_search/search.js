@@ -15,51 +15,51 @@
 //__END_LICENSE__
 
 
-function setMessage(message){
-    $("#message").text(message);
-}
-
-function doSearch(event) {
-    var theForm = this.$("#form-search");
-    var postData = theForm.serializeArray();
-    postData.push({'name':'modelClass', 'value': imageModel});
-    setMessage("Searching..."); //set message (TODO) 
-    event.preventDefault();
-    $.ajax({
-        url: '/xgds_map_server/doMapSearch',
-        dataType: 'json',
-        data: postData,
-        success: $.proxy(function(data) {
-            if (_.isUndefined(data) || data.length === 0){
-                setMessage("None found.");
-            } else {
-            	imageSetsArray = data;
-            	theDataTable.fnClearTable();
-            	theDataTable.fnAddData(data);
-                setMessage("");
-                app.vent.trigger("mapSearch:found", data); 
-            }
-        }, this),
-        error: $.proxy(function(data){
-            app.vent.trigger("mapSearch:clear");
-//            this.searchResultsView.reset();
-            setMessage("Search failed.")
-        }, this)
-      });
-}
-
-/*
- * Construct the search view
- */
-function constructSearchView(){
-	this.selectedModel = newModel;
-    var templateName = '#template-' + this.selectedModel;
-    this.searchFormView = new app.views.SearchFormView({template:templateName})
-    this.searchFormRegion.show(this.searchFormView);
-    this.$("#form-"+this.selectedModel).on('submit', function(event){
-        event.preventDefault();
-    });
-}
+//function setMessage(message){
+//    $("#message").text(message);
+//}
+//
+//function doSearch(event) {
+//    var theForm = this.$("#form-search");
+//    var postData = theForm.serializeArray();
+//    postData.push({'name':'modelClass', 'value': imageModel});
+//    setMessage("Searching..."); //set message (TODO) 
+//    event.preventDefault();
+//    $.ajax({
+//        url: '/xgds_map_server/doMapSearch',
+//        dataType: 'json',
+//        data: postData,
+//        success: $.proxy(function(data) {
+//            if (_.isUndefined(data) || data.length === 0){
+//                setMessage("None found.");
+//            } else {
+//            	imageSetsArray = data;
+//            	theDataTable.fnClearTable();
+//            	theDataTable.fnAddData(data);
+//                setMessage("");
+//                app.vent.trigger("mapSearch:found", data); 
+//            }
+//        }, this),
+//        error: $.proxy(function(data){
+//            app.vent.trigger("mapSearch:clear");
+////            this.searchResultsView.reset();
+//            setMessage("Search failed.")
+//        }, this)
+//      });
+//}
+//
+///*
+// * Construct the search view
+// */
+//function constructSearchView(){
+//	this.selectedModel = newModel;
+//    var templateName = '#template-' + this.selectedModel;
+//    this.searchFormView = new app.views.SearchFormView({template:templateName})
+//    this.searchFormRegion.show(this.searchFormView);
+//    this.$("#form-"+this.selectedModel).on('submit', function(event){
+//        event.preventDefault();
+//    });
+//}
 
 /*
  * Construct the item view

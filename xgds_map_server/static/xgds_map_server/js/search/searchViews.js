@@ -170,6 +170,39 @@ app.views.SearchResultsView = Backbone.Marionette.ItemView.extend({
     initialize: function(options){
         this.region = this.options.region;
     },
+    getColumnDefs: function(columns){
+    	result = [];
+    	for (var i=0; i<columns.length; i++){
+    		var heading = columns[i];
+    		var columnDef = {data:heading,
+    						 targets: i};
+    		if (this.columnTitles != undefined){
+        		columnDef['title'] = this.columnTitles[i];
+        	}
+    		if (heading.toLowerCase().indexOf('zone') > -1) {
+    			columnDef['render'] = function ( data, type, row ) {
+                                               return getLocalTimeString(row[0], row.timezone, "z");
+                                           };
+    		} else if  (heading.toLowerCase().indexOf('time') > -1){
+    			columnDef['render'] = function ( data, type, row ) {
+                                               return getLocalTimeString(data, row.timezone, "MM/DD/YY HH:mm:ss");
+                                           }
+    		} else if (heading.toLowerCase().indexOf('thumbnail') > -1) {
+    			columnDef['render'] = function(data, type, row){
+    									if (data != ''){
+    										var result = '<img width="100" src="' + data + '"'; //row['content_thumbnail_url'] + '"';
+    										result += '">';
+    										return result;
+    									} else {
+    										return '';
+    									}
+    								};
+    		}
+    		result.push(columnDef);
+    	}
+    	
+    	return result;
+    },
     updateContents: function(selectedModel, data) {
         if (data.length > 0){
             if (!_.isUndefined(this.theDataTable)) {
@@ -177,20 +210,25 @@ app.views.SearchResultsView = Backbone.Marionette.ItemView.extend({
                 this.theDataTable.fnAddData(data);
             } else {
                 this.theTable = this.$("#searchResultsTable");
-                this.columns = Object.keys(data[0]);
+                this.columns = app.options.searchModels[selectedModel].columns;
+                if (this.columns == undefined){
+                	this.columns = Object.keys(data[0]);
+                }
                 this.columns = _.difference(this.columns, app.options.searchModels[selectedModel].hiddenColumns);
-                var columnHeaders = this.columns.map(function(col){
-                    return { data: col}
-                });
+                this.columnTitles = app.options.searchModels[selectedModel].columnTitles;
+                this.columnHeaders = this.getColumnDefs(this.columns);
+                $.fn.dataTable.moment( DEFAULT_TIME_FORMAT);
+                $.fn.dataTable.moment( "MM/DD/YY HH:mm:ss");
                 var dataTableObj = {
                         data: data,
-                        columns: columnHeaders,
+                        columns: this.columnHeaders,
                         autoWidth: true,
                         stateSave: false,
                         paging: true,
                         pageLength: 10, 
                         lengthChange: true,
                         ordering: true,
+                        order: [[ 0, "desc" ]],
                         jQueryUI: false,
                         scrollY:  this.calcDataTableHeight(),
                         "lengthMenu": [[10, 20, 40, -1], [10, 20, 40, "All"]],

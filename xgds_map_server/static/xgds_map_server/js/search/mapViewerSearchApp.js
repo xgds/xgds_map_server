@@ -88,7 +88,6 @@ var app = (function($, _, Backbone) {
     });
     
     app.vent.on('repack', function(eventname, args) {
-    	layout();
     });
     
 

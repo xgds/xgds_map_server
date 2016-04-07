@@ -1,6 +1,9 @@
-<div id="searchContainer" style="minHeight:100px">
-	<div id="message" style="color:red;" class='item auto'><br/></div>
-	<div id="modelChoiceDiv" class='item auto '>
+
+    <div class="grid-stack-item-content" id="searchContainer" style="minHeight:100px">
+    	<i class="icon-lock-open pinDiv warning"></i>
+		<i class="icon-cancel-circled"></i>
+		<div id="message" style="color:red;" class='item auto'><br/></div>
+		<div id="modelChoiceDiv" class='item auto '>
 		Search for: 
 		<select id="searchModelSelector">
 		{{#each searchModels}}
@@ -8,7 +11,13 @@
 		{{/each}}
 		</select>
 		<button id="getSearchFormButton" class="small">Start</button>
+		</div>
 		<div id="searchFormDiv" ></div>
 	</div>
-	<div id="searchResultsDiv" class='item auto '></div>
- </div>
+	
+	<div id="searchDiv" class="grid-stack-item" 
+		data-gs-x="0" data-gs-y="3"
+        data-gs-width="3" data-gs-height="3" >
+	 <div class="grid-stack-item-content" id="searchResultsDiv">
+	</div>
+	</div>

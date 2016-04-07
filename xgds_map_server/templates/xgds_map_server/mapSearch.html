@@ -2,11 +2,13 @@
 
 {% block cssExtras %}
 {{ block.super }}
+{% include "xgds_notes2/NoteCSS.html" %}
 <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}jqueryui-timepicker-addon/dist/jquery-ui-timepicker-addon.css" ></link>
 {% endblock cssExtras %}
 
 {% block scripts %}
 {{block.super}}
+	{% include "xgds_notes2/NoteJS.html" %}
 	<script type="text/javascript" src="{{ EXTERNAL_URL }}jqueryui-timepicker-addon/dist/jquery-ui-timepicker-addon.min.js"></script>
 	<script type="text/javascript" src='{{ STATIC_URL }}xgds_core/js/datetimepickerUtils.js'></script>
     <script type="text/javascript" src="{{ STATIC_URL }}xgds_map_server/js/map_search/search.js"></script>
@@ -59,14 +61,16 @@
 {% endblock %}
 
 {% block preMap %}
-<div id="searchDiv">
+<div id="searchDiv" class="grid-stack-item" 
+		data-gs-x="0" data-gs-y="0"
+        data-gs-width="3" data-gs-height="3" >
 </div> 
 {% endblock preMap %}
 
 {% block map %}
 		<div id="map-gridstack-item" class="grid-stack-item" 
 		data-gs-x="3" data-gs-y="0"
-        data-gs-width="3" data-gs-height="2" >
+        data-gs-width="2" data-gs-height="2" >
 			<i class="icon-lock-open pinDiv warning"></i>
 			{% if settings.XGDS_SITEFRAMES|length > 1 %}	
         		{{selectSiteFrameForm}}
@@ -78,8 +82,8 @@
 		
 {% block layers %}
 		<div id="map-gridstack-item" class="grid-stack-item" 
-		data-gs-x="3" data-gs-y="0"
-        data-gs-width="1" data-gs-height="3" >
+		data-gs-x="6" data-gs-y="0"
+        data-gs-width="1" data-gs-height="2" >
 			<i class="icon-lock-open pinDiv warning"></i>
 			<div class="grid-stack-item-content" id="layers">
 			</div>
