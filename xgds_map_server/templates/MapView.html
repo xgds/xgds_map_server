@@ -1,5 +1,6 @@
 {% extends "MapBase.html" %}
 {% load pipeline %}
+{% load siteFrames %}
 
 {% block contents %}
 <div id="application">
@@ -7,9 +8,7 @@
 	</div>
 	<div class="row">
         <div id="overmap" class="six columns">
-        {% if settings.XGDS_SITEFRAMES|length > 1 %}	
-        	{{selectSiteFrameForm}}
-        {% endif %}
+       {% siteframe_form %}
         </div>
         <div id="overlayers" class="six columns"></div>
     </div>
@@ -51,7 +50,7 @@
 {% endblock scripts %}
 
 {% block jsInit %}
-	var siteFrames = {{settings.XGDS_SITEFRAMES|safe}};
+	var siteFrames = {% siteframes_dict %};
 	var appOptions = {
 		BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
 		DEFAULT_COORD_SYSTEM: "{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}",
@@ -62,7 +61,7 @@
 		SHOW_COMPASS: {{ settings.XGDS_MAP_SERVER_SHOW_COMPASS}},
 		selectedLayerUrl: "{{ settings.XGDS_MAP_SERVER_SELECTED_LAYER_URL }}",
 		layerFeedUrl: "{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}",
-		siteFrame: {{ settings.XGDS_CURRENT_SITEFRAME|safe }},
+		siteFrame: {% siteframe settings.XGDS_CURRENT_SITEFRAME_ID %},
 		XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: {{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }},
 		dataUrl: "{{ settings.DATA_URL }}"
 	}

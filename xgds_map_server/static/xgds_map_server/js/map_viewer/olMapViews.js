@@ -200,10 +200,10 @@ $(function() {
             },
             
             getSiteFrameProjection: function(site){
-            	var easting = site['east0'];
-            	var northing = site['north0'];
-            	var zone = site['zoneNumber'];
-            	var south = site['south'];
+            	var easting = site.east0;
+            	var northing = site.north0;
+            	var zone = site.zoneNumber;
+            	var south = site.south;
             	
             	var projectionKey = "utm:" + zone;
             	if (south == 1){

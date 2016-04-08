@@ -1,5 +1,7 @@
 {% extends 'dashboard_base.html' %}
 
+{% load siteFrames %}
+
 {% block cssExtras %}
 {{ block.super }}
 {% include "xgds_notes2/NoteCSS.html" %}
@@ -22,7 +24,7 @@
 
 
 {% block jsInit %}
-	var siteFrames = {{settings.XGDS_SITEFRAMES|safe}};
+	var siteFrames = {% siteframes_dict %};
 	appOptions = {
 		BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
 		DEFAULT_COORD_SYSTEM: "{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}",
@@ -33,7 +35,7 @@
 		SHOW_COMPASS: {{ settings.XGDS_MAP_SERVER_SHOW_COMPASS}},
 		selectedLayerUrl: "{{ settings.XGDS_MAP_SERVER_SELECTED_LAYER_URL }}",
 		layerFeedUrl: "{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}",
-		siteFrame: {{ settings.XGDS_CURRENT_SITEFRAME|safe }},
+		siteFrame: {% siteframe settings.XGDS_CURRENT_SITEFRAME_ID %},
 		XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: {{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }},
 		dataUrl: "{{ settings.DATA_URL }}",
 		searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
@@ -67,25 +69,6 @@
 </div> 
 {% endblock preMap %}
 
-{% block map %}
-		<div id="map-gridstack-item" class="grid-stack-item" 
-		data-gs-x="3" data-gs-y="0"
-        data-gs-width="2" data-gs-height="2" >
-			<i class="icon-lock-open pinDiv warning"></i>
-			{% if settings.XGDS_SITEFRAMES|length > 1 %}	
-        		{{selectSiteFrameForm}}
-        	{% endif %}
-			<div class="grid-stack-item-content" id="map"></div>
-		</div>
-{% endblock map %}
+
 		
-		
-{% block layers %}
-		<div id="map-gridstack-item" class="grid-stack-item" 
-		data-gs-x="6" data-gs-y="0"
-        data-gs-width="1" data-gs-height="2" >
-			<i class="icon-lock-open pinDiv warning"></i>
-			<div class="grid-stack-item-content" id="layers">
-			</div>
-		</div>
-{% endblock layers %}
+

@@ -24,8 +24,6 @@ from resumable.fields import ResumableFileField
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapCollection, MapSearch
 from xgds_data.models import Collection, RequestLog
 
-from geocamUtil.forms.SiteframeChoiceField import SiteframeChoiceField
-
 # pylint: disable=C1001
 
 
@@ -106,6 +104,3 @@ class MapSearchForm(AbstractMapForm):
         model = MapSearch
         exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'requestLog', 'locked', 'visible', 'mapBounded']
     
-
-class SelectSiteFrameForm(forms.Form):
-    siteFrame = SiteframeChoiceField(required=True, label=settings.XGDS_MAP_SERVER_SITE_MONIKER)

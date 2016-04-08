@@ -15,66 +15,61 @@
 #__END_LICENSE__
 
 from cStringIO import StringIO
-import threading
-import json
-import re
-import glob
-import string
-import logging
-import urllib
-import os
 import datetime
-import pytz
-
-import zipfile
+import glob
 import inspect
-import subprocess
+import json
+import logging
+import os
+import pytz
+import re
+import string
 from subprocess import Popen, PIPE
+import subprocess
+import threading
+import urllib
+import zipfile
 
-from django.core import mail
-#from django.http import StreamingHttpResponse
-from django.forms.formsets import formset_factory
-from django.views.decorators.csrf import csrf_protect
-from django.views.decorators.http import condition
+from django.conf import settings
+from django.contrib.gis.geos import LineString as geosLineString
+from django.contrib.gis.geos import LinearRing as geosLinearRing
+from django.contrib.gis.geos import Point as geosPoint
+from django.contrib.gis.geos import Polygon as geosPolygon
 from django.contrib.staticfiles.storage import staticfiles_storage
-from django.shortcuts import render_to_response
-from django.http import HttpResponse, Http404, HttpRequest
-from django.http import HttpResponseServerError
-from django.http import HttpResponseRedirect
-from django.http import HttpResponseBadRequest
-from django.http import HttpResponseNotFound
-from django.template import RequestContext
+from django.core import mail
+from django.core.urlresolvers import resolve
 from django.core.urlresolvers import reverse
 from django.db import transaction
+from django.forms.formsets import formset_factory
+from django.http import HttpResponse, Http404, HttpRequest
+from django.http import HttpResponseBadRequest
+from django.http import HttpResponseNotFound
+from django.http import HttpResponseRedirect
+from django.http import HttpResponseServerError
+from django.shortcuts import render_to_response
+from django.template import RequestContext
 from django.views.decorators.cache import never_cache
-from django.contrib.gis.geos import Point as geosPoint
-from django.contrib.gis.geos import LineString as geosLineString
-from django.contrib.gis.geos import Polygon as geosPolygon
-from django.contrib.gis.geos import LinearRing as geosLinearRing
-from django.conf import settings
+from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.http import condition
 
-from xgds_core.views import get_handlebars_templates
-
-from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapSearch, MapCollection, MapLink, MAP_NODE_MANAGER, MAP_MANAGER
-from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
-from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm, MapSearchForm, MapCollectionForm, EditMapTileForm
-from geocamUtil.geoEncoder import GeoDjangoEncoder
+from apps.geocamUtil.usng.usngGrid import outDirG
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
-from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
+from geocamUtil.geoEncoder import GeoDjangoEncoder
 from geocamUtil.loader import LazyGetModelByName
-from xgds_data.models import RequestLog, ResponseLog
+from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
+from geocamUtil.models import SiteFrame
+from xgds_core.views import get_handlebars_templates
 from xgds_data.dlogging import recordList, recordRequest
 from xgds_data.forms import SearchForm, SpecializedForm
-from geocamUtil.forms.SiteframeChoiceField import SiteframeChoiceField
-from apps.geocamUtil.usng.usngGrid import outDirG
-
+from xgds_data.models import RequestLog, ResponseLog
 from xgds_data.views import searchHandoff, resultsIdentity
-from django.core.urlresolvers import resolve
+from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm, MapSearchForm, MapCollectionForm, EditMapTileForm
+from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapSearch, MapCollection, MapLink, MAP_NODE_MANAGER, MAP_MANAGER
+from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
 
-from forms import SelectSiteFrameForm
 
+#from django.http import StreamingHttpResponse
 # pylint: disable=E1101,R0911
-
 latestRequestG = None
 
 XGDS_MAP_SERVER_GEOTIFF_PATH = os.path.join(settings.DATA_ROOT, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR)
@@ -92,7 +87,6 @@ def getMapServerIndexPage(request):
     templates = get_map_tree_templates(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     return render_to_response('MapView.html',
                               {'templates': templates,
-                               'selectSiteFrameForm': SelectSiteFrameForm(initial={'siteFrame': settings.XGDS_CURRENT_SITEFRAME['zone']}),
                                'app': 'xgds_map_server/js/map_viewer/mapViewerApp.js'},
                               context_instance=RequestContext(request))
 
@@ -101,7 +95,7 @@ def getGoogleEarthFeedPage(request):
     """
     Page with description and link to the kml feed
     """
-    feedUrl = (request.build_absolute_uri(reverse(getMapFeed, kwargs={'feedname': ''}))) + '?doc=0'
+    feedUrl = (request.build_absolute_uri(reverse('xgds_map_server_feed', kwargs={'feedname': ''}))) + '?doc=0'
     filename = settings.XGDS_MAP_SERVER_TOP_LEVEL['filename']
     return render_to_response('GoogleEarthFeed.html',
                               {'feedUrl': feedUrl,
@@ -146,7 +140,6 @@ def getMapEditorPage(request, layerID=None):
         return HttpResponse(json.dumps({'error': 'Map layer is not valid'}), content_type='application/json', status=406)
     return render_to_response("MapEditor.html",
                               RequestContext(request, {'templates': templates,
-                                                       'selectSiteFrameForm': SelectSiteFrameForm(initial={'siteFrame': settings.XGDS_CURRENT_SITEFRAME['zone']}),
                                                        'saveSearchForm': MapSearchForm(),
                                                        'searchForms': getSearchForms(),
                                                        'app': 'xgds_map_server/js/map_editor/mapEditorApp.js',
@@ -1569,7 +1562,6 @@ def getSearchPage(request, modelName=None):
                               #'modelClass': modelClass,
                                'templates': templates,
                                'searchForms': searchForms,
-                               'selectSiteFrameForm': SelectSiteFrameForm(initial={'siteFrame': settings.XGDS_CURRENT_SITEFRAME['zone']}),
                                'saveSearchForm': MapSearchForm(),
                                'app': 'xgds_map_server/js/search/mapViewerSearchApp.js'},
                               context_instance=RequestContext(request))
