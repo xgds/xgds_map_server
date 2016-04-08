@@ -238,6 +238,9 @@ app.views.SearchResultsView = Backbone.Marionette.ItemView.extend({
                 }
                 this.setupColumnHeaders();
                 this.theDataTable = this.theTable.dataTable( dataTableObj );
+                //this.viewHandlebars = app.options.searchModels[selectedModel].viewHandlebars;
+                connectSelectionCallback($("#searchResultsTable"), this.handleTableSelection, true);
+                this.setupTableSelection();
                 this.listenToTableChanges();
                 this.filterMapData();
                 app.vent.trigger("repack");
@@ -250,6 +253,9 @@ app.views.SearchResultsView = Backbone.Marionette.ItemView.extend({
       $.each(this.columns, function(index, col){
           columnRow.append("<th>"+ col +"</th>");
       });
+    },
+    handleTableSelection: function(index, theRow) {
+    	// TODO implement building or updating the view.
     },
     listenToTableChanges: function() {
         var _this = this;

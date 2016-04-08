@@ -95,6 +95,7 @@ XGDS_MAP_SERVER_MAP_LOADED_CALLBACK = 'xgds_map.coordinator.init'
 # for example
 # XGDS_MAP_SERVER_JS_MAP['Note'] = {'ol': 'plrpExplorer/js/olNoteMap.js',
 #                                  'model': 'plrpExplorer.Note',
+#                                  'viewHandlebars' : 'mypath/templates/handlebars/myvew.handlebars',
 #                                  'hiddenColumns': ['type', 'color', 'alpha', 'times', 'coords'], # you can exclude columns and include all others OR BETTER
 #                                  'columns': ['acquisition_time', 'acquisition_timezone', 'name', 'thumbnail_url']} # you can explicitly columns
 # these models should ideally have a toMapDict method that returns the dict you would want to use to render the model.

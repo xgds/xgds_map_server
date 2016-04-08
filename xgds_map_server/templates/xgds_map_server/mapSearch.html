@@ -13,7 +13,6 @@
 	{% include "xgds_notes2/NoteJS.html" %}
 	<script type="text/javascript" src="{{ EXTERNAL_URL }}jqueryui-timepicker-addon/dist/jquery-ui-timepicker-addon.min.js"></script>
 	<script type="text/javascript" src='{{ STATIC_URL }}xgds_core/js/datetimepickerUtils.js'></script>
-    <script type="text/javascript" src="{{ STATIC_URL }}xgds_map_server/js/map_search/search.js"></script>
     {% for template_name, template in templates.items %}
 	<script type="text/handlebars" id="template-{{template_name}}">
 		{{template|safe}}
