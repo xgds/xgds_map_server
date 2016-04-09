@@ -238,9 +238,8 @@ app.views.SearchResultsView = Backbone.Marionette.ItemView.extend({
                 }
                 this.setupColumnHeaders();
                 this.theDataTable = this.theTable.dataTable( dataTableObj );
-                //this.viewHandlebars = app.options.searchModels[selectedModel].viewHandlebars;
-                connectSelectionCallback($("#searchResultsTable"), this.handleTableSelection, true);
-                this.setupTableSelection();
+                this.viewHandlebars = app.options.searchModels[selectedModel].viewHandlebars;
+                connectSelectionCallback($("#searchResultsTable"), this.handleTableSelection, true, this);
                 this.listenToTableChanges();
                 this.filterMapData();
                 app.vent.trigger("repack");
@@ -254,8 +253,17 @@ app.views.SearchResultsView = Backbone.Marionette.ItemView.extend({
           columnRow.append("<th>"+ col +"</th>");
       });
     },
-    handleTableSelection: function(index, theRow) {
+    handleTableSelection: function(index, theRow, context) {
     	// TODO implement building or updating the view.
+    	if (context.viewHandlebars != undefined){
+    		if (context.detailView == undefined) {
+    			var url = '/xgds_core/handlebar_string/' + context.viewHandlebars;
+    			$.get(url, function(data, status){
+    		        var handlebarContents = data;
+    		        //TODO do something with it!
+    		    });
+    		}
+    	}
     },
     listenToTableChanges: function() {
         var _this = this;
