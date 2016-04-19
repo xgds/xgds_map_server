@@ -23,8 +23,8 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
     },
     regions: {
         modelChoiceRegion: '#modelChoiceDiv',
-        searchFormRegion: { selector: '#searchFormDiv' },
-        searchResultsRegion: { selector: '#searchResultsDiv' }
+        searchFormRegion: { el: $('#searchFormDiv') },
+        searchResultsRegion: { el: $('#searchResultsDiv') } 
     },
     initialize: function() {
         var source = $(this.template).html();
@@ -33,7 +33,6 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
                 return '';
             };
         } else {
-        	
             this.template = Handlebars.compile(source);
         }
     },
@@ -42,8 +41,8 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         this.$el.html(this.template({
             searchModels: theKeys
         }));
-        this.searchResultsView = new app.views.SearchResultsView({template:'#template-search-results', 
-                                                                  region: this.searchResultsRegion})
+        this.searchResultsView = new app.views.SearchResultsView({template:'#template-search-results' }); 
+//                                                                  region: this.searchResultsRegion})
         this.searchResultsRegion.show(this.searchResultsView);
         app.vent.trigger("repack");
         
@@ -166,10 +165,31 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
 app.views.SearchFormView = Backbone.Marionette.ItemView.extend({
 });
 
-app.views.SearchResultsView = Backbone.Marionette.ItemView.extend({
-    initialize: function(options){
-        this.region = this.options.region;
+app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
+    initialize: function(options) {
+    	this.handlebarSource = '';
+    	this.data = options.data;
+    	this.setHandlebars(options.handlebarSource);
     },
+    setHandlebars: function(handlebarSource){
+    	if (handlebarSource != this.handlebarSource){
+    		this.handlebarSource = handlebarSource;
+    		this.template = Handlebars.compile(this.handlebarSource);
+    	}
+    },
+    setData: function(data) {
+    	this.data = data;
+    },
+    render: function() {
+        this.$el.html(this.template(this.data));
+    }
+});
+
+app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
+	regions: {
+		region: { el: $('#searchResultsDiv') },
+		viewRegion: { el: $("#viewDiv") }
+	},
     getColumnDefs: function(columns){
     	result = [];
     	for (var i=0; i<columns.length; i++){
@@ -254,13 +274,23 @@ app.views.SearchResultsView = Backbone.Marionette.ItemView.extend({
       });
     },
     handleTableSelection: function(index, theRow, context) {
+    	var data = theRow;
     	// TODO implement building or updating the view.
     	if (context.viewHandlebars != undefined){
     		if (context.detailView == undefined) {
     			var url = '/xgds_core/handlebar_string/' + context.viewHandlebars;
-    			$.get(url, function(data, status){
-    		        var handlebarContents = data;
-    		        //TODO do something with it!
+    			$.get(url, function(handlebarSource, status){
+    		        if (context.detailView == undefined){
+    		        	context.detailView = new app.views.SearchDetailView({
+    		        		handlebarSource:handlebarSource,
+    		        		data:data
+    		        	});
+    		        	context.viewRegion.show(context.detailView);
+    		        } else {
+    		        	context.detailView.setHandlebars(handlebarSource);
+    		        	context.detailView.setData(data);
+    		        	context.detailView.render();
+    		        }
     		    });
     		}
     	}
