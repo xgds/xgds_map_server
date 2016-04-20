@@ -21,12 +21,21 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         'click #doSearch': 'doSearch',
         'click #doSaveSearch': 'openSaveDialog'
     },
-    regions: {
-        modelChoiceRegion: '#modelChoiceDiv',
-        searchFormRegion: { el: $('#searchFormDiv') },
-        searchResultsRegion: { el: $('#searchResultsDiv') } 
-    },
-    initialize: function() {
+    regions: function(options){
+        return {
+        	modelChoiceRegion: '#modelChoiceDiv',
+            searchFormRegion: { el: '#searchFormDiv'},
+            searchResultsRegion: (options.searchResultsRegion != undefined) ? {el:"#searchResultsDiv"} : '#searchResultsDiv'
+        };
+      },
+    initialize: function(options) {
+    	this.viewRegionDef = false;
+    	if (options.template != undefined){
+    		this.template = options.template;
+    	}
+    	if (options.viewRegion != undefined){
+    		this.viewRegion = true;
+    	}
         var source = $(this.template).html();
         if (_.isUndefined(source)) {
             this.template = function() {
@@ -41,8 +50,8 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         this.$el.html(this.template({
             searchModels: theKeys
         }));
-        this.searchResultsView = new app.views.SearchResultsView({template:'#template-search-results' }); 
-//                                                                  region: this.searchResultsRegion})
+        this.searchResultsView = new app.views.SearchResultsView({template:'#template-search-results',
+        														  viewRegion: this.viewRegion}); 
         this.searchResultsRegion.show(this.searchResultsView);
         app.vent.trigger("repack");
         
@@ -186,10 +195,11 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
 });
 
 app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
-	regions: {
-		region: { el: $('#searchResultsDiv') },
-		viewRegion: { el: $("#viewDiv") }
-	},
+    regions: function(options){
+        return {
+            viewRegion: (options.viewRegion) ? {el:"#viewDiv"} : '#viewDiv'
+        };
+      },
     getColumnDefs: function(columns){
     	result = [];
     	for (var i=0; i<columns.length; i++){
@@ -275,7 +285,6 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     },
     handleTableSelection: function(index, theRow, context) {
     	var data = theRow;
-    	// TODO implement building or updating the view.
     	if (context.viewHandlebars != undefined){
     		if (context.detailView == undefined) {
     			var url = '/xgds_core/handlebar_string/' + context.viewHandlebars;
@@ -285,7 +294,17 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     		        		handlebarSource:handlebarSource,
     		        		data:data
     		        	});
-    		        	context.viewRegion.show(context.detailView);
+    		        	try {
+    		        		context.viewRegion.show(context.detailView);
+    		        	} catch (err){
+    		        		var theEl = document.getElementById("viewDiv");
+    		        		context.viewRegion.el = $(theEl);
+    		        		try {
+    		        			context.viewRegion.show(context.detailView);
+    		        		} catch (err){
+    		        			// dammit
+    		        		}
+    		        	}
     		        } else {
     		        	context.detailView.setHandlebars(handlebarSource);
     		        	context.detailView.setData(data);
