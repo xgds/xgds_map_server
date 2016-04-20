@@ -14,6 +14,24 @@
 // specific language governing permissions and limitations under the License.
 //__END_LICENSE__
 
+$.extend({
+    getManyCss: function(urls, callback, nocache){
+        if (typeof nocache=='undefined') nocache=false; // default don't refresh
+        $.when(
+            $.each(urls, function(i, url){
+                if (nocache) url += '?_ts=' + new Date().getTime(); // refresh? 
+                $.get(url, function(){
+                    $('<link>', {rel:'stylesheet', type:'text/css', 'href':url}).appendTo('head');
+                });
+            })
+        ).then(function(){
+        	if (callback != undefined){
+        		if (typeof callback=='function') callback();
+        	}
+        });
+    },
+});
+
 app.views.SearchView = Backbone.Marionette.LayoutView.extend({
     template: '#template-search',
     events: {
@@ -195,6 +213,9 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
 });
 
 app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
+	initialize: function() {
+		this.modelMap = {};
+	},
     regions: function(options){
         return {
             viewRegion: (options.viewRegion) ? {el:"#viewDiv"} : '#viewDiv'
@@ -268,13 +289,24 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
                 }
                 this.setupColumnHeaders();
                 this.theDataTable = this.theTable.dataTable( dataTableObj );
-                this.viewHandlebars = app.options.searchModels[selectedModel].viewHandlebars;
+                this.selectedModel = selectedModel;
+                this.lookupModelMap(selectedModel);
                 connectSelectionCallback($("#searchResultsTable"), this.handleTableSelection, true, this);
                 this.listenToTableChanges();
                 this.filterMapData();
                 app.vent.trigger("repack");
             }
         }
+    },
+    lookupModelMap: function(selectedModel){
+    	if (this.modelMap[selectedModel] == undefined){
+        	this.modelMap[selectedModel] = {
+        			'viewHandlebarsURL' : app.options.searchModels[selectedModel].viewHandlebars,
+        			'viewJSURL' : app.options.searchModels[selectedModel].viewJS,
+        			'viewCssURL' : app.options.searchModels[selectedModel].viewCss
+        	}
+        }
+        return this.modelMap[selectedModel];
     },
     setupColumnHeaders: function() {
       this.theTable.append('<thead class="table_header"><tr id="columnRow"></tr></thead>');
@@ -283,36 +315,58 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
           columnRow.append("<th>"+ col +"</th>");
       });
     },
+    createDetailView: function(handlebarSource, data) {
+    	this.detailView = new app.views.SearchDetailView({
+    		handlebarSource:handlebarSource,
+    		data:data
+    	});
+    	try {
+    		this.viewRegion.show(this.detailView);
+    	} catch (err){
+    	}
+    },
+    updateDetailView: function(data){
+    	this.detailView.setData(data);
+    	this.render();
+    },
+    updateDetailHandlebars: function(handlebarSource){
+    	this.detailView.setHandlebars(handlebarSource);
+    },
     handleTableSelection: function(index, theRow, context) {
     	var data = theRow;
-    	if (context.viewHandlebars != undefined){
-    		if (context.detailView == undefined) {
-    			var url = '/xgds_core/handlebar_string/' + context.viewHandlebars;
-    			$.get(url, function(handlebarSource, status){
-    		        if (context.detailView == undefined){
-    		        	context.detailView = new app.views.SearchDetailView({
-    		        		handlebarSource:handlebarSource,
-    		        		data:data
-    		        	});
-    		        	try {
-    		        		context.viewRegion.show(context.detailView);
-    		        	} catch (err){
-    		        		var theEl = document.getElementById("viewDiv");
-    		        		context.viewRegion.el = $(theEl);
-    		        		try {
-    		        			context.viewRegion.show(context.detailView);
-    		        		} catch (err){
-    		        			// dammit
-    		        		}
-    		        	}
-    		        } else {
-    		        	context.detailView.setHandlebars(handlebarSource);
-    		        	context.detailView.setData(data);
-    		        	context.detailView.render();
-    		        }
-    		    });
+    	var modelMap = context.lookupModelMap(context.selectedModel);
+    	if (modelMap.viewHandlebarsURL != undefined){
+    		if (modelMap.viewHandlebars == undefined){
+				var url = '/xgds_core/handlebar_string/' + modelMap.viewHandlebarsURL;
+				$.get(url, function(handlebarSource, status){
+					modelMap['viewHandlebars'] = handlebarSource;
+					if (modelMap.viewJSURL != undefined){
+						for (var i=0; i<modelMap.viewJSURL.length; i++){
+							var script = modelMap.viewJSURL[i];
+							$.getScript( script, function( data, textStatus, jqxhr ) {});
+						}
+					}
+					if (modelMap.viewCssURL != undefined){
+						$.getManyCss(modelMap.viewCssURL, function(){
+						});
+
+					}
+					if (context.detailView == undefined){
+			        	context.createDetailView(handlebarSource, data);
+			        } else {
+			        	context.updateDetailHandlebars(handlebarSource);
+			        	context.updateDetailView(data);
+			        }
+			    });
+    		} else {
+    			if (context.detailView == undefined){
+		        	context.createDetailView(modelMap.viewHandlebars, data);
+		        } else {
+		        	context.updateDetailHandlebars(modelMap.handlebarSource);
+		        	context.updateDetailView(data);
+		        }
     		}
-    	}
+		}
     },
     listenToTableChanges: function() {
         var _this = this;
