@@ -62,19 +62,30 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         } else {
             this.template = Handlebars.compile(source);
         }
+        this.preselectModel = app.options.modelName;
+        Handlebars.registerHelper('modelSelected', function( input, modelName ){
+        	return input === modelName ? 'selected' : '';
+        });
+        
+    },
+    onShow: function() {
+    	if (this.preselectModel != undefined && this.preselectModel != 'None') {
+    		this.setupSearchForm(true);
+        }
     },
     onRender: function() {
         var theKeys = Object.keys(app.options.searchModels);
         this.$el.html(this.template({
-            searchModels: theKeys
+            searchModels: theKeys,
+            preselectModel: this.preselectModel
         }));
         this.searchResultsView = new app.views.SearchResultsView({template:'#template-search-results',
         														  viewRegion: this.viewRegion}); 
         this.searchResultsRegion.show(this.searchResultsView);
-        app.vent.trigger("repack");
         
+        app.vent.trigger("repack");
     },
-    setupSearchForm: function() {
+    setupSearchForm: function(runSearch) {
     	var newModel = app.options.modelName;
     	if (newModel === undefined || newModel == 'None'){
     		newModel = this.$("#searchModelSelector").val();
@@ -94,6 +105,9 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         this.$("#form-"+this.selectedModel).on('submit', function(event){
             event.preventDefault();
         });
+        if (runSearch != undefined && runSearch == true){
+        	this.doSearch();
+        }
     },
     setupSaveSearchDialog: function() {
 	//FOR NOW this is commented out, problem with latest jquery
@@ -349,7 +363,6 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
 					if (modelMap.viewCssURL != undefined){
 						$.getManyCss(modelMap.viewCssURL, function(){
 						});
-
 					}
 					if (context.detailView == undefined){
 			        	context.createDetailView(handlebarSource, data);

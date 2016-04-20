@@ -68,9 +68,12 @@ var app = (function($, _, Backbone) {
     
     app.addInitializer(function(options) {
         this.options = options = _.defaults(options || {});
+        
         app.searchRegion.show(new app.views.SearchView({template: '#template-mapViewerSearch',
         												searchResultsRegion: true,
-        												viewRegion: true}));
+        												viewRegion: true,
+        												selectedModel: this.options.modelName}));
+        
     });
     
     app.router = new Backbone.Router({

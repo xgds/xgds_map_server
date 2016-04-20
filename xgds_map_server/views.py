@@ -1559,7 +1559,6 @@ def getSearchPage(request, modelName=None):
     
     return render_to_response("xgds_map_server/mapSearch.html", 
                               {'modelName': modelName,
-                              #'modelClass': modelClass,
                                'templates': templates,
                                'searchForms': searchForms,
                                'saveSearchForm': MapSearchForm(),
