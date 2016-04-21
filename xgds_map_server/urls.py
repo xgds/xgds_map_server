@@ -102,11 +102,12 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,
     url(r'^feed/(?P<feedname>.*)', views.getMapFeed,
      {'readOnly': True, 'loginRequired': False, 'securityTags': ['kml', 'readOnly']},'xgds_map_server_feed'),
     url(r'^uploadGeoTiff/$', login_required(ResumableUploadView.as_view()), name='uploadGeoTiff'),
-    url(r'^mapJson/(?P<object_name>[\w]+)/(?P<filter>[\w]+:[\w]+)$', views.getMappedObjectsJson, {'isLive':settings.GEOCAM_UTIL_LIVE_MODE}, 'xgds_map_server_objectsJson'),
-    url(r'^mapJson/(?P<object_name>[\w]+)/(?P<range>[\d]+)$', views.getMappedObjectsJson, {'isLive':settings.GEOCAM_UTIL_LIVE_MODE}, 'xgds_map_server_objectsJson_range'),
-    url(r'^mapJson/(?P<object_name>[\w]+)$', views.getMappedObjectsJson, {'range':0, 'isLive':settings.GEOCAM_UTIL_LIVE_MODE}, 'xgds_map_server_objectsJson_default'),
+    url(r'^mapJson/(?P<object_name>[\w]+[\.]*[\w]*)/(?P<filter>[\w]+:[\w]+)$', views.getMappedObjectsJson, {'isLive':settings.GEOCAM_UTIL_LIVE_MODE}, 'xgds_map_server_objectsJson'),
+    url(r'^mapJson/(?P<object_name>[\w]+[\.]*[\w]*)/(?P<range>[\d]+)$', views.getMappedObjectsJson, {'isLive':settings.GEOCAM_UTIL_LIVE_MODE}, 'xgds_map_server_objectsJson_range'),
+    url(r'^mapJson/(?P<object_name>[\w]+[\.]*[\w]*)$', views.getMappedObjectsJson, {'range':0, 'isLive':settings.GEOCAM_UTIL_LIVE_MODE}, 'xgds_map_server_objectsJson_default'),
     
     url(r'^search/$', views.getSearchPage, {}, 'search_map'),
     url(r'^search/(?P<modelName>[\w]+)$', views.getSearchPage, {}, 'search_map_object'),
+    url(r'^view/(?P<modelName>[\w]+)/(?P<modelPK>[\d]+)$', views.getViewSingleModelPage, {}, 'search_map_single_object'),
 
 ]

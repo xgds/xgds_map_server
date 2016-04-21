@@ -66,9 +66,6 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         Handlebars.registerHelper('modelSelected', function( input, modelName ){
         	return input === modelName ? 'selected' : '';
         });
-        Handlebars.registerHelper('prettyTime', function( sourceTime, timeZone ){
-        	return getLocalTimeString(sourceTime, timeZone);
-        });
     },
     onShow: function() {
     	if (this.preselectModel != undefined && this.preselectModel != 'None') {
@@ -209,6 +206,10 @@ app.views.SearchFormView = Backbone.Marionette.ItemView.extend({
 
 app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     initialize: function(options) {
+        Handlebars.registerHelper('prettyTime', function( sourceTime, timeZone ){
+        	return getLocalTimeString(sourceTime, timeZone);
+        });
+
     	this.handlebarSource = '';
     	this.data = options.data;
     	this.setHandlebars(options.handlebarSource);

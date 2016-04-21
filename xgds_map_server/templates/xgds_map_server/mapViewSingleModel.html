@@ -1,0 +1,81 @@
+{% extends 'dashboard_base.html' %}
+
+{% load siteFrames %}
+
+{% block cssExtras %}
+{{ block.super }}
+{% include "xgds_notes2/NoteCSS.html" %}
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}jqueryui-timepicker-addon/dist/jquery-ui-timepicker-addon.css" ></link>
+{% endblock cssExtras %}
+
+{% block scripts %}
+{{block.super}}
+	{% include "xgds_notes2/NoteJS.html" %}
+	<script type="text/javascript" src="{{ EXTERNAL_URL }}jqueryui-timepicker-addon/dist/jquery-ui-timepicker-addon.min.js"></script>
+	<script type="text/javascript" src='{{ STATIC_URL }}xgds_core/js/datetimepickerUtils.js'></script>
+    {% for template_name, template in templates.items %}
+	<script type="text/handlebars" id="template-{{template_name}}">
+		{{template|safe}}
+	</script>
+    {% endfor %}
+    {% include "xgds_map_server/SearchForms.html" with searchForms=searchForms %}
+{% endblock scripts %}
+
+
+{% block jsInit %}
+	var siteFrames = {% siteframes_dict %};
+	appOptions = {
+		BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
+		DEFAULT_COORD_SYSTEM: "{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}",
+		SETUP_COORD_SYSTEM: {{ settings.XGDS_MAP_SERVER_MAP_SETUP_COORD_SYSTEM }},
+		DEFAULT_COORD_SYSTEM_CENTER: {{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM_CENTER }},
+		DEFAULT_ZOOM: {{ settings.XGDS_MAP_SERVER_DEFAULT_ZOOM }},
+		DEFAULT_ROTATION: {{ settings.XGDS_MAP_SERVER_DEFAULT_ROTATION }},
+		SHOW_COMPASS: {{ settings.XGDS_MAP_SERVER_SHOW_COMPASS}},
+		selectedLayerUrl: "{{ settings.XGDS_MAP_SERVER_SELECTED_LAYER_URL }}",
+		layerFeedUrl: "{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}",
+		siteFrame: {% siteframe settings.XGDS_CURRENT_SITEFRAME_ID %},
+		XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: {{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }},
+		dataUrl: "{{ settings.DATA_URL }}",
+		searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
+		modelName: '{{modelName}}',
+		modelPK: '{{modelPK}}'
+	};
+	{% block jsInitPreApp %}
+	{% endblock jsInitPreApp %}
+	
+	$(function(){
+		app.start(appOptions);
+    	app.vent.on("mapSearch:drewFeatures", function(e) {
+        	app.vent.trigger('mapSearch:fit');
+        });
+        
+        {% block preLayout %}
+		{% endblock preLayout %}
+		
+    	initializeGridstack();
+    	
+    	{% block otherJSInit %}
+		{% endblock otherJSInit %}
+		
+	});
+	
+{% endblock %}
+
+{% block preMap %}
+<div id="view-gridstack-item" class="grid-stack-item" 
+		data-gs-x="0" data-gs-y="0"
+        data-gs-width="3" data-gs-height="3" >
+        <div class="grid-stack-item-content" id="view-gridstack-item-content" >
+				<i class="icon-lock-open pinDiv warning"></i>
+				
+				<div id="viewDiv">
+				</div>
+		</div>
+</div> 
+{% endblock preMap %}
+
+
+
+		
+

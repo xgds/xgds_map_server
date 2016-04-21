@@ -1478,7 +1478,10 @@ def getMappedObjectsJson(request, object_name, filter=None, range=0, isLive=1):
     """ Get the object json information to show in table or map views.
     """
     try:
-        THE_OBJECT = LazyGetModelByName(getattr(settings, object_name))
+        try:
+            THE_OBJECT = LazyGetModelByName(getattr(settings, object_name))
+        except:
+            THE_OBJECT = LazyGetModelByName(object_name)
         isLive = int(isLive)
         if filter:
             splits = str(filter).split(":")
@@ -1547,14 +1550,7 @@ def getMappedObjectsExtens(request, object_name, extens, today=False):
 
 def getSearchPage(request, modelName=None):
     fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
-#     if modelName:
-#         searchForms = {modelName: getSearchForms()[modelName]}
-#         modelClass = searchForms[modelName][1]
-# #         modelClass = getattr(settings, modelSettingsName)
-#         fullTemplateList = fullTemplateList + settings.XGDS_CORE_TEMPLATE_DIRS[modelClass]
-#     else:
     searchForms = getSearchForms()
-
     templates = get_handlebars_templates(fullTemplateList, 'XGDS_MAP_SERVER_HANDLEBARS_DIRS')
     
     return render_to_response("xgds_map_server/mapSearch.html", 
@@ -1563,4 +1559,15 @@ def getSearchPage(request, modelName=None):
                                'searchForms': searchForms,
                                'saveSearchForm': MapSearchForm(),
                                'app': 'xgds_map_server/js/search/mapViewerSearchApp.js'},
+                              context_instance=RequestContext(request))
+    
+def getViewSingleModelPage(request, modelName, modelPK):
+    fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
+    templates = get_handlebars_templates(fullTemplateList, 'XGDS_MAP_SERVER_HANDLEBARS_DIRS')
+    
+    return render_to_response("xgds_map_server/mapViewSingleModel.html", 
+                              {'modelName': modelName,
+                               'modelPK': modelPK,
+                               'templates': templates,
+                               'app': 'xgds_map_server/js/search/mapViewerSingleModelApp.js'},
                               context_instance=RequestContext(request))
