@@ -66,7 +66,9 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         Handlebars.registerHelper('modelSelected', function( input, modelName ){
         	return input === modelName ? 'selected' : '';
         });
-        
+        Handlebars.registerHelper('prettyTime', function( sourceTime, timeZone ){
+        	return getLocalTimeString(sourceTime, timeZone);
+        });
     },
     onShow: function() {
     	if (this.preselectModel != undefined && this.preselectModel != 'None') {
@@ -82,7 +84,6 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         this.searchResultsView = new app.views.SearchResultsView({template:'#template-search-results',
         														  viewRegion: this.viewRegion}); 
         this.searchResultsRegion.show(this.searchResultsView);
-        
         app.vent.trigger("repack");
     },
     setupSearchForm: function(runSearch) {
@@ -221,6 +222,9 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     setData: function(data) {
     	this.data = data;
     },
+    rerender: function() {
+    	this.$el.replaceWith(this.template(this.data));
+    },
     render: function() {
         this.$el.html(this.template(this.data));
     }
@@ -341,7 +345,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     },
     updateDetailView: function(data){
     	this.detailView.setData(data);
-    	this.render();
+    	this.detailView.rerender();
     },
     updateDetailHandlebars: function(handlebarSource){
     	this.detailView.setHandlebars(handlebarSource);
@@ -350,10 +354,10 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     	var data = theRow;
     	var modelMap = context.lookupModelMap(context.selectedModel);
     	if (modelMap.viewHandlebarsURL != undefined){
-    		if (modelMap.viewHandlebars == undefined){
+    		if (modelMap.handlebarSource == undefined){
 				var url = '/xgds_core/handlebar_string/' + modelMap.viewHandlebarsURL;
 				$.get(url, function(handlebarSource, status){
-					modelMap['viewHandlebars'] = handlebarSource;
+					modelMap['handlebarSource'] = handlebarSource;
 					if (modelMap.viewJSURL != undefined){
 						for (var i=0; i<modelMap.viewJSURL.length; i++){
 							var script = modelMap.viewJSURL[i];
@@ -373,7 +377,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
 			    });
     		} else {
     			if (context.detailView == undefined){
-		        	context.createDetailView(modelMap.viewHandlebars, data);
+		        	context.createDetailView(modelMap.handlebarSource, data);
 		        } else {
 		        	context.updateDetailHandlebars(modelMap.handlebarSource);
 		        	context.updateDetailView(data);
