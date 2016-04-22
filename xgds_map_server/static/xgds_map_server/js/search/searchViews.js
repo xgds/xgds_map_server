@@ -85,14 +85,6 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
     },
     setupSearchForm: function(runSearch) {
     	var newModel = app.options.modelName;
-    	if (newModel === undefined || newModel == 'None'){
-    		newModel = this.$("#searchModelSelector").val();
-	        if (!_.isUndefined(this.selectedModel)){
-	            if (newModel == this.selectedModel){
-	                return;
-	            }
-	        }
-    	}
         this.clearMessage();
         app.vent.trigger("mapSearch:clear");
         this.searchResultsView.reset();
@@ -224,7 +216,8 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     	this.data = data;
     },
     rerender: function() {
-    	this.$el.replaceWith(this.template(this.data));
+    	this.$el.html(this.template(this.data));
+    	//this.$el.replaceWith(this.template(this.data));
     },
     render: function() {
         this.$el.html(this.template(this.data));
