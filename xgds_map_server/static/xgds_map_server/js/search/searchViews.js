@@ -85,6 +85,19 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
     },
     setupSearchForm: function(runSearch) {
     	var newModel = app.options.modelName;
+    	if (newModel == undefined || newModel == 'None') {
+    		newModel = this.$("#searchModelSelector").val();
+    	} else {
+    		var dropdownModel = this.$("#searchModelSelector").val();
+    		if (dropdownModel != newModel){
+    			newModel = dropdownModel;
+    		}
+    	}
+    	if (!_.isUndefined(this.selectedModel)){
+            if (newModel == this.selectedModel){
+                return;
+            }
+        }
         this.clearMessage();
         app.vent.trigger("mapSearch:clear");
         this.searchResultsView.reset();
@@ -204,6 +217,7 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
 
     	this.handlebarSource = '';
     	this.data = options.data;
+    	this.selectedModel = options.selectedModel;
     	this.setHandlebars(options.handlebarSource);
     },
     setHandlebars: function(handlebarSource){
@@ -215,12 +229,20 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     setData: function(data) {
     	this.data = data;
     },
-    rerender: function() {
-    	this.$el.html(this.template(this.data));
-    	//this.$el.replaceWith(this.template(this.data));
-    },
     render: function() {
         this.$el.html(this.template(this.data));
+        var new_window_btn = this.$el.parent().siblings("#new-window-btn");
+    	if (new_window_btn.length > 0){
+    		var theLink = new_window_btn.children("#view-new-window-target");
+    		theLink.attr("href","/xgds_map_server/view/" + this.selectedModel + "/" + this.data.pk );
+    	}
+    },
+    onShow: function() {
+    	var new_window_btn = this.$el.parent().siblings("#new-window-btn");
+    	if (new_window_btn.length > 0){
+    		var theLink = new_window_btn.children("#view-new-window-target");
+    		theLink.attr("href","/xgds_map_server/view/" + this.selectedModel + "/" + this.data.pk );
+    	}
     }
 });
 
@@ -291,6 +313,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
                         pageLength: 10, 
                         lengthChange: true,
                         ordering: true,
+                        select:true,
                         order: [[ 0, "desc" ]],
                         jQueryUI: false,
                         scrollY:  this.calcDataTableHeight(),
@@ -312,10 +335,11 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     },
     lookupModelMap: function(selectedModel){
     	if (this.modelMap[selectedModel] == undefined){
+    		var aoModel = app.options.searchModels[selectedModel];
         	this.modelMap[selectedModel] = {
-        			'viewHandlebarsURL' : app.options.searchModels[selectedModel].viewHandlebars,
-        			'viewJSURL' : app.options.searchModels[selectedModel].viewJS,
-        			'viewCssURL' : app.options.searchModels[selectedModel].viewCss
+        			'viewHandlebarsURL' : aoModel.viewHandlebars,
+        			'viewJSURL' : aoModel.viewJS,
+        			'viewCssURL' : aoModel.viewCss
         	}
         }
         return this.modelMap[selectedModel];
@@ -330,19 +354,48 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     createDetailView: function(handlebarSource, data) {
     	this.detailView = new app.views.SearchDetailView({
     		handlebarSource:handlebarSource,
-    		data:data
+    		data:data,
+    		selectedModel: this.selectedModel
     	});
     	try {
     		this.viewRegion.show(this.detailView);
+    		var context = this;
+    		$("#prev_button").click(function() {
+    			context.selectPrevious();
+    		});
+    		$("#next_button").click(function() {
+    			context.selectNext();
+    		});
     	} catch (err){
     	}
     },
     updateDetailView: function(data){
     	this.detailView.setData(data);
-    	this.detailView.rerender();
+    	this.detailView.render();
     },
     updateDetailHandlebars: function(handlebarSource){
     	this.detailView.setHandlebars(handlebarSource);
+    },
+    selectPrevious: function(){
+    	var dt = this.theTable.DataTable();
+    	var selectedRows = dt.rows({selected:true}).indexes();
+    	if (selectedRows.length > 0){
+    		if (selectedRows[0] > 0){
+    			dt.rows().deselect();
+    			dt.row(selectedRows[0] - 1).select();
+    		}
+    	}
+    },
+    selectNext: function() {
+    	var dt = this.theTable.DataTable();
+    	var selectedRows = dt.rows({selected:true}).indexes();
+    	if (selectedRows.length > 0){
+    		if (selectedRows[0] < dt.rows().count() - 1){
+    			dt.rows().deselect();
+    			dt.row(selectedRows[0] + 1).select();
+    		}
+    	}
+    	
     },
     handleTableSelection: function(index, theRow, context) {
     	var data = theRow;
