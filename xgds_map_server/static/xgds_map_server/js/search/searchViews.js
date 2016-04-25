@@ -25,6 +25,7 @@ $.extend({
             	    dataType: "script",
             	    error: function(jqXHR, errorType, exception) {
             	    	//TODO should probably handle this ...
+            	    	console.log(exception);
             	    }
             	}));
         });
