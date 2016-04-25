@@ -1,0 +1,12 @@
+{% block sitemenu-content-secondary %}
+{% load nav %}
+<div class="sitemenu-nav-secondary">
+	<nav class="subnav">
+	<ul>
+		<li class="nav-item {% if modelName == 'ImageSet' %}currentnav{% endif %}"><a href="{% url 'search_map_object' 'ImageSet'%}">Photo</a></li>
+		<li class="nav-item {% if modelName == 'InstrumentDataSet' %}currentnav{% endif %}"><a href="{% url 'search_map_object' 'InstrumentDataSet'%}">Instrument</a></li>
+		<li class="nav-item {% if modelName == 'Sample' %}currentnav{% endif %}"><a href="{% url 'search_map_object' 'Sample'%}">Sample</a></li>
+  	</ul>
+  	</nav>
+</div>
+{% endblock %}

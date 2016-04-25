@@ -15,21 +15,48 @@
 //__END_LICENSE__
 
 $.extend({
-    getManyCss: function(urls, callback, nocache){
-        if (typeof nocache=='undefined') nocache=false; // default don't refresh
-        $.when(
-            $.each(urls, function(i, url){
-                if (nocache) url += '?_ts=' + new Date().getTime(); // refresh? 
-                $.get(url, function(){
-                    $('<link>', {rel:'stylesheet', type:'text/css', 'href':url}).appendTo('head');
-                });
-            })
-        ).then(function(){
+	getManyJS: function(urls, callback){
+		var ajaxRequests = [];
+        $.each(urls, function(i, url){
+        	ajaxRequests.push(
+            	$.ajax({
+            	    async: false,
+            	    url: url,
+            	    dataType: "script",
+            	    error: function(jqXHR, errorType, exception) {
+            	    	//TODO should probably handle this ...
+            	    }
+            	}));
+        });
+        
+        $.when(ajaxRequests).then(function(){
         	if (callback != undefined){
         		if (typeof callback=='function') callback();
         	}
         });
     },
+    getManyCss: function(urls, callback){
+        $.when(
+            $.each(urls, function(i, url){
+                $.get(url, function(){
+                    $('<link>', {rel:'stylesheet', type:'text/css', 'href':url}).appendTo('head');
+                });
+            })
+        ).done(function(){
+        	if (callback != undefined){
+        		if (typeof callback=='function') callback();
+        	}
+        });
+    },
+    executeFunctionByName: function(functionName, context /*, args */) {
+    	  var args = [].slice.call(arguments).splice(2);
+    	  var namespaces = functionName.split(".");
+    	  var func = namespaces.pop();
+    	  for(var i = 0; i < namespaces.length; i++) {
+    	    context = context[namespaces[i]];
+    	  }
+    	  return context[func].apply(context, args);
+    	}
 });
 
 app.views.SearchView = Backbone.Marionette.LayoutView.extend({
@@ -218,6 +245,7 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     	this.handlebarSource = '';
     	this.data = options.data;
     	this.selectedModel = options.selectedModel;
+    	this.modelMap = options.modelMap;
     	this.setHandlebars(options.handlebarSource);
     },
     setHandlebars: function(handlebarSource){
@@ -236,12 +264,26 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     		var theLink = new_window_btn.children("#view-new-window-target");
     		theLink.attr("href","/xgds_map_server/view/" + this.selectedModel + "/" + this.data.pk );
     	}
+    	try {
+	    	if (this.modelMap.viewInitMethods != undefined){
+	    		for (var i=0; i < this.modelMap.viewInitMethods.length; i++){
+	    			$.executeFunctionByName(this.modelMap.viewInitMethods[i], window, this.data);
+	    		}
+	    	}
+    	} catch (err){
+    		// gulp
+    	}
     },
     onShow: function() {
     	var new_window_btn = this.$el.parent().siblings("#new-window-btn");
     	if (new_window_btn.length > 0){
     		var theLink = new_window_btn.children("#view-new-window-target");
     		theLink.attr("href","/xgds_map_server/view/" + this.selectedModel + "/" + this.data.pk );
+    	}
+    	if (this.modelMap.viewInitMethods != undefined){
+    		for (var i=0; i < this.modelMap.viewInitMethods.length; i++){
+    			$.executeFunctionByName(this.modelMap.viewInitMethods[i], window, this.data);
+    		}
     	}
     }
 });
@@ -336,11 +378,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     lookupModelMap: function(selectedModel){
     	if (this.modelMap[selectedModel] == undefined){
     		var aoModel = app.options.searchModels[selectedModel];
-        	this.modelMap[selectedModel] = {
-        			'viewHandlebarsURL' : aoModel.viewHandlebars,
-        			'viewJSURL' : aoModel.viewJS,
-        			'viewCssURL' : aoModel.viewCss
-        	}
+        	this.modelMap[selectedModel] = aoModel;
         }
         return this.modelMap[selectedModel];
     },
@@ -351,11 +389,21 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
           columnRow.append("<th>"+ col +"</th>");
       });
     },
+    updateDetailView: function(handlebarSource, data) {
+    	if (this.detailView == undefined){
+    		this.createDetailView(handlebarSource, data);
+        } else {
+        	this.detailView.setHandlebars(handlebarSource);
+        	this.detailView.setData(data);
+        	this.detailView.render();
+        }
+    },
     createDetailView: function(handlebarSource, data) {
     	this.detailView = new app.views.SearchDetailView({
     		handlebarSource:handlebarSource,
     		data:data,
-    		selectedModel: this.selectedModel
+    		selectedModel: this.selectedModel,
+    		modelMap: this.modelMap[this.selectedModel]
     	});
     	try {
     		this.viewRegion.show(this.detailView);
@@ -368,13 +416,6 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     		});
     	} catch (err){
     	}
-    },
-    updateDetailView: function(data){
-    	this.detailView.setData(data);
-    	this.detailView.render();
-    },
-    updateDetailHandlebars: function(handlebarSource){
-    	this.detailView.setHandlebars(handlebarSource);
     },
     selectPrevious: function(){
     	var dt = this.theTable.DataTable();
@@ -400,35 +441,31 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     handleTableSelection: function(index, theRow, context) {
     	var data = theRow;
     	var modelMap = context.lookupModelMap(context.selectedModel);
-    	if (modelMap.viewHandlebarsURL != undefined){
+    	if (modelMap.viewHandlebars != undefined){
     		if (modelMap.handlebarSource == undefined){
-				var url = '/xgds_core/handlebar_string/' + modelMap.viewHandlebarsURL;
+				var url = '/xgds_core/handlebar_string/' + modelMap.viewHandlebars;
 				$.get(url, function(handlebarSource, status){
 					modelMap['handlebarSource'] = handlebarSource;
-					if (modelMap.viewJSURL != undefined){
-						for (var i=0; i<modelMap.viewJSURL.length; i++){
-							var script = modelMap.viewJSURL[i];
-							$.getScript( script, function( data, textStatus, jqxhr ) {});
-						}
-					}
-					if (modelMap.viewCssURL != undefined){
-						$.getManyCss(modelMap.viewCssURL, function(){
+					if (modelMap.viewJS != undefined){
+						$.getManyJS( modelMap.viewJS, function() {
+							if (modelMap.viewCss != undefined){
+								$.getManyCss(modelMap.viewCss, function(){
+									context.updateDetailView(modelMap.handlebarSource, data);
+								});
+							} else {
+								context.updateDetailView(modelMap.handlebarSource, data);
+							}
 						});
+					} else if (modelMap.viewCss != undefined){
+						$.getManyCss(modelMap.viewCss, function(){
+							context.updateDetailView(modelMap.handlebarSource, data);
+						});
+					} else {
+						context.updateDetailView(modelMap.handlebarSource, data);
 					}
-					if (context.detailView == undefined){
-			        	context.createDetailView(handlebarSource, data);
-			        } else {
-			        	context.updateDetailHandlebars(handlebarSource);
-			        	context.updateDetailView(data);
-			        }
 			    });
     		} else {
-    			if (context.detailView == undefined){
-		        	context.createDetailView(modelMap.handlebarSource, data);
-		        } else {
-		        	context.updateDetailHandlebars(modelMap.handlebarSource);
-		        	context.updateDetailView(data);
-		        }
+    			context.updateDetailView(modelMap.handlebarSource, data);
     		}
 		}
     },

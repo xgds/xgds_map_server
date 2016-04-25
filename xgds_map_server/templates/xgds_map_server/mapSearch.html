@@ -1,5 +1,9 @@
 {% extends 'dashboard_base.html' %}
 
+{% block sitemenu-content-secondary %}
+	{% include "xgds_map_server/mapSearch_subnav.html" %}
+{% endblock %}
+
 {% load siteFrames %}
 
 {% block cssExtras %}
