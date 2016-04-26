@@ -280,6 +280,52 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     }
 });
 
+app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
+    initialize: function(options) {
+    	this.data = options.data;
+    	this.modelMap = options.modelMap;
+    	this.setupHandlebars();
+    },
+    setupHandlebars: function(){
+    	if (this.template == undefined){
+    		var url = '/xgds_core/handlebar_string/xgds_notes2/templates/handlebars/object-notes.handlebars';
+    		var context = this;
+    		$.ajax({
+        	    async: false,
+        	    url: url,
+        	    success: function(handlebarSource, status){
+        	    	context.handlebarSource = handlebarSource;
+        	    	context.template = Handlebars.compile(handlebarSource);
+        	    }
+        	});
+    	}
+    },
+    setData: function(data) {
+    	this.data = data;
+    },
+    updateContents: function() {
+    	var tbl = this.$el.find('table#notes_list');
+		if ( $.fn.DataTable.isDataTable( tbl) ) {
+			var dt = $(tbl).dataTable()
+			dt.fnClearTable();
+		}
+		initializeNotesReference(this.$el, this.data['app_label'], this.data['model_type'], this.data['pk'], this.data['acquisition_time'], this.data['acquisition_timezone']);
+		getNotesForObject(this.data['app_label'], this.data['model_type'], this.data['pk'], 'notes_content', dt);
+
+    },
+    render: function() {
+        this.$el.html(this.template(this.data));
+        var tbl = this.$el.find('table#notes_list');
+        if (tbl.length > 0){
+        	this.updateContents();
+        }
+    },
+    onShow: function() {
+    	setupNotesUI();
+    	this.updateContents();
+    }
+});
+
 app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
 	initialize: function() {
 		this.modelMap = {};

@@ -2,6 +2,10 @@
 
 {% load siteFrames %}
 
+{% block sitemenu-content-secondary %}
+	{% include "xgds_map_server/mapSearch_subnav.html" %}
+{% endblock %}
+
 {% block cssExtras %}
 {{ block.super }}
 {% include "xgds_notes2/NoteCSS.html" %}
@@ -13,12 +17,11 @@
 	{% include "xgds_notes2/NoteJS.html" %}
 	<script type="text/javascript" src="{{ EXTERNAL_URL }}jqueryui-timepicker-addon/dist/jquery-ui-timepicker-addon.min.js"></script>
 	<script type="text/javascript" src='{{ STATIC_URL }}xgds_core/js/datetimepickerUtils.js'></script>
-    {% for template_name, template in templates.items %}
+	{% for template_name, template in templates.items %}
 	<script type="text/handlebars" id="template-{{template_name}}">
 		{{template|safe}}
 	</script>
     {% endfor %}
-    {% include "xgds_map_server/SearchForms.html" with searchForms=searchForms %}
 {% endblock scripts %}
 
 
@@ -74,6 +77,19 @@
 		</div>
 </div> 
 {% endblock preMap %}
+
+{% block postMap %}
+<div id="notes-gridstack-item" class="grid-stack-item" 
+		data-gs-x="3" data-gs-y="3"
+        data-gs-width="3" data-gs-height="1" >
+        <div class="grid-stack-item-content" id="notes-gridstack-item-content" >
+				<i class="icon-lock-open pinDiv warning"></i>
+				
+				<div id="notesDiv">
+				</div>
+		</div>
+</div> 
+{% endblock postMap %}
 
 
 

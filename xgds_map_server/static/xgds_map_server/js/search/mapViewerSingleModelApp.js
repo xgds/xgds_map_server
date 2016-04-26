@@ -32,7 +32,8 @@ var app = (function($, _, Backbone) {
     app.addRegions({
         'mapRegion' : '#mapDiv',
         'layersRegion': '#layers',
-        'viewRegion': '#viewDiv'
+        'viewRegion': '#viewDiv',
+        'notesRegion': '#notesDiv'
     });
 
     app.module('State', function(options) {
@@ -66,45 +67,57 @@ var app = (function($, _, Backbone) {
         app.layersRegion.show(new app.views.FancyTreeView());
     });
     
+    app.showDetailView = function(handlebarSource, data, modelMap){
+    	var detailView = new app.views.SearchDetailView({
+    		handlebarSource:handlebarSource,
+    		data:data,
+    		modelMap: modelMap
+    	});
+    	app.viewRegion.show(detailView);
+    	app.showNotesView(data, modelMap);
+    	app.vent.trigger("mapSearch:found", data); 
+    };
+    
+    app.showNotesView = function(data, modelMap){
+    	var notesView = new app.views.SearchNotesView({
+    		data:data,
+    		modelMap: modelMap
+    	});
+    	app.notesRegion.show(notesView);
+    }
+    
     app.addInitializer(function(options) {
         this.options = options = _.defaults(options || {});
         
         var selectedModel = app.options.modelName;
-        var thisModelSettings = app.options.searchModels[selectedModel];
-        var modelMap = {
-    			'viewHandlebarsURL' : thisModelSettings.viewHandlebars,
-    			'viewJSURL' : thisModelSettings.viewJS,
-    			'viewCssURL' : thisModelSettings.viewCss,
-    			'modelClass': thisModelSettings.model
-    	}
-    	if (modelMap.viewHandlebarsURL != undefined){
+        var modelMap = app.options.searchModels[selectedModel];
+    	if (modelMap.viewHandlebars != undefined){
     		var data = undefined;
-    		var url = '/xgds_map_server/mapJson/' + modelMap.modelClass + '/pk:' + this.options.modelPK;
+    		var url = '/xgds_map_server/mapJson/' + modelMap.model + '/pk:' + this.options.modelPK;
 			
 				$.when($.get(url)
 				).then(function(incomingData, status) {
 					var data = incomingData[0];
-					var url = '/xgds_core/handlebar_string/' + modelMap.viewHandlebarsURL;
+					var url = '/xgds_core/handlebar_string/' + modelMap.viewHandlebars;
 					$.get(url, function(handlebarSource, status){
 						modelMap['handlebarSource'] = handlebarSource;
-						
-						
-						if (modelMap.viewJSURL != undefined){
-							for (var i=0; i<modelMap.viewJSURL.length; i++){
-								var script = modelMap.viewJSURL[i];
-								$.getScript( script, function( data, textStatus, jqxhr ) {});
-							}
-						}
-						if (modelMap.viewCssURL != undefined){
-							$.getManyCss(modelMap.viewCssURL, function(){
+						if (modelMap.viewJS != undefined){
+							$.getManyJS( modelMap.viewJS, function() {
+								if (modelMap.viewCss != undefined){
+									$.getManyCss(modelMap.viewCss, function(){
+										app.showDetailView(modelMap.handlebarSource, data, modelMap);
+									});
+								} else {
+									app.showDetailView(modelMap.handlebarSource, data, modelMap);
+								}
 							});
+						} else if (modelMap.viewCss != undefined){
+							$.getManyCss(modelMap.viewCss, function(){
+								app.showDetailView(modelMap.handlebarSource, data, modelMap);
+							});
+						} else {
+							app.showDetailView(modelMap.handlebarSource, data, modelMap);
 						}
-						var detailView = new app.views.SearchDetailView({
-				    		handlebarSource:handlebarSource,
-				    		data:data
-				    	});
-				    	app.viewRegion.show(detailView);
-				    	app.vent.trigger("mapSearch:found", data);  
 					});
 				});
     	}
