@@ -260,19 +260,10 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     },
     render: function() {
         this.$el.html(this.template(this.data));
-        var new_window_btn = this.$el.parent().siblings("#new-window-btn");
-    	if (new_window_btn.length > 0){
-    		var theLink = new_window_btn.children("#view-new-window-target");
-    		theLink.attr("href","/xgds_map_server/view/" + this.selectedModel + "/" + this.data.pk );
-    	}
     	try {
-	    	if (this.modelMap.viewInitMethods != undefined){
-	    		for (var i=0; i < this.modelMap.viewInitMethods.length; i++){
-	    			$.executeFunctionByName(this.modelMap.viewInitMethods[i], window, this.data);
-	    		}
-	    	}
+    		this.onShow();
     	} catch (err){
-    		// gulp
+    		// gulp, the first time this will 
     	}
     },
     onShow: function() {
@@ -407,7 +398,6 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     		modelMap: this.modelMap[this.selectedModel]
     	});
     	try {
-    		this.viewRegion.show(this.detailView);
     		var context = this;
     		$("#prev_button").click(function() {
     			context.selectPrevious();
@@ -415,6 +405,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     		$("#next_button").click(function() {
     			context.selectNext();
     		});
+    		this.viewRegion.show(this.detailView);
     	} catch (err){
     	}
     },
@@ -422,9 +413,11 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     	var dt = this.theTable.DataTable();
     	var selectedRows = dt.rows({selected:true}).indexes();
     	if (selectedRows.length > 0){
-    		if (selectedRows[0] > 0){
+    		var indexes = dt.rows().indexes();
+    		var currentIndexesIndex = indexes.indexOf( selectedRows[0] );
+    		if (currentIndexesIndex > 0){
     			dt.rows().deselect();
-    			dt.row(selectedRows[0] - 1).select();
+    			dt.row(indexes[currentIndexesIndex -1]).select();
     		}
     	}
     },
@@ -432,9 +425,11 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     	var dt = this.theTable.DataTable();
     	var selectedRows = dt.rows({selected:true}).indexes();
     	if (selectedRows.length > 0){
-    		if (selectedRows[0] < dt.rows().count() - 1){
+    		var indexes = dt.rows().indexes();
+    		var currentIndexesIndex = indexes.indexOf( selectedRows[0] );
+    		if (currentIndexesIndex < indexes.length - 1){
     			dt.rows().deselect();
-    			dt.row(selectedRows[0] + 1).select();
+    			dt.row(indexes[currentIndexesIndex + 1]).select();
     		}
     	}
     	
