@@ -259,6 +259,7 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     	this.data = data;
     },
     render: function() {
+    	showOnMap(this.data);
         this.$el.html(this.template(this.data));
     	try {
     		this.onShow();
@@ -305,12 +306,8 @@ app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
     },
     updateContents: function() {
     	var tbl = this.$el.find('table#notes_list');
-		if ( $.fn.DataTable.isDataTable( tbl) ) {
-			var dt = $(tbl).dataTable()
-			dt.fnClearTable();
-		}
 		initializeNotesReference(this.$el, this.data['app_label'], this.data['model_type'], this.data['pk'], this.data['acquisition_time'], this.data['acquisition_timezone']);
-		getNotesForObject(this.data['app_label'], this.data['model_type'], this.data['pk'], 'notes_content', dt);
+		getNotesForObject(this.data['app_label'], this.data['model_type'], this.data['pk'], 'notes_content', tbl);
 
     },
     render: function() {
