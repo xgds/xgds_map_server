@@ -102,7 +102,7 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
     },
     onRender: function() {
         var theKeys = Object.keys(app.options.searchModels);
-        this.$el.html(this.template({
+        this.$el.empty().append(this.template({
             searchModels: theKeys,
             preselectModel: this.preselectModel
         }));
@@ -260,7 +260,7 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     },
     render: function() {
     	showOnMap(this.data);
-        this.$el.html(this.template(this.data));
+        this.$el.empty().append(this.template(this.data));
     	try {
     		this.onShow();
     	} catch (err){
@@ -281,6 +281,9 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     }
 });
 
+/*
+ * This is the view for the notes that go with objects found by search.
+ */
 app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
     initialize: function(options) {
     	this.data = options.data;
@@ -305,17 +308,12 @@ app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
     	this.data = data;
     },
     updateContents: function() {
-    	var tbl = this.$el.find('table#notes_list');
-		initializeNotesReference(this.$el, this.data['app_label'], this.data['model_type'], this.data['pk'], this.data['acquisition_time'], this.data['acquisition_timezone']);
-		getNotesForObject(this.data['app_label'], this.data['model_type'], this.data['pk'], 'notes_content', tbl);
-
+    	hideError(this.$el);
+		initializeNotesReference(this.$el, this.data.app_label, this.data.model_type, this.data.pk, this.data.acquisition_time, this.data.acquisition_timezone);
+		getNotesForObject(this.data.app_label, this.data.model_type, this.data.pk, 'notes_content', this.$el.find('table#notes_list'));
     },
     render: function() {
-        this.$el.html(this.template(this.data));
-        var tbl = this.$el.find('table#notes_list');
-        if (tbl.length > 0){
-        	this.updateContents();
-        }
+        var appended = this.$el.empty().append(this.template(this.data));
     },
     onShow: function() {
     	setupNotesUI();
@@ -329,7 +327,8 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
 	},
     regions: function(options){
         return {
-            viewRegion: (options.viewRegion) ? {el:"#viewDiv"} : '#viewDiv'
+            viewRegion: (options.viewRegion) ? {el:"#viewDiv"} : '#viewDiv',
+            viewNotesRegion: (options.viewRegion) ? {el:"#notesDiv"} : '#notesDiv'
         };
       },
     getColumnDefs: function(columns){
@@ -431,6 +430,10 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
         	this.detailView.setHandlebars(handlebarSource);
         	this.detailView.setData(data);
         	this.detailView.render();
+        	if (this.detailNotesView != undefined){
+        		this.detailNotesView.setData(data);
+        		this.detailNotesView.updateContents();
+        	}
         }
     },
     createDetailView: function(handlebarSource, data) {
@@ -438,6 +441,10 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     		handlebarSource:handlebarSource,
     		data:data,
     		selectedModel: this.selectedModel,
+    		modelMap: this.modelMap[this.selectedModel]
+    	});
+    	this.detailNotesView = new app.views.SearchNotesView({
+    		data:data,
     		modelMap: this.modelMap[this.selectedModel]
     	});
     	try {
@@ -449,6 +456,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     			context.selectNext();
     		});
     		this.viewRegion.show(this.detailView);
+    		this.viewNotesRegion.show(this.detailNotesView);
     	} catch (err){
     	}
     },

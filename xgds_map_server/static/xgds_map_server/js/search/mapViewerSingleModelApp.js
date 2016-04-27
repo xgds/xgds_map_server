@@ -75,7 +75,7 @@ var app = (function($, _, Backbone) {
     	});
     	app.viewRegion.show(detailView);
     	app.showNotesView(data, modelMap);
-    	app.vent.trigger("mapSearch:found", data); 
+    	showOnMap(data); 
     };
     
     app.showNotesView = function(data, modelMap){
