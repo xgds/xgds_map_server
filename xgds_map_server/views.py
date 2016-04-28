@@ -1549,14 +1549,10 @@ def getMappedObjectsExtens(request, object_name, extens, today=False):
         return ""
 
 def getSearchPage(request, modelName=None):
-    fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
-    searchForms = getSearchForms()
-    templates = get_handlebars_templates(fullTemplateList, 'XGDS_MAP_SERVER_HANDLEBARS_DIRS')
-    
     return render_to_response("xgds_map_server/mapSearch.html", 
                               {'modelName': modelName,
-                               'templates': templates,
-                               'searchForms': searchForms,
+                               'templates': get_handlebars_templates(list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_HANDLEBARS_DIRS'),
+                               'searchForms': getSearchForms(),
                                'saveSearchForm': MapSearchForm(),
                                'app': 'xgds_map_server/js/search/mapViewerSearchApp.js'},
                               context_instance=RequestContext(request))
