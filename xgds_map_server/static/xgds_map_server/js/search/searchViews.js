@@ -309,7 +309,7 @@ app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
     },
     updateContents: function() {
     	hideError(this.$el);
-		initializeNotesReference(this.$el, this.data.app_label, this.data.model_type, this.data.pk, this.data.acquisition_time, this.data.acquisition_timezone);
+		initializeNotesReference(this.$el, this.data.app_label, this.data.model_type, this.data.pk, this.data[this.modelMap.event_time_field], this.data[this.modelMap.event_timezone_field]);
 		getNotesForObject(this.data.app_label, this.data.model_type, this.data.pk, 'notes_content', this.$el.find('table#notes_list'));
     },
     render: function() {
