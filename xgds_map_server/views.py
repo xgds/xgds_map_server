@@ -14,9 +14,9 @@
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
 
+import traceback
 from cStringIO import StringIO
 import datetime
-import glob
 import inspect
 import json
 import logging
@@ -25,7 +25,6 @@ import pytz
 import re
 import string
 from subprocess import Popen, PIPE
-import subprocess
 import threading
 import urllib
 import zipfile
@@ -35,15 +34,12 @@ from django.contrib.gis.geos import LineString as geosLineString
 from django.contrib.gis.geos import LinearRing as geosLinearRing
 from django.contrib.gis.geos import Point as geosPoint
 from django.contrib.gis.geos import Polygon as geosPolygon
-from django.contrib.staticfiles.storage import staticfiles_storage
 from django.core import mail
 from django.core.urlresolvers import resolve
 from django.core.urlresolvers import reverse
 from django.db import transaction
 from django.forms.formsets import formset_factory
-from django.http import HttpResponse, Http404, HttpRequest
-from django.http import HttpResponseBadRequest
-from django.http import HttpResponseNotFound
+from django.http import HttpResponse, Http404
 from django.http import HttpResponseRedirect
 from django.http import HttpResponseServerError
 from django.shortcuts import render_to_response
@@ -52,7 +48,6 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import condition
 
-from apps.geocamUtil.usng.usngGrid import outDirG
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
 from geocamUtil.geoEncoder import GeoDjangoEncoder
 from geocamUtil.loader import LazyGetModelByName
@@ -973,7 +968,8 @@ def getMapCollectionJSON(request, mapCollectionID):
                 resultDict = content.toMapDict()
             else:
                 resultDict = modelToDict(content)
-            dict_data.append(resultDict)
+            if resultDict:
+                dict_data.append(resultDict)
         json_data = json.dumps(dict_data, indent=4, cls=DatetimeJsonEncoder)
 
     return HttpResponse(content=json_data,
@@ -988,7 +984,8 @@ def getMapJsonDict(contents):
                 resultDict = content.toMapDict()
             else:
                 resultDict = modelToDict(content)
-            dict_data.append(resultDict)
+            if resultDict:
+                dict_data.append(resultDict)
     json_data = json.dumps(dict_data, indent=4, cls=DatetimeJsonEncoder)
     return json_data
 
@@ -1474,7 +1471,7 @@ def getMapLayerKML(request, layerID):
 
 
 @never_cache
-def getMappedObjectsJson(request, object_name, filter=None, range=0, isLive=1):
+def getMappedObjectsJson(request, object_name, filter=None, range=0, isLive=False, force=False):
     """ Get the object json information to show in table or map views.
     """
     try:
@@ -1484,25 +1481,38 @@ def getMappedObjectsJson(request, object_name, filter=None, range=0, isLive=1):
             THE_OBJECT = LazyGetModelByName(object_name)
         isLive = int(isLive)
         if filter:
+            #TODO this only handles a single filter
             splits = str(filter).split(":")
-            filterDict = {splits[0]: splits[1]}
-
+            try:
+                value = int(splits[1]);
+                filterDict = {splits[0]:value}
+            except:
+                filterDict = {splits[0]: splits[1]}
+        
         range = int(range)
-        if isLive or range:
+        if not force and (isLive or range):
             if range==0:
                 range = 6
             now = datetime.datetime.now(pytz.utc)
             yesterday = now - datetime.timedelta(seconds=3600 * range)
-            if not filter:
-                objects = THE_OBJECT.get().objects.filter(creation_time__lte=now).filter(creation_time__gte=yesterday)
-            else:
-                allobjects = THE_OBJECT.get().objects.filter(**filterDict)
-                objects = allobjects.filter(creation_time__lte=now).filter(creation_time__gte=yesterday)
+            try:
+                if not filter:
+                    objects = THE_OBJECT.get().objects.filter(creation_time__lte=now).filter(creation_time__gte=yesterday)
+                else:
+                    allobjects = THE_OBJECT.get().objects.filter(**filterDict)
+                    objects = allobjects.filter(creation_time__lte=now).filter(creation_time__gte=yesterday)
+            except:
+                # may not have a creation_time
+                if not filter:
+                    objects = THE_OBJECT.get().objects.all()
+                else:
+                    objects = THE_OBJECT.get().objects.filter(**filterDict)
         elif filter:
             objects = THE_OBJECT.get().objects.filter(**filterDict)
         else:
             objects = THE_OBJECT.get().objects.all()
     except:
+        traceback.print_exc()
         return HttpResponse(json.dumps({'error': {'message': 'I think you passed in an invalid filter.',
                                                   'filter': filter}
                                         }),
@@ -1512,7 +1522,8 @@ def getMappedObjectsJson(request, object_name, filter=None, range=0, isLive=1):
         keepers = []
         for o in objects:
             resultDict = o.toMapDict()
-            keepers.append(resultDict)
+            if resultDict:
+                keepers.append(resultDict)
         json_data = json.dumps(keepers, indent=4, cls=DatetimeJsonEncoder)
         return HttpResponse(content=json_data,
                             content_type="application/json")
@@ -1542,7 +1553,8 @@ def getMappedObjectsExtens(request, object_name, extens, today=False):
             keepers = []
             for o in found_objects:
                 resultDict = o.toMapDict()
-                keepers.append(resultDict)
+                if resultDict:
+                    keepers.append(resultDict)
             json_data = json.dumps(keepers, indent=4, cls=DatetimeJsonEncoder)
             return HttpResponse(content=json_data,
                                 content_type="application/json")

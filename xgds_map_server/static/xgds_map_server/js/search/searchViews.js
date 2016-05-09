@@ -337,16 +337,19 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     		var heading = columns[i];
     		var columnDef = {data:heading,
     						 targets: i};
+    		var context = this;
     		if (this.columnTitles != undefined){
         		columnDef['title'] = this.columnTitles[i];
         	}
     		if (heading.toLowerCase().indexOf('zone') > -1) {
     			columnDef['render'] = function ( data, type, row ) {
-                                               return getLocalTimeString(row[0], row.timezone, "z");
+    										   var mmap = context.lookupModelMap(context.selectedModel);
+                                               return getLocalTimeString(row[0], row[mmap.event_timezone_field], "z");
                                            };
     		} else if  (heading.toLowerCase().indexOf('time') > -1){
     			columnDef['render'] = function ( data, type, row ) {
-                                               return getLocalTimeString(data, row.timezone, "MM/DD/YY HH:mm:ss");
+    											var mmap = context.lookupModelMap(context.selectedModel);
+                                               return getLocalTimeString(data, row[mmap.event_timezone_field], "MM/DD/YY HH:mm:ss");
                                            }
     		} else if (heading.toLowerCase().indexOf('thumbnail') > -1) {
     			columnDef['render'] = function(data, type, row){
@@ -370,6 +373,9 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
                 this.theDataTable.fnClearTable();
                 this.theDataTable.fnAddData(data);
             } else {
+                this.selectedModel = selectedModel;
+                this.lookupModelMap(selectedModel);
+
                 this.theTable = this.$("#searchResultsTable");
                 this.columns = app.options.searchModels[selectedModel].columns;
                 if (this.columns == undefined){
@@ -400,8 +406,6 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
                 }
                 this.setupColumnHeaders();
                 this.theDataTable = this.theTable.dataTable( dataTableObj );
-                this.selectedModel = selectedModel;
-                this.lookupModelMap(selectedModel);
                 connectSelectionCallback($("#searchResultsTable"), this.handleTableSelection, true, this);
                 this.listenToTableChanges();
                 this.filterMapData();

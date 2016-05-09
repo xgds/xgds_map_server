@@ -93,7 +93,7 @@ var app = (function($, _, Backbone) {
         var modelMap = app.options.searchModels[selectedModel];
     	if (modelMap.viewHandlebars != undefined){
     		var data = undefined;
-    		var url = '/xgds_map_server/mapJson/' + modelMap.model + '/pk:' + this.options.modelPK;
+    		var url = '/xgds_map_server/fmapJson/' + modelMap.model + '/pk:' + this.options.modelPK;
 			
 				$.when($.get(url)
 				).then(function(incomingData, status) {
