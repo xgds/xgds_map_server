@@ -200,22 +200,10 @@ $(function() {
             },
             
             getSiteFrameProjection: function(site){
-            	var easting = site.east0;
-            	var northing = site.north0;
-            	var zone = site.zoneNumber;
-            	var south = site.south;
-            	
-            	var projectionKey = "utm:" + zone;
-            	if (south == 1){
-            		projectionKey += "S";
-            	}
+            	projectionKey = site.projCode;
             	var foundProjection = ol.proj.get(projectionKey);
             	if (_.isUndefined(foundProjection)){
-            		var proj4js_def = '+proj=utm +zone=' + zone;
-            		if (south){
-            			proj4js_def += ' +south';
-            		}
-            		proj4js_def += ' +ellps=WGS84 +datum=WGS84 +units=m +no_defs';
+            		var proj4js_def = site.projString;
             		proj4.defs(projectionKey, proj4js_def);
             		
             		var newProjection = new ol.proj.Projection({
