@@ -1531,7 +1531,8 @@ def getMappedObjectsJson(request, object_name, filter=None, range=0, isLive=Fals
         return HttpResponse(json.dumps({'error': {'message': 'No objects found.',
                                                   'filter': filter}
                                         }),
-                            content_type='application/json')
+                            content_type='application/json',
+                            status=406)
 
 
 @never_cache
