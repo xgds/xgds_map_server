@@ -918,12 +918,14 @@ $(function() {
             this.objectsJson = data
             for (i = 0; i < this.objectsJson.length; i++){
                 var object = this.objectsJson[i];
-                var theClass = window[object.type];
-                if (!_.isUndefined(theClass) && !_.isUndefined(theClass.constructElements)) {
-                    if (_.isUndefined(this.map[object.type])){
-                        this.map[object.type] = [];
-                    }
-                    this.map[object.type].push(object);
+                if (object != null){
+	                var theClass = window[object.type];
+	                if (!_.isUndefined(theClass) && !_.isUndefined(theClass.constructElements)) {
+	                    if (_.isUndefined(this.map[object.type])){
+	                        this.map[object.type] = [];
+	                    }
+	                    this.map[object.type].push(object);
+	                }
                 }
             }
             for (var key in this.map){
