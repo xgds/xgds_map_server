@@ -105,7 +105,7 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,
     url(r'^fmapJson/(?P<object_name>[\w]+[\.]*[\w]*)/(?P<filter>[\w]+:[\w]+)$', views.getMappedObjectsJson, {'isLive':settings.GEOCAM_UTIL_LIVE_MODE, 'force':True}, 'xgds_map_server_objectsJson_force'),
     url(r'^mapJson/(?P<object_name>[\w]+[\.]*[\w]*)/(?P<filter>[\w]+:[\w]+)$', views.getMappedObjectsJson, {'isLive':settings.GEOCAM_UTIL_LIVE_MODE}, 'xgds_map_server_objectsJson'),
     url(r'^mapJson/(?P<object_name>[\w]+[\.]*[\w]*)/(?P<range>[\d]+)$', views.getMappedObjectsJson, {'isLive':settings.GEOCAM_UTIL_LIVE_MODE}, 'xgds_map_server_objectsJson_range'),
-    url(r'^mapJson/(?P<object_name>[\w]+[\.]*[\w]*)$', views.getMappedObjectsJson, {'range':0, 'isLive':settings.GEOCAM_UTIL_LIVE_MODE}, 'xgds_map_server_objectsJson_default'),
+    url(r'^mapJson/(?P<object_name>[\w]+[\.]*[\w]*)$', views.getMappedObjectsJson, {'range':0, 'force': True, 'isLive':settings.GEOCAM_UTIL_LIVE_MODE}, 'xgds_map_server_objectsJson_default'),
     
     url(r'^search/$', views.getSearchPage, {}, 'search_map'),
     url(r'^search/(?P<modelName>[\w]+)$', views.getSearchPage, {}, 'search_map_object'),

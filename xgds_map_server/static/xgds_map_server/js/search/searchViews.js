@@ -308,15 +308,15 @@ app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
     	this.data = data;
     },
     updateContents: function() {
-    	hideError(this.$el);
-		initializeNotesReference(this.$el, this.data.app_label, this.data.model_type, this.data.pk, this.data[this.modelMap.event_time_field], this.data[this.modelMap.event_timezone_field]);
-		getNotesForObject(this.data.app_label, this.data.model_type, this.data.pk, 'notes_content', this.$el.find('table#notes_list'));
+    	xgds_notes.hideError(this.$el);
+		xgds_notes.initializeNotesReference(this.$el, this.data.app_label, this.data.model_type, this.data.pk, this.data[this.modelMap.event_time_field], this.data[this.modelMap.event_timezone_field]);
+		xgds_notes.getNotesForObject(this.data.app_label, this.data.model_type, this.data.pk, 'notes_content', this.$el.find('table#notes_list'));
     },
     render: function() {
         var appended = this.$el.empty().append(this.template(this.data));
     },
     onShow: function() {
-    	setupNotesUI();
+    	xgds_notes.setupNotesUI();
     	this.updateContents();
     }
 });
