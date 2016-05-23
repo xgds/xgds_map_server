@@ -1491,7 +1491,7 @@ def getMappedObjectsJson(request, object_name, filter=None, range=0, isLive=Fals
         range = int(range)
         if not force and (isLive or range):
             if range==0:
-                range = 6
+                range = settings.XGDS_MAP_SERVER_DEFAULT_HOURS_RANGE
             now = datetime.datetime.now(pytz.utc)
             yesterday = now - datetime.timedelta(seconds=3600 * range)
             try:

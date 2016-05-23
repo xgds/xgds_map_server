@@ -115,3 +115,5 @@ XGDS_MAP_SERVER_SITE_MONIKER = 'Site'
 
 XGDS_DATA_IMPORTS = getOrCreateDict('XGDS_DATA_IMPORTS')
 XGDS_DATA_IMPORTS['GeoTiff Map Tile'] = '/xgds_map_server/addTile'
+
+XGDS_MAP_SERVER_DEFAULT_HOURS_RANGE = 12 # if you are in live mode how many hours back to search through for objects by default
