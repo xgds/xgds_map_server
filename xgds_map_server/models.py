@@ -156,10 +156,8 @@ class KmlMap(AbstractMap):
         if self.localFile:
             return request.build_absolute_uri(self.localFile.url)
         elif self.kmlFile:
-            if (self.kmlFile.startswith('/') or
-                self.kmlFile.startswith('http://') or
-                self.kmlFile.startswith('https://')):
-                return self.kmlFile
+            if (self.kmlFile.startswith('/')):
+                return request.build_absolute_uri(self.kmlFile)
             else:
                 return request.build_absolute_uri(self.kmlFile.url)
         return ''
