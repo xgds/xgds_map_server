@@ -1121,12 +1121,12 @@ def deleteGroup(map_group, state):
     for group in MapGroup.objects.filter(parent=map_group.uuid):
         deleteGroup(group, state)
 
-def setMapProperties(m):
-    url = m.getGoogleEarthUrl()
+def setMapProperties(m, request):
+    url = m.getGoogleEarthUrl(request)
     if (url.startswith('/') or
             url.startswith('http://') or
             url.startswith('https://')):
-        m.url = latestRequestG.build_absolute_uri(url)
+        m.url = url
     else:
         m.url = latestRequestG.build_absolute_uri(url)
     if m.openable:
@@ -1143,7 +1143,7 @@ def setMapProperties(m):
     # logging.debug('listItemType is %s', m.listItemType)
 
 
-def getMapTree():
+def getMapTree(request):
     ''' This is left here to support older kml feed views '''
     groups = MapGroup.objects.filter(deleted=0)
     kmlMaps = KmlMap.objects.filter(deleted=0)
@@ -1166,7 +1166,7 @@ def getMapTree():
             parent.subGroups.append(subGroup)
 
     for subMap in kmlMaps:
-        setMapProperties(subMap)
+        setMapProperties(subMap, request)
         if subMap.parent:
             parent = groupLookup[subMap.parent.uuid]
             parent.subMaps.append(subMap)
@@ -1362,7 +1362,7 @@ def getMapFeedAll(request):
         'wrapDocument': int(request.GET.get('doc', '1'))
     }
 
-    root = getMapTree()
+    root = getMapTree(request)
     out = StringIO()
     printTreeToKml(out, opts, root)
     s = out.getvalue()

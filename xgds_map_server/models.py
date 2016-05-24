@@ -28,6 +28,7 @@ from geocamUtil.models.UuidField import UuidField
 from geocamUtil.models.managers import ModelCollectionManager
 from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
 from xgds_data.models import Collection, RequestLog
+from xgds_core.couchDbStorage import CouchDbStorage
 
 
 # from Carbon.TextEdit import WIDTHHook
@@ -128,13 +129,14 @@ class AbstractMap(AbstractMapNode):
         abstract = True
 
 
+couchStore = CouchDbStorage()
 class KmlMap(AbstractMap):
     """
     A reference to an external or local KML file.  Note we can't render all KML features in all libraries
     """
     kmlFile = models.CharField('KML File', max_length=200)  # actual name of the kml file
     localFile = models.FileField(upload_to=settings.XGDS_MAP_SERVER_MEDIA_SUBDIR, max_length=256,
-                                 null=True, blank=True)
+                                 null=True, blank=True, storage=couchStore)
     openable = models.BooleanField(default=True)
     hasNetworkLink = models.BooleanField(default=False) # if something has a network link, right now do not include it for openlayers
 
@@ -150,18 +152,20 @@ class KmlMap(AbstractMap):
         return any([r.search(self.name)
                     for r in LOGO_REGEXES])
 
-    def getGoogleEarthUrl(self):
+    def getGoogleEarthUrl(self, request):
         if self.localFile:
-            return settings.DATA_URL + str(self.localFile)
+            return request.build_absolute_uri(self.localFile.url)
         elif self.kmlFile:
-            if self.kmlFile[0] == '/':
+            if (self.kmlFile.startswith('/') or
+                self.kmlFile.startswith('http://') or
+                self.kmlFile.startswith('https://')):
                 return self.kmlFile
             else:
-                return settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + self.kmlFile
+                return request.build_absolute_uri(self.kmlFile.url)
         return ''
         
     def getUrl(self):
-        if self.kmlFile:
+        if self.kmlFile and not self.localFile:
             return settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + self.kmlFile
         elif self.localFile:
             return self.localFile.url
