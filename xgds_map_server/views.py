@@ -1480,13 +1480,7 @@ def getMappedObjectsJson(request, object_name, filter=None, range=0, isLive=Fals
             THE_OBJECT = LazyGetModelByName(object_name)
         isLive = int(isLive)
         if filter:
-            #TODO this only handles a single filter
-            splits = str(filter).split(":")
-            try:
-                value = int(splits[1]);
-                filterDict = {splits[0]:value}
-            except:
-                filterDict = {splits[0]: splits[1]}
+            filterDict = buildFilterDict(filter)
         
         range = int(range)
         if not force and (isLive or range):
@@ -1533,6 +1527,50 @@ def getMappedObjectsJson(request, object_name, filter=None, range=0, isLive=Fals
                             content_type='application/json',
                             status=406)
 
+def buildFilterDict(filter):
+    filterDict = {}
+    dictEntries = str(filter).split(",")
+    for entry in dictEntries:
+        splits = str(entry).split(":")
+        try:
+            value = int(splits[1]);
+            filterDict[splits[0]] = value
+        except:
+            filterDict[splits[0]] = value
+
+@never_cache
+def getLastObjectJson(request, object_name, filter=None):
+    """ Get the object json information to show in table or map views.
+    """
+    try:
+        try:
+            THE_OBJECT = LazyGetModelByName(getattr(settings, object_name))
+        except:
+            THE_OBJECT = LazyGetModelByName(object_name)
+        if filter:
+            filterDict = buildFilterDict(filter)
+            object = THE_OBJECT.get().objects.filter(**filterDict).last()
+        else:
+            object = THE_OBJECT.get().objects.last()
+    except:
+        traceback.print_exc()
+        return HttpResponse(json.dumps({'error': {'message': 'I think you passed in an invalid filter.',
+                                                  'filter': filter}
+                                        }),
+                            content_type='application/json')
+
+    if object:
+        resultDict = object.toMapDict()
+        if resultDict:
+            json_data = json.dumps([resultDict], indent=4, cls=DatetimeJsonEncoder)
+            return HttpResponse(content=json_data,
+                                content_type="application/json")
+    else:
+        return HttpResponse(json.dumps({'error': {'message': 'No objects found.',
+                                                  'filter': filter}
+                                        }),
+                            content_type='application/json',
+                            status=406)
 
 @never_cache
 def getMappedObjectsExtens(request, object_name, extens, today=False):

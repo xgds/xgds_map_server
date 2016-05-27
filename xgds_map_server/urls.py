@@ -106,6 +106,8 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,
     url(r'^mapJson/(?P<object_name>[\w]+[\.]*[\w]*)/(?P<filter>[\w]+:[\w]+)$', views.getMappedObjectsJson, {'isLive':settings.GEOCAM_UTIL_LIVE_MODE}, 'xgds_map_server_objectsJson'),
     url(r'^mapJson/(?P<object_name>[\w]+[\.]*[\w]*)/(?P<range>[\d]+)$', views.getMappedObjectsJson, {'isLive':settings.GEOCAM_UTIL_LIVE_MODE}, 'xgds_map_server_objectsJson_range'),
     url(r'^mapJson/(?P<object_name>[\w]+[\.]*[\w]*)$', views.getMappedObjectsJson, {'range':0, 'force': True, 'isLive':settings.GEOCAM_UTIL_LIVE_MODE}, 'xgds_map_server_objectsJson_default'),
+    url(r'^lastJson/(?P<object_name>[\w]+[\.]*[\w]*)/(?P<filter>[\w]+:[\w]+)$', views.getLastObjectJson, {},'xgds_map_server_lastJson_filter'),
+    url(r'^lastJson/(?P<object_name>[\w]+[\.]*[\w]*)$', views.getLastObjectJson, {}, 'xgds_map_server_lastJson'),
     
     url(r'^search/$', views.getSearchPage, {}, 'search_map'),
     url(r'^search/(?P<modelName>[\w]+)$', views.getSearchPage, {}, 'search_map_object'),
