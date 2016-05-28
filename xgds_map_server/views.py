@@ -1617,3 +1617,35 @@ def getViewSingleModelPage(request, modelName, modelPK):
                                'templates': templates,
                                'app': 'xgds_map_server/js/search/mapViewerSingleModelApp.js'},
                               context_instance=RequestContext(request))
+
+def getViewMultiModelPage(request, object_names, object_pks=None, filters=None, latest=True):
+    fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
+    templates = get_handlebars_templates(fullTemplateList, 'XGDS_MAP_SERVER_HANDLEBARS_DIRS')
+    
+    object_urls = [];
+    if latest:
+        for index, obj in enumerate(object_names):
+            object_name = settings.XGDS_MAP_SERVER_JS_MAP[obj]['model']
+            if filters:
+                url = reverse('xgds_map_server_lastJson_filter', kwargs={'object_name': object_name, 'filter': filters[index]})
+            elif object_pks:
+                url = reverse('xgds_map_server_lastJson_filter', kwargs={'object_name': object_name, 'filter': 'pk:'+object_pks[index]})
+            else:
+                url = reverse('xgds_map_server_lastJson', kwargs={'object_name': object_name})
+            object_urls.append(str(url))
+    else:
+        for index, obj in enumerate(object_names):
+            object_name = settings.XGDS_MAP_SERVER_JS_MAP[obj]['model']
+            if filters:
+                url = reverse('xgds_map_server_objectsJson_force', kwargs={'object_name': object_name, 'filter': filters[index]})
+            elif object_pks:
+                url = reverse('xgds_map_server_objectsJson_force', kwargs={'object_name': object_name, 'filter': 'pk:'+object_pks[index]})
+            else:
+                url = reverse('xgds_map_server_lastJson', kwargs={'object_name': object_name})
+            object_urls.append(str(url))
+    return render_to_response("xgds_map_server/mapViewMultiModel.html", 
+                              {'model_names': object_names,
+                               'model_urls' : object_urls,
+                               'templates': templates,
+                               'app': 'xgds_map_server/js/search/mapViewerMultiModelApp.js'},
+                              context_instance=RequestContext(request))
