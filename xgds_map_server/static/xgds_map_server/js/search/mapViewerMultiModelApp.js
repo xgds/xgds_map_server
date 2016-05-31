@@ -29,6 +29,7 @@ Backbone.Marionette.TemplateCache.prototype.compileTemplate = function(
 var app = (function($, _, Backbone) {
     app = new Backbone.Marionette.Application();
     app.views = app.views || {};
+    app.detail_views = app.detail_views || {};
     app.regionManager = new Marionette.RegionManager();
     app.regionManager.addRegions({'mapRegion' : '#mapDiv',
         						  'layersRegion': '#layers'
@@ -66,17 +67,31 @@ var app = (function($, _, Backbone) {
     });
     
     app.showDetailView = function(handlebarSource, data, modelMap, modelName){
+    	
     	var detailView = new app.views.SearchDetailView({
     		handlebarSource:handlebarSource,
     		data:data,
     		modelMap: modelMap
     	});
+    	app.detail_views[modelName] = detailView;
     	var viewRegionName = 'viewRegion'+modelName;
     	var viewDivName = '#viewDiv'+modelName;
 
     	app.regionManager.addRegion(viewRegionName, viewDivName);
     	app.regionManager.get(viewRegionName).show(detailView);
     	showOnMap(data); 
+    	
+    	var reloadIconName = '#reload' + modelName;
+    	$(reloadIconName).click(function() {
+    		reloadModelData(modelName);
+    	});
+    	
+    };
+    
+    app.updateDetailView = function(modelName, data ){
+    	var detailView = app.detail_views[modelName];
+    	detailView.setData(data);
+    	detailView.render();
     };
     
     var loadUpModel = function(modelName, modelMap, url) {
@@ -107,11 +122,19 @@ var app = (function($, _, Backbone) {
 		});
     };
     
+    var reloadModelData = function(modelName){
+    	var index = app.options.modelNames.indexOf(modelName);
+    	var url = app.options.modelUrls[index];
+    	$.when($.get(url)
+		).then(function(incomingData, status) {
+			var data = incomingData[0];
+			app.updateDetailView(modelName, data);
+		});
+    };
+    
     app.addInitializer(function(options) {
         this.options = options = _.defaults(options || {});
         
-//        var selectedModel = app.options.modelName;
-//        var modelMap = app.options.searchModels[selectedModel];
         for (var i=0; i < app.options.modelNames.length; i++){
         	var modelName = app.options.modelNames[i];
         	var url = app.options.modelUrls[i];
