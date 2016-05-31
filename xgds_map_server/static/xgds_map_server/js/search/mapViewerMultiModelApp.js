@@ -30,6 +30,7 @@ var app = (function($, _, Backbone) {
     app = new Backbone.Marionette.Application();
     app.views = app.views || {};
     app.detail_views = app.detail_views || {};
+    app.notes_views = app.notes_views || {};
     app.regionManager = new Marionette.RegionManager();
     app.regionManager.addRegions({'mapRegion' : '#mapDiv',
         						  'layersRegion': '#layers'
@@ -76,11 +77,22 @@ var app = (function($, _, Backbone) {
     	app.detail_views[modelName] = detailView;
     	var viewRegionName = 'viewRegion'+modelName;
     	var viewDivName = '#viewDiv'+modelName;
-
     	app.regionManager.addRegion(viewRegionName, viewDivName);
     	app.regionManager.get(viewRegionName).show(detailView);
     	showOnMap(data); 
     	
+    	// add the notes 
+    	var notesView = new app.views.SearchNotesView({
+    		data:data,
+    		modelMap: modelMap
+    	});
+    	app.notes_views[modelName] = notesView;
+    	var notesRegionName = 'notesRegion'+modelName;
+    	var notesDivName = '#notesDiv' + modelName;
+    	app.regionManager.addRegion(notesRegionName, notesDivName);
+    	app.regionManager.get(notesRegionName).show(notesView);
+    	
+    	// hook up ajax reloading
     	var reloadIconName = '#reload' + modelName;
     	$(reloadIconName).click(function() {
     		reloadModelData(modelName);
@@ -92,6 +104,10 @@ var app = (function($, _, Backbone) {
     	var detailView = app.detail_views[modelName];
     	detailView.setData(data);
     	detailView.render();
+    	
+    	var notesView = app.notes_views[modelName];
+    	notesView.setData(data);
+    	notesView.updateContents();
     };
     
     var loadUpModel = function(modelName, modelMap, url) {
