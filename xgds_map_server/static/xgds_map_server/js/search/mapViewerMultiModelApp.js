@@ -84,7 +84,8 @@ var app = (function($, _, Backbone) {
     	// add the notes 
     	var notesView = new app.views.SearchNotesView({
     		data:data,
-    		modelMap: modelMap
+    		modelMap: modelMap,
+    		modelName: modelName
     	});
     	app.notes_views[modelName] = notesView;
     	var notesRegionName = 'notesRegion'+modelName;

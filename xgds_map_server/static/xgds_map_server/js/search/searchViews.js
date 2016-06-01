@@ -288,6 +288,7 @@ app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
     initialize: function(options) {
     	this.data = options.data;
     	this.modelMap = options.modelMap;
+    	this.modelName = options.modelName;
     	this.setupHandlebars();
     },
     setupHandlebars: function(){
@@ -310,12 +311,15 @@ app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
     updateContents: function() {
     	xgds_notes.hideError(this.$el);
 		xgds_notes.initializeNotesReference(this.$el, this.data.app_label, this.data.model_type, this.data.pk, this.data[this.modelMap.event_time_field], this.data[this.modelMap.event_timezone_field]);
-		xgds_notes.getNotesForObject(this.data.app_label, this.data.model_type, this.data.pk, 'notes_content', this.$el.find('table#notes_list'));
+		xgds_notes.getNotesForObject(this.data.app_label, this.data.model_type, this.data.pk, 'notes_content', this.$el.find('table.notes_list'));
     },
     render: function() {
         var appended = this.$el.empty().append(this.template(this.data));
     },
     onShow: function() {
+    	// change the id of the table ...
+    	var notesList = this.$el.find('.notes_list');
+    	notesList.attr('id', 'notes_list' + this.modelName);
     	xgds_notes.setupNotesUI();
     	this.updateContents();
     }
@@ -449,7 +453,8 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     	});
     	this.detailNotesView = new app.views.SearchNotesView({
     		data:data,
-    		modelMap: this.modelMap[this.selectedModel]
+    		modelMap: this.modelMap[this.selectedModel],
+    		modelName: this.selectedModel
     	});
     	try {
     		var context = this;

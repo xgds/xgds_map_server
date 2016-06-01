@@ -1537,6 +1537,7 @@ def buildFilterDict(filter):
             filterDict[splits[0]] = value
         except:
             filterDict[splits[0]] = value
+    return filterDict
 
 @never_cache
 def getLastObjectJson(request, object_name, filter=None):

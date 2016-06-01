@@ -868,7 +868,7 @@ $(function() {
             this.options = options || {};
             this.group = this.options.group;
             app.vent.on('mapSearch:found', function(data) {
-        	if (data.length > 0){
+        	if (data != undefined && data.length > 0){
         	    this.constructMapFeatures(data);
         	}
             }, this);

@@ -81,7 +81,8 @@ var app = (function($, _, Backbone) {
     app.showNotesView = function(data, modelMap){
     	var notesView = new app.views.SearchNotesView({
     		data:data,
-    		modelMap: modelMap
+    		modelMap: modelMap,
+    		modelName: app.options.modelName
     	});
     	app.notesRegion.show(notesView);
     }
