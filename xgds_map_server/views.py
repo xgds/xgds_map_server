@@ -1536,7 +1536,7 @@ def buildFilterDict(filter):
             value = int(splits[1]);
             filterDict[splits[0]] = value
         except:
-            filterDict[splits[0]] = value
+            filterDict[splits[0]] = splits[1]
     return filterDict
 
 @never_cache
