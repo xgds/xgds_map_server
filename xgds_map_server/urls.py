@@ -32,11 +32,6 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,
     url(r'^feedPage/', views.getGoogleEarthFeedPage,
      {'readOnly': True, 'securityTags': ['readOnly']},
      'xgds_map_server_feed'),
-    # Map server urls
-    # HTML list of maps with description and links to individual maps, and a link to the kml feed
-    # url(r'^list/', views.getMapListPage,
-    # {'readOnly': True, 'securityTags': ['readOnly']},
-    # 'mapList'),
     # for saving single map feature from map layer, or creating new one
     url(r'^feature$', views.saveOrDeleteFeature, {}, 'saveOrDeleteFeature'),
     url(r'^feature/(?P<uuid>[\w-]+)$', views.saveOrDeleteFeature, {}, 
@@ -50,10 +45,6 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,
     # Open Map Editor on a map layer
     url(r'^mapeditor/(?P<layerID>[\w-]+)/', views.getMapEditorPage, {}, 'mapEditLayer'),
     url(r'^maplayer/kml/(?P<layerID>[\w-]+)/', views.getMapLayerKML,{},'mapLayerKML'),
-    # JSON tree of maps, formatted for jstree
-#     url(r'^listjson/', views.getMapTreeJSON,
-#      {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']},
-#      'mapListJSON'),
     url(r'^treejson/', views.getFancyTreeJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapTreeJSON'),
     url(r'^selectedjson/', views.getSelectedNodesJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapSelectedJSON'),
     url(r'^mapLayerJSON/(?P<layerID>[\w-]+)/', views.getMapLayerJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapLayerJSON'),

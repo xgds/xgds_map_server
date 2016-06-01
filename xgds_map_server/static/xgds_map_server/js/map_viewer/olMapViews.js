@@ -616,8 +616,10 @@ $(function() {
         initializeFeaturesJson: function() {
             var _this = this;
             $.getJSON(this.getJSONURL(), function(data){
-                _this.cacheJSON(data);
-                _this.trigger('readyToDraw');
+            	if (data != null && data.length > 0 && data[0] != null){
+            		_this.cacheJSON(data);
+            		_this.trigger('readyToDraw');
+            	}
             });
         },
         getJSONURL: function() {
