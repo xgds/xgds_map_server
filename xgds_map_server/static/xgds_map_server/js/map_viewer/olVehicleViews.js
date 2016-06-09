@@ -38,7 +38,8 @@ $(function() {
                     source: this.olSource,
                     zIndex: 3,
                     style: this.getStyles()
-                });    
+                });
+                this.vectorLayer.setZIndex(1000);
             }
         },
     	constructFeature: function() {
