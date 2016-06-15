@@ -236,6 +236,9 @@ class MapLayer(AbstractMap):
         result = super(MapLayer, self).getTreeJson()
         result["data"]["layerJSON"] = reverse('mapLayerJSON', kwargs={'layerID': self.uuid})
         return result
+    
+    def getFeatures(self):
+        return FEATURE_MANAGER.filter(mapLayer__pk=self.uuid)
 
 
 class MapCollection(AbstractMap):
@@ -454,17 +457,29 @@ class AbstractFeature(models.Model):
 class Polygon(AbstractFeature):
     polygon = models.PolygonField()
     style = models.ForeignKey(PolygonStyle, null=True)
+    
+    @property
+    def geometry(self):
+        return self.polygon
 
 
 class LineString(AbstractFeature):
     lineString = models.LineStringField()
     style = models.ForeignKey(LineStringStyle, null=True)
 
+    @property
+    def geometry(self):
+        return self.lineString
+
 
 class Point(AbstractFeature):
     point = models.PointField()
     style = models.ForeignKey(PointStyle, null=True)
     icon = models.ForeignKey(Icon, null=True)
+
+    @property
+    def geometry(self):
+        return self.point
 
 
 class Drawing(AbstractFeature):

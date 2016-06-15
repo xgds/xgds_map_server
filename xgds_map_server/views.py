@@ -60,7 +60,8 @@ from xgds_data.views import searchHandoff, resultsIdentity
 from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm, MapSearchForm, MapCollectionForm, EditMapTileForm
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapSearch, MapCollection, MapLink, MAP_NODE_MANAGER, MAP_MANAGER
 from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
-
+from xgds_map_server.KmlLayerExporter import exportMapLayer
+from geocamUtil.KmlUtil import wrapKmlForDownload
 
 #from django.http import StreamingHttpResponse
 # pylint: disable=E1101,R0911
@@ -1463,11 +1464,11 @@ def processTiles(request, uuid, minZoom, maxZoom, resampleMethod, mapTile):
 #             p.terminate()
 #             os.system(tileCmd)
 
-    
 def getMapLayerKML(request, layerID):
-    #TODO implement
-    pass
-
+    if layerID:
+        mapLayer = MapLayer.objects.get(pk=layerID)
+        result =  exportMapLayer(mapLayer)
+        return wrapKmlForDownload(result, mapLayer.name)
 
 @never_cache
 def getMappedObjectsJson(request, object_name, filter=None, range=0, isLive=False, force=False):
