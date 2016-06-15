@@ -70,7 +70,7 @@
 {% for modelName in model_names %}
 <div id="view-gridstack-item-{{modelName}}" class="grid-stack-item" 
 		data-gs-x="{{ forloop.counter0|multiply:3 }}" data-gs-y="0"
-        data-gs-width="3" data-gs-height="3" >
+        data-gs-width="3" data-gs-height="{% if forloop.counter0 == 0 %}4{% else %}3{% endif %}" >
         <div class="grid-stack-item-content" id="view-gridstack-item-content-{{modelName}}" >
 				<i class="icon-arrows-ccw right" title="Load Latest" id="reload{{modelName}}"></i>
 				<i class="icon-lock-open pinDiv warning"></i>
