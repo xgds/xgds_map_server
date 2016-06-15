@@ -1123,6 +1123,9 @@ def deleteGroup(map_group, state):
         deleteGroup(group, state)
 
 def setMapProperties(m, request):
+    """
+    This is for properties for nodes in map tree
+    """
     url = m.getGoogleEarthUrl(request)
     if (url.startswith('/') or
             url.startswith('http://') or
@@ -1130,18 +1133,18 @@ def setMapProperties(m, request):
         m.url = url
     else:
         m.url = latestRequestG.build_absolute_uri(url)
-    if m.openable:
-        m.listItemType = 'check'
-    else:
-        m.listItemType = 'checkHideChildren'
     if m.visible:
         m.visibility = 1
     else:
         m.visibility = 0
-    # logging.debug('kml file is %s', m.kmlFile)
-    # logging.debug('url is %s', m.url)
-    # logging.debug('visibility is %s', m.visibility)
-    # logging.debug('listItemType is %s', m.listItemType)
+    try:
+        if m.openable:
+            m.listItemType = 'check'
+        else:
+            m.listItemType = 'checkHideChildren'
+    except:
+        m.listItemType = 'check'
+
 
 
 def getMapTree(request):
@@ -1149,7 +1152,7 @@ def getMapTree(request):
     groups = MapGroup.objects.filter(deleted=0)
     kmlMaps = KmlMap.objects.filter(deleted=0)
 #     links = MapLink.objects.filter(deleted=0)
-#     layers = MapLayer.objects.filter(deleted=0)
+    layers = MapLayer.objects.filter(deleted=0)
 #     tiles = MapTile.objects.filter(deleted=0)
 
     groupLookup = dict([(group.uuid, group) for group in groups])
@@ -1158,7 +1161,7 @@ def getMapTree(request):
         group.subGroups = []
         group.subMaps = []
         group.subLinks = []
-#         group.subLayers = []
+        group.subLayers = []
 #         group.subTiles = []
 
     for subGroup in groups:
@@ -1178,10 +1181,11 @@ def getMapTree(request):
 #             parent = groupLookup[subLink.parent.uuid]
 #             parent.subLinks.append(subLink)
 
-#     for subLayer in layers:
-#         if subLayer.parent:
-#             parent = groupLookup[subLayer.parent.uuid]
-#             parent.subLayers.append(subLayer)
+    for subLayer in layers:
+        setMapProperties(subLayer, request)
+        if subLayer.parent:
+            parent = groupLookup[subLayer.parent.uuid]
+            parent.subLayers.append(subLayer)
 # 
 #     for subTile in tiles:
 #         if subTile.parent:
@@ -1227,6 +1231,8 @@ def printGroupToKml(out, opts, node, level=0):
     for n in node.subMaps:
         printMapToKml(out, opts, n, level + 1)
     for n in node.subLinks:
+        printMapToKml(out, opts, n, level + 1)
+    for n in node.subLayers:
         printMapToKml(out, opts, n, level + 1)
     out.write('</Folder>\n')
 

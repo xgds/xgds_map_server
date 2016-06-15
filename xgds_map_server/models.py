@@ -239,6 +239,9 @@ class MapLayer(AbstractMap):
     
     def getFeatures(self):
         return FEATURE_MANAGER.filter(mapLayer__pk=self.uuid)
+    
+    def getGoogleEarthUrl(self, request):
+        return request.build_absolute_uri(reverse('mapLayerKML', kwargs={'layerID': self.uuid}))
 
 
 class MapCollection(AbstractMap):
