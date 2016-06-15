@@ -1219,7 +1219,8 @@ def printTreeToKml(out, opts, node):
 
 def printGroupToKml(out, opts, node, level=0):
     if (0 == len(getattr(node, 'subGroups', [])))\
-       and (0 == len(getattr(node, 'subMaps', []))):
+       and (0 == len(getattr(node, 'subMaps', [])))\
+       and (0 == len(getattr(node, 'subLayers', []))):
         print "Found no maps!!"
         return
     out.write("""
