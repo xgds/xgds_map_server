@@ -44,7 +44,7 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,
      'mapTree'),
     # Open Map Editor on a map layer
     url(r'^mapeditor/(?P<layerID>[\w-]+)/', views.getMapEditorPage, {}, 'mapEditLayer'),
-    url(r'^maplayer/kml/(?P<layerID>[\w-]+)/', views.getMapLayerKML,{},'mapLayerKML'),
+    url(r'^maplayer/kml/(?P<layerID>[\w-]+).kml', views.getMapLayerKML,{},'mapLayerKML'),
     url(r'^treejson/', views.getFancyTreeJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapTreeJSON'),
     url(r'^selectedjson/', views.getSelectedNodesJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapSelectedJSON'),
     url(r'^mapLayerJSON/(?P<layerID>[\w-]+)/', views.getMapLayerJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapLayerJSON'),
