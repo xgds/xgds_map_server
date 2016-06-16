@@ -15,6 +15,7 @@
 #__END_LICENSE__
 
 from geocamUtil import KmlUtil
+from django.contrib.staticfiles.templatetags.staticfiles import static
 
 """
 Exports map layer as KML String
@@ -25,21 +26,28 @@ def getFeatureKml(feature):
 <Placemark>
 <name>%(name)s</name>
 <description>%(description)s</description>
+<styleUrl>%(style)s</styleUrl>
 %(point)s
 </Placemark>''' % {'name': feature.name,
                'description': feature.description,
-               'point': feature.geometry.kml, 
+               'point': feature.geometry.kml,
+               'style': '#xgds'
                })
     return result
 
-def makeStyles(mapLayer):
-    #TODO implement our own styles
-    return ''
+def makeStyles(request, mapLayer):
+    style = KmlUtil.makeStyle("xgds", 
+                              iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/point.png')), 
+                              iconScale=0.5,
+                              lineColor='FFFF0000',
+                              lineWidth=4,
+                              polyColor='44FF0000')
+    return style
 
-def exportMapLayer(mapLayer):
+def exportMapLayer(request, mapLayer):
     resultString = ''
     features = mapLayer.getFeatures()
     for f in features:
         resultString += '\n' + getFeatureKml(f)
         
-    return makeStyles(mapLayer) + '\n' + resultString
+    return makeStyles(request, mapLayer) + '\n' + resultString
