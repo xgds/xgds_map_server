@@ -81,6 +81,34 @@ app.views.FancyTreeView = Backbone.View.extend({
                 extensions: ["persist"],
                 source: app.treeData,
                 checkbox: true,
+                imagePath: "/static/xgds_map_server/icons/", //TODO check icon folder path
+                renderNode: function(event, data) {
+                    var node = data.node;
+                    if(node.data.cstrender){
+                        var image;
+                        //get the image depending on the type
+                        switch (node.data.type) {
+                            case "MapLink":
+                                image = "point.png"; //TODO change it to whatever you want.
+                                return;
+                            case "KmlMap":
+                                image = "globe.png";
+                                return;
+                            case "MapLayer":
+                                image = "northing.png"; //TODO change it to whatever you want.
+                                return;
+                            case "MapTile":
+                                image = "ylw-pushpin.png"; //TODO change it to whatever you want.
+                                return;
+                        }
+                        if (image) {
+                            $(node.span).find("> span.fancytree-icon").css({
+                                backgroundImage: "url("+image+")",
+                                backgroundPosition: "0 0"
+                            });
+                        }
+                    }
+                },
                 lazyLoad: function(event, data){
                     data.result = $.ajax({
                       url: data.node.data.childNodesUrl,
