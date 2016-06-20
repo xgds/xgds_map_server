@@ -74,41 +74,33 @@ app.views.FancyTreeView = Backbone.View.extend({
     close: function() {
       // we don't really want to close!
     },
+    getTreeIcon: function(key) {
+    	var image = "/static/xgds_map_server/icons/";
+    	switch (key) {
+	        case "MapLink":
+	            return image + "link-16.png";
+	        case "KmlMap":
+	            return image + "gearth.png";
+	        case "MapLayer":
+	            return image + "maplayer.png"; //TODO change it to whatever you want.
+	        case "MapTile":
+	            return image + "tif.png";
+	    }
+    	return null
+    },
     createTree: function() {
         if (_.isUndefined(app.tree) && !_.isUndefined(app.treeData)){
             var layertreeNode = this.$el.find("#layertree");
+            var context = this;
             var mytree = layertreeNode.fancytree({
                 extensions: ["persist"],
                 source: app.treeData,
                 checkbox: true,
-                imagePath: "/static/xgds_map_server/icons/", //TODO check icon folder path
-                renderNode: function(event, data) {
-                    var node = data.node;
-                    if(node.data.cstrender){
-                        var image;
-                        //get the image depending on the type
-                        switch (node.data.type) {
-                            case "MapLink":
-                                image = "point.png"; //TODO change it to whatever you want.
-                                return;
-                            case "KmlMap":
-                                image = "globe.png";
-                                return;
-                            case "MapLayer":
-                                image = "northing.png"; //TODO change it to whatever you want.
-                                return;
-                            case "MapTile":
-                                image = "ylw-pushpin.png"; //TODO change it to whatever you want.
-                                return;
-                        }
-                        if (image) {
-                            $(node.span).find("> span.fancytree-icon").css({
-                                backgroundImage: "url("+image+")",
-                                backgroundPosition: "0 0"
-                            });
-                        }
-                    }
-                },
+                icon: function(event, data) {
+                	  if( !data.node.isFolder() ) { 
+                		  return context.getTreeIcon(data.node.data.type); 
+                	  }
+                	},
                 lazyLoad: function(event, data){
                     data.result = $.ajax({
                       url: data.node.data.childNodesUrl,
