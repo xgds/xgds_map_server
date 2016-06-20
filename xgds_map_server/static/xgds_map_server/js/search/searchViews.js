@@ -173,29 +173,34 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         }
     },
     doSearch: function() {
-        var theForm = this.$("#form-"+this.selectedModel);
-        var postData = theForm.serializeArray();
-        postData.push({'name':'modelClass', 'value':app.options.searchModels[this.selectedModel].model});
-        this.setMessage("Searching...");
-        $.ajax({
-            url: '/xgds_map_server/doMapSearch',
-            dataType: 'json',
-            data: postData,
-            success: $.proxy(function(data) {
-                if (_.isUndefined(data) || data.length === 0){
-                    this.setMessage("None found.");
-                } else {
-                    this.searchResultsView.updateContents(this.selectedModel, data);
-                    this.setupSaveSearchDialog();
-                    this.clearMessage();
-                }
-            }, this),
-            error: $.proxy(function(data){
-                app.vent.trigger("mapSearch:clear");
-                this.searchResultsView.reset();
-                this.setMessage("Search failed.")
-            }, this)
-          });
+    	
+    	this.searchResultsView.setupDatatable(this.selectedModel);
+    	this.setupSaveSearchDialog();
+    	return;
+    	
+//        var theForm = this.$("#form-"+this.selectedModel);
+//        var postData = theForm.serializeArray();
+//        postData.push({'name':'modelClass', 'value':app.options.searchModels[this.selectedModel].model});
+//        this.setMessage("Searching...");
+//        $.ajax({
+//            url: '/xgds_map_server/doMapSearch',
+//            dataType: 'json',
+//            data: postData,
+//            success: $.proxy(function(data) {
+//                if (_.isUndefined(data) || data.length === 0){
+//                    this.setMessage("None found.");
+//                } else {
+//                    this.searchResultsView.updateContents(this.selectedModel, data);
+//                    this.setupSaveSearchDialog();
+//                    this.clearMessage();
+//                }
+//            }, this),
+//            error: $.proxy(function(data){
+//                app.vent.trigger("mapSearch:clear");
+//                this.searchResultsView.reset();
+//                this.setMessage("Search failed.")
+//            }, this)
+//          });
     },
     openSaveDialog: function() {
     	this.setupSaveSearchDialog();
@@ -259,7 +264,7 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     	this.data = data;
     },
     render: function() {
-    	showOnMap(this.data);
+    	showOnMap([this.data]);
         this.$el.empty().append(this.template(this.data));
     	try {
     		this.onShow();
@@ -335,30 +340,36 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
             viewNotesRegion: (options.viewRegion) ? {el:"#notesDiv"} : '#notesDiv'
         };
       },
-    getColumnDefs: function(columns){
-    	result = [];
+    getColumnDefs: function(columns, searchableColumns){
+    	var result = [];
+    	if (_.isUndefined(searchableColumns)){
+    		searchableColumns = [];
+    	}
     	for (var i=0; i<columns.length; i++){
-    		var heading = columns[i];
-    		var columnDef = {data:heading,
-    						 targets: i};
     		var context = this;
+    		var heading = columns[i];
+    		var columnDef = {//data:heading,
+    						 targets: i};
+    		if ($.inArray(heading, searchableColumns) > -1){
+    			columnDef['searchable'] = true;
+    		}
     		if (this.columnTitles != undefined){
         		columnDef['title'] = this.columnTitles[i];
         	}
     		if (heading.toLowerCase().indexOf('zone') > -1) {
     			columnDef['render'] = function ( data, type, row ) {
     										   var mmap = context.lookupModelMap(context.selectedModel);
-                                               return getLocalTimeString(row[0], row[mmap.event_timezone_field], "z");
+                                               return getLocalTimeString(row[0], row[1], "z");
                                            };
     		} else if  (heading.toLowerCase().indexOf('time') > -1){
     			columnDef['render'] = function ( data, type, row ) {
     											var mmap = context.lookupModelMap(context.selectedModel);
-                                               return getLocalTimeString(data, row[mmap.event_timezone_field], "MM/DD/YY HH:mm:ss");
+                                               return getLocalTimeString(row[0], row[1], "MM/DD/YY HH:mm:ss");
                                            }
     		} else if (heading.toLowerCase().indexOf('thumbnail') > -1) {
     			columnDef['render'] = function(data, type, row){
     									if (data != ''){
-    										var result = '<img width="100" src="' + data + '"'; //row['content_thumbnail_url'] + '"';
+    										var result = '<img width="100" src="' + data + '"'; 
     										result += '">';
     										return result;
     									} else {
@@ -371,49 +382,72 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     	
     	return result;
     },
+    setupDatatable: function(selectedModel, data){
+    	this.selectedModel = selectedModel;
+        this.lookupModelMap(selectedModel);
+
+        this.theTable = this.$("#searchResultsTable");
+        this.columns = app.options.searchModels[selectedModel].columns;
+        if (_.isUndefined(this.columns) && !_.isUndefined(data) && !_.isEmpty(data)){
+        	this.columns = Object.keys(data[0]);
+        }
+        this.columns = _.difference(this.columns, app.options.searchModels[selectedModel].hiddenColumns);
+        this.columnTitles = app.options.searchModels[selectedModel].columnTitles;
+        this.columnHeaders = this.getColumnDefs(this.columns, app.options.searchModels[selectedModel].searchableColumns);
+        $.fn.dataTable.moment( DEFAULT_TIME_FORMAT);
+        $.fn.dataTable.moment( "MM/DD/YY HH:mm:ss");
+        var tableheight = this.calcDataTableHeight();
+        if (app.options.tableHeight != undefined){
+        	tableheight = app.options.tableHeight;
+        }
+        
+        var dataTableObj = {
+                columns: this.columnHeaders,
+                autoWidth: true,
+                stateSave: false,
+                paging: true,
+                pageLength: 10, 
+                lengthChange: true,
+                ordering: true,
+                select:true,
+                order: [[ 0, "desc" ]],
+                jQueryUI: false,
+                scrollY:  tableheight,
+                "lengthMenu": [[10, 20, 40, -1], [10, 20, 40, "All"]],
+                "language": {
+                    "lengthMenu": "Display _MENU_"
+                }
+        }
+        
+        if (!_.isUndefined(data)){
+        	dataTableObj['data'] = data;
+        } else {
+        	var url = '/xgds_map_server/view/' + selectedModel;
+        	dataTableObj['processing'] = true;
+        	dataTableObj['serverSide'] = true;
+        	dataTableObj['ajax']= url;
+        }
+        //this.setupColumnHeaders();
+        this.theDataTable = $(this.theTable).DataTable( dataTableObj );
+        var context = this;
+//        this.theDataTable.on( 'xhr', function () {
+//            var json = context.theDataTable.ajax.json();
+//            if (context.theDataTable.rows().count() == 0){
+//            	console.log('ble');
+//            }
+//        } );
+        connectSelectionCallback($("#searchResultsTable"), this.handleTableSelection, true, this);
+        this.listenToTableChanges();
+        this.filterMapData();
+        app.vent.trigger("repack");
+    },
     updateContents: function(selectedModel, data) {
-        if (data.length > 0){
+        if (!_.isUndefined(data) && data.length > 0){
             if (!_.isUndefined(this.theDataTable)) {
                 this.theDataTable.fnClearTable();
                 this.theDataTable.fnAddData(data);
             } else {
-                this.selectedModel = selectedModel;
-                this.lookupModelMap(selectedModel);
-
-                this.theTable = this.$("#searchResultsTable");
-                this.columns = app.options.searchModels[selectedModel].columns;
-                if (this.columns == undefined){
-                	this.columns = Object.keys(data[0]);
-                }
-                this.columns = _.difference(this.columns, app.options.searchModels[selectedModel].hiddenColumns);
-                this.columnTitles = app.options.searchModels[selectedModel].columnTitles;
-                this.columnHeaders = this.getColumnDefs(this.columns);
-                $.fn.dataTable.moment( DEFAULT_TIME_FORMAT);
-                $.fn.dataTable.moment( "MM/DD/YY HH:mm:ss");
-                var dataTableObj = {
-                        data: data,
-                        columns: this.columnHeaders,
-                        autoWidth: true,
-                        stateSave: false,
-                        paging: true,
-                        pageLength: 10, 
-                        lengthChange: true,
-                        ordering: true,
-                        select:true,
-                        order: [[ 0, "desc" ]],
-                        jQueryUI: false,
-                        scrollY:  this.calcDataTableHeight(),
-                        "lengthMenu": [[10, 20, 40, -1], [10, 20, 40, "All"]],
-                        "language": {
-                            "lengthMenu": "Display _MENU_"
-                        }
-                }
-                this.setupColumnHeaders();
-                this.theDataTable = this.theTable.dataTable( dataTableObj );
-                connectSelectionCallback($("#searchResultsTable"), this.handleTableSelection, true, this);
-                this.listenToTableChanges();
-                this.filterMapData();
-                app.vent.trigger("repack");
+            	this.setupDatatable(selectedModel, data);
             }
         }
     },
@@ -495,8 +529,9 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     	
     },
     handleTableSelection: function(index, theRow, context) {
-    	var data = theRow;
     	var modelMap = context.lookupModelMap(context.selectedModel);
+    	var data = _.object(modelMap.columns, theRow);
+    	
     	if (modelMap.viewHandlebars != undefined){
     		if (modelMap.handlebarSource == undefined){
 				var url = '/xgds_core/handlebar_string/' + modelMap.viewHandlebars;
@@ -541,16 +576,17 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
         this.$("#searchResultsTable").off( 'search.dt');
     },
     filterMapData: function() {
-        var thedt = this.theDataTable;
-        var rowData = thedt.$('tr', {"page": "current", "filter": "applied"} );
-        var data = [];
-        $.each(rowData, function(index, value){
-            var datum = thedt.fnGetData(value);
-            if (!_.isUndefined(datum)){
-                data.push(datum);
-            }
-        });
-        app.vent.trigger("mapSearch:found", data);  
+    	//TODO figure out what we are doing
+//        var thedt = this.theDataTable;
+//        var rowData = thedt.$('tr', {"page": "current", "filter": "applied"} );
+//        var data = [];
+//        $.each(rowData, function(index, value){
+//            var datum = thedt.fnGetData(value);
+//            if (!_.isUndefined(datum)){
+//                data.push(datum);
+//            }
+//        });
+//        app.vent.trigger("mapSearch:found", data);  
     },
     calcDataTableHeight : function() {
         var h =  Math.floor($(window).height()*.4);

@@ -13,6 +13,7 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
+
 import traceback
 from cStringIO import StringIO
 import datetime
@@ -52,7 +53,7 @@ from geocamUtil.geoEncoder import GeoDjangoEncoder
 from geocamUtil.loader import LazyGetModelByName
 from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
 from geocamUtil.models import SiteFrame
-from xgds_core.views import get_handlebars_templates
+from xgds_core.views import get_handlebars_templates, OrderListJson
 from xgds_data.dlogging import recordList, recordRequest
 from xgds_data.forms import SearchForm, SpecializedForm
 from xgds_data.models import RequestLog, ResponseLog
@@ -1535,9 +1536,9 @@ def getMappedObjectsJson(request, object_name, filter=None, range=0, isLive=Fals
                             content_type='application/json',
                             status=406)
 
-def buildFilterDict(filter):
+def buildFilterDict(theFilter):
     filterDict = {}
-    dictEntries = str(filter).split(",")
+    dictEntries = str(theFilter).split(",")
     for entry in dictEntries:
         splits = str(entry).split(":")
         try:
@@ -1548,7 +1549,7 @@ def buildFilterDict(filter):
     return filterDict
 
 @never_cache
-def getLastObjectJson(request, object_name, filter=None):
+def getLastObjectJson(request, object_name, theFilter=None):
     """ Get the object json information to show in table or map views.
     """
     try:
@@ -1556,11 +1557,11 @@ def getLastObjectJson(request, object_name, filter=None):
             THE_OBJECT = LazyGetModelByName(getattr(settings, object_name))
         except:
             THE_OBJECT = LazyGetModelByName(object_name)
-        if filter:
-            filterDict = buildFilterDict(filter)
-            object = THE_OBJECT.get().objects.filter(**filterDict).last()
+        if theFilter:
+            filterDict = buildFilterDict(theFilter)
+            theObject = THE_OBJECT.get().objects.filter(**filterDict).last()
         else:
-            object = THE_OBJECT.get().objects.last()
+            theObject = THE_OBJECT.get().objects.last()
     except:
         traceback.print_exc()
         return HttpResponse(json.dumps({'error': {'message': 'I think you passed in an invalid filter.',
@@ -1568,7 +1569,7 @@ def getLastObjectJson(request, object_name, filter=None):
                                         }),
                             content_type='application/json')
 
-    if object:
+    if theObject:
         resultDict = object.toMapDict()
         if resultDict:
             json_data = json.dumps([resultDict], indent=4, cls=DatetimeJsonEncoder)
@@ -1658,3 +1659,16 @@ def getViewMultiModelPage(request, object_names, object_pks=None, filters=None, 
                                'templates': templates,
                                'app': 'xgds_map_server/js/search/mapViewerMultiModelApp.js'},
                               context_instance=RequestContext(request))
+
+class MapOrderListJson(OrderListJson):
+    
+    def dispatch(self, request, *args, **kwargs):
+        if 'mapName' in kwargs:
+            mapName = kwargs.get('mapName', None)
+            if mapName in settings.XGDS_MAP_SERVER_JS_MAP:
+                modelMap = settings.XGDS_MAP_SERVER_JS_MAP[mapName]
+                modelName = modelMap['model']
+                self.lookupModel(modelName)
+                self.columns = modelMap['columns']
+                self.order_columns = self.columns
+        return super(MapOrderListJson, self).dispatch(request, *args, **kwargs)

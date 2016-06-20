@@ -919,14 +919,14 @@ $(function() {
             this.clearDataAndFeatures();
             this.objectsJson = data
             for (i = 0; i < this.objectsJson.length; i++){
-                var object = this.objectsJson[i];
-                if (object != null){
-	                var theClass = window[object.type];
+                var theObject = this.objectsJson[i];
+                if ((!_.isNull(theObject)) && (_.isNumber(theObject.lat))){
+	                var theClass = window[theObject.type];
 	                if (!_.isUndefined(theClass) && !_.isUndefined(theClass.constructElements)) {
-	                    if (_.isUndefined(this.map[object.type])){
-	                        this.map[object.type] = [];
+	                    if (_.isUndefined(this.map[theObject.type])){
+	                        this.map[theObject.type] = [];
 	                    }
-	                    this.map[object.type].push(object);
+	                    this.map[theObject.type].push(theObject);
 	                }
                 }
             }
