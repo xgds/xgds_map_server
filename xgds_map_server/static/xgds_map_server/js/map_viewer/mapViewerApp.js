@@ -29,11 +29,12 @@ Backbone.Marionette.TemplateCache.prototype.compileTemplate = function(
 var app = (function($, _, Backbone) {
     app = new Backbone.Marionette.Application();
     app.views = app.views || {};
+    app.notes_views = app.notes_views || {};
     app.addRegions({
         'mapRegion' : '#mapDiv',
         'layersRegion': '#layers'
     });
-
+    app.regionManager = new Marionette.RegionManager();
     app.module('State', function(options) {
         this.addInitializer(function(options) {
         	this.featureSelected = undefined;
@@ -86,6 +87,40 @@ var app = (function($, _, Backbone) {
      */
     app.hasHandler = function(name) {
         return !!this.reqres._wreqrHandlers[name];
+    };
+    
+    app.showDetailView = function(handlebarSource, data, modelMap, modelName){
+    	
+    	var detailView = new app.views.SearchDetailView({
+    		handlebarSource:handlebarSource,
+    		data:data,
+    		modelMap: modelMap
+    	});
+    	app.detail_view = detailView;
+    	var viewRegionName = 'viewRegion'+modelName;
+    	var viewDivName = '#viewDiv'+modelName;
+    	app.regionManager.addRegion(viewRegionName, viewDivName);
+    	app.regionManager.get(viewRegionName).show(detailView);
+    	showOnMap(data); 
+    	
+    	// add the notes 
+    	var notesView = new app.views.SearchNotesView({
+    		data:data,
+    		modelMap: modelMap,
+    		modelName: modelName
+    	});
+    	app.notes_views[modelName] = notesView;
+    	var notesRegionName = 'notesRegion'+modelName;
+    	var notesDivName = '#notesDiv' + modelName;
+    	app.regionManager.addRegion(notesRegionName, notesDivName);
+    	app.regionManager.get(notesRegionName).show(notesView);
+    	
+    	// hook up ajax reloading
+    	var reloadIconName = '#reload' + modelName;
+    	$(reloadIconName).click(function() {
+    		reloadModelData(modelName);
+    	});
+    	
     };
     
     return app;
