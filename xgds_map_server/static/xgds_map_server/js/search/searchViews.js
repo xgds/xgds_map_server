@@ -340,6 +340,14 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
             viewNotesRegion: (options.viewRegion) ? {el:"#notesDiv"} : '#notesDiv'
         };
       },
+    onShow: function() {
+    	// hook up ajax reloading
+    	var reloadIconName = '#reloadSearchResults';
+    	var context = this;
+    	$(reloadIconName).click(function() {
+    		context.theDataTable.ajax.reload( null, false );
+    	});
+    },
     getColumnDefs: function(columns, searchableColumns){
     	var result = [];
     	if (_.isUndefined(searchableColumns)){
@@ -348,8 +356,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     	for (var i=0; i<columns.length; i++){
     		var context = this;
     		var heading = columns[i];
-    		var columnDef = {//data:heading,
-    						 targets: i};
+    		var columnDef = {targets: i};
     		if ($.inArray(heading, searchableColumns) > -1){
     			columnDef['searchable'] = true;
     		}
@@ -376,7 +383,18 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     										return '';
     									}
     								};
-    		}
+    		} else if (heading.toLowerCase().indexOf('tag') > -1){
+			    			columnDef['render'] =  function(data, type, row) {
+			    				if (data != ''){
+									var result = "";
+									for (var i = 0; i < data.length; i++) {
+										result = result + '<span class="tag label label-info">' + data[i] + '</span>&nbsp;';
+									}
+									return result;
+								}
+								return null;
+							};
+			}
     		result.push(columnDef);
     	}
     	
@@ -427,13 +445,12 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
         	dataTableObj['serverSide'] = true;
         	dataTableObj['ajax']= url;
         }
-        //this.setupColumnHeaders();
         this.theDataTable = $(this.theTable).DataTable( dataTableObj );
         var context = this;
 //        this.theDataTable.on( 'xhr', function () {
 //            var json = context.theDataTable.ajax.json();
 //            if (context.theDataTable.rows().count() == 0){
-//            	console.log('ble');
+//            	alert('got data');
 //            }
 //        } );
         connectSelectionCallback($("#searchResultsTable"), this.handleTableSelection, true, this);
@@ -558,6 +575,8 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     		} else {
     			context.updateDetailView(modelMap.handlebarSource, data);
     		}
+		} else if (_.isNumber(data.lat)){
+			showOnMap([data]);
 		}
     },
     listenToTableChanges: function() {
