@@ -394,6 +394,29 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
 								}
 								return null;
 							};
+			} else if (heading.toLowerCase().indexOf('content_url') > -1) {
+    			columnDef['render'] = function(data, type, row){
+					if (data != ''){
+						theObject = context.getObject(row, context);
+						if (theObject.content_url != '') {
+							result = '<a href="' + theObject.content_url + '" target="_blank">';
+							if (theObject.content_thumbnail_url != '') {
+								result += '<img src="' + theObject.content_thumbnail_url + '"';
+								if (theObject.content_name != '') {
+									result += 'alt="' + theObject.content_name +'"';
+								}
+								result += '">';
+							} else if (theObject.content_name != ''){
+								result += theObject.content_name;
+							} else {
+								result += "Link";
+							}
+							result += '</a>';
+							return result;
+						}
+					}
+					return '';
+				};
 			}
     		result.push(columnDef);
     	}
@@ -422,6 +445,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
         var dataTableObj = {
                 columns: this.columnHeaders,
                 autoWidth: true,
+                dom: '<"top"flp<"clear">>rt<"bottom"ip<"clear">>',
                 stateSave: false,
                 paging: true,
                 pageLength: 10, 
@@ -544,6 +568,11 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     		}
     	}
     	
+    },
+    getObject: function(theRow, context){
+    	var modelMap = context.lookupModelMap(context.selectedModel);
+    	var data = _.object(modelMap.columns, theRow);
+    	return data
     },
     handleTableSelection: function(index, theRow, context) {
     	var modelMap = context.lookupModelMap(context.selectedModel);
