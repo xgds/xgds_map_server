@@ -43,7 +43,8 @@
 		dataUrl: "{{ settings.DATA_URL }}",
 		searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
 		modelName: '{{modelName}}',
-		tableHeight: Math.floor($(window).height()*.7) + 'px'
+		tableHeight: Math.floor($(window).height()*.7) + 'px',
+		settingsLive: {% if settings.GEOCAM_UTIL_LIVE_MODE %}true{% else %}false{% endif %}
 	};
 	{% block jsInitPreApp %}
 	{% endblock jsInitPreApp %}
@@ -71,6 +72,7 @@
 		data-gs-x="0" data-gs-y="0"
         data-gs-width="3" data-gs-height="3" >
         <div class="grid-stack-item-content" id="search-results-gridstack-item-content" >
+        <input type="checkbox" id="today" value="today" checked>Today
         <i class="icon-lock-open pinDiv warning"></i>
 		<i class="icon-cancel-circled"></i>
 		<i class="icon-arrows-ccw right" title="Reload Latest" id="reloadSearchResults"></i>

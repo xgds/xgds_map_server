@@ -283,6 +283,21 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     			$.executeFunctionByName(this.modelMap.viewInitMethods[i], window, this.data);
     		}
     	}
+    	var context = this;
+    	$('.grid-stack').on('resizestop', function(event, ui) {
+    	    var element = event.target;
+    	    var found = $(event.target).find('#viewDiv');
+    	    if (found.length > 0){
+    	    	if (context.modelMap.viewResizeMethod != undefined){
+    	    		context.handleResizeDetailView(found[0], context);
+//    	    		_.debounce(context.handleResizeDetailView(found[0], context), 250);
+    	    	}
+    	    }
+    		
+    	});
+    },
+    handleResizeDetailView: function(theDiv, context){
+		$.executeFunctionByName(context.modelMap.viewResizeMethod[0], window, theDiv, context.data);
     }
 });
 
@@ -347,6 +362,13 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     	$(reloadIconName).click(function() {
     		context.theDataTable.ajax.reload( null, false );
     	});
+    	var todayCheckbox = $('#today');
+    	if (todayCheckbox.length > 0){
+    		todayCheckbox.prop('checked', app.options.settingsLive);
+    		todayCheckbox.click(function() {
+    			context.theDataTable.ajax.reload( null, true );
+    		});
+    	}
     },
     getColumnDefs: function(columns, searchableColumns){
     	var result = [];
@@ -467,7 +489,21 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
         	var url = '/xgds_map_server/view/' + selectedModel;
         	dataTableObj['processing'] = true;
         	dataTableObj['serverSide'] = true;
-        	dataTableObj['ajax']= url;
+        	
+        	var ajaxConfig = {
+        	    "url": url,
+        	    "data": function ( d ) {
+        	    	var todayCheckbox = $('#today');
+                	var today = 1;
+                	if (todayCheckbox.length > 0){
+                		today = todayCheckbox[0].checked
+                	}
+        	      return $.extend( {}, d, {
+        	        "today": today
+        	      } );
+        	    }
+        	}
+        	dataTableObj['ajax']= ajaxConfig;
         }
         this.theDataTable = $(this.theTable).DataTable( dataTableObj );
         var context = this;
