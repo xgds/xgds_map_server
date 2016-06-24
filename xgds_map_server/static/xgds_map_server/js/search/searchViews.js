@@ -281,7 +281,6 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     	}
     },
     updateContents: function() {
-    	console.log("update contents : " + new Date());
     	try {
 	    	var new_window_btn = this.$el.parent().siblings("#new-window-btn");
 	    	if (new_window_btn.length > 0){
