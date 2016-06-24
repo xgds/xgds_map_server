@@ -286,7 +286,7 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     	var context = this;
     	$('.grid-stack').on('resizestop', function(event, ui) {
     	    var element = event.target;
-    	    var found = $(event.target).find('#viewDiv');
+    	    var found = $(event.target).find('#view-gridstack-item-content');
     	    if (found.length > 0){
     	    	if (context.modelMap.viewResizeMethod != undefined){
     	    		context.handleResizeDetailView(found[0], context);
@@ -297,7 +297,8 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     	});
     },
     handleResizeDetailView: function(theDiv, context){
-		$.executeFunctionByName(context.modelMap.viewResizeMethod[0], window, theDiv, context.data);
+    	var functionName = context.modelMap.viewResizeMethod[0];
+		$.executeFunctionByName(functionName, window, theDiv, context.data);
     }
 });
 
