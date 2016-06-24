@@ -478,7 +478,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
                 order: [[ 0, "desc" ]],
                 jQueryUI: false,
                 scrollY:  tableheight,
-                "lengthMenu": [[10, 20, 40, -1], [10, 20, 40, "All"]],
+                "lengthMenu": [[10, 20, 40, 80, -1], [10, 20, 40, 80, "All"]],
                 "language": {
                     "lengthMenu": "Display _MENU_"
                 }
