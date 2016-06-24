@@ -253,6 +253,9 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     	this.selectedModel = options.selectedModel;
     	this.modelMap = options.modelMap;
     	this.setHandlebars(options.handlebarSource);
+    	this.neverShown = true;
+    	var context = this;
+    	this.on('updateContents', _.debounce(context.updateContents, 500));
     },
     setHandlebars: function(handlebarSource){
     	if (handlebarSource != this.handlebarSource){
@@ -267,22 +270,37 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     	showOnMap([this.data]);
         this.$el.empty().append(this.template(this.data));
     	try {
-    		this.onShow();
+    		var context = this;
+    		if (this.neverShown){
+        		this.onShow();
+    		} else {
+    			this.trigger('updateContents');
+    		}
     	} catch (err){
     		// gulp, the first time this will 
     	}
     },
-    onShow: function() {
-    	var new_window_btn = this.$el.parent().siblings("#new-window-btn");
-    	if (new_window_btn.length > 0){
-    		var theLink = new_window_btn.children("#view-new-window-target");
-    		theLink.attr("href","/xgds_map_server/view/" + this.selectedModel + "/" + this.data.pk );
+    updateContents: function() {
+    	console.log("update contents : " + new Date());
+    	try {
+	    	var new_window_btn = this.$el.parent().siblings("#new-window-btn");
+	    	if (new_window_btn.length > 0){
+	    		var theLink = new_window_btn.children("#view-new-window-target");
+	    		theLink.attr("href","/xgds_map_server/view/" + this.selectedModel + "/" + this.data.pk );
+	    	}
+    	} catch (err) {
+    		// gulp we do not always have a new window button
     	}
+	    
     	if (this.modelMap.viewInitMethods != undefined){
     		for (var i=0; i < this.modelMap.viewInitMethods.length; i++){
     			$.executeFunctionByName(this.modelMap.viewInitMethods[i], window, this.data);
     		}
     	}
+    },
+    onShow: function() {
+    	this.neverShown = false;
+    	this.updateContents();
     	var context = this;
     	$('.grid-stack').on('resizestop', function(event, ui) {
     	    var element = event.target;
@@ -310,18 +328,30 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     	var modelName = this.data.type;
     	var modelMap = this.modelMap;
     	var url = '/xgds_map_server/prevJson/' + modelName + '/' + this.data.pk;
+    	var context = this;
     	$.when($.get(url)).then(function(incomingData, status){
     		var data = _.object(modelMap.columns, incomingData);
-			app.showDetailView(modelMap.handlebarSource, data, modelMap, modelName);
+    		context.setData(data);
+        	context.render();
+        	if (context.detailNotesView != undefined){
+        		context.detailNotesView.setData(data);
+        		context.detailNotesView.updateContents();
+        	}
     	});
     },
     selectNextAjax: function() {
     	var modelName = this.data.type;
     	var modelMap = this.modelMap;
     	var url = '/xgds_map_server/nextJson/' + modelName + '/' + this.data.pk;
+    	var context = this;
     	$.when($.get(url)).then(function(incomingData, status){
     		var data = _.object(modelMap.columns, incomingData);
-			app.showDetailView(modelMap.handlebarSource, data, modelMap, modelName);
+    		context.setData(data);
+        	context.render();
+        	if (context.detailNotesView != undefined){
+        		context.detailNotesView.setData(data);
+        		context.detailNotesView.updateContents();
+        	}
     	});
     },
 });
