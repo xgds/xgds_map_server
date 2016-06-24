@@ -13,7 +13,6 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
-
 import traceback
 from cStringIO import StringIO
 import datetime
@@ -1659,6 +1658,70 @@ def getViewMultiModelPage(request, object_names, object_pks=None, filters=None, 
                                'templates': templates,
                                'app': 'xgds_map_server/js/search/mapViewerMultiModelApp.js'},
                               context_instance=RequestContext(request))
+
+
+def viewMultiLast(request, mapNames):
+    fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
+    templates = get_handlebars_templates(fullTemplateList, 'XGDS_MAP_SERVER_HANDLEBARS_DIRS')
+    
+    object_urls = [];
+    for obj in mapNames:
+        url = reverse('xgds_map_server_lastJson2', kwargs={'mapName': obj})
+        object_urls.append(str(url))
+    return render_to_response("xgds_map_server/mapViewMultiModel.html", 
+                              {'model_names': mapNames,
+                               'model_urls' : object_urls,
+                               'templates': templates,
+                               'app': 'xgds_map_server/js/search/mapViewerMultiModelApp.js'},
+                              context_instance=RequestContext(request))
+    
+def lookupModel(request, mapName):
+    try:
+        modelMap = settings.XGDS_MAP_SERVER_JS_MAP[mapName]
+        object_name = modelMap['model']
+        THE_OBJECT = LazyGetModelByName(getattr(settings, object_name))
+    except:
+        THE_OBJECT = LazyGetModelByName(object_name)
+    return (THE_OBJECT, modelMap)
+
+def getLastObject(request, mapName):
+    try:
+        (THE_OBJECT, modelMap) = lookupModel(request, mapName)
+        current = THE_OBJECT.get().objects.last()
+        jsonResult = current.toViewDict(modelMap['columns'])
+        return HttpResponse(json.dumps(jsonResult, cls=DatetimeJsonEncoder),
+                            content_type='application/json')
+    except:
+        traceback.print_exc()
+        return HttpResponse(json.dumps({'error': {'message': 'Could not find last %s.' % mapName
+                                                  }
+                                        }),
+                            content_type='application/json', status=406)
+        
+def getPrevNextObject(request, currentPK, mapName, which='previous'):
+    """ which is previous or next.  This builds up get_next_by_timeName or get_previous_by_timeName"""
+    try:
+        (THE_OBJECT, modelMap) = lookupModel(request, mapName)
+        current = THE_OBJECT.get().objects.get(pk=currentPK)
+        timeName = modelMap['event_time_field']
+        methodName = 'get_%s_by_%s' % (which, timeName)
+        methodToCall = getattr(current, methodName)
+        try:
+            result = methodToCall()
+            jsonResult = result.toViewDict(modelMap['columns'])
+            return HttpResponse(json.dumps(jsonResult, cls=DatetimeJsonEncoder),
+                                content_type='application/json')
+        except:
+            return HttpResponse(json.dumps({'error': {'message': 'No %s %s' % (which, mapName)
+                                                  }
+                                        }),
+                            content_type='application/json', status=406)
+    except:
+        traceback.print_exc()
+        return HttpResponse(json.dumps({'error': {'message': 'I think you passed in an invalid filter.'
+                                                  }
+                                        }),
+                            content_type='application/json', status=406)
 
 class MapOrderListJson(OrderListJson):
     

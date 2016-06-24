@@ -295,11 +295,35 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     	    }
     		
     	});
+    	$("#ajax_prev_button").click(function(event) {
+			context.selectPreviousAjax();
+		});
+		$("#ajax_next_button").click(function(event) {
+			context.selectNextAjax();
+			});
     },
     handleResizeDetailView: function(theDiv, context){
     	var functionName = context.modelMap.viewResizeMethod[0];
 		$.executeFunctionByName(functionName, window, theDiv, context.data);
-    }
+    },
+    selectPreviousAjax: function() {
+    	var modelName = this.data.type;
+    	var modelMap = this.modelMap;
+    	var url = '/xgds_map_server/prevJson/' + modelName + '/' + this.data.pk;
+    	$.when($.get(url)).then(function(incomingData, status){
+    		var data = _.object(modelMap.columns, incomingData);
+			app.showDetailView(modelMap.handlebarSource, data, modelMap, modelName);
+    	});
+    },
+    selectNextAjax: function() {
+    	var modelName = this.data.type;
+    	var modelMap = this.modelMap;
+    	var url = '/xgds_map_server/nextJson/' + modelName + '/' + this.data.pk;
+    	$.when($.get(url)).then(function(incomingData, status){
+    		var data = _.object(modelMap.columns, incomingData);
+			app.showDetailView(modelMap.handlebarSource, data, modelMap, modelName);
+    	});
+    },
 });
 
 /*
@@ -569,17 +593,20 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     		modelName: this.selectedModel
     	});
     	try {
-    		var context = this;
-    		$("#prev_button").click(function() {
-    			context.selectPrevious();
-    		});
-    		$("#next_button").click(function() {
-    			context.selectNext();
-    		});
+    		this.hookPrevNextButtons();
     		this.viewRegion.show(this.detailView);
     		this.viewNotesRegion.show(this.detailNotesView);
     	} catch (err){
     	}
+    },
+    hookPrevNextButtons: function() {
+    	var context = this;
+		$("#prev_button").click(function() {
+			context.selectPrevious();
+		});
+		$("#next_button").click(function() {
+			context.selectNext();
+		});
     },
     selectPrevious: function(){
     	var dt = this.theTable.DataTable();

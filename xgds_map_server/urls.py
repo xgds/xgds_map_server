@@ -104,8 +104,12 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,
     url(r'^search/$', views.getSearchPage, {}, 'search_map'),
     url(r'^search/(?P<modelName>[\w]+)$', views.getSearchPage, {}, 'search_map_object'),
     url(r'^view/(?P<modelName>[\w]+)/(?P<modelPK>[\d]+)$', views.getViewSingleModelPage, {}, 'search_map_single_object'),
-    url(r'^view/(?P<modelName>[\w]+)/(?P<modelPK>[\d]+)$', views.getViewMultiModelPage, {}, 'search_map_single_object'),
+    #url(r'^view/(?P<modelName>[\w]+)/(?P<modelPK>[\d]+)$', views.getViewMultiModelPage, {}, 'search_map_single_object'),
     url(r'^view/(?P<mapName>\w+)/$', views.MapOrderListJson.as_view(), {}, 'map_view_json'),
     url(r'^view/(?P<mapName>\w+)/(?P<filter>[\w]+:[\w]+)$', views.MapOrderListJson.as_view(), {}, 'map_view_json_filter'),
 
+    url(r'^lastJson2/(?P<mapName>\w+)/$', views.getLastObject, {}, 'xgds_map_server_lastJson2'),
+    url(r'^prevJson/(?P<mapName>\w+)/(?P<currentPK>[\d]+)$', views.getPrevNextObject, {'which':'previous'}, 'xgds_map_server_prevJson'),
+    url(r'^nextJson/(?P<mapName>\w+)/(?P<currentPK>[\d]+)$', views.getPrevNextObject, {'which':'next'}, 'xgds_map_server_nextJson'),
+    
 ]

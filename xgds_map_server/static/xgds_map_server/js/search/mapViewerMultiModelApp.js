@@ -57,7 +57,7 @@ var app = (function($, _, Backbone) {
             pageContentElement.outerHeight(pageElement.innerHeight() - pageTopHeight);
         });
     });
-
+    
     app.addInitializer(function(options) {
         this.options = options = _.defaults(options || {});
         app.map = new app.views.OLMapView({
@@ -114,7 +114,7 @@ var app = (function($, _, Backbone) {
     var loadUpModel = function(modelName, modelMap, url) {
     	$.when($.get(url)
 		).then(function(incomingData, status) {
-			var data = incomingData[0];
+			var data = _.object(modelMap.columns, incomingData);
 			var url = '/xgds_core/handlebar_string/' + modelMap.viewHandlebars;
 			$.get(url, function(handlebarSource, status){
 				modelMap['handlebarSource'] = handlebarSource;
@@ -144,7 +144,8 @@ var app = (function($, _, Backbone) {
     	var url = app.options.modelUrls[index];
     	$.when($.get(url)
 		).then(function(incomingData, status) {
-			var data = incomingData[0];
+			var modelMap = app.options.searchModels[modelName];
+			var data = _.object(modelMap.columns, incomingData);
 			app.updateDetailView(modelName, data);
 		});
     };
