@@ -582,13 +582,17 @@ $(function() {
         },
         show: function() {
             if (!this.visible){
-                this.group.getLayers().push(this.mapElement);
+            	if (this.mapElement) {
+            		this.group.getLayers().push(this.mapElement);
+            	}
                 this.visible = true;
             }
         },
         hide: function() {
             if (this.visible){
-                this.group.getLayers().remove(this.mapElement);
+            	if (this.mapElement) {
+            		this.group.getLayers().remove(this.mapElement);
+            	}
                 this.visible = false;
             }
         }
