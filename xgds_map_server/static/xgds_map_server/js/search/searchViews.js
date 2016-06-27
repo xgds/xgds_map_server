@@ -266,6 +266,9 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     setData: function(data) {
     	this.data = data;
     },
+    setModelMap: function(modelMap){
+    	this.modelMap = modelMap;
+    },
     render: function() {
     	showOnMap([this.data]);
         this.$el.empty().append(this.template(this.data));
@@ -307,7 +310,6 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     	    if (found.length > 0){
     	    	if (context.modelMap.viewResizeMethod != undefined){
     	    		context.handleResizeDetailView(found[0], context);
-//    	    		_.debounce(context.handleResizeDetailView(found[0], context), 250);
     	    	}
     	    }
     		
@@ -402,6 +404,11 @@ app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
 app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
 	initialize: function() {
 		this.modelMap = {};
+		var context = this;
+		app.on('forceDetail', function(data){
+			var modelMap = context.lookupModelMap(data.type);
+			context.forceDetailView(data, modelMap);
+		});
 	},
     regions: function(options){
         return {
@@ -596,12 +603,13 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
           columnRow.append("<th>"+ col +"</th>");
       });
     },
-    updateDetailView: function(handlebarSource, data) {
+    updateDetailView: function(data, modelMap) {
     	if (this.detailView == undefined){
-    		this.createDetailView(handlebarSource, data);
+    		this.createDetailView(modelMap.handlebarSource, data);
         } else {
-        	this.detailView.setHandlebars(handlebarSource);
+        	this.detailView.setHandlebars(modelMap.handlebarSource);
         	this.detailView.setData(data);
+        	this.detailView.setModelMap(modelMap);
         	this.detailView.render();
         	if (this.detailNotesView != undefined){
         		this.detailNotesView.setData(data);
@@ -667,10 +675,8 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     	var data = _.object(modelMap.columns, theRow);
     	return data
     },
-    handleTableSelection: function(index, theRow, context) {
-    	var modelMap = context.lookupModelMap(context.selectedModel);
-    	var data = _.object(modelMap.columns, theRow);
-    	
+    forceDetailView: function(data, modelMap){
+    	var context = this;
     	if (modelMap.viewHandlebars != undefined){
     		if (modelMap.handlebarSource == undefined){
 				var url = '/xgds_core/handlebar_string/' + modelMap.viewHandlebars;
@@ -680,26 +686,31 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
 						$.getManyJS( modelMap.viewJS, function() {
 							if (modelMap.viewCss != undefined){
 								$.getManyCss(modelMap.viewCss, function(){
-									context.updateDetailView(modelMap.handlebarSource, data);
+									context.updateDetailView(data,modelMap);
 								});
 							} else {
-								context.updateDetailView(modelMap.handlebarSource, data);
+								context.updateDetailView(data,modelMap);
 							}
 						});
 					} else if (modelMap.viewCss != undefined){
 						$.getManyCss(modelMap.viewCss, function(){
-							context.updateDetailView(modelMap.handlebarSource, data);
+							context.updateDetailView(data,modelMap);
 						});
 					} else {
-						context.updateDetailView(modelMap.handlebarSource, data);
+						context.updateDetailView(data,modelMap);
 					}
 			    });
     		} else {
-    			context.updateDetailView(modelMap.handlebarSource, data);
+    			context.updateDetailView(data,modelMap);
     		}
 		} else if (_.isNumber(data.lat)){
 			showOnMap([data]);
 		}
+    },
+    handleTableSelection: function(index, theRow, context) {
+    	var modelMap = context.lookupModelMap(context.selectedModel);
+    	var data = _.object(modelMap.columns, theRow);
+    	context.forceDetailView(data, modelMap);
     },
     listenToTableChanges: function() {
         var _this = this;

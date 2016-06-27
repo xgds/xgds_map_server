@@ -1684,13 +1684,29 @@ def lookupModel(request, mapName):
         THE_OBJECT = LazyGetModelByName(object_name)
     return (THE_OBJECT, modelMap)
 
+def viewDictResponse(request, current, modelMap):
+    jsonResult = current.toViewDict(modelMap['columns'])
+    return HttpResponse(json.dumps(jsonResult, cls=DatetimeJsonEncoder),
+                        content_type='application/json')
+
+def getObject(request, mapName, currentPK):
+    try:
+        (THE_OBJECT, modelMap) = lookupModel(request, mapName)
+        current = THE_OBJECT.get().objects.get(pk=currentPK)
+        return viewDictResponse(request, current, modelMap)
+    except:
+        traceback.print_exc()
+        return HttpResponse(json.dumps({'error': {'message': 'Could not find last %s.' % mapName
+                                                  }
+                                        }),
+                            content_type='application/json', status=406)
+
+
 def getLastObject(request, mapName):
     try:
         (THE_OBJECT, modelMap) = lookupModel(request, mapName)
         current = THE_OBJECT.get().objects.last()
-        jsonResult = current.toViewDict(modelMap['columns'])
-        return HttpResponse(json.dumps(jsonResult, cls=DatetimeJsonEncoder),
-                            content_type='application/json')
+        return viewDictResponse(request, current, modelMap)
     except:
         traceback.print_exc()
         return HttpResponse(json.dumps({'error': {'message': 'Could not find last %s.' % mapName
@@ -1708,9 +1724,7 @@ def getPrevNextObject(request, currentPK, mapName, which='previous'):
         methodToCall = getattr(current, methodName)
         try:
             result = methodToCall()
-            jsonResult = result.toViewDict(modelMap['columns'])
-            return HttpResponse(json.dumps(jsonResult, cls=DatetimeJsonEncoder),
-                                content_type='application/json')
+            return viewDictResponse(request, result, modelMap)
         except:
             return HttpResponse(json.dumps({'error': {'message': 'No %s %s' % (which, mapName)
                                                   }

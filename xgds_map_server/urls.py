@@ -108,6 +108,7 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,
     url(r'^view/(?P<mapName>\w+)/$', views.MapOrderListJson.as_view(), {}, 'map_view_json'),
     url(r'^view/(?P<mapName>\w+)/(?P<filter>[\w]+:[\w]+)$', views.MapOrderListJson.as_view(), {}, 'map_view_json_filter'),
 
+    url(r'^json/(?P<mapName>\w+)/(?P<currentPK>[\d]+)$', views.getObject, {}, 'xgds_map_server_object'),
     url(r'^lastJson2/(?P<mapName>\w+)/$', views.getLastObject, {}, 'xgds_map_server_lastJson2'),
     url(r'^prevJson/(?P<mapName>\w+)/(?P<currentPK>[\d]+)$', views.getPrevNextObject, {'which':'previous'}, 'xgds_map_server_prevJson'),
     url(r'^nextJson/(?P<mapName>\w+)/(?P<currentPK>[\d]+)$', views.getPrevNextObject, {'which':'next'}, 'xgds_map_server_nextJson'),
