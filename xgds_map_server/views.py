@@ -1607,8 +1607,8 @@ def getMappedObjectsExtens(request, object_name, extens, today=False):
                                 content_type="application/json")
         return ""
 
-def getSearchPage(request, modelName=None):
-    return render_to_response("xgds_map_server/mapSearch.html", 
+def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSearch.html'):
+    return render_to_response(templatePath, 
                               {'modelName': modelName,
                                'templates': get_handlebars_templates(list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_HANDLEBARS_DIRS'),
                                'searchForms': getSearchForms(),
@@ -1685,7 +1685,7 @@ def lookupModel(request, mapName):
     return (THE_OBJECT, modelMap)
 
 def viewDictResponse(request, current, modelMap):
-    jsonResult = current.toViewDict(modelMap['columns'])
+    jsonResult = current.toMapList(modelMap['columns'])
     return HttpResponse(json.dumps(jsonResult, cls=DatetimeJsonEncoder),
                         content_type='application/json')
 
