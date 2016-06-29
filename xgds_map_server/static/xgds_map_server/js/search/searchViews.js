@@ -397,7 +397,7 @@ app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
     	// change the id of the table ...
     	var notesList = this.$el.find('.notes_list');
     	notesList.attr('id', 'notes_list' + this.modelName);
-    	xgds_notes.setupNotesUI();
+    	xgds_notes.setupNotesUI(this.$el);
     	this.updateContents();
     }
 });
