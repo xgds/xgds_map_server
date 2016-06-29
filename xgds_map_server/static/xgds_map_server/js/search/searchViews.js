@@ -107,7 +107,8 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
             preselectModel: this.preselectModel
         }));
         this.searchResultsView = new app.views.SearchResultsView({template:'#template-search-results',
-        														  viewRegion: this.viewRegion}); 
+        														  viewRegion: this.viewRegion});
+        app.searchResultsView = this.searchResultsView;
         this.searchResultsRegion.show(this.searchResultsView);
         app.vent.trigger("repack");
     },
@@ -431,7 +432,22 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     		});
     	}
     },
-    getColumnDefs: function(columns, searchableColumns){
+    getEditableColumnDefs: function(columns, columnTitles, editableColumns){
+    	var result = [];
+    	if (!_.isUndefined(editableColumns)){
+    		
+    		for (var i=0; i<columnTitles.length; i++){
+    			var entry = { label: columnTitles[i],
+       		 		 		  name: columns[i]}
+	            if ($.inArray(columns[i], Object.keys(editableColumns)) > -1){
+					entry['type'] = editableColumns[columns[i]];
+				}
+	            result.push(entry);
+    		}
+    	}
+    	return result;
+    },
+    getColumnDefs: function(columns, searchableColumns, editableColumns){
     	var result = [];
     	if (_.isUndefined(searchableColumns)){
     		searchableColumns = [];
@@ -439,26 +455,30 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     	for (var i=0; i<columns.length; i++){
     		var context = this;
     		var heading = columns[i];
-    		var columnDef = {targets: i};
+    		var columnDef = {};
+    		columnDef['targets'] = i;
     		if ($.inArray(heading, searchableColumns) > -1){
     			columnDef['searchable'] = true;
+    		}
+    		if (!_.isUndefined(editableColumns)){
+    			if ($.inArray(heading, Object.keys(editableColumns)) > -1){
+    				columnDef['className'] = 'editable';
+    			}
     		}
     		if (this.columnTitles != undefined){
         		columnDef['title'] = this.columnTitles[i];
         	}
     		if (heading.toLowerCase().indexOf('zone') > -1) {
     			columnDef['render'] = function ( data, type, row ) {
-    										   var mmap = context.lookupModelMap(context.selectedModel);
                                                return getLocalTimeString(row[0], row[1], "z");
                                            };
     		} else if  (heading.toLowerCase().indexOf('time') > -1){
     			columnDef['render'] = function ( data, type, row ) {
-    											var mmap = context.lookupModelMap(context.selectedModel);
                                                return getLocalTimeString(row[0], row[1], "MM/DD/YY HH:mm:ss");
                                            }
     		} else if (heading.toLowerCase().indexOf('thumbnail') > -1) {
     			columnDef['render'] = function(data, type, row){
-    									if (data != ''){
+    									if (!_.isUndefined(data) && !_.isNull(data) && data != ''){
     										var result = '<img width="100" src="' + data + '"'; 
     										result += '">';
     										return result;
@@ -468,7 +488,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     								};
     		} else if (heading.toLowerCase().indexOf('tag') > -1){
 			    			columnDef['render'] =  function(data, type, row) {
-			    				if (data != ''){
+			    				if (!_.isUndefined(data) && !_.isNull(data) && data != ''){
 									var result = "";
 									for (var i = 0; i < data.length; i++) {
 										result = result + '<span class="tag label label-info">' + data[i] + '</span>&nbsp;';
@@ -479,7 +499,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
 							};
 			} else if (heading.toLowerCase().indexOf('content_url') > -1) {
     			columnDef['render'] = function(data, type, row){
-					if (data != ''){
+					if (!_.isUndefined(data) && !_.isNull(data) && data != ''){
 						theObject = context.getObject(row, context);
 						if (theObject.content_url != '') {
 							result = '<a href="' + theObject.content_url + '" target="_blank">';
@@ -508,16 +528,17 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     },
     setupDatatable: function(selectedModel, data){
     	this.selectedModel = selectedModel;
-        this.lookupModelMap(selectedModel);
+        var modelMap = this.lookupModelMap(selectedModel);
 
         this.theTable = this.$("#searchResultsTable");
-        this.columns = app.options.searchModels[selectedModel].columns;
+        this.columns = modelMap.columns;
         if (_.isUndefined(this.columns) && !_.isUndefined(data) && !_.isEmpty(data)){
         	this.columns = Object.keys(data[0]);
         }
-        this.columns = _.difference(this.columns, app.options.searchModels[selectedModel].hiddenColumns);
-        this.columnTitles = app.options.searchModels[selectedModel].columnTitles;
-        this.columnHeaders = this.getColumnDefs(this.columns, app.options.searchModels[selectedModel].searchableColumns);
+        this.columns = _.difference(this.columns, modelMap.hiddenColumns);
+        this.columnTitles = modelMap.columnTitles;
+        this.columnHeaders = this.getColumnDefs(this.columns, modelMap.searchableColumns, modelMap.editableColumns);
+        this.editableColumns = this.getEditableColumnDefs(this.columns, modelMap.columnTitles, modelMap.editableColumns);
         $.fn.dataTable.moment( DEFAULT_TIME_FORMAT);
         $.fn.dataTable.moment( "MM/DD/YY HH:mm:ss");
         var tableheight = this.calcDataTableHeight();
@@ -530,6 +551,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
                 autoWidth: true,
                 dom: '<"top"flp<"clear">>rt<"bottom"ip<"clear">>',
                 stateSave: false,
+                rowId: function(a) {return a[a.length-1]; },
                 paging: true,
                 pageLength: 10, 
                 lengthChange: true,
@@ -537,6 +559,9 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
                 select:true,
                 order: [[ 0, "desc" ]],
                 jQueryUI: false,
+                rowCallback: function (row, data, index){
+                	$(row).attr('id', data[data.length - 1]);
+                },
                 scrollY:  tableheight,
                 "lengthMenu": [[10, 20, 40, 80, -1], [10, 20, 40, 80, "All"]],
                 "language": {
