@@ -435,7 +435,6 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     getEditableColumnDefs: function(columns, columnTitles, editableColumns){
     	var result = [];
     	if (!_.isUndefined(editableColumns)){
-    		
     		for (var i=0; i<columnTitles.length; i++){
     			var entry = { label: columnTitles[i],
        		 		 		  name: columns[i]}
@@ -533,7 +532,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
         this.theTable = this.$("#searchResultsTable");
         this.columns = modelMap.columns;
         if (_.isUndefined(this.columns) && !_.isUndefined(data) && !_.isEmpty(data)){
-        	this.columns = Object.keys(data[0]);
+        	this.columns = Object.keys(data[0]); // this only works if it is a json dict.
         }
         this.columns = _.difference(this.columns, modelMap.hiddenColumns);
         this.columnTitles = modelMap.columnTitles;
