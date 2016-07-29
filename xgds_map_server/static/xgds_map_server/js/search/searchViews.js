@@ -173,9 +173,29 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
           });
         }
     },
-    doSearch: function() {
+    buildFilter: function() {
+    	var theForm = this.$("#form-"+this.selectedModel);
+    	var postData = null;
+    	var result = '';
+    	if (theForm.length == 1){
+    		postData = theForm.serializeArray();
+    		for (var i=0; i<postData.length; i++){
+        		var item = postData[i];
+        		if ( item.value != '' &&
+        			!item.name.endsWith('_operator') && 
+        			 item.name.startsWith('form-0-')){
+        			if (result != ''){
+        				result += ',';
+        			}
+        			result += item.name.substring(7) + ":" + item.value;
+        		}
+        	}
+    	}
     	
-    	this.searchResultsView.setupDatatable(this.selectedModel);
+    	return result;
+    },
+    doSearch: function() {
+    	this.searchResultsView.setupDatatable(this.selectedModel, undefined, this.buildFilter());
     	this.setupSaveSearchDialog();
     	return;
     	
@@ -446,6 +466,9 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     	}
     	return result;
     },
+    toTitleCase: function(str) {
+    	return str.substr(0,1).toUpperCase()+str.substr(1);
+    },
     getColumnDefs: function(columns, searchableColumns, editableColumns){
     	var result = [];
     	if (_.isUndefined(searchableColumns)){
@@ -466,6 +489,8 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     		}
     		if (this.columnTitles != undefined){
         		columnDef['title'] = this.columnTitles[i];
+        	} else {
+        		columnDef['title'] = this.toTitleCase(columns[i]);
         	}
     		if (heading.toLowerCase().indexOf('zone') > -1) {
     			columnDef['render'] = function ( data, type, row ) {
@@ -525,7 +550,8 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     	
     	return result;
     },
-    setupDatatable: function(selectedModel, data){
+    setupDatatable: function(selectedModel, data, filter){
+    	//hereTamar TODO handle existing table
     	this.selectedModel = selectedModel;
         var modelMap = this.lookupModelMap(selectedModel);
 
@@ -572,6 +598,9 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
         	dataTableObj['data'] = data;
         } else {
         	var url = '/xgds_map_server/view/' + selectedModel;
+        	if (filter != null && filter != ''){
+        		url += '/' + filter;
+        	}
         	dataTableObj['processing'] = true;
         	dataTableObj['serverSide'] = true;
         	
@@ -583,21 +612,13 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
                 	if (todayCheckbox.length > 0){
                 		today = todayCheckbox[0].checked
                 	}
-        	      return $.extend( {}, d, {
-        	        "today": today
-        	      } );
+                	return $.extend( {}, d, {"today": today});
         	    }
         	}
         	dataTableObj['ajax']= ajaxConfig;
         }
         this.theDataTable = $(this.theTable).DataTable( dataTableObj );
         var context = this;
-//        this.theDataTable.on( 'xhr', function () {
-//            var json = context.theDataTable.ajax.json();
-//            if (context.theDataTable.rows().count() == 0){
-//            	alert('got data');
-//            }
-//        } );
         connectSelectionCallback($("#searchResultsTable"), this.handleTableSelection, true, this);
         this.listenToTableChanges();
         this.filterMapData();
