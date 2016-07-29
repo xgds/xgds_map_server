@@ -624,9 +624,22 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
         this.theDataTable = $(this.theTable).DataTable( dataTableObj );
         var context = this;
         connectSelectionCallback($("#searchResultsTable"), this.handleTableSelection, true, this);
+        this.connectDeselectCallback();
         this.listenToTableChanges();
         this.filterMapData();
         app.vent.trigger("repack");
+    },
+    connectDeselectCallback(table){
+    	var context = this;
+    	this.theDataTable.on( 'deselect', function ( e, dt, type, indexes ) {
+    	    if ( type === 'row' ) {
+    	    	for (var i=0; i<indexes.length; i++){
+        	        var modelMap = context.lookupModelMap(context.selectedModel);
+        	    	var data = _.object(modelMap.columns, dt.row(indexes[i]).data());
+        	    	removeFromMap(data);
+    	    	}
+    	    }
+    	} );
     },
     updateContents: function(selectedModel, data) {
         if (!_.isUndefined(data) && data.length > 0){

@@ -26,6 +26,10 @@ function showOnMap(data){
 	app.vent.trigger('mapSearch:fit');
 }
 
+function removeFromMap(data){
+	app.vent.trigger("mapSearch:clear", data);
+}
+
 // take a list of tuples and return a flat list
 function flatten(coords){
     var result = [];
