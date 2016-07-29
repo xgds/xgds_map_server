@@ -748,7 +748,8 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     		} else {
     			context.updateDetailView(data,modelMap);
     		}
-		} else if (_.isNumber(data.lat)){
+		} 
+    	if (_.isNumber(data.lat)){
 			showOnMap([data]);
 		}
     },
