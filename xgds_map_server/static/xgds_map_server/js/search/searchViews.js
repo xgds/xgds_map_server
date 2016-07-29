@@ -406,9 +406,13 @@ app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
     	this.data = data;
     },
     updateContents: function() {
-    	xgds_notes.hideError(this.$el);
-		xgds_notes.initializeNotesReference(this.$el, this.data.app_label, this.data.model_type, this.data.pk, this.data[this.modelMap.event_time_field], this.data[this.modelMap.event_timezone_field]);
-		xgds_notes.getNotesForObject(this.data.app_label, this.data.model_type, this.data.pk, 'notes_content', this.$el.find('table.notes_list'));
+    	try {
+    		xgds_notes.hideError(this.$el);
+    		xgds_notes.initializeNotesReference(this.$el, this.data.app_label, this.data.model_type, this.data.pk, this.data[this.modelMap.event_time_field], this.data[this.modelMap.event_timezone_field]);
+    		xgds_notes.getNotesForObject(this.data.app_label, this.data.model_type, this.data.pk, 'notes_content', this.$el.find('table.notes_list'));
+    	} catch(err) {
+    		// we don't always have notes.
+    	}
     },
     render: function() {
         var appended = this.$el.empty().append(this.template(this.data));
@@ -793,7 +797,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     reset: function() {
         if (!_.isUndefined(this.theDataTable)) {
             this.unListenToTableChanges();
-            this.theDataTable.fnDestroy();
+            this.theDataTable.destroy();
             this.theDataTable = undefined;
             this.$('#searchResultsTable').empty();
         }
