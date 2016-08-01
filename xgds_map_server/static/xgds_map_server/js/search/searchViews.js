@@ -554,12 +554,17 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     	
     	return result;
     },
-    setupDatatable: function(selectedModel, data, filter){
-    	//hereTamar TODO handle existing table
+    buildAjaxUrl(selectedModel, filter){
+    	var url = '/xgds_map_server/view/' + selectedModel + '/';
+    	if (filter != null && filter != ''){
+    		url += filter;
+    	}
+    	return url;
+    },
+    constructDatatable: function(selectedModel, data, filter){
     	this.selectedModel = selectedModel;
         var modelMap = this.lookupModelMap(selectedModel);
-
-        this.theTable = this.$("#searchResultsTable");
+        
         this.columns = modelMap.columns;
         if (_.isUndefined(this.columns) && !_.isUndefined(data) && !_.isEmpty(data)){
         	this.columns = Object.keys(data[0]); // this only works if it is a json dict.
@@ -601,15 +606,11 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
         if (!_.isUndefined(data)){
         	dataTableObj['data'] = data;
         } else {
-        	var url = '/xgds_map_server/view/' + selectedModel;
-        	if (filter != null && filter != ''){
-        		url += '/' + filter;
-        	}
         	dataTableObj['processing'] = true;
         	dataTableObj['serverSide'] = true;
         	
-        	var ajaxConfig = {
-        	    "url": url,
+        	this.ajaxConfig = {
+        	    "url": this.buildAjaxUrl(selectedModel, filter),
         	    "data": function ( d ) {
         	    	var todayCheckbox = $('#today');
                 	var today = 1;
@@ -619,7 +620,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
                 	return $.extend( {}, d, {"today": today});
         	    }
         	}
-        	dataTableObj['ajax']= ajaxConfig;
+        	dataTableObj['ajax']= this.ajaxConfig;
         }
         this.theDataTable = $(this.theTable).DataTable( dataTableObj );
         var context = this;
@@ -628,6 +629,31 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
         this.listenToTableChanges();
         this.filterMapData();
         app.vent.trigger("repack");
+    },
+    setupDatatable: function(selectedModel, data, filter){
+    	this.theTable = this.$("#searchResultsTable");
+    	if (this.theDataTable != undefined) {
+    		// the table already exists, see if we need to destroy it and rebuild it
+    		if (this.selectedModel != selectedModel) {
+    			// destroy it
+    			this.theDataTable.destroy();
+    			this.theDataTable = undefined;
+    			//TODO may have to unhook callbacks from the old table?
+    		} else {
+    			// if we have data, set it.  Not sure when this would be called
+    			if (data != undefined){
+    				this.theDataTable.fnClearTable();
+    				this.theDataTable.fnAddData(data);
+    			} else {
+    				// if we have no data but we have a filter, clear and update the ajax
+    				this.ajaxConfig.url = this.buildAjaxUrl(selectedModel, filter);
+    				this.theDataTable.ajax.url(this.ajaxConfig.url).load();
+    			}
+    			return;
+    		}
+    	}
+    	this.constructDatatable(selectedModel, data, filter);
+    	
     },
     connectDeselectCallback(table){
     	var context = this;
