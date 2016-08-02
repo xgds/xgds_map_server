@@ -96,12 +96,7 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         });
     },
     onShow: function() {
-    	if (this.preselectModel != undefined && this.preselectModel != 'None') {
-    		this.setupSearchForm(true);
-        }
-    },
-    onRender: function() {
-        var theKeys = Object.keys(app.options.searchModels);
+    	var theKeys = Object.keys(app.options.searchModels);
         this.$el.empty().append(this.template({
             searchModels: theKeys,
             preselectModel: this.preselectModel
@@ -110,6 +105,20 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         														  viewRegion: this.viewRegion});
         app.searchResultsView = this.searchResultsView;
         this.searchResultsRegion.show(this.searchResultsView);
+    	if (this.preselectModel != undefined && this.preselectModel != 'None') {
+    		this.setupSearchForm(true);
+        }
+    },
+    onRender: function() {
+//        var theKeys = Object.keys(app.options.searchModels);
+//        this.$el.empty().append(this.template({
+//            searchModels: theKeys,
+//            preselectModel: this.preselectModel
+//        }));
+//        this.searchResultsView = new app.views.SearchResultsView({template:'#template-search-results',
+//        														  viewRegion: this.viewRegion});
+//        app.searchResultsView = this.searchResultsView;
+//        this.searchResultsRegion.show(this.searchResultsView);
         app.vent.trigger("repack");
     },
     setupSearchForm: function(runSearch) {
@@ -129,7 +138,9 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         }
         this.clearMessage();
         app.vent.trigger("mapSearch:clear");
-        this.searchResultsView.reset();
+        if (this.searchResultsView != undefined){
+        	this.searchResultsView.reset();
+        }
         this.selectedModel = newModel;
         var templateName = '#template-' + this.selectedModel;
         this.searchFormView = new app.views.SearchFormView({template:templateName})

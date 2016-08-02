@@ -43,7 +43,8 @@
 		dataUrl: "{{ settings.DATA_URL }}",
 		searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
 		modelNames: {{model_names|safe}},
-		modelUrls: {{model_urls|safe}}
+		modelUrls: {{model_urls|safe}},
+		settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }}
 	};
 	{% block jsInitPreApp %}
 	{% endblock jsInitPreApp %}

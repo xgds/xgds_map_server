@@ -44,7 +44,7 @@
 		searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
 		modelName: '{{modelName}}',
 		tableHeight: Math.floor($(window).height()*.7) + 'px',
-		settingsLive: {% if settings.GEOCAM_UTIL_LIVE_MODE %}true{% else %}false{% endif %}
+		settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }}
 	};
 	{% block jsInitPreApp %}
 	{% endblock jsInitPreApp %}
