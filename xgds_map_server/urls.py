@@ -39,15 +39,14 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,
     # for saving map layer itself
     url(r'^saveMaplayer.json$', views.saveMaplayer, {}, 'saveMaplayer'),
     # HTML tree of maps
-    url(r'^maptree/', views.getMapTreePage,
-     {'readOnly': True, 'securityTags': ['readOnly']},
-     'mapTree'),
-    # Open Map Editor on a map layer
-    url(r'^mapeditor/(?P<layerID>[\w-]+)/', views.getMapEditorPage, {}, 'mapEditLayer'),
-    url(r'^maplayer/kml/(?P<layerID>[\w-]+).kml', views.getMapLayerKML,{'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']},'mapLayerKML'),
+    url(r'^maptree/', views.getMapTreePage, {'readOnly': True, 'securityTags': ['readOnly']},'mapTree'),
     url(r'^treejson/', views.getFancyTreeJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapTreeJSON'),
     url(r'^selectedjson/', views.getSelectedNodesJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapSelectedJSON'),
     url(r'^mapLayerJSON/(?P<layerID>[\w-]+)/', views.getMapLayerJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapLayerJSON'),
+    
+    # Open Map Editor on a map layer
+    url(r'^mapeditor/(?P<layerID>[\w-]+)/', views.getMapEditorPage, {}, 'mapEditLayer'),
+    url(r'^maplayer/kml/(?P<layerID>[\w-]+).kml', views.getMapLayerKML,{'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']},'mapLayerKML'),
     # HTML detail view of map
     url(r'^detail/(?P<mapID>[\w-]+)/', views.getMapDetailPage,
      {'readOnly': True },
@@ -90,8 +89,7 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,
      'xgds_map_server_static'),
 
     # By default if you just load the app you should see the list
-    url(r'^feed/(?P<feedname>.*)', views.getMapFeed,
-     {'readOnly': True, 'loginRequired': False, 'securityTags': ['kml', 'readOnly']},'xgds_map_server_feed'),
+    url(r'^feed/(?P<feedname>.*)', views.getMapFeed,{'readOnly': True, 'loginRequired': False, 'securityTags': ['kml', 'readOnly']},'xgds_map_server_feed'),
     url(r'^uploadGeoTiff/$', login_required(ResumableUploadView.as_view()), name='uploadGeoTiff'),
     url(r'^fmapJson/(?P<object_name>[\w]+[\.]*[\w]*)/(?P<filter>[\w]+:[\w]+)$', views.getMappedObjectsJson, {'isLive':settings.GEOCAM_UTIL_LIVE_MODE, 'force':True}, 'xgds_map_server_objectsJson_force'),
     url(r'^mapJson/(?P<object_name>[\w]+[\.]*[\w]*)/(?P<filter>[\w]+:[\w]+)$', views.getMappedObjectsJson, {'isLive':settings.GEOCAM_UTIL_LIVE_MODE}, 'xgds_map_server_objectsJson'),
