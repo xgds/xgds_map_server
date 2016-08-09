@@ -1,4 +1,10 @@
 <div id="layertreeContainer">
-	<i class="icon-arrows-ccw" alt="refresh" id="refreshTreeLink" onclick="javascript: app.vent.trigger('refreshTree');"></i>
+	<p>
+	    <label>Filter:</label>
+    	<input name="searchTree" placeholder="Filter..." autocomplete="off">
+    	<button id="btnResetSearch" class="small">&times;</button>
+    	<span id="matches"></span>
+  	</p>
+  	<i class="icon-arrows-ccw" alt="refresh" id="refreshTreeLink" onclick="javascript: app.vent.trigger('refreshTree');"></i>
  	<div id="layertree" data-source="ajax" class="sampletree"></div>
  </div>

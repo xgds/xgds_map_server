@@ -50,6 +50,7 @@ app.views.FancyTreeView = Backbone.View.extend({
     },
     onShow: function() {
     	app.vent.trigger('layerView:onShow');
+    	this.connectFilter();
     },
     afterRender: function() {
         app.vent.trigger('layerView:onRender');
@@ -91,13 +92,54 @@ app.views.FancyTreeView = Backbone.View.extend({
 	    }
     	return null
     },
+    connectFilter: function() {
+    	$("button#btnResetSearch").click(function(e){
+    	      $("input[name=searchTree]").val("");
+    	      $("span#matches").text("");
+    	      app.tree.clearFilter();
+    	    }).attr("disabled", true);
+    	
+    	$("input[name=searchTree]").keyup(function(e){
+    	      var n,
+    	        opts = {
+    	          autoExpand: true,
+    	          leavesOnly: false
+    	        },
+    	        match = $(this).val();
+
+    	      if(e && e.which === $.ui.keyCode.ESCAPE || $.trim(match) === ""){
+    	        $("button#btnResetSearch").click();
+    	        return;
+    	      }
+//    	      if($("#regex").is(":checked")) {
+//    	        // Pass function to perform match
+//    	        n = app.tree.filterNodes(function(node) {
+//    	          return new RegExp(match, "i").test(node.title);
+//    	        }, opts);
+//    	      } else {
+    	        // Pass a string to perform case insensitive matching
+    	        n = app.tree.filterNodes(match, opts);
+//    	      }
+    	      $("button#btnResetSearch").attr("disabled", false);
+    	      $("span#matches").text("(" + n + " matches)");
+    	    }).focus();
+    },
     createTree: function() {
         if (_.isUndefined(app.tree) && !_.isUndefined(app.treeData)){
             var layertreeNode = this.$el.find("#layertree");
             var context = this;
             var mytree = layertreeNode.fancytree({
-                extensions: ["persist"],
+                extensions: ['persist', 'filter'],
                 source: app.treeData,
+                filter: {
+                    autoApply: true,  // Re-apply last filter if lazy data is loaded
+                    counter: true,  // Show a badge with number of matching child nodes near parent icons
+                    fuzzy: false,  // Match single characters in order, e.g. 'fb' will match 'FooBar'
+                    hideExpandedCounter: true,  // Hide counter badge, when parent is expanded
+                    highlight: true,  // Highlight matches by wrapping inside <mark> tags
+                    mode: "hide",  // Hide unmatched nodes (pass "dimm" to gray out unmatched nodes)
+                    autoExpand: true
+                  },
                 checkbox: true,
                 icon: function(event, data) {
                 	  if( !data.node.isFolder() ) { 
