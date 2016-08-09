@@ -39,7 +39,8 @@
 		dataUrl: "{{ settings.DATA_URL }}",
 		searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
 		modelName: '{{modelName}}',
-		modelPK: '{{modelPK}}'
+		modelPK: '{{modelPK}}',
+		settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }}
 	};
 	{% block jsInitPreApp %}
 	{% endblock jsInitPreApp %}
@@ -53,7 +54,7 @@
         {% block preLayout %}
 		{% endblock preLayout %}
 		
-    	initializeGridstack();
+    	xgds_gridstack.initializeGridstack();
     	
     	{% block otherJSInit %}
 		{% endblock otherJSInit %}
@@ -73,9 +74,6 @@
 				</div>
 		</div>
 </div> 
-{% endblock preMap %}
-
-{% block postMap %}
 <div id="notes-gridstack-item" class="grid-stack-item" 
 		data-gs-x="3" data-gs-y="3"
         data-gs-width="3" data-gs-height="1" >
@@ -86,9 +84,32 @@
 				</div>
 		</div>
 </div> 
-{% endblock postMap %}
+{% endblock preMap %}
 
 
+{% block map %}
+<div id="map-gridstack-item" class="grid-stack-item" 
+data-gs-x="3" data-gs-y="4"
+      data-gs-width="2" data-gs-height="1" >
+	<div class="grid-stack-item-content" id="map-gridstack-item-content" >
+	<i class="icon-lock pinDiv warning"></i>
+      		{% siteframe_form %}
+		<div id="map"></div>
+	</div>
+</div>
+{% endblock map %}
+
+{% block layers %}
+<div id="map-gridstack-item" class="grid-stack-item" 
+data-gs-x="6" data-gs-y="4"
+      data-gs-width="1" data-gs-height="1" >
+	<div class="grid-stack-item-content" id="layers-gridstack-item-content">
+	<i class="icon-cancel-circled"></i>
+	<i class="icon-lock-open pinDiv warning"></i>
+	<div id="layers"></div>
+	</div>
+</div>
+{% endblock layers %}
 
 		
 

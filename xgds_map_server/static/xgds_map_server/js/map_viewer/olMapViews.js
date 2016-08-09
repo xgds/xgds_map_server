@@ -26,6 +26,10 @@ function showOnMap(data){
 	app.vent.trigger('mapSearch:fit');
 }
 
+function removeFromMap(data){
+	app.vent.trigger("mapSearch:clear", data);
+}
+
 // take a list of tuples and return a flat list
 function flatten(coords){
     var result = [];
@@ -583,13 +587,17 @@ $(function() {
         },
         show: function() {
             if (!this.visible){
-                this.group.getLayers().push(this.mapElement);
+            	if (this.mapElement) {
+            		this.group.getLayers().push(this.mapElement);
+            	}
                 this.visible = true;
             }
         },
         hide: function() {
             if (this.visible){
-                this.group.getLayers().remove(this.mapElement);
+            	if (this.mapElement) {
+            		this.group.getLayers().remove(this.mapElement);
+            	}
                 this.visible = false;
             }
         }
@@ -920,14 +928,14 @@ $(function() {
             this.clearDataAndFeatures();
             this.objectsJson = data
             for (i = 0; i < this.objectsJson.length; i++){
-                var object = this.objectsJson[i];
-                if (object != null){
-	                var theClass = window[object.type];
+                var theObject = this.objectsJson[i];
+                if ((!_.isNull(theObject)) && (_.isNumber(theObject.lat))){
+	                var theClass = window[theObject.type];
 	                if (!_.isUndefined(theClass) && !_.isUndefined(theClass.constructElements)) {
-	                    if (_.isUndefined(this.map[object.type])){
-	                        this.map[object.type] = [];
+	                    if (_.isUndefined(this.map[theObject.type])){
+	                        this.map[theObject.type] = [];
 	                    }
-	                    this.map[object.type].push(object);
+	                    this.map[theObject.type].push(theObject);
 	                }
                 }
             }

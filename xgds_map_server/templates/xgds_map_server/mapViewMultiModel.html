@@ -43,7 +43,8 @@
 		dataUrl: "{{ settings.DATA_URL }}",
 		searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
 		modelNames: {{model_names|safe}},
-		modelUrls: {{model_urls|safe}}
+		modelUrls: {{model_urls|safe}},
+		settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }}
 	};
 	{% block jsInitPreApp %}
 	{% endblock jsInitPreApp %}
@@ -57,7 +58,7 @@
         {% block preLayout %}
 		{% endblock preLayout %}
 		
-    	initializeGridstack();
+    	xgds_gridstack.initializeGridstack();
     	
     	{% block otherJSInit %}
 		{% endblock otherJSInit %}
@@ -69,12 +70,16 @@
 {% block preMap %}
 {% for modelName in model_names %}
 <div id="view-gridstack-item-{{modelName}}" class="grid-stack-item" 
-		data-gs-x="{{ forloop.counter0|multiply:3 }}" data-gs-y="0"
-        data-gs-width="3" data-gs-height="3" >
+		data-gs-x="{{ forloop.counter0|multiply:3 }}" data-gs-y="{{ forloop.counter0|multiply:2 }}"
+        data-gs-width="3" data-gs-height="{% if forloop.counter0 == 0 %}4{% else %}3{% endif %}" >
         <div class="grid-stack-item-content" id="view-gridstack-item-content-{{modelName}}" >
 				<i class="icon-arrows-ccw right" title="Load Latest" id="reload{{modelName}}"></i>
 				<i class="icon-lock-open pinDiv warning"></i>
-				<div id="viewDiv{{modelName}}">
+				<i class="icon-cancel-circled"></i>
+				<button class="small info btn prev-button" id="ajax_prev_button"><i class="icon-left-dir"></i></button>
+				<strong id="nameBlock"></strong>
+				<button class="small info btn next-button" id="ajax_next_button"><i class="icon-right-dir"></i></button>
+				<div id="viewDiv{{modelName}}" class="view-div">
 				</div>
 				<div id="notesDiv{{modelName}}">
 				</div>
@@ -82,6 +87,30 @@
 </div> 
 {% endfor %}
 {% endblock preMap %}
+
+{% block map %}
+<div id="map-gridstack-item" class="grid-stack-item" 
+data-gs-x="3" data-gs-y="0"
+      data-gs-width="2" data-gs-height="1" >
+	<div class="grid-stack-item-content" id="map-gridstack-item-content" >
+	<i class="icon-lock pinDiv warning"></i>
+      		{% siteframe_form %}
+		<div id="map"></div>
+	</div>
+</div>
+{% endblock map %}
+
+{% block layers %}
+<div id="map-gridstack-item" class="grid-stack-item" 
+data-gs-x="6" data-gs-y="0"
+      data-gs-width="1" data-gs-height="1" >
+	<div class="grid-stack-item-content" id="layers-gridstack-item-content">
+	<i class="icon-cancel-circled"></i>
+	<i class="icon-lock-open pinDiv warning"></i>
+	<div id="layers"></div>
+	</div>
+</div>
+{% endblock layers %}
 
 
 

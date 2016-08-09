@@ -52,7 +52,7 @@ from geocamUtil.geoEncoder import GeoDjangoEncoder
 from geocamUtil.loader import LazyGetModelByName
 from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
 from geocamUtil.models import SiteFrame
-from xgds_core.views import get_handlebars_templates
+from xgds_core.views import get_handlebars_templates, OrderListJson
 from xgds_data.dlogging import recordList, recordRequest
 from xgds_data.forms import SearchForm, SpecializedForm
 from xgds_data.models import RequestLog, ResponseLog
@@ -60,7 +60,8 @@ from xgds_data.views import searchHandoff, resultsIdentity
 from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm, MapSearchForm, MapCollectionForm, EditMapTileForm
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapSearch, MapCollection, MapLink, MAP_NODE_MANAGER, MAP_MANAGER
 from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
-
+from xgds_map_server.kmlLayerExporter import exportMapLayer
+from geocamUtil.KmlUtil import wrapKmlForDownload
 
 #from django.http import StreamingHttpResponse
 # pylint: disable=E1101,R0911
@@ -1122,6 +1123,9 @@ def deleteGroup(map_group, state):
         deleteGroup(group, state)
 
 def setMapProperties(m, request):
+    """
+    This is for properties for nodes in map tree
+    """
     url = m.getGoogleEarthUrl(request)
     if (url.startswith('/') or
             url.startswith('http://') or
@@ -1129,18 +1133,18 @@ def setMapProperties(m, request):
         m.url = url
     else:
         m.url = latestRequestG.build_absolute_uri(url)
-    if m.openable:
-        m.listItemType = 'check'
-    else:
-        m.listItemType = 'checkHideChildren'
     if m.visible:
         m.visibility = 1
     else:
         m.visibility = 0
-    # logging.debug('kml file is %s', m.kmlFile)
-    # logging.debug('url is %s', m.url)
-    # logging.debug('visibility is %s', m.visibility)
-    # logging.debug('listItemType is %s', m.listItemType)
+    try:
+        if m.openable:
+            m.listItemType = 'check'
+        else:
+            m.listItemType = 'checkHideChildren'
+    except:
+        m.listItemType = 'check'
+
 
 
 def getMapTree(request):
@@ -1148,7 +1152,7 @@ def getMapTree(request):
     groups = MapGroup.objects.filter(deleted=0)
     kmlMaps = KmlMap.objects.filter(deleted=0)
 #     links = MapLink.objects.filter(deleted=0)
-#     layers = MapLayer.objects.filter(deleted=0)
+    layers = MapLayer.objects.filter(deleted=0)
 #     tiles = MapTile.objects.filter(deleted=0)
 
     groupLookup = dict([(group.uuid, group) for group in groups])
@@ -1157,7 +1161,7 @@ def getMapTree(request):
         group.subGroups = []
         group.subMaps = []
         group.subLinks = []
-#         group.subLayers = []
+        group.subLayers = []
 #         group.subTiles = []
 
     for subGroup in groups:
@@ -1177,10 +1181,11 @@ def getMapTree(request):
 #             parent = groupLookup[subLink.parent.uuid]
 #             parent.subLinks.append(subLink)
 
-#     for subLayer in layers:
-#         if subLayer.parent:
-#             parent = groupLookup[subLayer.parent.uuid]
-#             parent.subLayers.append(subLayer)
+    for subLayer in layers:
+        setMapProperties(subLayer, request)
+        if subLayer.parent:
+            parent = groupLookup[subLayer.parent.uuid]
+            parent.subLayers.append(subLayer)
 # 
 #     for subTile in tiles:
 #         if subTile.parent:
@@ -1214,7 +1219,8 @@ def printTreeToKml(out, opts, node):
 
 def printGroupToKml(out, opts, node, level=0):
     if (0 == len(getattr(node, 'subGroups', [])))\
-       and (0 == len(getattr(node, 'subMaps', []))):
+       and (0 == len(getattr(node, 'subMaps', [])))\
+       and (0 == len(getattr(node, 'subLayers', []))):
         print "Found no maps!!"
         return
     out.write("""
@@ -1226,6 +1232,8 @@ def printGroupToKml(out, opts, node, level=0):
     for n in node.subMaps:
         printMapToKml(out, opts, n, level + 1)
     for n in node.subLinks:
+        printMapToKml(out, opts, n, level + 1)
+    for n in node.subLayers:
         printMapToKml(out, opts, n, level + 1)
     out.write('</Folder>\n')
 
@@ -1463,11 +1471,11 @@ def processTiles(request, uuid, minZoom, maxZoom, resampleMethod, mapTile):
 #             p.terminate()
 #             os.system(tileCmd)
 
-    
 def getMapLayerKML(request, layerID):
-    #TODO implement
-    pass
-
+    if layerID:
+        mapLayer = MapLayer.objects.get(pk=layerID)
+        result =  exportMapLayer(request,mapLayer)
+        return wrapKmlForDownload(result, mapLayer.name)
 
 @never_cache
 def getMappedObjectsJson(request, object_name, filter=None, range=0, isLive=False, force=False):
@@ -1527,9 +1535,9 @@ def getMappedObjectsJson(request, object_name, filter=None, range=0, isLive=Fals
                             content_type='application/json',
                             status=406)
 
-def buildFilterDict(filter):
+def buildFilterDict(theFilter):
     filterDict = {}
-    dictEntries = str(filter).split(",")
+    dictEntries = str(theFilter).split(",")
     for entry in dictEntries:
         splits = str(entry).split(":")
         try:
@@ -1540,7 +1548,7 @@ def buildFilterDict(filter):
     return filterDict
 
 @never_cache
-def getLastObjectJson(request, object_name, filter=None):
+def getLastObjectJson(request, object_name, theFilter=None):
     """ Get the object json information to show in table or map views.
     """
     try:
@@ -1548,11 +1556,11 @@ def getLastObjectJson(request, object_name, filter=None):
             THE_OBJECT = LazyGetModelByName(getattr(settings, object_name))
         except:
             THE_OBJECT = LazyGetModelByName(object_name)
-        if filter:
-            filterDict = buildFilterDict(filter)
-            object = THE_OBJECT.get().objects.filter(**filterDict).last()
+        if theFilter:
+            filterDict = buildFilterDict(theFilter)
+            theObject = THE_OBJECT.get().objects.filter(**filterDict).last()
         else:
-            object = THE_OBJECT.get().objects.last()
+            theObject = THE_OBJECT.get().objects.last()
     except:
         traceback.print_exc()
         return HttpResponse(json.dumps({'error': {'message': 'I think you passed in an invalid filter.',
@@ -1560,7 +1568,7 @@ def getLastObjectJson(request, object_name, filter=None):
                                         }),
                             content_type='application/json')
 
-    if object:
+    if theObject:
         resultDict = object.toMapDict()
         if resultDict:
             json_data = json.dumps([resultDict], indent=4, cls=DatetimeJsonEncoder)
@@ -1599,8 +1607,8 @@ def getMappedObjectsExtens(request, object_name, extens, today=False):
                                 content_type="application/json")
         return ""
 
-def getSearchPage(request, modelName=None):
-    return render_to_response("xgds_map_server/mapSearch.html", 
+def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSearch.html'):
+    return render_to_response(templatePath, 
                               {'modelName': modelName,
                                'templates': get_handlebars_templates(list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_HANDLEBARS_DIRS'),
                                'searchForms': getSearchForms(),
@@ -1650,3 +1658,94 @@ def getViewMultiModelPage(request, object_names, object_pks=None, filters=None, 
                                'templates': templates,
                                'app': 'xgds_map_server/js/search/mapViewerMultiModelApp.js'},
                               context_instance=RequestContext(request))
+
+
+def viewMultiLast(request, mapNames):
+    fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
+    templates = get_handlebars_templates(fullTemplateList, 'XGDS_MAP_SERVER_HANDLEBARS_DIRS')
+    
+    object_urls = [];
+    for obj in mapNames:
+        url = reverse('xgds_map_server_lastJson2', kwargs={'mapName': obj})
+        object_urls.append(str(url))
+    return render_to_response("xgds_map_server/mapViewMultiModel.html", 
+                              {'model_names': mapNames,
+                               'model_urls' : object_urls,
+                               'templates': templates,
+                               'app': 'xgds_map_server/js/search/mapViewerMultiModelApp.js'},
+                              context_instance=RequestContext(request))
+    
+def lookupModel(request, mapName):
+    try:
+        modelMap = settings.XGDS_MAP_SERVER_JS_MAP[mapName]
+        object_name = modelMap['model']
+        THE_OBJECT = LazyGetModelByName(getattr(settings, object_name))
+    except:
+        THE_OBJECT = LazyGetModelByName(object_name)
+    return (THE_OBJECT, modelMap)
+
+def viewDictResponse(request, current, modelMap):
+    jsonResult = current.toMapList(modelMap['columns'])
+    return HttpResponse(json.dumps(jsonResult, cls=DatetimeJsonEncoder),
+                        content_type='application/json')
+
+def getObject(request, mapName, currentPK):
+    try:
+        (THE_OBJECT, modelMap) = lookupModel(request, mapName)
+        current = THE_OBJECT.get().objects.get(pk=currentPK)
+        return viewDictResponse(request, current, modelMap)
+    except:
+        traceback.print_exc()
+        return HttpResponse(json.dumps({'error': {'message': 'Could not find last %s.' % mapName
+                                                  }
+                                        }),
+                            content_type='application/json', status=406)
+
+
+def getLastObject(request, mapName):
+    try:
+        (THE_OBJECT, modelMap) = lookupModel(request, mapName)
+        current = THE_OBJECT.get().objects.last()
+        return viewDictResponse(request, current, modelMap)
+    except:
+        traceback.print_exc()
+        return HttpResponse(json.dumps({'error': {'message': 'Could not find last %s.' % mapName
+                                                  }
+                                        }),
+                            content_type='application/json', status=406)
+        
+def getPrevNextObject(request, currentPK, mapName, which='previous'):
+    """ which is previous or next.  This builds up get_next_by_timeName or get_previous_by_timeName"""
+    try:
+        (THE_OBJECT, modelMap) = lookupModel(request, mapName)
+        current = THE_OBJECT.get().objects.get(pk=currentPK)
+        timeName = modelMap['event_time_field']
+        methodName = 'get_%s_by_%s' % (which, timeName)
+        methodToCall = getattr(current, methodName)
+        try:
+            result = methodToCall()
+            return viewDictResponse(request, result, modelMap)
+        except:
+            return HttpResponse(json.dumps({'error': {'message': 'No %s %s' % (which, mapName)
+                                                  }
+                                        }),
+                            content_type='application/json', status=406)
+    except:
+        traceback.print_exc()
+        return HttpResponse(json.dumps({'error': {'message': 'I think you passed in an invalid filter.'
+                                                  }
+                                        }),
+                            content_type='application/json', status=406)
+
+class MapOrderListJson(OrderListJson):
+    
+    def dispatch(self, request, *args, **kwargs):
+        if 'mapName' in kwargs:
+            mapName = kwargs.get('mapName', None)
+            if mapName in settings.XGDS_MAP_SERVER_JS_MAP:
+                modelMap = settings.XGDS_MAP_SERVER_JS_MAP[mapName]
+                modelName = modelMap['model']
+                self.lookupModel(modelName)
+                self.columns = modelMap['columns']
+                self.order_columns = self.columns
+        return super(MapOrderListJson, self).dispatch(request, *args, **kwargs)

@@ -96,19 +96,29 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         });
     },
     onShow: function() {
-    	if (this.preselectModel != undefined && this.preselectModel != 'None') {
-    		this.setupSearchForm(true);
-        }
-    },
-    onRender: function() {
-        var theKeys = Object.keys(app.options.searchModels);
+    	var theKeys = Object.keys(app.options.searchModels);
         this.$el.empty().append(this.template({
             searchModels: theKeys,
             preselectModel: this.preselectModel
         }));
         this.searchResultsView = new app.views.SearchResultsView({template:'#template-search-results',
-        														  viewRegion: this.viewRegion}); 
+        														  viewRegion: this.viewRegion});
+        app.searchResultsView = this.searchResultsView;
         this.searchResultsRegion.show(this.searchResultsView);
+    	if (this.preselectModel != undefined && this.preselectModel != 'None') {
+    		this.setupSearchForm(true);
+        }
+    },
+    onRender: function() {
+//        var theKeys = Object.keys(app.options.searchModels);
+//        this.$el.empty().append(this.template({
+//            searchModels: theKeys,
+//            preselectModel: this.preselectModel
+//        }));
+//        this.searchResultsView = new app.views.SearchResultsView({template:'#template-search-results',
+//        														  viewRegion: this.viewRegion});
+//        app.searchResultsView = this.searchResultsView;
+//        this.searchResultsRegion.show(this.searchResultsView);
         app.vent.trigger("repack");
     },
     setupSearchForm: function(runSearch) {
@@ -128,7 +138,9 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         }
         this.clearMessage();
         app.vent.trigger("mapSearch:clear");
-        this.searchResultsView.reset();
+        if (this.searchResultsView != undefined){
+        	this.searchResultsView.reset();
+        }
         this.selectedModel = newModel;
         var templateName = '#template-' + this.selectedModel;
         this.searchFormView = new app.views.SearchFormView({template:templateName})
@@ -172,30 +184,55 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
           });
         }
     },
+    buildFilter: function() {
+    	var theForm = this.$("#form-"+this.selectedModel);
+    	var postData = null;
+    	var result = '';
+    	if (theForm.length == 1){
+    		postData = theForm.serializeArray();
+    		for (var i=0; i<postData.length; i++){
+        		var item = postData[i];
+        		if ( item.value != '' &&
+        			!item.name.endsWith('_operator') && 
+        			 item.name.startsWith('form-0-')){
+        			if (result != ''){
+        				result += ',';
+        			}
+        			result += item.name.substring(7) + ":" + item.value;
+        		}
+        	}
+    	}
+    	
+    	return result;
+    },
     doSearch: function() {
-        var theForm = this.$("#form-"+this.selectedModel);
-        var postData = theForm.serializeArray();
-        postData.push({'name':'modelClass', 'value':app.options.searchModels[this.selectedModel].model});
-        this.setMessage("Searching...");
-        $.ajax({
-            url: '/xgds_map_server/doMapSearch',
-            dataType: 'json',
-            data: postData,
-            success: $.proxy(function(data) {
-                if (_.isUndefined(data) || data.length === 0){
-                    this.setMessage("None found.");
-                } else {
-                    this.searchResultsView.updateContents(this.selectedModel, data);
-                    this.setupSaveSearchDialog();
-                    this.clearMessage();
-                }
-            }, this),
-            error: $.proxy(function(data){
-                app.vent.trigger("mapSearch:clear");
-                this.searchResultsView.reset();
-                this.setMessage("Search failed.")
-            }, this)
-          });
+    	this.searchResultsView.setupDatatable(this.selectedModel, undefined, this.buildFilter());
+    	this.setupSaveSearchDialog();
+    	return;
+    	
+//        var theForm = this.$("#form-"+this.selectedModel);
+//        var postData = theForm.serializeArray();
+//        postData.push({'name':'modelClass', 'value':app.options.searchModels[this.selectedModel].model});
+//        this.setMessage("Searching...");
+//        $.ajax({
+//            url: '/xgds_map_server/doMapSearch',
+//            dataType: 'json',
+//            data: postData,
+//            success: $.proxy(function(data) {
+//                if (_.isUndefined(data) || data.length === 0){
+//                    this.setMessage("None found.");
+//                } else {
+//                    this.searchResultsView.updateContents(this.selectedModel, data);
+//                    this.setupSaveSearchDialog();
+//                    this.clearMessage();
+//                }
+//            }, this),
+//            error: $.proxy(function(data){
+//                app.vent.trigger("mapSearch:clear");
+//                this.searchResultsView.reset();
+//                this.setMessage("Search failed.")
+//            }, this)
+//          });
     },
     openSaveDialog: function() {
     	this.setupSaveSearchDialog();
@@ -248,6 +285,9 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     	this.selectedModel = options.selectedModel;
     	this.modelMap = options.modelMap;
     	this.setHandlebars(options.handlebarSource);
+    	this.neverShown = true;
+    	var context = this;
+    	this.on('updateContents', _.debounce(context.updateContents, 500));
     },
     setHandlebars: function(handlebarSource){
     	if (handlebarSource != this.handlebarSource){
@@ -258,27 +298,95 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     setData: function(data) {
     	this.data = data;
     },
+    setModelMap: function(modelMap){
+    	this.modelMap = modelMap;
+    },
     render: function() {
-    	showOnMap(this.data);
+    	showOnMap([this.data]);
         this.$el.empty().append(this.template(this.data));
     	try {
-    		this.onShow();
+    		var context = this;
+    		if (this.neverShown){
+        		this.onShow();
+    		} else {
+    			this.trigger('updateContents');
+    		}
     	} catch (err){
     		// gulp, the first time this will 
     	}
     },
-    onShow: function() {
-    	var new_window_btn = this.$el.parent().siblings("#new-window-btn");
-    	if (new_window_btn.length > 0){
-    		var theLink = new_window_btn.children("#view-new-window-target");
-    		theLink.attr("href","/xgds_map_server/view/" + this.selectedModel + "/" + this.data.pk );
+    updateContents: function() {
+    	try {
+	    	var new_window_btn = this.$el.parent().siblings("#new-window-btn");
+	    	if (new_window_btn.length > 0){
+	    		var theLink = new_window_btn.children("#view-new-window-target");
+	    		theLink.attr("href","/xgds_map_server/view/" + this.selectedModel + "/" + this.data.pk );
+	    	}
+    	} catch (err) {
+    		// gulp we do not always have a new window button
     	}
+	    
     	if (this.modelMap.viewInitMethods != undefined){
     		for (var i=0; i < this.modelMap.viewInitMethods.length; i++){
     			$.executeFunctionByName(this.modelMap.viewInitMethods[i], window, this.data);
     		}
     	}
-    }
+    },
+    onShow: function() {
+    	this.neverShown = false;
+    	this.updateContents();
+    	var context = this;
+    	$('.grid-stack').on('resizestop', function(event, ui) {
+    	    var element = event.target;
+    	    var found = $(event.target).find('#view-gridstack-item-content');
+    	    if (found.length > 0){
+    	    	if (context.modelMap.viewResizeMethod != undefined){
+    	    		context.handleResizeDetailView(found[0], context);
+    	    	}
+    	    }
+    		
+    	});
+    	$("#ajax_prev_button").click(function(event) {
+			context.selectPreviousAjax();
+		});
+		$("#ajax_next_button").click(function(event) {
+			context.selectNextAjax();
+			});
+    },
+    handleResizeDetailView: function(theDiv, context){
+    	var functionName = context.modelMap.viewResizeMethod[0];
+		$.executeFunctionByName(functionName, window, theDiv, context.data);
+    },
+    selectPreviousAjax: function() {
+    	var modelName = this.data.type;
+    	var modelMap = this.modelMap;
+    	var url = '/xgds_map_server/prevJson/' + modelName + '/' + this.data.pk;
+    	var context = this;
+    	$.when($.get(url)).then(function(incomingData, status){
+    		var data = _.object(modelMap.columns, incomingData);
+    		context.setData(data);
+        	context.render();
+        	if (context.detailNotesView != undefined){
+        		context.detailNotesView.setData(data);
+        		context.detailNotesView.updateContents();
+        	}
+    	});
+    },
+    selectNextAjax: function() {
+    	var modelName = this.data.type;
+    	var modelMap = this.modelMap;
+    	var url = '/xgds_map_server/nextJson/' + modelName + '/' + this.data.pk;
+    	var context = this;
+    	$.when($.get(url)).then(function(incomingData, status){
+    		var data = _.object(modelMap.columns, incomingData);
+    		context.setData(data);
+        	context.render();
+        	if (context.detailNotesView != undefined){
+        		context.detailNotesView.setData(data);
+        		context.detailNotesView.updateContents();
+        	}
+    	});
+    },
 });
 
 /*
@@ -309,9 +417,13 @@ app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
     	this.data = data;
     },
     updateContents: function() {
-    	xgds_notes.hideError(this.$el);
-		xgds_notes.initializeNotesReference(this.$el, this.data.app_label, this.data.model_type, this.data.pk, this.data[this.modelMap.event_time_field], this.data[this.modelMap.event_timezone_field]);
-		xgds_notes.getNotesForObject(this.data.app_label, this.data.model_type, this.data.pk, 'notes_content', this.$el.find('table.notes_list'));
+    	try {
+    		xgds_notes.hideError(this.$el);
+    		xgds_notes.initializeNotesReference(this.$el, this.data.app_label, this.data.model_type, this.data.pk, this.data[this.modelMap.event_time_field], this.data[this.modelMap.event_timezone_field]);
+    		xgds_notes.getNotesForObject(this.data.app_label, this.data.model_type, this.data.pk, 'notes_content', this.$el.find('table.notes_list'));
+    	} catch(err) {
+    		// we don't always have notes.
+    	}
     },
     render: function() {
         var appended = this.$el.empty().append(this.template(this.data));
@@ -320,7 +432,7 @@ app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
     	// change the id of the table ...
     	var notesList = this.$el.find('.notes_list');
     	notesList.attr('id', 'notes_list' + this.modelName);
-    	xgds_notes.setupNotesUI();
+    	xgds_notes.setupNotesUI(this.$el);
     	this.updateContents();
     }
 });
@@ -328,6 +440,11 @@ app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
 app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
 	initialize: function() {
 		this.modelMap = {};
+		var context = this;
+		app.on('forceDetail', function(data){
+			var modelMap = context.lookupModelMap(data.type);
+			context.forceDetailView(data, modelMap);
+		});
 	},
     regions: function(options){
         return {
@@ -335,85 +452,239 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
             viewNotesRegion: (options.viewRegion) ? {el:"#notesDiv"} : '#notesDiv'
         };
       },
-    getColumnDefs: function(columns){
-    	result = [];
+    onShow: function() {
+    	// hook up ajax reloading
+    	var reloadIconName = '#reloadSearchResults';
+    	var context = this;
+    	$(reloadIconName).click(function() {
+    		context.theDataTable.ajax.reload( null, false );
+    	});
+    	var todayCheckbox = $('#today');
+    	if (todayCheckbox.length > 0){
+    		todayCheckbox.prop('checked', app.options.settingsLive);
+    		todayCheckbox.click(function() {
+    			context.theDataTable.ajax.reload( null, true );
+    		});
+    	}
+    },
+    getEditableColumnDefs: function(columns, columnTitles, editableColumns){
+    	var result = [];
+    	if (!_.isUndefined(editableColumns)){
+    		for (var i=0; i<columnTitles.length; i++){
+    			var entry = { label: columnTitles[i],
+       		 		 		  name: columns[i]}
+	            if ($.inArray(columns[i], Object.keys(editableColumns)) > -1){
+					entry['type'] = editableColumns[columns[i]];
+				}
+	            result.push(entry);
+    		}
+    	}
+    	return result;
+    },
+    toTitleCase: function(str) {
+    	return str.substr(0,1).toUpperCase()+str.substr(1);
+    },
+    getColumnDefs: function(columns, searchableColumns, editableColumns){
+    	var result = [];
+    	if (_.isUndefined(searchableColumns)){
+    		searchableColumns = [];
+    	}
     	for (var i=0; i<columns.length; i++){
-    		var heading = columns[i];
-    		var columnDef = {data:heading,
-    						 targets: i};
     		var context = this;
+    		var heading = columns[i];
+    		var columnDef = {};
+    		columnDef['targets'] = i;
+    		if ($.inArray(heading, searchableColumns) > -1){
+    			columnDef['searchable'] = true;
+    		}
+    		if (!_.isUndefined(editableColumns)){
+    			if ($.inArray(heading, Object.keys(editableColumns)) > -1){
+    				columnDef['className'] = 'editable';
+    			}
+    		}
     		if (this.columnTitles != undefined){
         		columnDef['title'] = this.columnTitles[i];
+        	} else {
+        		columnDef['title'] = this.toTitleCase(columns[i]);
         	}
     		if (heading.toLowerCase().indexOf('zone') > -1) {
     			columnDef['render'] = function ( data, type, row ) {
-    										   var mmap = context.lookupModelMap(context.selectedModel);
-                                               return getLocalTimeString(row[0], row[mmap.event_timezone_field], "z");
+                                               return getLocalTimeString(row[0], row[1], "z");
                                            };
     		} else if  (heading.toLowerCase().indexOf('time') > -1){
     			columnDef['render'] = function ( data, type, row ) {
-    											var mmap = context.lookupModelMap(context.selectedModel);
-                                               return getLocalTimeString(data, row[mmap.event_timezone_field], "MM/DD/YY HH:mm:ss");
+                                               return getLocalTimeString(row[0], row[1], "MM/DD/YY HH:mm:ss");
                                            }
     		} else if (heading.toLowerCase().indexOf('thumbnail') > -1) {
     			columnDef['render'] = function(data, type, row){
-    									if (data != ''){
-    										var result = '<img width="100" src="' + data + '"'; //row['content_thumbnail_url'] + '"';
+    									if (!_.isUndefined(data) && !_.isNull(data) && data != ''){
+    										var result = '<img width="100" src="' + data + '"'; 
     										result += '">';
     										return result;
     									} else {
     										return '';
     									}
     								};
-    		}
+    		} else if (heading.toLowerCase().indexOf('tag') > -1){
+			    			columnDef['render'] =  function(data, type, row) {
+			    				if (!_.isUndefined(data) && !_.isNull(data) && data != ''){
+									var result = "";
+									for (var i = 0; i < data.length; i++) {
+										result = result + '<span class="tag label label-info">' + data[i] + '</span>&nbsp;';
+									}
+									return result;
+								}
+								return null;
+							};
+			} else if (heading.toLowerCase().indexOf('content_url') > -1) {
+    			columnDef['render'] = function(data, type, row){
+					if (!_.isUndefined(data) && !_.isNull(data) && data != ''){
+						theObject = context.getObject(row, context);
+						if (theObject.content_url != '') {
+							result = '<a href="' + theObject.content_url + '" target="_blank">';
+							if (theObject.content_thumbnail_url != '') {
+								result += '<img src="' + theObject.content_thumbnail_url + '"';
+								if (theObject.content_name != '') {
+									result += 'alt="' + theObject.content_name +'"';
+								}
+								result += '">';
+							} else if (theObject.content_name != ''){
+								result += theObject.content_name;
+							} else {
+								result += "Link";
+							}
+							result += '</a>';
+							return result;
+						}
+					}
+					return '';
+				};
+			}
     		result.push(columnDef);
     	}
     	
     	return result;
     },
+    buildAjaxUrl(selectedModel, filter){
+    	var url = '/xgds_map_server/view/' + selectedModel + '/';
+    	if (filter != null && filter != ''){
+    		url += filter;
+    	}
+    	return url;
+    },
+    constructDatatable: function(selectedModel, data, filter){
+    	this.selectedModel = selectedModel;
+        var modelMap = this.lookupModelMap(selectedModel);
+        
+        this.columns = modelMap.columns;
+        if (_.isUndefined(this.columns) && !_.isUndefined(data) && !_.isEmpty(data)){
+        	this.columns = Object.keys(data[0]); // this only works if it is a json dict.
+        }
+        this.columns = _.difference(this.columns, modelMap.hiddenColumns);
+        this.columnTitles = modelMap.columnTitles;
+        this.columnHeaders = this.getColumnDefs(this.columns, modelMap.searchableColumns, modelMap.editableColumns);
+        this.editableColumns = this.getEditableColumnDefs(this.columns, modelMap.columnTitles, modelMap.editableColumns);
+        $.fn.dataTable.moment( DEFAULT_TIME_FORMAT);
+        $.fn.dataTable.moment( "MM/DD/YY HH:mm:ss");
+        var tableheight = this.calcDataTableHeight();
+        if (app.options.tableHeight != undefined){
+        	tableheight = app.options.tableHeight;
+        }
+        
+        var dataTableObj = {
+                columns: this.columnHeaders,
+                autoWidth: true,
+                dom: '<"top"flp<"clear">>rt<"bottom"ip<"clear">>',
+                stateSave: false,
+                rowId: function(a) {return a[a.length-1]; },
+                paging: true,
+                pageLength: 10, 
+                lengthChange: true,
+                ordering: true,
+                select:true,
+                order: [[ 0, "desc" ]],
+                jQueryUI: false,
+                rowCallback: function (row, data, index){
+                	$(row).attr('id', data[data.length - 1]);
+                },
+                scrollY:  tableheight,
+                "lengthMenu": [[10, 20, 40, 80, -1], [10, 20, 40, 80, "All"]],
+                "language": {
+                    "lengthMenu": "Display _MENU_"
+                }
+        }
+        
+        if (!_.isUndefined(data)){
+        	dataTableObj['data'] = data;
+        } else {
+        	dataTableObj['processing'] = true;
+        	dataTableObj['serverSide'] = true;
+        	
+        	this.ajaxConfig = {
+        	    "url": this.buildAjaxUrl(selectedModel, filter),
+        	    "data": function ( d ) {
+        	    	var todayCheckbox = $('#today');
+                	var today = 1;
+                	if (todayCheckbox.length > 0){
+                		today = todayCheckbox[0].checked
+                	}
+                	return $.extend( {}, d, {"today": today});
+        	    }
+        	}
+        	dataTableObj['ajax']= this.ajaxConfig;
+        }
+        this.theDataTable = $(this.theTable).DataTable( dataTableObj );
+        var context = this;
+        connectSelectionCallback($("#searchResultsTable"), this.handleTableSelection, true, this);
+        this.connectDeselectCallback();
+        this.listenToTableChanges();
+        this.filterMapData();
+        app.vent.trigger("repack");
+    },
+    setupDatatable: function(selectedModel, data, filter){
+    	this.theTable = this.$("#searchResultsTable");
+    	if (this.theDataTable != undefined) {
+    		// the table already exists, see if we need to destroy it and rebuild it
+    		if (this.selectedModel != selectedModel) {
+    			// destroy it
+    			this.theDataTable.destroy();
+    			this.theDataTable = undefined;
+    			//TODO may have to unhook callbacks from the old table?
+    		} else {
+    			// if we have data, set it.  Not sure when this would be called
+    			if (data != undefined){
+    				this.theDataTable.fnClearTable();
+    				this.theDataTable.fnAddData(data);
+    			} else {
+    				// if we have no data but we have a filter, clear and update the ajax
+    				this.ajaxConfig.url = this.buildAjaxUrl(selectedModel, filter);
+    				this.theDataTable.ajax.url(this.ajaxConfig.url).load();
+    			}
+    			return;
+    		}
+    	}
+    	this.constructDatatable(selectedModel, data, filter);
+    	
+    },
+    connectDeselectCallback(table){
+    	var context = this;
+    	this.theDataTable.on( 'deselect', function ( e, dt, type, indexes ) {
+    	    if ( type === 'row' ) {
+    	    	for (var i=0; i<indexes.length; i++){
+        	        var modelMap = context.lookupModelMap(context.selectedModel);
+        	    	var data = _.object(modelMap.columns, dt.row(indexes[i]).data());
+        	    	removeFromMap(data);
+    	    	}
+    	    }
+    	} );
+    },
     updateContents: function(selectedModel, data) {
-        if (data.length > 0){
+        if (!_.isUndefined(data) && data.length > 0){
             if (!_.isUndefined(this.theDataTable)) {
                 this.theDataTable.fnClearTable();
                 this.theDataTable.fnAddData(data);
             } else {
-                this.selectedModel = selectedModel;
-                this.lookupModelMap(selectedModel);
-
-                this.theTable = this.$("#searchResultsTable");
-                this.columns = app.options.searchModels[selectedModel].columns;
-                if (this.columns == undefined){
-                	this.columns = Object.keys(data[0]);
-                }
-                this.columns = _.difference(this.columns, app.options.searchModels[selectedModel].hiddenColumns);
-                this.columnTitles = app.options.searchModels[selectedModel].columnTitles;
-                this.columnHeaders = this.getColumnDefs(this.columns);
-                $.fn.dataTable.moment( DEFAULT_TIME_FORMAT);
-                $.fn.dataTable.moment( "MM/DD/YY HH:mm:ss");
-                var dataTableObj = {
-                        data: data,
-                        columns: this.columnHeaders,
-                        autoWidth: true,
-                        stateSave: false,
-                        paging: true,
-                        pageLength: 10, 
-                        lengthChange: true,
-                        ordering: true,
-                        select:true,
-                        order: [[ 0, "desc" ]],
-                        jQueryUI: false,
-                        scrollY:  this.calcDataTableHeight(),
-                        "lengthMenu": [[10, 20, 40, -1], [10, 20, 40, "All"]],
-                        "language": {
-                            "lengthMenu": "Display _MENU_"
-                        }
-                }
-                this.setupColumnHeaders();
-                this.theDataTable = this.theTable.dataTable( dataTableObj );
-                connectSelectionCallback($("#searchResultsTable"), this.handleTableSelection, true, this);
-                this.listenToTableChanges();
-                this.filterMapData();
-                app.vent.trigger("repack");
+            	this.setupDatatable(selectedModel, data);
             }
         }
     },
@@ -431,12 +702,13 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
           columnRow.append("<th>"+ col +"</th>");
       });
     },
-    updateDetailView: function(handlebarSource, data) {
+    updateDetailView: function(data, modelMap) {
     	if (this.detailView == undefined){
-    		this.createDetailView(handlebarSource, data);
+    		this.createDetailView(modelMap.handlebarSource, data);
         } else {
-        	this.detailView.setHandlebars(handlebarSource);
+        	this.detailView.setHandlebars(modelMap.handlebarSource);
         	this.detailView.setData(data);
+        	this.detailView.setModelMap(modelMap);
         	this.detailView.render();
         	if (this.detailNotesView != undefined){
         		this.detailNotesView.setData(data);
@@ -457,17 +729,20 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     		modelName: this.selectedModel
     	});
     	try {
-    		var context = this;
-    		$("#prev_button").click(function() {
-    			context.selectPrevious();
-    		});
-    		$("#next_button").click(function() {
-    			context.selectNext();
-    		});
+    		this.hookPrevNextButtons();
     		this.viewRegion.show(this.detailView);
     		this.viewNotesRegion.show(this.detailNotesView);
     	} catch (err){
     	}
+    },
+    hookPrevNextButtons: function() {
+    	var context = this;
+		$("#prev_button").click(function() {
+			context.selectPrevious();
+		});
+		$("#next_button").click(function() {
+			context.selectNext();
+		});
     },
     selectPrevious: function(){
     	var dt = this.theTable.DataTable();
@@ -494,9 +769,13 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     	}
     	
     },
-    handleTableSelection: function(index, theRow, context) {
-    	var data = theRow;
+    getObject: function(theRow, context){
     	var modelMap = context.lookupModelMap(context.selectedModel);
+    	var data = _.object(modelMap.columns, theRow);
+    	return data
+    },
+    forceDetailView: function(data, modelMap){
+    	var context = this;
     	if (modelMap.viewHandlebars != undefined){
     		if (modelMap.handlebarSource == undefined){
 				var url = '/xgds_core/handlebar_string/' + modelMap.viewHandlebars;
@@ -506,24 +785,32 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
 						$.getManyJS( modelMap.viewJS, function() {
 							if (modelMap.viewCss != undefined){
 								$.getManyCss(modelMap.viewCss, function(){
-									context.updateDetailView(modelMap.handlebarSource, data);
+									context.updateDetailView(data,modelMap);
 								});
 							} else {
-								context.updateDetailView(modelMap.handlebarSource, data);
+								context.updateDetailView(data,modelMap);
 							}
 						});
 					} else if (modelMap.viewCss != undefined){
 						$.getManyCss(modelMap.viewCss, function(){
-							context.updateDetailView(modelMap.handlebarSource, data);
+							context.updateDetailView(data,modelMap);
 						});
 					} else {
-						context.updateDetailView(modelMap.handlebarSource, data);
+						context.updateDetailView(data,modelMap);
 					}
 			    });
     		} else {
-    			context.updateDetailView(modelMap.handlebarSource, data);
+    			context.updateDetailView(data,modelMap);
     		}
+		} 
+    	if (_.isNumber(data.lat)){
+			showOnMap([data]);
 		}
+    },
+    handleTableSelection: function(index, theRow, context) {
+    	var modelMap = context.lookupModelMap(context.selectedModel);
+    	var data = _.object(modelMap.columns, theRow);
+    	context.forceDetailView(data, modelMap);
     },
     listenToTableChanges: function() {
         var _this = this;
@@ -541,16 +828,17 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
         this.$("#searchResultsTable").off( 'search.dt');
     },
     filterMapData: function() {
-        var thedt = this.theDataTable;
-        var rowData = thedt.$('tr', {"page": "current", "filter": "applied"} );
-        var data = [];
-        $.each(rowData, function(index, value){
-            var datum = thedt.fnGetData(value);
-            if (!_.isUndefined(datum)){
-                data.push(datum);
-            }
-        });
-        app.vent.trigger("mapSearch:found", data);  
+    	//TODO figure out what we are doing
+//        var thedt = this.theDataTable;
+//        var rowData = thedt.$('tr', {"page": "current", "filter": "applied"} );
+//        var data = [];
+//        $.each(rowData, function(index, value){
+//            var datum = thedt.fnGetData(value);
+//            if (!_.isUndefined(datum)){
+//                data.push(datum);
+//            }
+//        });
+//        app.vent.trigger("mapSearch:found", data);  
     },
     calcDataTableHeight : function() {
         var h =  Math.floor($(window).height()*.4);
@@ -559,7 +847,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     reset: function() {
         if (!_.isUndefined(this.theDataTable)) {
             this.unListenToTableChanges();
-            this.theDataTable.fnDestroy();
+            this.theDataTable.destroy();
             this.theDataTable = undefined;
             this.$('#searchResultsTable').empty();
         }

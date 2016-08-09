@@ -14,7 +14,7 @@
 
 {% block scripts %}
 {{block.super}}
-	{% include "xgds_notes2/NoteJS.html" %}
+	{% include "xgds_notes2/NoteJS.html" with forceUserSession=False%}
 	<script type="text/javascript" src="{{ EXTERNAL_URL }}jqueryui-timepicker-addon/dist/jquery-ui-timepicker-addon.min.js"></script>
 	<script type="text/javascript" src='{{ STATIC_URL }}xgds_core/js/datetimepickerUtils.js'></script>
     {% for template_name, template in templates.items %}
@@ -42,7 +42,9 @@
 		XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: {{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }},
 		dataUrl: "{{ settings.DATA_URL }}",
 		searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
-		modelName: '{{modelName}}'
+		modelName: '{{modelName}}',
+		tableHeight: Math.floor($(window).height()*.7) + 'px',
+		settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }}
 	};
 	{% block jsInitPreApp %}
 	{% endblock jsInitPreApp %}
@@ -56,7 +58,7 @@
         {% block preLayout %}
 		{% endblock preLayout %}
 		
-    	initializeGridstack();
+    	xgds_gridstack.initializeGridstack();
     	
     	{% block otherJSInit %}
 		{% endblock otherJSInit %}
@@ -66,29 +68,25 @@
 {% endblock %}
 
 {% block preMap %}
-<div id="search-gridstack-item" class="grid-stack-item" 
-		data-gs-x="0" data-gs-y="0"
-        data-gs-width="3" data-gs-height="2" >
-        <div class="grid-stack-item-content" id="search-gridstack-item-content" >
-				<div id="searchDiv"></div>
-		</div>
-</div> 
-
+{% block searchResultsDiv %}
 <div id="search-results-gridstack-item" class="grid-stack-item" 
-		data-gs-x="0" data-gs-y="3"
-        data-gs-width="3" data-gs-height="2" >
+		data-gs-x="0" data-gs-y="0"
+        data-gs-width="3" data-gs-height="3" >
         <div class="grid-stack-item-content" id="search-results-gridstack-item-content" >
+        <!-- <input type="checkbox" id="today" value="today" checked>Today -->
         <i class="icon-lock-open pinDiv warning"></i>
 		<i class="icon-cancel-circled"></i>
+		<i class="icon-arrows-ccw right" title="Reload Latest" id="reloadSearchResults"></i>
 			<div id="searchResultsDiv"></div>
 		</div>
-</div> 
-{% endblock preMap %}
+</div>
+{% endblock searchResultsDiv %}
 
+<div id="searchDiv" hidden></div>
 
-{% block postMap %}
+{% block viewDiv %}
 <div id="view-gridstack-item" class="grid-stack-item" 
-		data-gs-x="3" data-gs-y="2"
+		data-gs-x="3" data-gs-y="0"
         data-gs-width="3" data-gs-height="3" >
         <div class="grid-stack-item-content" id="view-gridstack-item-content" >
 			<i class="icon-lock-open pinDiv warning"></i>
@@ -105,7 +103,32 @@
 			</div>
 		</div>
 </div> 
-{% endblock postMap %}
+{% endblock viewDiv %}
+{% endblock preMap %}
+
+{% block map %}
+<div id="map-gridstack-item" class="grid-stack-item" 
+data-gs-x="3" data-gs-y="4"
+      data-gs-width="2" data-gs-height="1" >
+	<div class="grid-stack-item-content" id="map-gridstack-item-content" >
+	<i class="icon-lock pinDiv warning"></i>
+      		{% siteframe_form %}
+		<div id="map"></div>
+	</div>
+</div>
+{% endblock map %}
+
+{% block layers %}
+<div id="map-gridstack-item" class="grid-stack-item" 
+data-gs-x="6" data-gs-y="4"
+      data-gs-width="1" data-gs-height="1" >
+	<div class="grid-stack-item-content" id="layers-gridstack-item-content">
+	<i class="icon-cancel-circled"></i>
+	<i class="icon-lock-open pinDiv warning"></i>
+	<div id="layers"></div>
+	</div>
+</div>
+{% endblock layers %}
 
 		
 

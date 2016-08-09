@@ -15,7 +15,6 @@
 #__END_LICENSE__
 
 import re
-import json
 import os
 import shutil
 
@@ -45,12 +44,12 @@ class AbstractMapNode(models.Model):
     Abstract Map Node for an entry in the map tree, which can have a parent.
     """
     uuid = UuidField(primary_key=True)
-    name = models.CharField('name', max_length=200)
+    name = models.CharField('name', max_length=200, db_index=True)
     description = models.CharField('description', max_length=1024, blank=True)
     creator = models.CharField('creator', max_length=200)
     modifier = models.CharField('modifier', max_length=200, null=True, blank=True)
-    creation_time = models.DateTimeField(null=True, blank=True)
-    modification_time = models.DateTimeField(null=True, blank=True)
+    creation_time = models.DateTimeField(null=True, blank=True, db_index=True)
+    modification_time = models.DateTimeField(null=True, blank=True, db_index=True)
     deleted = models.BooleanField(blank=True, default=False)
 
     @property
@@ -236,6 +235,12 @@ class MapLayer(AbstractMap):
         result = super(MapLayer, self).getTreeJson()
         result["data"]["layerJSON"] = reverse('mapLayerJSON', kwargs={'layerID': self.uuid})
         return result
+    
+    def getFeatures(self):
+        return FEATURE_MANAGER.filter(mapLayer__pk=self.uuid)
+    
+    def getGoogleEarthUrl(self, request):
+        return request.build_absolute_uri(reverse('mapLayerKML', kwargs={'layerID': self.uuid}))
 
 
 class MapCollection(AbstractMap):
@@ -454,17 +459,29 @@ class AbstractFeature(models.Model):
 class Polygon(AbstractFeature):
     polygon = models.PolygonField()
     style = models.ForeignKey(PolygonStyle, null=True)
+    
+    @property
+    def geometry(self):
+        return self.polygon
 
 
 class LineString(AbstractFeature):
     lineString = models.LineStringField()
     style = models.ForeignKey(LineStringStyle, null=True)
 
+    @property
+    def geometry(self):
+        return self.lineString
+
 
 class Point(AbstractFeature):
     point = models.PointField()
     style = models.ForeignKey(PointStyle, null=True)
     icon = models.ForeignKey(Icon, null=True)
+
+    @property
+    def geometry(self):
+        return self.point
 
 
 class Drawing(AbstractFeature):

@@ -1,17 +1,33 @@
 {% extends "MapBase.html" %}
 {% block contents %}
 <h2><a href="{{ feedUrl }}" class="mybutton" title="Open the map feed in Google Earth on your desktop.  Maps are managed by the server and automatically updated as new information becomes available.">Open in Google Earth</a> </h2>
-<span class="small">
 <p>
-The Master Map Feed includes all of the maps provided by this map server.
+The Google Earth Map Feed includes <strong>MOST</strong> of the maps provided by this map server.
 It will update automatically in Google Earth as new data becomes available.<br/>
 <b>You only have to download and open this file once.</b><br/>
 If it does not automatically open,
 double-click on the downloaded file <code>{{ filename }}</code> to open it.<br/>
 If the network link ever breaks (you see a red folder icon in the Google
 Earth sidebar) right click on the link in Google Earth and select "refresh".<br/>
-Get <a href="http://www.google.com/earth/download/ge/" target="_blank">Google Earth</a>.  
+
+</p>  
 <p>
-</span>
+<strong>Google Earth Map Feed includes:</strong>
+<ul>
+	<li type="disc">KML layers uploaded into xGDS</li>
+	<li type="disc">Map layers and markup authored within xGDS</li>
+	<li type="disc">Live Positions and {{settings.GEOCAM_TRACK_TRACK_MONIKIER}}s</li>
+	<li type="disc">Past Positions and {{settings.GEOCAM_TRACK_TRACK_MONIKIER}}s</li>
+	<li type="disc">{{settings.XGDS_PLANNER2_PLAN_MONIKER}}s</li>
+</ul>
+<strong>Google Earth Map Feed does not include:</strong>
+<ul>
+	<li type="disc">Map tiles (geoTIFFs) uploaded and tiled within xGDS</li>
+	<li type="disc">{{settings.XGDS_PLANNER2_FLIGHT_MONIKER}} folders with dynamic contents</li>
+</ul>
+</p>
+<p>
+<a href="http://www.google.com/earth/download/ge/" target="_blank" class="mybutton" title="Get Google Earth">Get Google Earth</a>
+</p>
 {% endblock %}
 

@@ -64,7 +64,7 @@ BOWER_INSTALLED_APPS += ['sprintf.js=sprintf.js',
                          'backbone-forms',
                          'fancytree=fancytree',
                          'jquery-cookie=git://github.com/carhartl/jquery-cookie.git',
-                         'openlayers3=https://github.com/openlayers/ol3/releases/download/v3.15.1/v3.15.1-dist.zip',
+                         'openlayers3=https://github.com/openlayers/ol3/releases/download/v3.16.0/v3.16.0-dist.zip',
                          'ol3-popup',
                          'proj4',
                          'resumable=git://github.com/23/resumable.js.git'

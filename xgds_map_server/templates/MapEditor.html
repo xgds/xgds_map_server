@@ -19,6 +19,7 @@
   /* for some reason compressing this in the css does not work so it's separate in the planner_app */
   @import url('{{ EXTERNAL_URL }}backbone-forms/distribution/templates/old.css');
   @import url('{{ EXTERNAL_URL }}openlayers3/ol.css');
+  @import url('{{ STATIC_URL}}geocamUtil/css/datatable.css');
   @import url('{{ EXTERNAL_URL }}fancytree/dist/skin-lion/ui.fancytree.min.css');
   @import url('{{ STATIC_URL }}xgds_map_server/css/fancytree_custom.css');
   @import url('{{ STATIC_URL }}xgds_planner2/css/forms_adjust.css');
@@ -116,7 +117,8 @@
         mapLayerDict: {{ mapLayerDict|safe }},
         siteFrame: {% siteframe settings.XGDS_CURRENT_SITEFRAME_ID %},
         saveMaplayerUrl: "{{ saveMaplayerUrl }}",
-        searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }}
+        searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
+        settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }}
     };
 	
 	$(function(){
