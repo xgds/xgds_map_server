@@ -105,7 +105,8 @@ function getExtens(coordinates){
     var maxX = Math.max.apply(null, xValues);   
     var minY = Math.min.apply(null, yValues);
     var maxY = Math.max.apply(null, yValues);   
-    return [minY, minX, maxY, maxX];
+    return [coordinates[0][0], coordinates[0][1], coordinates[2][0], coordinates[2][1]]
+//    return [minY, minX, maxY, maxX];
 }
 
 $(function() {
@@ -1004,7 +1005,7 @@ $(function() {
                     layerGroup: this.layerGroup,
                     featureJson: featureJson
                 });
-                this.drawBelow = true;
+                this.drawBelow = false;
                 break;
             case 'Polygon':
                 newFeature = new app.views.PolygonView({
@@ -1124,15 +1125,24 @@ $(function() {
     app.views.GroundOverlayView = app.views.LayerFeatureView.extend({
         constructContent: function() {
             var extens = getExtens(this.featureJson.polygon);
+            var lowerLeft = [extens[0], extens[1]];
+            var upperRight = [extens[2], extens[3]];
+            var transFxn = ol.proj.getTransform(LONG_LAT, DEFAULT_COORD_SYSTEM);
+            var lowerLeftTrans = transFxn(lowerLeft);
+            var upperRightTrans = transFxn(upperRight);
+            var extensTrans = [lowerLeftTrans[0], lowerLeftTrans[1], upperRightTrans[0], upperRightTrans[1]];
             this.imageLayer = new ol.layer.Image({
                 name: this.featureJson.name,
                 source: new ol.source.ImageStatic({
                     url: this.featureJson.image,
                     size: [this.featureJson.width, this.featureJson.height],
-                    imageExtent: ol.extent.applyTransform(extens , ol.proj.getTransform(LONG_LAT, DEFAULT_COORD_SYSTEM))
+//                    imageExtent: ol.extent.applyTransform(extens , ol.proj.getTransform(LONG_LAT, DEFAULT_COORD_SYSTEM))
+//                    imageExtent: [22012.307, -101829.476, 65462.259,  -58379.524]
+                    imageExtent: extensTrans
                 }),
                 style: this.getStyles()
             });
+            this.imageLayer.setZIndex(50);  // Be sure we're sitting on top of any base layers. FIXME: this shoudl be in DB
         },
         getLayer: function() {
             return this.imageLayer;
