@@ -48,6 +48,9 @@ app.views.FancyTreeView = Backbone.View.extend({
             this.$el.html(this.template());
         }
     },
+    onShow: function() {
+    	app.vent.trigger('layerView:onShow');
+    },
     afterRender: function() {
         app.vent.trigger('layerView:onRender');
         if (!_.isUndefined(app.tree)) {
