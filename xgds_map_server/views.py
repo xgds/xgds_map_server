@@ -420,6 +420,7 @@ def getAddTilePage(request):
             mapTile.description = tile_form.cleaned_data['description']
             mapTile.creator = request.user.username
             mapTile.creation_time = datetime.datetime.now(pytz.utc)
+            mapTile.transparency = tile_form.cleaned_data['transparency']
             mapTile.deleted = False
             mapGroupName = tile_form.cleaned_data['parent']
             foundParents = MapGroup.objects.filter(name=mapGroupName)
@@ -469,6 +470,7 @@ def getEditTilePage(request, tileID):
             mapTile.locked = tile_form.cleaned_data['locked']
             mapTile.visible = tile_form.cleaned_data['visible']
             mapTile.parent = tile_form.cleaned_data['parent']
+            mapTile.transparency = tile_form.cleaned_data['transparency']
             mapTile.save()
             return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
         else:
@@ -477,6 +479,7 @@ def getEditTilePage(request, tileID):
                                        "fromSave": False,
                                        "title": "Edit Map Tile",
                                        "error": True,
+                                       "extras": mapTile.sourceFileLink,
                                        "errorText": "Invalid form entries"},
                                       context_instance=RequestContext(request))
 
@@ -485,6 +488,7 @@ def getEditTilePage(request, tileID):
     return render_to_response("EditNode.html",
                               {"form": tile_form,
                                "title": "Edit Map Tile",
+                               "extras": mapTile.sourceFileLink,
                                "fromSave": fromSave,
                                },
                               context_instance=RequestContext(request))

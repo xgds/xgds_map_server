@@ -771,7 +771,7 @@ $(function() {
     app.views.TileView = app.views.TreeMapElement.extend({
         initialize: function(options) {
             this.tileURL = options.tileURL;
-            this.opacity = calculateOpacity(options.transparency);
+            this.opacity = calculateOpacity(options.node.data.transparency);
             app.views.TreeMapElement.prototype.initialize.call(this, options);
         },
         checkRequired: function() {

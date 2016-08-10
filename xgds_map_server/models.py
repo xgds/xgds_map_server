@@ -116,6 +116,7 @@ class AbstractMap(AbstractMapNode):
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
         result = super(AbstractMap, self).getTreeJson()
+        result["transparency"] = self.transparency
         result["selected"] = self.visible
         return result
 
@@ -190,6 +191,13 @@ class MapTile(AbstractMap):
                                   null=True, blank=True)
     processed = models.BooleanField(default=False)
     
+    @property
+    def sourceFileLink(self):
+        if self.sourceFile:
+            return "<a href='%s'>Download %s (%d MB)</a>" % (self.sourceFile.url, os.path.basename(self.sourceFile.name), self.sourceFile.size / 1000000)
+        else:
+            return "No Source File"
+        
     def getUrl(self):
         return self.getXYZTileSourceUrl()
 
