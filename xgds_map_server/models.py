@@ -176,6 +176,7 @@ class KmlMap(AbstractMap):
         result = super(KmlMap, self).getTreeJson()
         result["data"]["openable"] = self.openable
         result["data"]["kmlFile"] = self.getUrl()
+        result["data"]["transparency"] = self.transparency
         if self.localFile:
             result["data"]["localFile"] = self.localFile.url
         return result

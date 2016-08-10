@@ -346,6 +346,7 @@ def getAddKmlPage(request):
             map_obj.openable = map_form.cleaned_data['openable']
             map_obj.visible = map_form.cleaned_data['visible']
             map_obj.parent = map_form.cleaned_data['parent']
+            map_obj.transparency = map_form.cleaned_data['transparency']
             map_obj.save()
             #
             # The file field may have changed our file name at save time
