@@ -113,6 +113,14 @@ function getExtens(coordinates){
 //    return [minY, minX, maxY, maxX];
 }
 
+function calculateOpacity(transparency){
+	if (transparency == undefined || transparency == 0){
+		return 1;
+	}
+	var t = transparency/100.0;
+	return 1.0 - t;
+}
+
 $(function() {
     app.views = app.views || {};
 
@@ -576,6 +584,10 @@ $(function() {
                 throw 'Missing map group!';
             }
         },
+        setTransparency: function(transparency) {
+        	this.opacity = calculateOpacity(transparency);
+        	this.layerGroup.setOpacity(this.opacity);
+        },
         render: function() {
             if (_.isUndefined(this.node)){
                 this.show();
@@ -692,6 +704,7 @@ $(function() {
     app.views.KmlLayerView = app.views.TreeMapElement.extend({
         initialize: function(options) {
             this.kmlFile = options.kmlFile;
+            this.opacity = calculateOpacity(options.transparency);
             app.views.TreeMapElement.prototype.initialize.call(this, options);
         },
         checkRequired: function() {
@@ -706,7 +719,8 @@ $(function() {
                     source: new ol.source.Vector({
                         url: this.kmlFile,
                         format: new ol.format.KML()
-                    }) 
+                    }),
+                    opacity: this.opacity
                 });
             }
         }
@@ -757,6 +771,7 @@ $(function() {
     app.views.TileView = app.views.TreeMapElement.extend({
         initialize: function(options) {
             this.tileURL = options.tileURL;
+            this.opacity = calculateOpacity(options.transparency);
             app.views.TreeMapElement.prototype.initialize.call(this, options);
         },
         checkRequired: function() {
@@ -770,7 +785,8 @@ $(function() {
                 this.mapElement = new ol.layer.Tile({
                     source: new ol.source.XYZ({
                         url: this.tileURL
-                    })
+                    }),
+                    opacity: this.opacity
                 });
             }
         }
@@ -998,12 +1014,17 @@ $(function() {
         },
         constructFeatures: function() {
             if (_.isUndefined(this.layerGroup)){
-                this.layerGroup = new ol.layer.Group({name:this.mapLayerJson.name});
+                this.layerGroup = new ol.layer.Group({name:this.mapLayerJson.name,
+                								      opacity: calculateOpacity(this.mapLayerJson.transparency)});
             };
             var _this = this;
             $.each(this.mapLayerJson.features, function( index, value ) {
                     _this.createFeature(value);
               });
+        },
+        setTransparency: function(transparency) {
+        	this.opacity = calculateOpacity(transparency);
+        	this.mapElement.setOpacity(this.opacity);
         },
         createFeature: function(featureJson){
             var newFeature;
@@ -1078,6 +1099,7 @@ $(function() {
             if (!options.layerGroup && !options.featureJson) {
                 throw 'Missing a required option!';
             }
+            this.opacity = calculateOpacity(options.transparency);
             this.olFeature = this.options.olFeature;
             this.layerGroup = this.options.layerGroup;
             this.featureJson = this.options.featureJson; 
@@ -1148,7 +1170,8 @@ $(function() {
 //                    imageExtent: [22012.307, -101829.476, 65462.259,  -58379.524]
                     imageExtent: extensTrans
                 }),
-                style: this.getStyles()
+                style: this.getStyles(),
+                opacity: this.opacity
             });
             this.imageLayer.setZIndex(50);  // Be sure we're sitting on top of any base layers. FIXME: this shoudl be in DB
         },
@@ -1170,7 +1193,8 @@ $(function() {
                     source: new ol.source.Vector({
                         features: [this.feature]
                     }),
-                    style: this.getStyles()
+                    style: this.getStyles(),
+                    opacity: this.opacity
                 });    
             }
             var popup = this.getPopupContent();

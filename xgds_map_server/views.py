@@ -386,6 +386,7 @@ def getAddLayerPage(request):
             map_layer.deleted = False
             map_layer.locked = layer_form.cleaned_data['locked']
             map_layer.visible = layer_form.cleaned_data['visible']
+            map_layer.transparency = layer_form.cleaned_data['transparency']
             mapGroup = layer_form.cleaned_data['parent']
             map_layer.parent = MapGroup.objects.get(name=mapGroup)
             map_layer.save()

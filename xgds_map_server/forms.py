@@ -65,6 +65,7 @@ class MapLayerForm(AbstractMapForm):
 class MapTileForm(AbstractMapForm):
     minZoom = IntegerField(initial=12, label="Min Zoom")
     maxZoom = IntegerField(initial=20, label="Max Zoom (UAV=23, Satellite=20)")
+    
     resampleMethod = ChoiceField(choices=settings.XGDS_MAP_SERVER_GDAL_RESAMPLE_OPTIONS,
                                  label="Resampling Method")
 

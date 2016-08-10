@@ -19,6 +19,7 @@ import os
 import shutil
 
 from django.core.urlresolvers import reverse
+from django.core.validators import MaxValueValidator
 from django.db import models
 from django.contrib.gis.db import models
 from django.conf import settings
@@ -107,6 +108,7 @@ class AbstractMap(AbstractMapNode):
     """
     locked = models.BooleanField(blank=True, default=False)
     visible = models.BooleanField(blank=False, default=False)
+    transparency = models.PositiveSmallIntegerField(default=0, validators=[MaxValueValidator(100)], help_text="100=transparent") #100=fully transparent, 0=fully opaque
     parent = models.ForeignKey(MapGroup, db_column='parentId',
                                null=True, blank=True,
                                verbose_name='group')

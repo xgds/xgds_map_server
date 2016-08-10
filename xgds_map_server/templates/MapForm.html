@@ -21,5 +21,7 @@ You can create ground overlays in Map Layers.</br>
 <label for="id_openable">Openable:</label> {{ mapForm.openable }}<br/>
 {% if mapForm.visible.errors %}<span style="color:red">{{ mapForm.visible.errors }}</span>{% endif %}
 <label for="id_visible">Visible:</label> {{ mapForm.visible }}<span style="color: gray"> Checking visible will make this layer turned ON by default.</span><br/>
+{% if mapForm.transparency.errors %}<span style="color:red">{{ mapForm.transparency.errors }}</span>{% endif %}
+<label for="id_transparency">Transparency:</label> {{ mapForm.transparency }}<span style="color: gray">(100=transparent)</span><br/>
 {% if mapForm.parentId.errors %}<span style="color:red">{{ mapForm.parentId.errors }}</span>{% endif %}
 <label for="id_parent">In Folder:</label> {{ mapForm.parent }}<br/>
