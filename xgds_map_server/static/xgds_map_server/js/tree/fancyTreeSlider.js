@@ -36,12 +36,11 @@
  }(jQuery));
 
 transparencySlidersVisible = false;
+persistTransparency = false;
 
 handleTransparencySliderChange = function(event, ui) {
-	console.log(event);
 	var newValue = ui.value;
 	var node_id = ui.handle.parentElement.id.substring(0, ui.handle.parentElement.id.length - 7);
-	//var node_id = event.currentTarget.id.substring(0, event.currentTarget.id.length - 7);
 	var node = app.tree.getNodeByKey(node_id);
 	if (node.treeMapElement != undefined) {
 		node.treeMapElement.setTransparency(newValue);
@@ -51,10 +50,27 @@ handleTransparencySliderChange = function(event, ui) {
 	var transparencyValueSpan = $(ui.handle.parentElement.parentElement).find(transparencyValueID);
 	$(transparencyValueSpan).html(newValue);
 	
-	// set the cookie
-	Cookies.set(node_id, {transparency:newValue});
-	
+	if (!persistTransparency) {
+		// set the cookie
+		Cookies.set(node_id, {transparency:newValue});
+	}
 };
+
+saveTransparency = function(event, ui){
+	// save the transparency to the server when the slider stops moving
+	var newValue = ui.value;
+	var node_id = ui.handle.parentElement.id.substring(0, ui.handle.parentElement.id.length - 7);
+	var node = app.tree.getNodeByKey(node_id);
+	theUrl = '/xgds_map_server/setTransparency/' + node_id + '/' + node.data.type + '/' + newValue;
+	$.ajax({
+        url: theUrl,
+        dataType: "json",
+        error: function(data){
+        	alert('Problem saving transparency.');
+        }
+      });
+}
+
 toggleTransparencySliders = function() {
 	transparencySlidersVisible = !transparencySlidersVisible;
 	if (transparencySlidersVisible){
@@ -67,6 +83,11 @@ toggleTransparencySliders = function() {
 					var slider_div = el.find(".transparency_slider");
 					var theSlider = slider_div.slider({value:node.data.transparency,
 						   							   slide: handleTransparencySliderChange});
+					if (persistTransparency){
+						theSlider.on('slidestop', saveTransparency);
+					}
+					
+					// add the value
 					var transparencyValueID = node.key + '_transparencyValue';
 					var transparencyHtml = '<span style="float:right;" class="transparency_value" id=' + transparencyValueID + '>' + node.data.transparency + '</span>';
 					$(slider_div).parent().append($(transparencyHtml));

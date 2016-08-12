@@ -178,7 +178,7 @@ app.views.FancyTreeView = Backbone.View.extend({
                   persist: {
                       cookieDelimiter: "~",    // character used to join key strings
                       cookiePrefix: undefined, // 'fancytree-<treeId>-' by default
-                      cookie: { // settings passed to jquery.cookie plugin
+                      cookie: { // settings passed to js.cookie plugin
                         raw: false,
                         expires: "",
                         path: "",

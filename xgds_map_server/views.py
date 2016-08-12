@@ -38,7 +38,7 @@ from django.core.urlresolvers import resolve
 from django.core.urlresolvers import reverse
 from django.db import transaction
 from django.forms.formsets import formset_factory
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, JsonResponse
 from django.http import HttpResponseRedirect
 from django.http import HttpResponseServerError
 from django.shortcuts import render_to_response
@@ -49,7 +49,7 @@ from django.views.decorators.http import condition
 
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
 from geocamUtil.geoEncoder import GeoDjangoEncoder
-from geocamUtil.loader import LazyGetModelByName
+from geocamUtil.loader import LazyGetModelByName, getClassByName, getModelByName
 from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
 from geocamUtil.models import SiteFrame
 from xgds_core.views import get_handlebars_templates, OrderListJson
@@ -69,6 +69,20 @@ latestRequestG = None
 
 XGDS_MAP_SERVER_GEOTIFF_PATH = os.path.join(settings.DATA_ROOT, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR)
 SEARCH_FORMS = {}
+
+
+def setTransparency(request, uuid, mapType, value):
+    try:
+        theClass = getModelByName('xgds_map_server.' + mapType)
+        foundElement = theClass.objects.get(uuid=uuid)
+        foundElement.transparency = value
+        foundElement.save()
+        msg = "Transparency saved for " + foundElement.name
+        return JsonResponse({'status':'true','message':msg})
+    except:
+        traceback.print_exc()
+        msg = "Could not save transparency: " + uuid
+        return JsonResponse({'status':'false','message':msg}, status=500)
 
 def get_map_tree_templates(source):
     fullCache = get_handlebars_templates(source, 'XGDS_MAP_SERVER_HANDLEBARS_DIRS')
