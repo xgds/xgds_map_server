@@ -187,7 +187,7 @@ app.views.FancyTreeView = Backbone.View.extend({
                       },
                       expandLazy: false, // true: recursively expand and load lazy nodes
                       overrideSource: true,  // true: cookie takes precedence over `source` data attributes.
-                      store: "auto",     // 'cookie': use cookie, 'local': use localStore, 'session': use sessionStore
+                      store: "cookie",     // 'cookie': use cookie, 'local': use localStore, 'session': use sessionStore
                       types: "active expanded focus selected"  // which status types to store
                     }
             });

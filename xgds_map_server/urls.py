@@ -34,14 +34,14 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,
      'xgds_map_server_feed'),
     # for saving single map feature from map layer, or creating new one
     url(r'^feature$', views.saveOrDeleteFeature, {}, 'saveOrDeleteFeature'),
-    url(r'^feature/(?P<uuid>[\w-]+)$', views.saveOrDeleteFeature, {}, 
-     'saveOrDeleteFeature'),
+    url(r'^feature/(?P<uuid>[\w-]+)$', views.saveOrDeleteFeature, {}, 'saveOrDeleteFeature'),
     # for saving map layer itself
     url(r'^saveMaplayer.json$', views.saveMaplayer, {}, 'saveMaplayer'),
     # HTML tree of maps
     url(r'^maptree/', views.getMapTreePage, {'readOnly': True, 'securityTags': ['readOnly']},'mapTree'),
     url(r'^treejson/', views.getFancyTreeJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapTreeJSON'),
     url(r'^selectedjson/', views.getSelectedNodesJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapSelectedJSON'),
+    url(r'^uuidsjson/', views.getNodesByUuidJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapSelectedUUIDJSON'),
     url(r'^mapLayerJSON/(?P<layerID>[\w-]+)/', views.getMapLayerJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapLayerJSON'),
     url(r'^setTransparency/(?P<uuid>[\w-]+)/(?P<mapType>\w+)/(?P<value>[\d]+)', views.setTransparency, {}, 'mapSetTransparency'),
     

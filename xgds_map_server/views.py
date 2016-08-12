@@ -1087,6 +1087,17 @@ def getSelectedNodesJSON(request):
     return HttpResponse(content=json_data,
                         content_type="application/json")
 
+def getNodesByUuidJSON(request):
+    if request.POST:
+        uuids = request.POST['uuids'].split('~')
+        nodes = MAP_MANAGER.filter(uuid__in=uuids)
+        node_dict = []
+        for node in nodes:
+            node_dict.append(node.getTreeJson())
+        json_data = json.dumps(node_dict, indent=4, cls=GeoDjangoEncoder)
+        return HttpResponse(content=json_data,
+                            content_type="application/json")
+
 @never_cache
 def getFancyTreeJSON(request):
     """

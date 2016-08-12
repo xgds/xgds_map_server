@@ -391,19 +391,43 @@ $(function() {
             // load map tree ahead of time to load layers into map
             initializeMapData: function() {
                 if (!this.layersInitialized){
-                $.ajax({
-                    url: app.options.layerFeedUrl,
-                    dataType: 'json',
-                    success: $.proxy(function(data) {
-                    	if (data != null){
-	                        app.treeData = data;
-	                        this.layersInitialized = true;
-	                        app.vent.trigger('treeData:loaded');
-	                        this.initializeMapLayers(app.treeData[0]);
-                    	}
-                    }, this)
-                  });
+	                $.ajax({
+	                    url: app.options.layerFeedUrl,
+	                    dataType: 'json',
+	                    success: $.proxy(function(data) {
+	                    	if (data != null){
+		                        app.treeData = data;
+		                        this.layersInitialized = true;
+		                        app.vent.trigger('treeData:loaded');
+		                        this.initializeMapLayers(app.treeData[0]);
+	                    	}
+	                    }, this)
+	                  });
+	                // turn on layers that were turned on in the cookies
+	                var selected_uuids = Cookies.get('fancytree-1-selected');
+	                if (selected_uuids != undefined && selected_uuids.length > 0){
+		                $.ajax({
+		                    url: '/xgds_map_server/uuidsjson/',
+		                    dataType: 'json',
+		                    type: "POST",
+		                    data: {'uuids':selected_uuids},
+		                    success: $.proxy(function(data) {
+		                    	if (data != null){
+			                        this.selectNodes(data);
+		                    	}
+		                    }, this)
+		                  });
+	                }
                 }
+                
+            },
+            selectNodes: function(nodes){
+            	// select specific nodes that were set in cookies
+            	for (var i=0; i<nodes.length; i++){
+            		var node = nodes[i];
+            		node.selected = true;
+            		this.createNode(nodes[i]);
+            	}
             },
             // read through the json data and turn on layers that should be on
             initializeMapLayers: function(node, index, collection) {
