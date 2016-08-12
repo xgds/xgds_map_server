@@ -160,7 +160,6 @@ $(function() {
                 // also bind to window to adjust on window size change
                 $(window).bind('resize', this.handleWindowResize);
                 
-                
                 this.buildLayersForMap();
                 this.layersInitialized = false;
                 
@@ -575,9 +574,19 @@ $(function() {
             } else {
                 this.visible = !this.node.selected;  // the first time we need to set it opposite so rendering works
             }
+            this.loadCookieData();
             this.checkRequired();
             this.constructMapElements();
             this.render();
+            this.node.treeMapElement = this;
+        },
+        loadCookieData: function() {
+        	if (this.node != undefined){
+        		var foundData = Cookies.getJSON(this.node.key);
+        		if (foundData != undefined){
+        			this.node.data.transparency = foundData.transparency;
+        		}
+        	}
         },
         checkRequired: function() {
             if (!this.group) {
@@ -586,7 +595,7 @@ $(function() {
         },
         setTransparency: function(transparency) {
         	this.opacity = calculateOpacity(transparency);
-        	this.layerGroup.setOpacity(this.opacity);
+        	this.mapElement.setOpacity(this.opacity);
         },
         render: function() {
             if (_.isUndefined(this.node)){
@@ -1024,7 +1033,7 @@ $(function() {
         },
         setTransparency: function(transparency) {
         	this.opacity = calculateOpacity(transparency);
-        	this.mapElement.setOpacity(this.opacity);
+        	this.layerGroup.setOpacity(this.opacity);
         },
         createFeature: function(featureJson){
             var newFeature;

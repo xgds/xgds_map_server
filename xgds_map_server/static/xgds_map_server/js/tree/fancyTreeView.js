@@ -129,7 +129,7 @@ app.views.FancyTreeView = Backbone.View.extend({
             var layertreeNode = this.$el.find("#layertree");
             var context = this;
             var mytree = layertreeNode.fancytree({
-                extensions: ['persist', 'filter'],
+                extensions: ['persist', 'filter', 'transparency_slider'],
                 source: app.treeData,
                 filter: {
                     autoApply: true,  // Re-apply last filter if lazy data is loaded
@@ -176,7 +176,6 @@ app.views.FancyTreeView = Backbone.View.extend({
                     }
                   },
                   persist: {
-                      // Available options with their default:
                       cookieDelimiter: "~",    // character used to join key strings
                       cookiePrefix: undefined, // 'fancytree-<treeId>-' by default
                       cookie: { // settings passed to jquery.cookie plugin

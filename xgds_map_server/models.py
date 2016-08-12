@@ -329,6 +329,10 @@ class MapLink(AbstractMap):
             result['lazy'] = True
         result["data"]["mapBounded"] = self.mapBounded
         result["data"]["sseUrl"] = self.sseUrl
+        try:
+            del result["data"]["transparency"]
+        except:
+            pass
         return result
 
 
