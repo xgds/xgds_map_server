@@ -235,8 +235,12 @@ $(function() {
                 if (!_.isUndefined(app.nodeMap[node.key])){
                     // render it
                     var foundView = app.nodeMap[node.key];
-                    foundView.node = node;
-                    node.mapView = foundView;
+                    if (node.addNode != undefined){
+                    	foundView.node = node;
+                    }
+                    if (node.mapView == undefined){
+                    	node.mapView = foundView;
+                    }
                     foundView.render();
                 } else {
                     if (node.data.type == "KmlMap"){
@@ -426,6 +430,14 @@ $(function() {
             	for (var i=0; i<nodes.length; i++){
             		var node = nodes[i];
             		node.selected = true;
+//            		try {
+//            			var cookieData = Cookies.getJSON(node.key);
+//            			if (cookieData != undefined){
+//            				node.data.transparency = cookieData.transparency
+//            			}
+//            		} catch (err){
+//            			//pass
+//            		}
             		this.createNode(nodes[i]);
             	}
             },
@@ -598,20 +610,46 @@ $(function() {
             } else {
                 this.visible = !this.node.selected;  // the first time we need to set it opposite so rendering works
             }
-            this.loadCookieData();
+//            this.loadCookieData();
             this.checkRequired();
             this.constructMapElements();
             this.render();
-            this.node.treeMapElement = this;
+            this.node.mapView = this;
         },
-        loadCookieData: function() {
-        	if (this.node != undefined){
-        		var foundData = Cookies.getJSON(this.node.key);
-        		if (foundData != undefined){
-        			this.node.data.transparency = foundData.transparency;
-        		}
+        setupOpacity: function(options){
+        	var transparency = options.node.data.transparency;
+        	if (transparency == undefined){
+        		transparency = options.node.transparency;
         	}
+        	try {
+        		var cookieJSON = Cookies.getJSON(options.node.key);
+        		if (cookieJSON != undefined){
+        			transparency = cookieJSON.transparency;
+        			if (this.node != undefined){
+        				this.node.data.transparency = transparency;
+        			}
+        		}
+        	} catch (err) {
+        		//pass
+        		console.log(err);
+        	}
+        	if (transparency == undefined){
+        		transparency = 0;
+        	}
+            this.opacity = calculateOpacity(transparency);
         },
+//        loadCookieData: function() {
+//        	if (this.node != undefined){
+//        		try {
+//	        		var foundData = Cookies.getJSON(this.node.key);
+//	        		if (foundData != undefined){
+//	        			this.node.data.transparency = foundData.transparency;
+//	        		}
+//        		} catch (err){
+//        			//pass
+//        		}
+//        	}
+//        },
         checkRequired: function() {
             if (!this.group) {
                 throw 'Missing map group!';
@@ -737,7 +775,7 @@ $(function() {
     app.views.KmlLayerView = app.views.TreeMapElement.extend({
         initialize: function(options) {
             this.kmlFile = options.kmlFile;
-            this.opacity = calculateOpacity(options.node.data.transparency);
+            this.setupOpacity(options);
             app.views.TreeMapElement.prototype.initialize.call(this, options);
         },
         checkRequired: function() {
@@ -804,7 +842,13 @@ $(function() {
     app.views.TileView = app.views.TreeMapElement.extend({
         initialize: function(options) {
             this.tileURL = options.tileURL;
-            this.opacity = calculateOpacity(options.node.data.transparency);
+            this.setupOpacity(options);
+//            var transparency = options.node.data.transparency;
+//            var cookieJSON = Cookies.getJSON(options.node.key);
+//        	if (cookieJSON != undefined){
+//        		transparency = cookieJSON.transparency;
+//        	}
+//            this.opacity = calculateOpacity(transparency);
             app.views.TreeMapElement.prototype.initialize.call(this, options);
         },
         checkRequired: function() {
@@ -1047,8 +1091,17 @@ $(function() {
         },
         constructFeatures: function() {
             if (_.isUndefined(this.layerGroup)){
+            	var transparency = this.mapLayerJson.transparency;
+            	try {
+            		var cookieJSON = Cookies.getJSON(this.node.key);
+            		if (cookieJSON != undefined){
+            			transparency = cookieJSON.transparency;
+            		}
+            	} catch (err){
+            		//pass
+            	}
                 this.layerGroup = new ol.layer.Group({name:this.mapLayerJson.name,
-                								      opacity: calculateOpacity(this.mapLayerJson.transparency)});
+                								      opacity: calculateOpacity(transparency)});
             };
             var _this = this;
             $.each(this.mapLayerJson.features, function( index, value ) {

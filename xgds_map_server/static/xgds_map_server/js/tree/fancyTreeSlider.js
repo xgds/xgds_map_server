@@ -42,8 +42,8 @@ handleTransparencySliderChange = function(event, ui) {
 	var newValue = ui.value;
 	var node_id = ui.handle.parentElement.id.substring(0, ui.handle.parentElement.id.length - 7);
 	var node = app.tree.getNodeByKey(node_id);
-	if (node.treeMapElement != undefined) {
-		node.treeMapElement.setTransparency(newValue);
+	if (node.mapView != undefined) {
+		node.mapView.setTransparency(newValue);
 	}
 	// set the printed value
 	var transparencyValueID = '#' + node_id + '_transparencyValue';
