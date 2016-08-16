@@ -1,3 +1,4 @@
+
 #__BEGIN_LICENSE__
 # Copyright (c) 2015, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
@@ -116,7 +117,7 @@ class AbstractMap(AbstractMapNode):
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
         result = super(AbstractMap, self).getTreeJson()
-        result["transparency"] = self.transparency
+        result["data"]["transparency"] = self.transparency
         result["selected"] = self.visible
         return result
 
@@ -177,7 +178,7 @@ class KmlMap(AbstractMap):
         result = super(KmlMap, self).getTreeJson()
         result["data"]["openable"] = self.openable
         result["data"]["kmlFile"] = self.getUrl()
-        result["data"]["transparency"] = self.transparency
+#         result["data"]["transparency"] = self.transparency
         if self.localFile:
             result["data"]["localFile"] = self.localFile.url
         return result

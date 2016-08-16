@@ -153,6 +153,7 @@ app.views.FancyTreeView = Backbone.View.extend({
                       success: $.proxy(function(data) {
                           if (!_.isUndefined(data) && data.length > 0){
                               $.each(data, function(index, datum){
+                            	  app.vent.trigger('treeNode:loaded', datum);
                                   app.vent.trigger('mapNode:create', datum);
                                   if (!_.isUndefined(datum.children)){
                                       $.each(datum.children, function(index, child){

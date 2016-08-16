@@ -189,9 +189,11 @@ $(function() {
                 this.setupPopups();
                 
                 //events
+                var context = this;
                 app.vent.on('onMapSetup', this.postMapCreation);
                 app.vent.on('layers:loaded', this.render);
                 app.vent.on('layers:loaded', this.initializeMapData);
+                app.vent.on('treeNode:loaded', function(data) {context.updateNodesFromCookies(data)});
                 app.vent.on('tree:loaded', this.updateMapLayers);
                 app.vent.trigger('layers:loaded');
                 
@@ -237,6 +239,7 @@ $(function() {
                     var foundView = app.nodeMap[node.key];
                     if (node.addNode != undefined){
                     	foundView.node = node;
+                    	foundView.setupOpacity({'node':node});
                     }
                     if (node.mapView == undefined){
                     	node.mapView = foundView;
@@ -430,14 +433,6 @@ $(function() {
             	for (var i=0; i<nodes.length; i++){
             		var node = nodes[i];
             		node.selected = true;
-//            		try {
-//            			var cookieData = Cookies.getJSON(node.key);
-//            			if (cookieData != undefined){
-//            				node.data.transparency = cookieData.transparency
-//            			}
-//            		} catch (err){
-//            			//pass
-//            		}
             		this.createNode(nodes[i]);
             	}
             },
@@ -538,8 +533,28 @@ $(function() {
                 });
                 return liveSearchView;
             },
+            updateNodesFromCookies: function(rootNode) {
+            	var theCookies = Cookies.getJSON();
+            	for (var key in theCookies) {
+            		  if (theCookies.hasOwnProperty(key)) {
+            			  if (theCookies[key].transparency != undefined){
+            				  var node = undefined;
+            				  if (rootNode != undefined){
+            					  node = app.tree.getNodeByKey(key, app.tree.getNodeByKey(rootNode.key));
+            				  } else {
+            					  node = app.tree.getNodeByKey(key);
+            				  }
+                		    if (node != undefined) {
+                		    	node.data.transparency = theCookies[key].transparency;
+                		    }
+            			  }
+            		  }
+            	}
+            },
             updateMapLayers: function() {
-                if (!_.isUndefined(app.tree) && !_.isEmpty(app.tree)){
+            	if (!_.isUndefined(app.tree) && !_.isEmpty(app.tree)){
+            		this.updateNodesFromCookies();
+                	// must visit all the nodes and update transparency
                     var selectedNodes = app.tree.getSelectedNodes();
                     selectedNodes.forEach(function(node){
                         if (_.isUndefined(node.mapView)){
@@ -610,7 +625,6 @@ $(function() {
             } else {
                 this.visible = !this.node.selected;  // the first time we need to set it opposite so rendering works
             }
-//            this.loadCookieData();
             this.checkRequired();
             this.constructMapElements();
             this.render();
@@ -618,9 +632,6 @@ $(function() {
         },
         setupOpacity: function(options){
         	var transparency = options.node.data.transparency;
-        	if (transparency == undefined){
-        		transparency = options.node.transparency;
-        	}
         	try {
         		var cookieJSON = Cookies.getJSON(options.node.key);
         		if (cookieJSON != undefined){
@@ -628,6 +639,7 @@ $(function() {
         			if (this.node != undefined){
         				this.node.data.transparency = transparency;
         			}
+        			options.node.data.transparency = transparency;
         		}
         	} catch (err) {
         		//pass
@@ -638,18 +650,6 @@ $(function() {
         	}
             this.opacity = calculateOpacity(transparency);
         },
-//        loadCookieData: function() {
-//        	if (this.node != undefined){
-//        		try {
-//	        		var foundData = Cookies.getJSON(this.node.key);
-//	        		if (foundData != undefined){
-//	        			this.node.data.transparency = foundData.transparency;
-//	        		}
-//        		} catch (err){
-//        			//pass
-//        		}
-//        	}
-//        },
         checkRequired: function() {
             if (!this.group) {
                 throw 'Missing map group!';
@@ -843,12 +843,6 @@ $(function() {
         initialize: function(options) {
             this.tileURL = options.tileURL;
             this.setupOpacity(options);
-//            var transparency = options.node.data.transparency;
-//            var cookieJSON = Cookies.getJSON(options.node.key);
-//        	if (cookieJSON != undefined){
-//        		transparency = cookieJSON.transparency;
-//        	}
-//            this.opacity = calculateOpacity(transparency);
             app.views.TreeMapElement.prototype.initialize.call(this, options);
         },
         checkRequired: function() {
@@ -1072,7 +1066,32 @@ $(function() {
             this.features = [];
             this.mapLayerGroup = this.options.mapLayerGroup;
             this.on( "readyToDraw", this.finishInitialization, this);
+            this.setupOpacity();
             this.initializeFeaturesJson();
+        },
+        setupOpacity: function(){
+        	if (this.node != undefined){
+	        	var transparency = this.node.data.transparency;
+	        	try {
+	        		var cookieJSON = Cookies.getJSON(this.node.key);
+	        		if (cookieJSON != undefined){
+	        			transparency = cookieJSON.transparency;
+	        			if (this.node != undefined){
+	        				this.node.data.transparency = transparency;
+	        			}
+	        			this.options.node.data.transparency = transparency;
+	        		}
+	        	} catch (err) {
+	        		//pass
+	        		console.log(err);
+	        	}
+	        	if (transparency == undefined){
+	        		transparency = 0;
+	        	}
+	            this.opacity = calculateOpacity(transparency);
+        	} else {
+        		this.opacity = 1.0;
+        	}
         },
         finishInitialization: function() {
             this.createFeaturesLayer();
@@ -1091,17 +1110,17 @@ $(function() {
         },
         constructFeatures: function() {
             if (_.isUndefined(this.layerGroup)){
-            	var transparency = this.mapLayerJson.transparency;
-            	try {
-            		var cookieJSON = Cookies.getJSON(this.node.key);
-            		if (cookieJSON != undefined){
-            			transparency = cookieJSON.transparency;
-            		}
-            	} catch (err){
-            		//pass
-            	}
+//            	var transparency = this.mapLayerJson.transparency;
+//            	try {
+//            		var cookieJSON = Cookies.getJSON(this.node.key);
+//            		if (cookieJSON != undefined){
+//            			transparency = cookieJSON.transparency;
+//            		}
+//            	} catch (err){
+//            		//pass
+//            	}
                 this.layerGroup = new ol.layer.Group({name:this.mapLayerJson.name,
-                								      opacity: calculateOpacity(transparency)});
+                								      opacity: this.opacity});
             };
             var _this = this;
             $.each(this.mapLayerJson.features, function( index, value ) {
