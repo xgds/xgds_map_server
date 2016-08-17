@@ -21,6 +21,12 @@ app.views.FancyTreeView = Backbone.View.extend({
     initialize: function() {
         this.listenTo(app.vent, 'refreshTree', function() {this.refreshTree()});
         this.listenTo(app.vent, 'treeData:loaded', function() {this.createTree()});
+        app.vent.on('tree:expanded', function(node) {
+        	console.log(node.key);
+        	if (transparencySlidersVisible) {
+        		showTransparencySliders(node);
+        	}
+        });
         
         var source = $(this.template).html();
         if (_.isUndefined(source))
@@ -146,6 +152,9 @@ app.views.FancyTreeView = Backbone.View.extend({
                 		  return context.getTreeIcon(data.node.data.type); 
                 	  }
                 	},
+                expand: function(event, data){
+                	app.vent.trigger('tree:expanded', data.node);
+                },
                 lazyLoad: function(event, data){
                     data.result = $.ajax({
                       url: data.node.data.childNodesUrl,

@@ -69,36 +69,44 @@ saveTransparency = function(event, ui){
         	alert('Problem saving transparency.');
         }
       });
-}
+};
 
-toggleTransparencySliders = function() {
+
+showTransparencySliders = function(node){
+	node.visit(function(node) {
+		if (node.data.transparency != undefined){
+			var el = $(node.li)
+			var value_span = el.find(".transparency_value");
+			
+			if (value_span.length == 0){
+				var slider_div = el.find(".transparency_slider");
+				var theSlider = slider_div.slider({value:node.data.transparency,
+					   							   slide: handleTransparencySliderChange});
+				if (persistTransparency){
+					theSlider.on('slidestop', saveTransparency);
+				}
+				
+				// add the value
+				var transparencyValueID = node.key + '_transparencyValue';
+				var transparencyHtml = '<span style="float:right;" class="transparency_value" id=' + transparencyValueID + '>' + node.data.transparency + '</span>';
+				$(slider_div).parent().append($(transparencyHtml));
+			} else {
+				var slider_div = $(value_span).prev();
+				slider_div.toggle();
+				value_span.toggle();
+			}
+		}
+		return true;
+	});
+};
+
+toggleTransparencySliders = function(rootNode) {
 	transparencySlidersVisible = !transparencySlidersVisible;
 	if (transparencySlidersVisible){
-		app.tree.visit(function(node) {
-			if (node.data.transparency != undefined){
-				var el = $(node.li)
-				var value_span = el.find(".transparency_value");
-				
-				if (value_span.length == 0){
-					var slider_div = el.find(".transparency_slider");
-					var theSlider = slider_div.slider({value:node.data.transparency,
-						   							   slide: handleTransparencySliderChange});
-					if (persistTransparency){
-						theSlider.on('slidestop', saveTransparency);
-					}
-					
-					// add the value
-					var transparencyValueID = node.key + '_transparencyValue';
-					var transparencyHtml = '<span style="float:right;" class="transparency_value" id=' + transparencyValueID + '>' + node.data.transparency + '</span>';
-					$(slider_div).parent().append($(transparencyHtml));
-				} else {
-					var slider_div = $(value_span).prev();
-					slider_div.toggle();
-					value_span.toggle();
-				}
-			}
-			return true;
-		})
+		if (rootNode == undefined){
+			rootNode = app.tree.rootNode;
+		}
+		showTransparencySliders(rootNode);
 	} else {
 		$(".transparency_value").hide();
 		$(".transparency_slider").hide(); //.slider("destroy");
