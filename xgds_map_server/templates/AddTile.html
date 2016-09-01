@@ -12,8 +12,7 @@ input[type='file'] {
 {{ block.super }}
 {% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
 <h2>{{ title }}</h2>
-Upload a geotiff file to create a map tile layer.<br/>
-Processing of GeoTiff files can take some time, please allow 30 minutes after the upload finishes.<br/>
+{{instructions|safe }}
 <form action="#" enctype="multipart/form-data" method="post">
 {% csrf_token %}
 {{ form.as_p }}

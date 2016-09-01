@@ -57,8 +57,8 @@ from xgds_data.dlogging import recordList, recordRequest
 from xgds_data.forms import SearchForm, SpecializedForm
 from xgds_data.models import RequestLog, ResponseLog
 from xgds_data.views import searchHandoff, resultsIdentity
-from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm, MapSearchForm, MapCollectionForm, EditMapTileForm
-from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapSearch, MapCollection, MapLink, MAP_NODE_MANAGER, MAP_MANAGER
+from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm, MapDataTileForm, MapSearchForm, MapCollectionForm, EditMapTileForm, EditMapDataTileForm
+from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapDataTile, MapSearch, MapCollection, MapLink, MAP_NODE_MANAGER, MAP_MANAGER
 from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
 from xgds_map_server.kmlLayerExporter import exportMapLayer
 from geocamUtil.KmlUtil import wrapKmlForDownload
@@ -425,35 +425,39 @@ def getAddTilePage(request):
     HTML view to create a new map tile
     """
     title = "Add Map Tile"
+    instructions = "Upload a GeoTiff file to create a map tile layer.<br/>Processing of GeoTiff files can take some time, please allow at least 30 minutes after the upload finishes.<br/>"
     if request.method == 'POST':
         tile_form = MapTileForm(request.POST, request.FILES)
         if tile_form.is_valid():
-            sourceFile = tile_form.cleaned_data['sourceFile']
-            mapTile = MapTile(sourceFile=sourceFile)
-            mapTile.name = tile_form.cleaned_data['name']
-            mapTile.description = tile_form.cleaned_data['description']
-            mapTile.creator = request.user.username
-            mapTile.creation_time = datetime.datetime.now(pytz.utc)
-            mapTile.transparency = tile_form.cleaned_data['transparency']
-            mapTile.deleted = False
-            mapGroupName = tile_form.cleaned_data['parent']
-            foundParents = MapGroup.objects.filter(name=mapGroupName)
-            mapTile.parent = foundParents[0] #TODO better handle same name folder
-            mapTile.save()
+            mapTile = tile_form.save()
+#             sourceFile = tile_form.cleaned_data['sourceFile']
+#             mapTile = MapTile(sourceFile=sourceFile)
+#             mapTile.name = tile_form.cleaned_data['name']
+#             mapTile.description = tile_form.cleaned_data['description']
+#             mapTile.creator = request.user.username
+#             mapTile.creation_time = datetime.datetime.now(pytz.utc)
+#             mapTile.transparency = tile_form.cleaned_data['transparency']
+#             mapTile.deleted = False
+#             mapGroupName = tile_form.cleaned_data['parent']
+#             foundParents = MapGroup.objects.filter(name=mapGroupName)
+#             mapTile.parent = foundParents[0] #TODO better handle same name folder
+#             mapTile.save()
             processTiles(request, mapTile.uuid, tile_form.cleaned_data['minZoom'],
                          tile_form.cleaned_data['maxZoom'], tile_form.cleaned_data['resampleMethod'], mapTile)
         else:
-            return render_to_response("AddTile.html",
+            return render_to_response('AddTile.html',
                                       {'form': tile_form,
                                        'error': True,
-                                       "title": title},
+                                       'instructions': instructions,
+                                       'title': title},
                                       context_instance=RequestContext(request))
         return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
     else:
         tile_form = MapTileForm()
-        return render_to_response("AddTile.html",
+        return render_to_response('AddTile.html',
                                   {'form': tile_form,
                                    'error': False,
+                                   'instructions': instructions,
                                    'title': title},
                                   context_instance=RequestContext(request))
 
@@ -507,6 +511,38 @@ def getEditTilePage(request, tileID):
                                },
                               context_instance=RequestContext(request))
 
+@csrf_protect
+@condition(etag_func=None)
+def getAddMapDataTilePage(request):
+    """
+    HTML view to create a new map data tile
+    """
+    title = "Add Map Data Tile"
+    instructions = "Upload a GeoTiff file to create a map tile layer.<br/>Upload a file to provide the data value, and an optional legend image.<br/>Processing of GeoTiff files can take some time, please allow at least 30 minutes after the upload finishes.<br/>"
+
+    if request.method == 'POST':
+        tile_form = MapDataTileForm(request.POST, request.FILES)
+        if tile_form.is_valid():
+            mapTile = tile_form.save()
+            mapTile.initBounds()
+            processTiles(request, mapTile.uuid, tile_form.cleaned_data['minZoom'],
+                         tile_form.cleaned_data['maxZoom'], tile_form.cleaned_data['resampleMethod'], mapTile)
+        else:
+            return render_to_response("AddTile.html",
+                                      {'form': tile_form,
+                                       'error': True,
+                                       'instructions': instructions,
+                                       'title': title},
+                                      context_instance=RequestContext(request))
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
+    else:
+        tile_form = MapDataTileForm()
+        return render_to_response("AddTile.html",
+                                  {'form': tile_form,
+                                   'error': False,
+                                   'instructions': instructions,
+                                   'title': title},
+                                  context_instance=RequestContext(request))
 
 def getAddFolderPage(request):
     """
@@ -1429,6 +1465,7 @@ def processTileSuccess(email, mapTile, out, err):
     print out
     print err
     mapTile.processed = True
+    mapTile.initResolutions()
     mapTile.save()
     mail.send_mail(
         "Map tile has finished processing " + mapTile.name,

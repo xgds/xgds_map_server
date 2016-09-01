@@ -18,6 +18,7 @@
     </div>
     <div class="row">
 		<div id="postmap"></div>
+		<div id="postpostmap"></div>
 	</div>
 </div>
 {% endblock %}
@@ -45,7 +46,22 @@
 		{{template|safe}}
 	</script>
     {% endfor %}
-    {% javascript 'custom_map' %}
+    {# javascript 'custom_map' #}
+    
+    <!-- <script type="text/javascript" src='{{EXTERNAL_URL}}geotiff.js/dist/geotiff.min.js'></script>
+     -->
+<!--      <script type="text/javascript" src='{{EXTERNAL_URL}}pngjs/PNG.js'></script>
+    <script type="text/javascript" src='{{EXTERNAL_URL}}pngjs/PNGReader.js'></script>
+ -->
+      <!-- <script type="text/javascript" src='{{EXTERNAL_URL}}jpeg-js/lib/decoder.js'></script>
+      -->
+      
+     <script type="text/javascript" src='{{EXTERNAL_URL}}pngtoy/pngtoy.min.js'></script>
+     
+    <script type="text/javascript" src='{{STATIC_URL}}rpApp/js/uploadJson.js'></script>
+    <script type="text/javascript" src='{{STATIC_URL}}rpApp/js/showMapCoords.js'></script>
+    <script type="text/javascript" src='{{STATIC_URL}}rpApp/js/initial_layers.js'></script>
+    <script type="text/javascript" src='{{STATIC_URL}}rpApp/js/constraintChecker.js'></script>
     
 {% endblock scripts %}
 

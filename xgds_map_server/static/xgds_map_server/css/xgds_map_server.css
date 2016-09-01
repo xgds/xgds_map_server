@@ -1,3 +1,7 @@
 .coords-error-msg {
 	color: red;
 }
+
+.legend {
+	top: 65px;
+}
