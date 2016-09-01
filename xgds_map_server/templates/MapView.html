@@ -30,6 +30,7 @@
   @import url('{{EXTERNAL_URL}}ol3-popup/src/ol3-popup.css');
   @import url('{{ EXTERNAL_URL }}fancytree/dist/skin-lion/ui.fancytree.min.css');
   @import url('{{ STATIC_URL }}xgds_map_server/css/fancytree_custom.css');
+  @import url('{{ STATIC_URL }}xgds_map_server/css/xgds_map_server.css');
   #map {
   	 margin-top: 25px;
  	 height: 400px;
@@ -46,22 +47,7 @@
 		{{template|safe}}
 	</script>
     {% endfor %}
-    {# javascript 'custom_map' #}
-    
-    <!-- <script type="text/javascript" src='{{EXTERNAL_URL}}geotiff.js/dist/geotiff.min.js'></script>
-     -->
-<!--      <script type="text/javascript" src='{{EXTERNAL_URL}}pngjs/PNG.js'></script>
-    <script type="text/javascript" src='{{EXTERNAL_URL}}pngjs/PNGReader.js'></script>
- -->
-      <!-- <script type="text/javascript" src='{{EXTERNAL_URL}}jpeg-js/lib/decoder.js'></script>
-      -->
-      
-     <script type="text/javascript" src='{{EXTERNAL_URL}}pngtoy/pngtoy.min.js'></script>
-     
-    <script type="text/javascript" src='{{STATIC_URL}}rpApp/js/uploadJson.js'></script>
-    <script type="text/javascript" src='{{STATIC_URL}}rpApp/js/showMapCoords.js'></script>
-    <script type="text/javascript" src='{{STATIC_URL}}rpApp/js/initial_layers.js'></script>
-    <script type="text/javascript" src='{{STATIC_URL}}rpApp/js/constraintChecker.js'></script>
+    {% javascript 'custom_map' %}
     
 {% endblock scripts %}
 

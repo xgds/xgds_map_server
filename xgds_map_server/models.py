@@ -315,7 +315,7 @@ class MapDataTile(AbstractMapTile):
         result = super(MapDataTile, self).getTreeJson()
         result["data"]["dataFileURL"] = self.getDataFileUrl()
         result["data"]["legendFileURL"] = self.getLegendFileUrl()
-        result["data"]["legendVisible"] = 'true' if  self.legendDefaultVisible else 'false'
+        result["data"]["legendVisible"] = self.legendDefaultVisible
         result["data"]["valueLabel"] = self.valueLabel
         result["data"]["unitsLabel"] = self.unitsLabel
         result["data"]["jsFunction"] = self.jsFunction
