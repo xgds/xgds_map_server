@@ -46,6 +46,8 @@ XGDS_MAP_SERVER_SELECTED_LAYER_URL = "/xgds_map_server/selectedjson/"
 
 # path to script to turn geotiffs into tiles, via gdal with our patch
 XGDS_MAP_SERVER_GDAL2TILES = "xgds_map_server/bin/gdal2tiles.py"
+XGDS_MAP_SERVER_GDAL2TILES_ZOOM_LEVELS = True # if you don't want to customize zoom levels turn this off
+XGDS_MAP_SERVER_GDAL2TILES_EXTRAS = ""  # if you have to pass extra parameters to gdal2tiles override this
 XGDS_MAP_SERVER_GDAL_RESAMPLE_OPTIONS = [("lanczos", "Lanczos"), ("cubic", "Cubic"),
                                          ("near", "Nearest Neighbor")]
 

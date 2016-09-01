@@ -72,8 +72,9 @@ class MapLayerForm(AbstractMapForm):
 
 
 class MapTileForm(AbstractMapForm):
-    minZoom = IntegerField(initial=12, label="Min Zoom")
-    maxZoom = IntegerField(initial=20, label="Max Zoom (UAV=23, Satellite=20)")
+    if settings.XGDS_MAP_SERVER_GDAL2TILES_ZOOM_LEVELS:
+        minZoom = IntegerField(initial=12, label="Min Zoom")
+        maxZoom = IntegerField(initial=20, label="Max Zoom (UAV=23, Satellite=20)")
     
     resampleMethod = ChoiceField(choices=settings.XGDS_MAP_SERVER_GDAL_RESAMPLE_OPTIONS,
                                  label="Resampling Method")
@@ -86,8 +87,12 @@ class MapTileForm(AbstractMapForm):
 
     def save(self, commit=True):
         instance = super(MapTileForm, self).save(commit=False)
-        instance.creator = self.username
-        instance.creation_time = datetime.datetime.now(pytz.utc)
+        if not instance.creator:
+            instance.creator = self.cleaned_data['username']
+            instance.creation_time = datetime.datetime.now(pytz.utc)
+        else:
+            instance.modifier = self.cleaned_data['username']
+            instance.modification_time = self.cleaned_data['username']
         instance.parent = self.getParentGroup()
         if commit:
             instance.save()
@@ -95,14 +100,14 @@ class MapTileForm(AbstractMapForm):
     
     class Meta(AbstractMapForm.Meta):
         model = MapTile
-        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed']
+        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed', 'minx', 'miny', 'maxx', 'maxy', 'resolutions']
 
 
 class MapDataTileForm(MapTileForm):
-    dataFile = ResumableFileField(allowed_mimes=("image/tiff",),
+    dataFile = ResumableFileField(allowed_mimes=("image/png",),
                                   upload_url=lambda: reverse('uploadResumable'),
                                   chunks_dir=getattr(settings, 'FILE_UPLOAD_TEMP_DIR'),
-                                  label="Data File"
+                                  label="Data File (png)"
                                   )
     
     legendFile = ResumableFileField(allowed_mimes=("image/png",),
@@ -113,7 +118,7 @@ class MapDataTileForm(MapTileForm):
     
     class Meta(AbstractMapForm.Meta):
         model = MapDataTile
-        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed']
+        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed', 'minx', 'miny', 'maxx', 'maxy', 'resolutions']
 
 class EditMapTileForm(AbstractMapForm):
     

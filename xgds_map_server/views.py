@@ -429,7 +429,8 @@ def getAddTilePage(request):
     if request.method == 'POST':
         tile_form = MapTileForm(request.POST, request.FILES)
         if tile_form.is_valid():
-            mapTile = tile_form.save()
+            tile_form.save()
+            mapTile = tile_form.instance
 #             sourceFile = tile_form.cleaned_data['sourceFile']
 #             mapTile = MapTile(sourceFile=sourceFile)
 #             mapTile.name = tile_form.cleaned_data['name']
@@ -442,8 +443,12 @@ def getAddTilePage(request):
 #             foundParents = MapGroup.objects.filter(name=mapGroupName)
 #             mapTile.parent = foundParents[0] #TODO better handle same name folder
 #             mapTile.save()
-            processTiles(request, mapTile.uuid, tile_form.cleaned_data['minZoom'],
-                         tile_form.cleaned_data['maxZoom'], tile_form.cleaned_data['resampleMethod'], mapTile)
+            minZoom = -1
+            maxZoom = -1
+            if settings.XGDS_MAP_SERVER_GDAL2TILES_ZOOM_LEVELS:
+                minZoom = tile_form.cleaned_data['minZoom']
+                maxZoom = tile_form.cleaned_data['maxZoom']
+            processTiles(request, mapTile.uuid, minZoom, maxZoom, tile_form.cleaned_data['resampleMethod'], mapTile)
         else:
             return render_to_response('AddTile.html',
                                       {'form': tile_form,
@@ -453,7 +458,7 @@ def getAddTilePage(request):
                                       context_instance=RequestContext(request))
         return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
     else:
-        tile_form = MapTileForm()
+        tile_form = MapTileForm(initial={'username': request.user.username})
         return render_to_response('AddTile.html',
                                   {'form': tile_form,
                                    'error': False,
@@ -502,7 +507,7 @@ def getEditTilePage(request, tileID):
                                       context_instance=RequestContext(request))
 
     # return form page with current form data
-    tile_form = EditMapTileForm(instance=mapTile,)
+    tile_form = EditMapTileForm(instance=mapTile, initial={'username': request.user.username})
     return render_to_response("EditNode.html",
                               {"form": tile_form,
                                "title": "Edit Map Tile",
@@ -523,10 +528,14 @@ def getAddMapDataTilePage(request):
     if request.method == 'POST':
         tile_form = MapDataTileForm(request.POST, request.FILES)
         if tile_form.is_valid():
-            mapTile = tile_form.save()
-            mapTile.initBounds()
-            processTiles(request, mapTile.uuid, tile_form.cleaned_data['minZoom'],
-                         tile_form.cleaned_data['maxZoom'], tile_form.cleaned_data['resampleMethod'], mapTile)
+            tile_form.save()
+            mapTile = tile_form.instance
+            minZoom = -1
+            maxZoom = -1
+            if settings.XGDS_MAP_SERVER_GDAL2TILES_ZOOM_LEVELS:
+                minZoom = tile_form.cleaned_data['minZoom']
+                maxZoom = tile_form.cleaned_data['maxZoom']
+            processTiles(request, mapTile.uuid, minZoom, maxZoom, tile_form.cleaned_data['resampleMethod'], mapTile)
         else:
             return render_to_response("AddTile.html",
                                       {'form': tile_form,
@@ -536,7 +545,7 @@ def getAddMapDataTilePage(request):
                                       context_instance=RequestContext(request))
         return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
     else:
-        tile_form = MapDataTileForm()
+        tile_form = MapDataTileForm(initial={'username': request.user.username})
         return render_to_response("AddTile.html",
                                   {'form': tile_form,
                                    'error': False,
@@ -1466,6 +1475,7 @@ def processTileSuccess(email, mapTile, out, err):
     print err
     mapTile.processed = True
     mapTile.initResolutions()
+    mapTile.initBounds()
     mapTile.save()
     mail.send_mail(
         "Map tile has finished processing " + mapTile.name,
@@ -1521,11 +1531,15 @@ def processTiles(request, uuid, minZoom, maxZoom, resampleMethod, mapTile):
             fh.close()
 
     for source in sourceFiles:
-        tileCmd = ('%s -z %d-%d --resampling=%s %s %s'
-                   % (os.path.join(settings.PROJ_ROOT, "apps", settings.XGDS_MAP_SERVER_GDAL2TILES),
-                      minZoom,
-                      maxZoom,
+        executable = '%s' % os.path.join(settings.PROJ_ROOT, "apps", settings.XGDS_MAP_SERVER_GDAL2TILES)
+        zooms = ''
+        if settings.XGDS_MAP_SERVER_GDAL2TILES_ZOOM_LEVELS:
+            zooms = '-z %d-%d' % (minZoom, maxZoom)
+        tileCmd = ('%s %s --resampling=%s %s %s %s'
+                   % (executable,
+                      zooms,
                       resampleMethod,
+                      settings.XGDS_MAP_SERVER_GDAL2TILES_EXTRAS,
                       os.path.join(settings.DATA_ROOT,source),
                       outPath))
         print "Map Tile command: %s" % tileCmd

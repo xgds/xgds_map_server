@@ -235,9 +235,9 @@ class AbstractMapTile(AbstractMap):
     
     def getBounds(self):
         src = gdal.Open(self.sourceFile.path)
-        minx, xres, xskew, miny, yskew, yres  = src.GetGeoTransform()
+        minx, xres, xskew, maxy, yskew, yres  = src.GetGeoTransform()
         maxx = minx + (src.RasterXSize * xres)
-        maxy = miny + (src.RasterYSize * yres)
+        miny = maxy + (src.RasterYSize * yres)
         return [[minx, miny], [maxx, maxy]]
     
     @property

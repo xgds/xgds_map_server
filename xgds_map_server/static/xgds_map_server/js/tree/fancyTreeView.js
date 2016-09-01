@@ -22,7 +22,6 @@ app.views.FancyTreeView = Backbone.View.extend({
         this.listenTo(app.vent, 'refreshTree', function() {this.refreshTree()});
         this.listenTo(app.vent, 'treeData:loaded', function() {this.createTree()});
         app.vent.on('tree:expanded', function(node) {
-        	console.log(node.key);
         	if (transparencySlidersVisible) {
         		showTransparencySliders(node);
         	}
