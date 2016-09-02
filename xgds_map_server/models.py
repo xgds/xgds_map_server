@@ -258,9 +258,6 @@ class AbstractMapTile(AbstractMap):
         result = os.path.join(settings.DATA_URL, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR, self.name.replace(' ', '_'))
         return result
 
-    def getEditHref(self):
-        return reverse('mapEditTile', kwargs={'tileID': self.uuid})
-
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
         result = super(AbstractMapTile, self).getTreeJson()
@@ -285,7 +282,9 @@ class AbstractMapTile(AbstractMap):
         abstract = True
 
 class MapTile(AbstractMapTile):
-    pass
+    
+    def getEditHref(self):
+        return reverse('mapEditTile', kwargs={'tileID': self.uuid})
 
 class MapDataTile(AbstractMapTile):
     """
@@ -322,7 +321,8 @@ class MapDataTile(AbstractMapTile):
         
         return result
 
-    
+    def getEditHref(self):
+        return reverse('mapEditDataTile', kwargs={'tileID': self.uuid})
 
 class MapLayer(AbstractMap):
     """ A map layer which will have a collection of features that have content in them. """

@@ -552,6 +552,43 @@ def getAddMapDataTilePage(request):
                                    'instructions': instructions,
                                    'title': title},
                                   context_instance=RequestContext(request))
+        
+@csrf_protect
+@condition(etag_func=None)
+def getEditMapDataTilePage(request, tileID):
+    """
+    HTML view to edit an existing map data tile
+    """
+    try:
+        mapTile = MapDataTile.objects.get(pk=tileID)
+    except MapDataTile.DoesNotExist:
+        raise Http404
+    except MapDataTile.MultipleObjectsReturned:
+        # this really shouldn't happen, ever
+        return HttpResponseServerError()
+    title = "Edit Map Data Tile"
+    instructions = "You may modify anything except the original GeoTiff file.<br/>Upload a file to provide the data value, and an optional legend image.<br/>"
+
+    if request.method == 'POST':
+        tile_form = EditMapDataTileForm(request.POST, request.FILES, instance=mapTile)
+        if tile_form.is_valid():
+            tile_form.save()
+        else:
+            return render_to_response("EditNode.html",
+                                      {'form': tile_form,
+                                       'error': True,
+                                       'instructions': instructions,
+                                       'title': title},
+                                      context_instance=RequestContext(request))
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
+    else:
+        tile_form = EditMapDataTileForm(instance=mapTile, initial={'username': request.user.username})
+        return render_to_response("EditNode.html",
+                                  {'form': tile_form,
+                                   'error': False,
+                                   'instructions': instructions,
+                                   'title': title},
+                                  context_instance=RequestContext(request))
 
 def getAddFolderPage(request):
     """

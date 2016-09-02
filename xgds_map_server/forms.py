@@ -124,11 +124,12 @@ class EditMapTileForm(AbstractMapForm):
     
     class Meta(AbstractMapForm.Meta):
         model = MapTile
-        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed', 'sourceFile', ]
+        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed', 'sourceFile', 'minx', 'miny', 'maxx', 'maxy', 'resolutions']
 
 class EditMapDataTileForm(EditMapTileForm):
     class Meta(AbstractMapForm.Meta):
         model = MapDataTile
+        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed', 'sourceFile', 'minx', 'miny', 'maxx', 'maxy', 'resolutions']
 
 class CollectionModelChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
