@@ -888,6 +888,11 @@ $(function() {
         	this.legendVisible = options.node.data.legendVisible;
         	this.valueLabel = options.node.data.valueLabel;
         	this.name = options.node.title;
+        	this.minx = options.node.data.minx;
+  		    this.miny = options.node.data.miny;
+		    this.maxx = options.node.data.maxx;
+		    this.maxy = options.node.data.maxy;
+		    this.resolutions = options.node.data.resolutions;
             if (this.valueLabel === null){
         		this.valueLabel = this.name;
         	}
@@ -907,13 +912,13 @@ $(function() {
             if (_.isUndefined(this.mapElement)){
             	app.views.TileView.prototype.constructMapElements.call(this);
             	this.extent = this.mapElement.getExtent();
-        		if (this.extent === undefined){
+            	if (this.extent === undefined){
             		this.extent = [this.options.node.data.minx,
             		               this.options.node.data.miny,
             		               this.options.node.data.maxx,
             		               this.options.node.data.maxy];
             	}
-        		if (this.extent !== undefined){
+            	if (this.extent !== undefined){
         			this.mapWidth = Math.abs(this.extent[2] - this.extent[0]);
         			this.mapHeight = Math.abs(this.extent[3] - this.extent[1]);
         		}
@@ -931,12 +936,45 @@ $(function() {
 				legendImage.id = this.name+"_legend";
 				
 				var legendDiv = document.createElement('div');
-				legendDiv.className = 'ol-unselectable ol-control legend';
+				legendDiv.className = 'ol-unselectable ol-control maplegend';
 				legendDiv.id = legendImage.id + '_div';
 				legendDiv.appendChild(legendImage);
 		        
 				this.legendControl = new ol.control.Control({element: legendDiv});
         	}
+		},
+		manageLegendHorizontalAlignment: function(visible) {
+			var alignmentDict = app.alignmentDict;
+			if (alignmentDict === undefined){
+				app.alignmentDict = {};
+				alignmentDict = app.alignmentDict;
+			}
+			var stored = alignmentDict[this.name];
+			if (stored === undefined){
+				var theDiv = $("#" + this.name + "_legend_div");
+				var width = $(theDiv.children()[0]).width();
+				stored = {'control': theDiv, 
+						  'visible': visible,
+						  'width': width};
+				alignmentDict[this.name] = stored;
+			} else {
+				stored.visible = visible;
+			}
+			var left = 0;
+			for(var key in alignmentDict) {
+				  var value = alignmentDict[key];
+				  if (value.visible){
+					  value.control[0].style.left = left + "px";
+					  if (value.width == 0){
+						  value.width = $(value.control.children()[0]).width();
+					  }
+					  if (value.width == 0){
+						  left += 50;
+					  } else {
+						  left += value.width;
+					  }
+				  }
+			}
 		},
 		constructMousePositionControl: function() {
 			var context = this;
@@ -1030,6 +1068,7 @@ $(function() {
             		app.map.map.addControl(this.mousePositionControl);
             		if (this.legendControl !== undefined) {
             			app.map.map.addControl(this.legendControl);
+            			this.manageLegendHorizontalAlignment(true);
             		}
             	}
                 this.visible = true;
@@ -1042,6 +1081,7 @@ $(function() {
             		app.map.map.removeControl(this.mousePositionControl);
             		if (this.legendControl !== undefined) {
             			app.map.map.removeControl(this.legendControl);
+            			this.manageLegendHorizontalAlignment(false);
             		}
             	}
                 this.visible = false;
