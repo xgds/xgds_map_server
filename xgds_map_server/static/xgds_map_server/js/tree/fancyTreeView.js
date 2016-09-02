@@ -94,6 +94,8 @@ app.views.FancyTreeView = Backbone.View.extend({
 	            return image + "maplayer.png"; //TODO change it to whatever you want.
 	        case "MapTile":
 	            return image + "tif.png";
+	        case "MapDataTile":
+	            return image + "dataTif.png";
 	    }
     	return null
     },
