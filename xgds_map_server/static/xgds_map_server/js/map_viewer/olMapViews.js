@@ -893,7 +893,7 @@ $(function() {
 		    this.maxx = options.node.data.maxx;
 		    this.maxy = options.node.data.maxy;
 		    this.resolutions = options.node.data.resolutions;
-            if (this.valueLabel === null){
+            if (this.valueLabel == ""){
         		this.valueLabel = this.name;
         	}
         	this.unitsLabel = options.node.data.unitsLabel;
