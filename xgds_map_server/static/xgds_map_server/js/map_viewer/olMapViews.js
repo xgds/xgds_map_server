@@ -1001,12 +1001,13 @@ $(function() {
 			}
 			return null;
 		},
-        getPngIndex:  function(x,y) {
+		getPngIndex:  function(x,y) {
 			// this is in pixel coordinates; image starts from top left 0,0
-			var row = 4 * this.dataBitmap.width * y;
-			var column = 4 * x;
+			var multiplier = (this.dataBitmap.depth / 8);
+			var row = multiplier * this.dataBitmap.width * y;
+			var column = (multiplier) * x;
 			return row + column;
-		}, 
+		},
 		getPngValue: function(x,y) {
 			// this is in pixel coordinates; image starts from top left 0,0
 			var index = this.getPngIndex(x,y);
