@@ -951,10 +951,17 @@ $(function() {
 			}
 			var stored = alignmentDict[this.name];
 			if (stored === undefined){
-				var theDiv = $("#" + this.name + "_legend_div");
-				var width = $(theDiv.children()[0]).width();
+				var theDiv = undefined;
+				var width = 0;
+				try {
+					var theDiv = document.getElementById(this.name + "_legend_div");
+					var width = theDiv.children[0].width;
+				} catch (err){
+					//pass
+				}
 				stored = {'control': theDiv, 
 						  'visible': visible,
+						  'name': this.name,
 						  'width': width};
 				alignmentDict[this.name] = stored;
 			} else {
@@ -964,9 +971,20 @@ $(function() {
 			for(var key in alignmentDict) {
 				  var value = alignmentDict[key];
 				  if (value.visible){
-					  value.control[0].style.left = left + "px";
+					  if (value.control === undefined) {
+						  try {
+								value.control = document.getElementById(value.name + "_legend_div");
+								value.width = theDiv.children[0].width;
+							} catch (err){
+								//pass
+							}
+						  if (value.control === undefined){
+							  continue;
+						  }
+					  }
+					  value.control.style.left = left + "px";
 					  if (value.width == 0){
-						  value.width = $(value.control.children()[0]).width();
+						  value.width = value.control.children[0].width;
 					  }
 					  if (value.width == 0){
 						  left += 50;
@@ -985,7 +1003,7 @@ $(function() {
 				projection: DEFAULT_COORD_SYSTEM,
 				className: 'custom-mouse-position',
 				target: document.getElementById('postpostmap'),
-				undefinedHTML: 'Unknown Slope'
+				undefinedHTML: 'Unknown'
 			});
 		},
 		checkBounds: function(coords) {
@@ -1003,17 +1021,17 @@ $(function() {
 		},
 		getPngIndex:  function(x,y) {
 			// this is in pixel coordinates; image starts from top left 0,0
-			var multiplier = (this.dataBitmap.depth / 8);
-			var row = multiplier * this.dataBitmap.width * y;
-			var column = (multiplier) * x;
+			var row = this.multiplier * this.dataBitmap.width * y;
+			var column = this.multiplier * x;
 			return row + column;
 		},
 		getPngValue: function(x,y) {
 			// this is in pixel coordinates; image starts from top left 0,0
 			var index = this.getPngIndex(x,y);
-			var u32bytes = this.dataBitmap.bitmap.slice(index, index+3);
-			var uint = new Uint32Array(u32bytes)[0];
-			return uint;
+			return this.dataBitmap.bitmap[index];
+//			var u32bytes = this.dataBitmap.bitmap.slice(index, index+3);
+//			var uint = new Uint32Array(u32bytes)[0];
+//			return uint;
 		},
 		loadData: function() {
 			// loads the data from a png
@@ -1023,6 +1041,7 @@ $(function() {
 			this.dataPng.fetch(this.dataFileURL).then(function() {
 				context.dataPng.decode().then(function(theBitmap) {
 					context.dataBitmap = theBitmap;
+					context.multiplier = (context.dataBitmap.depth / 8);
 				});
 			});
 		},

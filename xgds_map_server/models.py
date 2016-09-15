@@ -20,6 +20,7 @@ import os
 import shutil
 import gdal
 import untangle
+import traceback
 
 from django.core.urlresolvers import reverse
 from django.core.validators import MaxValueValidator
@@ -213,6 +214,7 @@ class AbstractMapTile(AbstractMap):
                     self.resolutions = result
                     self.save()
             except:
+                traceback.print_exc()
                 pass
     
     @property
