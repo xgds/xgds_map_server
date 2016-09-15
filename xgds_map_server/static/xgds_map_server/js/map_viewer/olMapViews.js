@@ -221,7 +221,7 @@ $(function() {
             getSiteFrameProjection: function(site){
             	projectionKey = site.projCode;
             	var foundProjection = ol.proj.get(projectionKey);
-            	if (_.isUndefined(foundProjection)){
+            	if (_.isUndefined(foundProjection) || _.isNull(foundProjection)){
             		var proj4js_def = site.projString;
             		proj4.defs(projectionKey, proj4js_def);
             		
