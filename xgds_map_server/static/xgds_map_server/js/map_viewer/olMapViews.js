@@ -13,7 +13,6 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 //__END_LICENSE__
-
 var DEG2RAD = Math.PI / 180.0;
 var SPHERICAL_MERCATOR = 'EPSG:3857'; 
 var WGS_84 = 'EPSG:3395';
@@ -184,6 +183,12 @@ $(function() {
                 	                           new ol.control.ScaleLine()];
                 }
                 this.map = new ol.Map(mapOptions);
+                this.map.on('precompose', function(evt) {
+                	  evt.context.imageSmoothingEnabled = false;
+                	  evt.context.webkitImageSmoothingEnabled = false;
+                	  evt.context.mozImageSmoothingEnabled = false;
+                	  evt.context.msImageSmoothingEnabled = false;
+                	});
                 this.updateBbox();
                 this.buildStyles();
                 this.setupPopups();
@@ -252,6 +257,8 @@ $(function() {
                         app.nodeMap[node.key] = this.createMapLayerView(node);
                     } else if (node.data.type == "MapTile"){
                         app.nodeMap[node.key] = this.createTileView(node);
+                    } else if (node.data.type == "MapDataTile"){
+                        app.nodeMap[node.key] = this.createDataTileView(node);
                     } else if (node.data.type == "MapCollection"){
                         app.nodeMap[node.key] = this.createCollectionView(node);
                     } else if (node.data.type == "MapSearch"){
@@ -499,6 +506,15 @@ $(function() {
               node.mapView = tileView;
               return tileView;
             },
+            createDataTileView: function(node) {
+                var dataTileView = new app.views.DataTileView({
+                    node: node,
+                    group: this.tileGroup,
+                    tileURL: node.data.tileURL
+                });
+                node.mapView = dataTileView;
+                return dataTileView;
+              },
             createCollectionView: function(node){
                 var collectionView = new app.views.MapCollectionView({
                     node: node,
@@ -859,6 +875,217 @@ $(function() {
                     }),
                     opacity: this.opacity
                 });
+            }
+        }
+    });
+    
+    app.views.DataTileView = app.views.TileView.extend({
+    	/// A DataTile view has an optional legend and shows the value from the data file below the map (when turned on).
+        initialize: function(options) {
+        	this.dataFileURL = options.node.data.dataFileURL;
+        	this.tilePath = options.node.data.tilePath;
+        	this.legendFileURL = options.node.data.legendFileURL;
+        	this.legendVisible = options.node.data.legendVisible;
+        	this.valueLabel = options.node.data.valueLabel;
+        	this.name = options.node.title;
+        	this.minx = options.node.data.minx;
+  		    this.miny = options.node.data.miny;
+		    this.maxx = options.node.data.maxx;
+		    this.maxy = options.node.data.maxy;
+		    this.resolutions = options.node.data.resolutions;
+            if (this.valueLabel == ""){
+        		this.valueLabel = this.name;
+        	}
+        	this.unitsLabel = options.node.data.unitsLabel;
+        	if (options.node.data.jsFunction != null){
+            	this.jsFunction = new Function("value", options.node.data.jsFunction);
+            }
+        	app.views.TileView.prototype.initialize.call(this, options);
+        },
+        checkRequired: function() {
+            if (!this.dataFileURL) {
+                throw 'Missing data file URL option!';
+            }
+            app.views.TileView.prototype.checkRequired.call(this);
+        },
+        constructMapElements: function() {
+            if (_.isUndefined(this.mapElement)){
+            	app.views.TileView.prototype.constructMapElements.call(this);
+            	this.extent = this.mapElement.getExtent();
+            	if (this.extent === undefined){
+            		this.extent = [this.options.node.data.minx,
+            		               this.options.node.data.miny,
+            		               this.options.node.data.maxx,
+            		               this.options.node.data.maxy];
+            	}
+            	if (this.extent !== undefined){
+        			this.mapWidth = Math.abs(this.extent[2] - this.extent[0]);
+        			this.mapHeight = Math.abs(this.extent[3] - this.extent[1]);
+        		}
+            	this.loadData();
+            	this.constructMousePositionControl();
+            	if (this.legendVisible && !_.isUndefined(this.legendFileURL)){
+            		this.constructLegend()
+            	}
+            }
+        }, 
+        constructLegend: function() {
+        	if (this.legendVisible && this.legendFileURL != null){
+				var legendImage=document.createElement("img");
+				legendImage.setAttribute('src', this.legendFileURL);
+				legendImage.id = this.name+"_legend";
+				
+				var legendDiv = document.createElement('div');
+				legendDiv.className = 'ol-unselectable ol-control maplegend';
+				legendDiv.id = legendImage.id + '_div';
+				legendDiv.appendChild(legendImage);
+		        
+				this.legendControl = new ol.control.Control({element: legendDiv});
+        	}
+		},
+		manageLegendHorizontalAlignment: function(visible) {
+			var alignmentDict = app.alignmentDict;
+			if (alignmentDict === undefined){
+				app.alignmentDict = {};
+				alignmentDict = app.alignmentDict;
+			}
+			var stored = alignmentDict[this.name];
+			if (stored === undefined){
+				var theDiv = $("#" + this.name + "_legend_div");
+				var width = $(theDiv.children()[0]).width();
+				stored = {'control': theDiv, 
+						  'visible': visible,
+						  'width': width};
+				alignmentDict[this.name] = stored;
+			} else {
+				stored.visible = visible;
+			}
+			var left = 0;
+			for(var key in alignmentDict) {
+				  var value = alignmentDict[key];
+				  if (value.visible){
+					  value.control[0].style.left = left + "px";
+					  if (value.width == 0){
+						  value.width = $(value.control.children()[0]).width();
+					  }
+					  if (value.width == 0){
+						  left += 50;
+					  } else {
+						  left += value.width;
+					  }
+				  }
+			}
+		},
+		constructMousePositionControl: function() {
+			var context = this;
+			this.mousePositionControl = new ol.control.MousePosition({
+				coordinateFormat:  function(coords) {
+					return context.getPrintedValue(coords);
+				},
+				projection: DEFAULT_COORD_SYSTEM,
+				className: 'custom-mouse-position',
+				target: document.getElementById('postpostmap'),
+				undefinedHTML: 'Unknown Slope'
+			});
+		},
+		checkBounds: function(coords) {
+			return ol.extent.containsCoordinate(this.extent, coords);
+		},
+		convertToPixelCoords: function(coords){
+			if (this.checkBounds(coords)){
+				var percentX =  (coords[0] - this.extent[0])/this.mapWidth;
+				var percentY =  1.0 - (coords[1] - this.extent[1])/this.mapHeight;
+				var pixelX = Math.round(percentX * this.dataBitmap.width);
+				var pixelY = Math.round(percentY * this.dataBitmap.height);
+				return [pixelX, pixelY];
+			}
+			return null;
+		},
+		getPngIndex:  function(x,y) {
+			// this is in pixel coordinates; image starts from top left 0,0
+			var multiplier = (this.dataBitmap.depth / 8);
+			var row = multiplier * this.dataBitmap.width * y;
+			var column = (multiplier) * x;
+			return row + column;
+		},
+		getPngValue: function(x,y) {
+			// this is in pixel coordinates; image starts from top left 0,0
+			var index = this.getPngIndex(x,y);
+			var u32bytes = this.dataBitmap.bitmap.slice(index, index+3);
+			var uint = new Uint32Array(u32bytes)[0];
+			return uint;
+		},
+		loadData: function() {
+			// loads the data from a png
+			// gets the bitmap in a 1d array of r, g, b, a
+			this.dataPng = new PngToy([]);
+			var context = this;
+			this.dataPng.fetch(this.dataFileURL).then(function() {
+				context.dataPng.decode().then(function(theBitmap) {
+					context.dataBitmap = theBitmap;
+				});
+			});
+		},
+		getDataValue: function(coords){
+			var pixelCoords = this.convertToPixelCoords(coords);
+			if (pixelCoords != null){
+				var pngValue = this.getPngValue(pixelCoords[0], pixelCoords[1]);
+				if (this.jsFunction != null){
+					return this.jsFunction(pngValue);
+				}
+				return pngValue;
+			}
+			return null;
+		},
+		getPrintedValue: function(coords) {
+			var result = this.valueLabel + ": ";
+			var value = this.getDataValue(coords);
+			if (value != null){
+				result += value;
+				if (this.unitsLabel != null){
+					result += " " + this.unitsLabel;
+				}
+			} else {
+				result += "undefined";
+			}
+			return result;
+		},
+//		loadSlopeDataTiff: function() {
+//			var xhr = new XMLHttpRequest();
+//			xhr.open('GET', '/data/xgds_map_server/mapData/ldem_Erlanger_20m_slopes.tif', true);
+//			xhr.responseType = 'arraybuffer';
+//			xhr.onload = function(e) {
+//			  rp.slopeTiff = GeoTIFF.parse(this.response);
+//			  rp.slopeImage = rp.slopeTiff.getImage();
+//			  var rasterWindow = []; //left, top, right, bottom
+//			  
+//			}
+//			xhr.send();
+//		},
+		show: function() {
+            if (!this.visible){
+            	if (this.mapElement) {
+            		this.group.getLayers().push(this.mapElement);
+            		app.map.map.addControl(this.mousePositionControl);
+            		if (this.legendControl !== undefined) {
+            			app.map.map.addControl(this.legendControl);
+            			this.manageLegendHorizontalAlignment(true);
+            		}
+            	}
+                this.visible = true;
+            }
+        },
+        hide: function() {
+            if (this.visible){
+            	if (this.mapElement) {
+            		this.group.getLayers().remove(this.mapElement);
+            		app.map.map.removeControl(this.mousePositionControl);
+            		if (this.legendControl !== undefined) {
+            			app.map.map.removeControl(this.legendControl);
+            			this.manageLegendHorizontalAlignment(false);
+            		}
+            	}
+                this.visible = false;
             }
         }
     });

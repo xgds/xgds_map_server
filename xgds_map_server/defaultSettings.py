@@ -23,6 +23,7 @@ XGDS_MAP_SERVER_MAP_API_KEY = ""
 XGDS_MAP_SERVER_MEDIA_SUBDIR = 'xgds_map_server/'
 XGDS_MAP_SERVER_DATA_SUBDIR = 'xgds_map_server/'
 XGDS_MAP_SERVER_GEOTIFF_SUBDIR = XGDS_MAP_SERVER_DATA_SUBDIR + 'geoTiff/'
+XGDS_MAP_SERVER_MAPDATA_SUBDIR = XGDS_MAP_SERVER_DATA_SUBDIR + 'mapData/'
 XGDS_MAP_SERVER_GEOTIFF_UPLOAD_SUBDIR = XGDS_MAP_SERVER_GEOTIFF_SUBDIR + 'upload/'
 # FILE_UPLOAD_TEMP_DIR = XGDS_MAP_SERVER_GEOTIFF_SUBDIR + 'temp/'
 
@@ -45,6 +46,8 @@ XGDS_MAP_SERVER_SELECTED_LAYER_URL = "/xgds_map_server/selectedjson/"
 
 # path to script to turn geotiffs into tiles, via gdal with our patch
 XGDS_MAP_SERVER_GDAL2TILES = "xgds_map_server/bin/gdal2tiles.py"
+XGDS_MAP_SERVER_GDAL2TILES_ZOOM_LEVELS = True # if you don't want to customize zoom levels turn this off
+XGDS_MAP_SERVER_GDAL2TILES_EXTRAS = ""  # if you have to pass extra parameters to gdal2tiles override this
 XGDS_MAP_SERVER_GDAL_RESAMPLE_OPTIONS = [("lanczos", "Lanczos"), ("cubic", "Cubic"),
                                          ("near", "Nearest Neighbor")]
 
@@ -67,7 +70,11 @@ BOWER_INSTALLED_APPS += ['sprintf.js=sprintf.js',
                          'openlayers3=https://github.com/tamarmot/ol3/releases/download/v3.17.2/ol.zip',
                          'ol3-popup',
                          'proj4',
-                         'resumable=git://github.com/23/resumable.js.git'
+                         'resumable=git://github.com/23/resumable.js.git',
+                         #'geotiff.js=git://github.com/constantinius/geotiff.js.git',
+#                          'pngjs=git://github.com/arian/pngjs.git',
+#                          'jpeg-js=git://github.com/eugeneware/jpeg-js.git',
+                         'pngtoy',
                          ]
 
 # if you want to have a custom javascript included in your maps, override this in siteSettings.
