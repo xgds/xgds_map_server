@@ -1,5 +1,6 @@
 {% extends "MapBase.html" %}
 {% load staticfiles %}
+{% load help_button %}
 
 {% block cssExtras %}
 <style scoped>
@@ -11,7 +12,8 @@ input[type='file'] {
 {% block contents %}
 {{ block.super }}
 {% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
-<h2>{{ title }}</h2>
+{% help_button help_content_path title %}
+ <h2>{{ title }}</h2>
 {{instructions|safe }}
 <form action="#" enctype="multipart/form-data" method="post">
 {% csrf_token %}

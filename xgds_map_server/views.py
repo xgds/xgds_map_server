@@ -453,6 +453,7 @@ def getAddTilePage(request):
             return render_to_response('AddTile.html',
                                       {'form': tile_form,
                                        'error': True,
+                                       'help_content_path' : 'xgds_map_server/help/addMapTile.rst',
                                        'instructions': instructions,
                                        'title': title},
                                       context_instance=RequestContext(request))
@@ -462,6 +463,7 @@ def getAddTilePage(request):
         return render_to_response('AddTile.html',
                                   {'form': tile_form,
                                    'error': False,
+                                   'help_content_path' : 'xgds_map_server/help/addMapTile.rst',
                                    'instructions': instructions,
                                    'title': title},
                                   context_instance=RequestContext(request))
@@ -500,6 +502,7 @@ def getEditTilePage(request, tileID):
             return render_to_response("EditNode.html",
                                       {"form": tile_form,
                                        "fromSave": False,
+                                       'help_content_path' : 'xgds_map_server/help/addMapTile.rst',
                                        "title": "Edit Map Tile",
                                        "error": True,
                                        "extras": mapTile.sourceFileLink,
@@ -511,6 +514,7 @@ def getEditTilePage(request, tileID):
     return render_to_response("EditNode.html",
                               {"form": tile_form,
                                "title": "Edit Map Tile",
+                               'help_content_path' : 'xgds_map_server/help/addMapTile.rst',
                                "extras": mapTile.sourceFileLink,
                                "fromSave": fromSave,
                                },
@@ -540,6 +544,7 @@ def getAddMapDataTilePage(request):
             return render_to_response("AddTile.html",
                                       {'form': tile_form,
                                        'error': True,
+                                       'help_content_path' : 'xgds_map_server/help/addMapDataTile.rst',
                                        'instructions': instructions,
                                        'title': title},
                                       context_instance=RequestContext(request))
@@ -549,6 +554,7 @@ def getAddMapDataTilePage(request):
         return render_to_response("AddTile.html",
                                   {'form': tile_form,
                                    'error': False,
+                                   'help_content_path' : 'xgds_map_server/help/addMapDataTile.rst',
                                    'instructions': instructions,
                                    'title': title},
                                   context_instance=RequestContext(request))
@@ -577,6 +583,7 @@ def getEditMapDataTilePage(request, tileID):
             return render_to_response("EditNode.html",
                                       {'form': tile_form,
                                        'error': True,
+                                       'help_content_path' : 'xgds_map_server/help/addMapDataTile.rst',
                                        'instructions': instructions,
                                        'title': title},
                                       context_instance=RequestContext(request))
@@ -586,6 +593,7 @@ def getEditMapDataTilePage(request, tileID):
         return render_to_response("EditNode.html",
                                   {'form': tile_form,
                                    'error': False,
+                                   'help_content_path' : 'xgds_map_server/help/addMapDataTile.rst',
                                    'instructions': instructions,
                                    'title': title},
                                   context_instance=RequestContext(request))
