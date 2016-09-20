@@ -17,7 +17,7 @@ Using the Map Tree
  - Drag and drop elements in the map tree to reorganize the tree.
 
 Refresh
-   Fetch any updated content from the server.  Usually you won't have to do this.
+   Fetch any updated content from the server.  Usually you won’t have to do this.
   
 Filter
    If you are looking for a particular element in the map tree, you can type some of the name in the filter box.

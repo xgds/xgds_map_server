@@ -22,7 +22,7 @@ Using the Map Tree
    Double-click on the name of the map element to edit it.
 
 Refresh
-   Fetch any updated content from the server.  Usually you won't have to do this.
+   Fetch any updated content from the server.  Usually you won’t have to do this.
   
 Filter
    If you are looking for a particular element in the map tree, you can type some of the name in the filter box.
