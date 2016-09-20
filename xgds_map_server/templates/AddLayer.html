@@ -1,8 +1,10 @@
 {% extends "MapBase.html" %}
+{% load help_button %}
 
 {% block contents %}
 {{ block.super }}
 {% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
+{% help_button help_content_path help_title %}
 <h2>Add Layer</h2>
 Here you can create a new map layer. You can add polygons, lines and points to the new
 map layers in the map editor view. 

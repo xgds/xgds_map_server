@@ -1,4 +1,6 @@
 {% extends "MapBase.html" %}
+{% load help_button %}
+
 {% block scripts %}
 {{ block.super }}
 	<script type="text/javascript" src='{{ EXTERNAL_URL }}js-cookie/src/js.cookie.js'></script>
@@ -12,6 +14,7 @@
 {% endblock %}
 
 {% block contents %}
+{% help_button help_content_path 'Edit Maps' %}
 <strong>Add</strong>
 <a href="{% url 'folderAdd' %}" class="mybutton small">Folder</a>
 <a href="{% url 'addKml' %}" class="mybutton small">Kml</a>

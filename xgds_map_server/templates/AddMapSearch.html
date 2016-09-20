@@ -1,8 +1,10 @@
 {% extends "MapBase.html" %}
+{% load help_button %}
 
 {% block contents %}
 {{ block.super }}
 {% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
+{% help_button help_content_path 'Add Map Search' %}
 <h2>Add Map Search</h2>
 Create a new map search -- a search for objects that can be turned on and off on the map. 
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}

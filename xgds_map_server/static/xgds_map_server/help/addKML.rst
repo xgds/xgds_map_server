@@ -1,38 +1,49 @@
 
-**Map Tiles** are geoTiff tiled data.  They can be turned on and off in the xGDS maps.
+**KML Files** are usually created and used within Google Earth.  
+See `KML_Tutorial`_ for more information.
+xGDS supports inclusion of kml files with limited functionality.  
 
-Input file:
-------------
+Supported:
+----------
 
-GeoTiff Source File
-	A registered GeoTiff which will be tiled and rendered
-	in the map. Note that once this is imported and tiled, it cannot be modified.
- 	Make sure it is in the correct map projection.
-
-
-Other options:
+ - Placemarks, icons
+ - Polygons
+ - Text
+ 
+Not Supported:
 --------------
 
-Name
-	The name of the Map Tile in the map tree.
+ - Ground Overlay
+ - Network Link
+ - KMZ files
+
+Options:
+--------------
+
+Map Name
+	The name of the referenced KML File in the map tree.
 
 Description
-	The description of the Map Tile, seen on hovering in the map tree.
+	The description of the referenced KML File, seen on hovering in the map tree.
 
-Locked
-	If nobody should be able to modify this Map Tile, check locked.
+File Type
+	In general, if you are uploading a KML File that you have created, choose File Upload.
+
+Upload File
+	Choose a single, compliant KML file.  When you are saving from Google Earth, make sure to choose kml not kmz.
 
 Visible
-	If this Map Tile should be turned on (visible) by default, check visible.
+	If this KML File should be turned on (visible) by default, check visible.
 
-Transparency
+Transparent
 	Percentage transparency by default; 100% is fully transparent.  You can control 
 	transparency later while viewing; this setting is a default.
 
-Resampling Method
-	This is used when tiling the GeoTiff.  Typically you can leave it at the default.
- 
+Folder
+	The containing Folder in the map tree.
 
+
+.. _KML_Tutorial: https://developers.google.com/kml/documentation/kml_tut
 
 .. o __BEGIN_LICENSE__
 .. o  Copyright (c) 2015, United States Government, as represented by the

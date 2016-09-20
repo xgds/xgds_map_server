@@ -1,10 +1,12 @@
 {% extends "MapBase.html" %}
 {% load pipeline %}
 {% load siteFrames %}
+{% load help_button %}
 
 {% block contents %}
 <div id="application">
 	<div id="toolbar" class="row">
+	{% help_button help_content_path 'View Maps' %}
 	</div>
 	<div class="row">
         <div id="overmap" class="six columns">

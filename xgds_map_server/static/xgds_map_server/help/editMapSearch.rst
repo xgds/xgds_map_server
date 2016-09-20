@@ -1,36 +1,21 @@
 
-**Map Tiles** are geoTiff tiled data.  They can be turned on and off in the xGDS maps.
+**Map Search** lets you save a map search to dynamically see the results of the search in the map when you turn it on.
 
-Input file:
-------------
-
-GeoTiff Source File
-	A registered GeoTiff which will be tiled and rendered
-	in the map. Note that once this is imported and tiled, it cannot be modified.
- 	Make sure it is in the correct map projection.
-
-
-Other options:
+Options:
 --------------
 
 Name
-	The name of the Map Tile in the map tree.
+	The name of the Map Search in the map tree.
 
 Description
-	The description of the Map Tile, seen on hovering in the map tree.
-
-Locked
-	If nobody should be able to modify this Map Tile, check locked.
-
-Visible
-	If this Map Tile should be turned on (visible) by default, check visible.
+	The description of the Map Search, seen on hovering in the map tree.
 
 Transparency
 	Percentage transparency by default; 100% is fully transparent.  You can control 
 	transparency later while viewing; this setting is a default.
 
-Resampling Method
-	This is used when tiling the GeoTiff.  Typically you can leave it at the default.
+Parent Folder
+	The containing Folder in the map tree.
  
 
 
