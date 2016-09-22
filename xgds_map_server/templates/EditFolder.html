@@ -1,9 +1,7 @@
 {% extends "MapBase.html" %}
-{% load help_button %}
 
 {% block contents %}
 {{ block.super }}
-{% help_button help_content_path 'Edit Folder' %}
 <h3>Edit Folder</h3>
 
 {% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}

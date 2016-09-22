@@ -1,5 +1,4 @@
 {% extends "MapBase.html" %}
-{% load help_button %}
 
 {% block scripts %}
 {{ block.super }}
@@ -8,7 +7,6 @@
 
 {% block contents %}
 {{ block.super }}
-{% help_button help_content_path 'Add Kml' %}
 <h3>Add Kml</h3>
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
 {% include "MapForm.html" %}

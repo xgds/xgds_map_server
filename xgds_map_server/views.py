@@ -96,6 +96,7 @@ def getMapServerIndexPage(request):
     templates = get_map_tree_templates(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     return render_to_response('MapView.html',
                               {'templates': templates,
+                               'title': 'Map View',
                                'help_content_path': 'xgds_map_server/help/viewMaps.rst',
                                'app': 'xgds_map_server/js/map_viewer/mapViewerApp.js'},
                               context_instance=RequestContext(request))
@@ -123,6 +124,7 @@ def getMapTreePage(request):
     return render_to_response("MapTree.html",
                               {'JSONMapTreeURL': jsonMapTreeUrl,
                                'moveNodeURL': moveNodeURL,
+                               'title': 'Edit Maps',
                                'help_content_path': 'xgds_map_server/help/editMaps.rst',
                                'setVisibilityURL': setVisibilityURL},
                               context_instance=RequestContext(request))
@@ -377,7 +379,7 @@ def getAddKmlPage(request):
                                       {'mapForm': map_form,
                                        'error': True,
                                        'help_content_path': 'xgds_map_server/help/addKML.rst',
-                                       'help_title': 'Add KML',
+                                       'title': 'Add KML',
                                        'errorText': 'Invalid form entries'},
                                       context_instance=RequestContext(request))
         return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
@@ -386,7 +388,7 @@ def getAddKmlPage(request):
         return render_to_response("AddKml.html",
                                   {'mapForm': map_form,
                                    'help_content_path': 'xgds_map_server/help/addKML.rst',
-                                   'help_title': 'Add KML',
+                                   'title': 'Add KML',
                                    },
                                   context_instance=RequestContext(request))
 
@@ -416,7 +418,7 @@ def getAddLayerPage(request):
             return render_to_response("AddLayer.html",
                                       {'layerForm': layer_form,
                                        'help_content_path':'xgds_map_server/help/addMapLayer.rst',
-                                       'help_title': 'Add Map Layer',
+                                       'title': 'Add Map Layer',
                                        'error': True},
                                       context_instance=RequestContext(request))
         return HttpResponseRedirect(request.build_absolute_uri(reverse('mapEditLayer', kwargs={'layerID': map_layer.uuid})))
@@ -425,7 +427,7 @@ def getAddLayerPage(request):
         return render_to_response("AddLayer.html",
                                   {'layerForm': layer_form,
                                    'help_content_path':'xgds_map_server/help/addMapLayer.rst',
-                                   'help_title': 'Add Map Layer',
+                                   'title': 'Add Map Layer',
                                    'error': False},
                                   context_instance=RequestContext(request))
 
@@ -626,7 +628,7 @@ def getAddFolderPage(request):
                                       {'groupForm': group_form,
                                        'error': True,
                                        'help_content_path': 'xgds_map_server/help/addFolder.rst',
-                                       'help_title': 'Add Folder',
+                                       'title': 'Add Folder',
                                        'errorText': "Invalid form entries"},
                                       context_instance=RequestContext(request))
         return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
@@ -635,7 +637,7 @@ def getAddFolderPage(request):
         return render_to_response("AddFolder.html",
                                   {'groupForm': group_form,
                                    'help_content_path': 'xgds_map_server/help/addFolder.rst',
-                                   'help_title': 'Add Folder',
+                                   'title': 'Add Folder',
                                    'error': False},
                                   context_instance=RequestContext(request))
 
@@ -663,6 +665,7 @@ def getAddMapSearchPage(request):
                                       {'form': form,
                                        'error': True,
                                        'help_content_path' : 'xgds_map_server/help/editMapSearch.rst',
+                                       'title': 'Edit Map Search',
                                        'errorText': "Invalid form entries"},
                                       context_instance=RequestContext(request))
         return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
@@ -671,6 +674,7 @@ def getAddMapSearchPage(request):
         return render_to_response("AddMapSearch.html",
                                   {'form': form,
                                    'help_content_path' : 'xgds_map_server/help/editMapSearch.rst',
+                                   'title': 'Edit Map Search',
                                    'error': False},
                                   context_instance=RequestContext(request))
 
@@ -907,7 +911,7 @@ def getFolderDetailPage(request, groupID):
                                        "group_obj": map_group,
                                        "fromSave": fromSave,
                                        'help_content_path': 'xgds_map_server/help/addFolder.rst',
-                                       'help_title': 'Edit Folder',
+                                       'title': 'Edit Folder',
                                        "error": True,
                                        "errorText": "Invalid form entries"},
                                       context_instance=RequestContext(request))
@@ -918,7 +922,7 @@ def getFolderDetailPage(request, groupID):
                               {"groupForm": group_form,
                                "group_obj": map_group,
                                'help_content_path': 'xgds_map_server/help/addFolder.rst',
-                               'help_title': 'Edit Folder',
+                               'title': 'Edit Folder',
                                "fromSave": fromSave},
                               context_instance=RequestContext(request))
 
@@ -1760,6 +1764,8 @@ def getMappedObjectsExtens(request, object_name, extens, today=False):
 def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSearch.html'):
     return render_to_response(templatePath, 
                               {'modelName': modelName,
+                               'help_content_path': 'xgds_map_server/help/mapSearch.rst',
+                               'title': 'Map Search',
                                'templates': get_handlebars_templates(list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_HANDLEBARS_DIRS'),
                                'searchForms': getSearchForms(),
                                'saveSearchForm': MapSearchForm(),
