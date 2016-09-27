@@ -474,7 +474,11 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     			var entry = { label: columnTitles[i],
        		 		 		  name: columns[i]}
 	            if ($.inArray(columns[i], Object.keys(editableColumns)) > -1){
+	            	var index = i;
 					entry['type'] = editableColumns[columns[i]];
+					entry['data'] = function( row, type, val, meta ){
+						return row[index - 1];
+					};
 				}
 	            result.push(entry);
     		}
