@@ -185,7 +185,6 @@ $(function() {
                 this.map = new ol.Map(mapOptions);
                 this.map.on('precompose', function(evt) {
                 	  evt.context.imageSmoothingEnabled = false;
-                	  evt.context.webkitImageSmoothingEnabled = false;
                 	  evt.context.mozImageSmoothingEnabled = false;
                 	  evt.context.msImageSmoothingEnabled = false;
                 	});
