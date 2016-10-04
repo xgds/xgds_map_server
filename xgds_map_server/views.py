@@ -1767,7 +1767,7 @@ def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSear
                                'help_content_path': 'xgds_map_server/help/mapSearch.rst',
                                'title': 'Map Search',
                                'templates': get_handlebars_templates(list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_HANDLEBARS_DIRS'),
-                               'searchForms': getSearchForms(),
+                               'searchForms': getSearchForms(), #TODO if we are coming in with just one model get just the form for one model
                                'saveSearchForm': MapSearchForm(),
                                'app': 'xgds_map_server/js/search/mapViewerSearchApp.js'},
                               context_instance=RequestContext(request))
