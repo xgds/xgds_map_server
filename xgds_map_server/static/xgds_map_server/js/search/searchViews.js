@@ -467,18 +467,21 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     		});
     	}
     },
+    buildEditableEntry: function(entry, index, columnType) {
+    	entry['type'] = columnType;
+		entry['data'] = function( row, type, val, meta ){
+			return row[index];
+		};
+    },
     getEditableColumnDefs: function(columns, columnTitles, editableColumns){
     	var result = [];
     	if (!_.isUndefined(editableColumns)){
     		for (var i=0; i<columnTitles.length; i++){
+    			var columnName = columns[i];
     			var entry = { label: columnTitles[i],
-       		 		 		  name: columns[i]}
-	            if ($.inArray(columns[i], Object.keys(editableColumns)) > -1){
-	            	var index = i;
-					entry['type'] = editableColumns[columns[i]];
-					entry['data'] = function( row, type, val, meta ){
-						return row[index - 1];
-					};
+       		 		 		  name: columnName}
+	            if ($.inArray(columnName, Object.keys(editableColumns)) > -1){
+	            	this.buildEditableEntry(entry, i, editableColumns[columnName]);
 				}
 	            result.push(entry);
     		}
