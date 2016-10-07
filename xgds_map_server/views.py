@@ -49,7 +49,7 @@ from django.views.decorators.http import condition
 
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
 from geocamUtil.geoEncoder import GeoDjangoEncoder
-from geocamUtil.loader import LazyGetModelByName, getClassByName, getModelByName
+from geocamUtil.loader import LazyGetModelByName, getClassByName, getModelByName, getFormByName
 from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
 from geocamUtil.models import SiteFrame
 from xgds_core.views import get_handlebars_templates, OrderListJson
@@ -62,6 +62,7 @@ from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapDataT
 from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
 from xgds_map_server.kmlLayerExporter import exportMapLayer
 from geocamUtil.KmlUtil import wrapKmlForDownload
+from apps.xgds_data.introspection import modelName
 
 #from django.http import StreamingHttpResponse
 # pylint: disable=E1101,R0911
@@ -130,15 +131,25 @@ def getMapTreePage(request):
                               context_instance=RequestContext(request))
 
 
-def getSearchForms():
-    # get the dictionary of forms for searches
-    SEARCH_FORMS = {}
-    for key, entry in settings.XGDS_MAP_SERVER_JS_MAP.iteritems():
+def populateSearchFormHash(key, entry, SEARCH_FORMS):
+    if 'search_form_class' in entry:
+        theForm = getFormByName(entry['search_form_class'])
+    else:
         theClass = LazyGetModelByName(entry['model'])
         theForm = SpecializedForm(SearchForm, theClass.get())
-        theFormSetMaker = formset_factory(theForm, extra=0)
-        theFormSet = theFormSetMaker(initial=[{'modelClass': entry['model']}])
-        SEARCH_FORMS[key] = [theFormSet, entry['model']]
+    theFormSetMaker = formset_factory(theForm, extra=0)
+    theFormSet = theFormSetMaker(initial=[{'modelClass': entry['model']}])
+    SEARCH_FORMS[key] = [theFormSet, entry['model']]
+
+def getSearchForms(key=None):
+    # get the dictionary of forms for searches
+    SEARCH_FORMS = {}
+    if not key:
+        for key, entry in settings.XGDS_MAP_SERVER_JS_MAP.iteritems():
+            populateSearchFormHash(key, entry, SEARCH_FORMS)
+    else:
+        entry = settings.XGDS_MAP_SERVER_JS_MAP[key]
+        populateSearchFormHash(key, entry, SEARCH_FORMS)
     return SEARCH_FORMS
 
 
@@ -1762,12 +1773,18 @@ def getMappedObjectsExtens(request, object_name, extens, today=False):
         return ""
 
 def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSearch.html'):
+    searchModelDict = settings.XGDS_MAP_SERVER_JS_MAP
+    if modelName:
+        searchModelDict = {}
+        searchModelDict[str(modelName)] = settings.XGDS_MAP_SERVER_JS_MAP[modelName]
+    
     return render_to_response(templatePath, 
                               {'modelName': modelName,
                                'help_content_path': 'xgds_map_server/help/mapSearch.rst',
                                'title': 'Map Search',
                                'templates': get_handlebars_templates(list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_HANDLEBARS_DIRS'),
-                               'searchForms': getSearchForms(), #TODO if we are coming in with just one model get just the form for one model
+                               'searchForms': getSearchForms(modelName),
+                               'searchModelDict': searchModelDict, 
                                'saveSearchForm': MapSearchForm(),
                                'app': 'xgds_map_server/js/search/mapViewerSearchApp.js'},
                               context_instance=RequestContext(request))

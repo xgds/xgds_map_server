@@ -41,7 +41,7 @@
 		siteFrame: {% siteframe settings.XGDS_CURRENT_SITEFRAME_ID %},
 		XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: {{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }},
 		dataUrl: "{{ settings.DATA_URL }}",
-		searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
+		searchModels: {{ searchModelDict|safe }},
 		modelName: '{{modelName}}',
 		tableHeight: Math.floor($(window).height()*.7) + 'px',
 		settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }}
@@ -60,6 +60,7 @@
 		
     	xgds_gridstack.initializeGridstack();
     	
+    	xgds_search.hookAdvancedSearchButton();
     	{% block otherJSInit %}
 		{% endblock otherJSInit %}
 		
@@ -67,7 +68,28 @@
 	
 {% endblock %}
 
+{% block preDashboard %}
+<div id="buttonRow" class="row" style="padding-bottom:5px;">
+{% block buttonRow %}
+<button id="advanced_search_button" class="small pull_right">Advanced Search</button>
+{% endblock buttonRow %}
+</div>
+{% endblock preDashboard %}
+
 {% block preMap %}
+
+{% block searchDiv %}
+<div id="search-gridstack-item" class="grid-stack-item" 
+		data-gs-x="0" data-gs-y="0"
+        data-gs-width="3" data-gs-height="2" hidden="true">
+        <div class="grid-stack-item-content" id="search-gridstack-item-content" >
+	        <i class="icon-lock-open pinDiv warning"></i>
+	    	<i class="icon-cancel-circled"></i>
+			<div id="searchDiv" hidden="true">IN SEARCH DIV</div>
+		</div>
+</div>
+{% endblock searchDiv %}
+
 {% block searchResultsDiv %}
 <div id="search-results-gridstack-item" class="grid-stack-item" 
 		data-gs-x="0" data-gs-y="0"
@@ -82,7 +104,6 @@
 </div>
 {% endblock searchResultsDiv %}
 
-<div id="searchDiv" hidden></div>
 
 {% block viewDiv %}
 <div id="view-gridstack-item" class="grid-stack-item" 

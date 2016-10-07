@@ -68,10 +68,11 @@ var app = (function($, _, Backbone) {
     
     app.addInitializer(function(options) {
         this.options = options = _.defaults(options || {});
-        
+        var hideModelChoice = (this.options.modelName !== undefined);
         app.searchRegion.show(new app.views.SearchView({template: '#template-mapViewerSearch',
         												searchResultsRegion: true,
         												viewRegion: true,
+        												hideModelChoice: hideModelChoice,
         												selectedModel: this.options.modelName}));
         
     });

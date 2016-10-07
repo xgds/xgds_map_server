@@ -90,6 +90,7 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         } else {
             this.template = Handlebars.compile(source);
         }
+        this.hideModelChoice = options.hideModelChoice;
         this.preselectModel = app.options.modelName;
         Handlebars.registerHelper('modelSelected', function( input, modelName ){
         	return input === modelName ? 'selected' : '';
@@ -99,7 +100,8 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
     	var theKeys = Object.keys(app.options.searchModels);
         this.$el.empty().append(this.template({
             searchModels: theKeys,
-            preselectModel: this.preselectModel
+            preselectModel: this.preselectModel,
+            hideModelChoice: this.hideModelChoice
         }));
         this.searchResultsView = new app.views.SearchResultsView({template:'#template-search-results',
         														  viewRegion: this.viewRegion});
@@ -127,7 +129,7 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
     		newModel = this.$("#searchModelSelector").val();
     	} else {
     		var dropdownModel = this.$("#searchModelSelector").val();
-    		if (dropdownModel != newModel){
+    		if (dropdownModel != undefined && dropdownModel != newModel){
     			newModel = dropdownModel;
     		}
     	}
@@ -434,6 +436,9 @@ app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
     	notesList.attr('id', 'notes_list' + this.modelName);
     	xgds_notes.setupNotesUI(this.$el);
     	this.updateContents();
+    },
+    onRender: function() {
+    	xgds_notes.setupNotesUI(this.$el);
     }
 });
 
@@ -859,4 +864,27 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
             this.$('#searchResultsTable').empty();
         }
     }
+});
+
+var xgds_search = xgds_search || {};
+$.extend(xgds_search,{
+	hookAdvancedSearchButton : function() {
+		var advancedSearchButton = $("#advanced_search_button");
+		advancedSearchButton.off('click');
+		advancedSearchButton.on('click',function(event) {
+		    event.preventDefault();
+		    var searchDiv = $("#searchDiv");
+	    	var searchGridstack = $("#search-gridstack-item");
+		    var visible = searchDiv.is(":visible");
+		    if (!visible){
+		    	// show it and initialize
+		    	searchDiv.show();
+		    	searchGridstack.show();
+		    	GridStackUI.Utils.sort($(".grid-stack-item"));
+		    } else {
+		    	searchGridstack.hide();
+		    	searchDiv.hide();
+		    }
+		});
+	}
 });
