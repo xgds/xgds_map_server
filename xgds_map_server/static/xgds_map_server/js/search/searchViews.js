@@ -186,9 +186,23 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
           });
         }
     },
+    getFilterData: function() {
+    	var theForm = this.$("#form-"+this.selectedModel);
+    	if (theForm.length == 1){
+    		var result = theForm.serializeArray();
+    		var newresult = {};
+    		for (var i=0; i<result.length; i++){
+    			if (result[i].value != ""){
+    				newresult[result[i].name] = result[i].value;
+    			}
+    		}
+    		return newresult;
+    	}
+    	return {};
+    },
     buildFilter: function() {
     	var theForm = this.$("#form-"+this.selectedModel);
-    	var postData = null;
+    	var postData = {};
     	var result = '';
     	if (theForm.length == 1){
     		postData = theForm.serializeArray();
@@ -200,7 +214,7 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         			if (result != ''){
         				result += ',';
         			}
-        			result += item.name.substring(7) + ":" + item.value;
+        			result += item.name.substring(7) + "|" + item.value;
         		}
         	}
     	}
@@ -208,7 +222,7 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
     	return result;
     },
     doSearch: function() {
-    	this.searchResultsView.setupDatatable(this.selectedModel, undefined, this.buildFilter());
+    	this.searchResultsView.setupDatatable(this.selectedModel, undefined, this.getFilterData());
     	this.setupSaveSearchDialog();
     	return;
     	
@@ -577,14 +591,15 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     	
     	return result;
     },
-    buildAjaxUrl(selectedModel, filter){
+    buildAjaxUrl(selectedModel) {//, filter){
     	var url = '/xgds_map_server/view/' + selectedModel + '/';
-    	if (filter != null && filter != ''){
-    		url += filter;
-    	}
+//    	if (filter != null && filter != ''){
+//    		url += filter;
+//    	}
     	return url;
     },
-    constructDatatable: function(selectedModel, data, filter){
+    constructDatatable: function(selectedModel, data, postData){
+    	this.postData = postData;
     	this.selectedModel = selectedModel;
         var modelMap = this.lookupModelMap(selectedModel);
         
@@ -631,17 +646,21 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
         } else {
         	dataTableObj['processing'] = true;
         	dataTableObj['serverSide'] = true;
-        	
+        	var context = this;
         	this.ajaxConfig = {
-        	    "url": this.buildAjaxUrl(selectedModel, filter),
-        	    "data": function ( d ) {
-        	    	var todayCheckbox = $('#today');
-                	var today = 1;
-                	if (todayCheckbox.length > 0){
-                		today = todayCheckbox[0].checked
-                	}
-                	return $.extend( {}, d, {"today": today});
+        	    "url": this.buildAjaxUrl(selectedModel),
+        	    "type": "POST",
+        	    "data": function(d) {
+        	    	return context.buildAjaxData(d);
         	    }
+//        		function ( d ) {
+//        	    	var todayCheckbox = $('#today');
+//                	var today = 1;
+//                	if (todayCheckbox.length > 0){
+//                		today = todayCheckbox[0].checked
+//                	}
+//                	return $.extend( postData, d, {"today": today});
+//        	    }
         	}
         	dataTableObj['ajax']= this.ajaxConfig;
         }
@@ -653,7 +672,17 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
         this.filterMapData();
         app.vent.trigger("repack");
     },
-    setupDatatable: function(selectedModel, data, filter){
+    buildAjaxData: function(d) {
+    	var todayCheckbox = $('#today');
+    	var today = 1;
+    	if (todayCheckbox.length > 0){
+    		today = todayCheckbox[0].checked
+    	}
+    	var result = $.extend( this.postData, d, {"today": today});
+    	return result;
+    },
+    setupDatatable: function(selectedModel, data, postData){
+    	this.postData = postData;
     	this.theTable = this.$("#searchResultsTable");
     	if (this.theDataTable != undefined) {
     		// the table already exists, see if we need to destroy it and rebuild it
@@ -669,13 +698,14 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     				this.theDataTable.fnAddData(data);
     			} else {
     				// if we have no data but we have a filter, clear and update the ajax
-    				this.ajaxConfig.url = this.buildAjaxUrl(selectedModel, filter);
+    				this.ajaxConfig.url = this.buildAjaxUrl(selectedModel);
+    				var context=this;
     				this.theDataTable.ajax.url(this.ajaxConfig.url).load();
     			}
     			return;
     		}
     	}
-    	this.constructDatatable(selectedModel, data, filter);
+    	this.constructDatatable(selectedModel, data, postData);
     	
     },
     connectDeselectCallback(table){

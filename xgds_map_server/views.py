@@ -134,11 +134,12 @@ def getMapTreePage(request):
 def populateSearchFormHash(key, entry, SEARCH_FORMS):
     if 'search_form_class' in entry:
         theForm = getFormByName(entry['search_form_class'])
+        theFormSet = theForm()
     else:
         theClass = LazyGetModelByName(entry['model'])
         theForm = SpecializedForm(SearchForm, theClass.get())
-    theFormSetMaker = formset_factory(theForm, extra=0)
-    theFormSet = theFormSetMaker(initial=[{'modelClass': entry['model']}])
+        theFormSetMaker = formset_factory(theForm, extra=0)
+        theFormSet = theFormSetMaker(initial=[{'modelClass': entry['model']}])
     SEARCH_FORMS[key] = [theFormSet, entry['model']]
 
 def getSearchForms(key=None):
@@ -1848,7 +1849,7 @@ def viewMultiLast(request, mapNames):
                                'app': 'xgds_map_server/js/search/mapViewerMultiModelApp.js'},
                               context_instance=RequestContext(request))
     
-def lookupModel(request, mapName):
+def lookupModelAndMap(mapName):
     try:
         modelMap = settings.XGDS_MAP_SERVER_JS_MAP[mapName]
         object_name = modelMap['model']
@@ -1857,6 +1858,14 @@ def lookupModel(request, mapName):
         THE_OBJECT = LazyGetModelByName(object_name)
     return (THE_OBJECT, modelMap)
 
+def lookupForm(form_name):
+    try:
+        if form_name:
+            return getFormByName(form_name)
+    except:
+        pass
+    return None
+
 def viewDictResponse(request, current, modelMap):
     jsonResult = current.toMapList(modelMap['columns'])
     return HttpResponse(json.dumps(jsonResult, cls=DatetimeJsonEncoder),
@@ -1864,7 +1873,7 @@ def viewDictResponse(request, current, modelMap):
 
 def getObject(request, mapName, currentPK):
     try:
-        (THE_OBJECT, modelMap) = lookupModel(request, mapName)
+        (THE_OBJECT, modelMap) = lookupModelAndMap(mapName)
         current = THE_OBJECT.get().objects.get(pk=currentPK)
         return viewDictResponse(request, current, modelMap)
     except:
@@ -1877,7 +1886,7 @@ def getObject(request, mapName, currentPK):
 
 def getLastObject(request, mapName):
     try:
-        (THE_OBJECT, modelMap) = lookupModel(request, mapName)
+        (THE_OBJECT, modelMap) = lookupModelAndMap(mapName)
         current = THE_OBJECT.get().objects.last()
         return viewDictResponse(request, current, modelMap)
     except:
@@ -1890,7 +1899,7 @@ def getLastObject(request, mapName):
 def getPrevNextObject(request, currentPK, mapName, which='previous'):
     """ which is previous or next.  This builds up get_next_by_timeName or get_previous_by_timeName"""
     try:
-        (THE_OBJECT, modelMap) = lookupModel(request, mapName)
+        (THE_OBJECT, modelMap) = lookupModelAndMap(mapName)
         current = THE_OBJECT.get().objects.get(pk=currentPK)
         timeName = modelMap['event_time_field']
         methodName = 'get_%s_by_%s' % (which, timeName)
@@ -1919,6 +1928,7 @@ class MapOrderListJson(OrderListJson):
                 modelMap = settings.XGDS_MAP_SERVER_JS_MAP[mapName]
                 modelName = modelMap['model']
                 self.lookupModel(modelName)
+                self.form = lookupForm(modelMap['search_form_class'])
                 self.columns = modelMap['columns']
                 self.order_columns = self.columns
         return super(MapOrderListJson, self).dispatch(request, *args, **kwargs)
