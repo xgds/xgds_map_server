@@ -110,6 +110,9 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
     	if (this.preselectModel != undefined && this.preselectModel != 'None') {
     		this.setupSearchForm(true);
         }
+    	this.$("#form-"+this.selectedModel).on('submit', function(event){
+            event.preventDefault();
+        });
     },
     onRender: function() {
 //        var theKeys = Object.keys(app.options.searchModels);
@@ -147,9 +150,6 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         var templateName = '#template-' + this.selectedModel;
         this.searchFormView = new app.views.SearchFormView({template:templateName})
         this.searchFormRegion.show(this.searchFormView);
-        this.$("#form-"+this.selectedModel).on('submit', function(event){
-            event.preventDefault();
-        });
         if (runSearch != undefined && runSearch == true){
         	this.doSearch();
         }
@@ -910,7 +910,9 @@ $.extend(xgds_search,{
 		    	// show it and initialize
 		    	searchDiv.show();
 		    	searchGridstack.show();
-		    	GridStackUI.Utils.sort($(".grid-stack-item"));
+		    	// TODO put advanced search at the top
+		    	//GridStackUI.Utils.sort($(".grid-stack-item"));
+		    	app.vent.trigger('searchDiv:visible');
 		    } else {
 		    	searchGridstack.hide();
 		    	searchDiv.hide();
