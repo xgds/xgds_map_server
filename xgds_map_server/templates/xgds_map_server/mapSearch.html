@@ -59,8 +59,15 @@
 		{% endblock preLayout %}
 		
     	xgds_gridstack.initializeGridstack();
-    	
     	xgds_search.hookAdvancedSearchButton();
+    	
+    	var searchDiv_initialized = false;
+		 app.vent.on('searchDiv:visible', function(){
+		 	if (!searchDiv_initialized){
+		        addDateTimePickers();
+		        searchDiv_initialized = true;
+		 	} 
+		 });
     	{% block otherJSInit %}
 		{% endblock otherJSInit %}
 		
