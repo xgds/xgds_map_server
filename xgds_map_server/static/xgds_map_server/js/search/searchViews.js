@@ -593,9 +593,6 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     },
     buildAjaxUrl(selectedModel) {//, filter){
     	var url = '/xgds_map_server/view/' + selectedModel + '/';
-//    	if (filter != null && filter != ''){
-//    		url += filter;
-//    	}
     	return url;
     },
     constructDatatable: function(selectedModel, data, postData){
@@ -653,14 +650,6 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
         	    "data": function(d) {
         	    	return context.buildAjaxData(d);
         	    }
-//        		function ( d ) {
-//        	    	var todayCheckbox = $('#today');
-//                	var today = 1;
-//                	if (todayCheckbox.length > 0){
-//                		today = todayCheckbox[0].checked
-//                	}
-//                	return $.extend( postData, d, {"today": today});
-//        	    }
         	}
         	dataTableObj['ajax']= this.ajaxConfig;
         }
