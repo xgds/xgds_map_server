@@ -98,8 +98,14 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
     },
     onShow: function() {
     	var theKeys = Object.keys(app.options.searchModels);
+    	var searchableModels = [];
+    	for (var i=0; i<theKeys.length; i++){
+    		if (!_.isUndefined(app.options.searchModels[theKeys[i]].search_form_class)){
+    			searchableModels.push(theKeys[i]);
+    		}
+    	}
         this.$el.empty().append(this.template({
-            searchModels: theKeys,
+            searchModels: searchableModels,
             preselectModel: this.preselectModel,
             hideModelChoice: this.hideModelChoice
         }));

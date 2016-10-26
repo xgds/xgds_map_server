@@ -135,12 +135,12 @@ def populateSearchFormHash(key, entry, SEARCH_FORMS):
     if 'search_form_class' in entry:
         theForm = getFormByName(entry['search_form_class'])
         theFormSet = theForm()
-    else:
-        theClass = LazyGetModelByName(entry['model'])
-        theForm = SpecializedForm(SearchForm, theClass.get())
-        theFormSetMaker = formset_factory(theForm, extra=0)
-        theFormSet = theFormSetMaker(initial=[{'modelClass': entry['model']}])
-    SEARCH_FORMS[key] = [theFormSet, entry['model']]
+        SEARCH_FORMS[key] = [theFormSet, entry['model']]
+#     else:
+#         theClass = LazyGetModelByName(entry['model'])
+#         theForm = SpecializedForm(SearchForm, theClass.get())
+#         theFormSetMaker = formset_factory(theForm, extra=0)
+#         theFormSet = theFormSetMaker(initial=[{'modelClass': entry['model']}])
 
 def getSearchForms(key=None):
     # get the dictionary of forms for searches
