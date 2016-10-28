@@ -127,9 +127,11 @@ $(function() {
 	    };
 	    var _this = this;
 	    var unconstructedFeatures = app.mapLayer.get('feature');
-	    _.each(unconstructedFeatures.models, function(featureObj){
-		_this.createFeature(featureObj);
-	    });
+	    if (!_.isEmpty(unconstructedFeatures)){
+	    	_.each(unconstructedFeatures.models, function(featureObj){
+	    		_this.createFeature(featureObj);
+	    	});
+	    }
 	},
 	createBackboneFeatureObj: function(olFeature) {
             // create a new backbone feature object from the user drawings on map.

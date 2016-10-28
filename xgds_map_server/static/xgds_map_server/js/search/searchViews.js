@@ -227,7 +227,10 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
     	
     	return result;
     },
-    doSearch: function() {
+    doSearch: function(event) {
+    	if (!_.isUndefined(event)){
+    		event.preventDefault();
+    	}
     	this.searchResultsView.setupDatatable(this.selectedModel, undefined, this.getFilterData());
     	this.setupSaveSearchDialog();
     	return;

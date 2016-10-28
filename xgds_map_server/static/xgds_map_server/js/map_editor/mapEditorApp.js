@@ -207,7 +207,7 @@ var app = (function($, _, Backbone) {
     ** Debug global event triggering.
     */
     app.router.on('all', function(eventname) {
-        console.log('Router event: ' + eventname);
+//        console.log('Router event: ' + eventname);
     });
 
     app.vent.on('all', function(eventname, args) {
