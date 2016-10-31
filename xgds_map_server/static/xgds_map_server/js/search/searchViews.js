@@ -119,6 +119,7 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
     	this.$("#form-"+this.selectedModel).on('submit', function(event){
             event.preventDefault();
         });
+    	
     },
     onRender: function() {
 //        var theKeys = Object.keys(app.options.searchModels);
@@ -156,6 +157,13 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         var templateName = '#template-' + this.selectedModel;
         this.searchFormView = new app.views.SearchFormView({template:templateName})
         this.searchFormRegion.show(this.searchFormView);
+        
+        var theModelMap = app.options.searchModels[newModel];
+        if (theModelMap.searchInitMethods != undefined){
+    		for (var i=0; i < theModelMap.searchInitMethods.length; i++){
+    			$.executeFunctionByName(theModelMap.searchInitMethods[i], window, this.data);
+    		}
+    	}
         if (runSearch != undefined && runSearch == true){
         	this.doSearch();
         }
