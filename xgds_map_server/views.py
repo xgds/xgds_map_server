@@ -1773,7 +1773,7 @@ def getMappedObjectsExtens(request, object_name, extens, today=False):
                                 content_type="application/json")
         return ""
 
-def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSearch.html'):
+def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSearch.html', forceUserSession=False):
     searchModelDict = settings.XGDS_MAP_SERVER_JS_MAP
     if modelName:
         searchModelDict = {}
@@ -1786,6 +1786,7 @@ def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSear
                                'templates': get_handlebars_templates(list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_HANDLEBARS_DIRS'),
                                'searchForms': getSearchForms(modelName),
                                'searchModelDict': searchModelDict, 
+                               'forceUserSession': forceUserSession,
                                'saveSearchForm': MapSearchForm(),
                                'app': 'xgds_map_server/js/search/mapViewerSearchApp.js'},
                               context_instance=RequestContext(request))
