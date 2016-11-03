@@ -335,7 +335,8 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     	this.modelMap = modelMap;
     },
     render: function() {
-    	showOnMap([this.data]);
+    	// TODO by the time we get here the map should already have been highlighted?
+    	//highlightOnMap([this.data]);
         this.$el.empty().append(this.template(this.data));
     	try {
     		var context = this;
@@ -608,7 +609,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     	
     	return result;
     },
-    buildAjaxUrl(selectedModel) {//, filter){
+    buildAjaxUrl(selectedModel) {
     	var url = '/xgds_map_server/view/' + selectedModel + '/';
     	return url;
     },
@@ -675,7 +676,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
         connectSelectionCallback($("#searchResultsTable"), this.handleTableSelection, true, this);
         this.connectDeselectCallback();
         this.listenToTableChanges();
-        this.filterMapData();
+        this.filterMapData(undefined);
         app.vent.trigger("repack");
     },
     buildAjaxData: function(d) {
@@ -716,12 +717,14 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     },
     connectDeselectCallback(table){
     	var context = this;
-    	this.theDataTable.on( 'deselect', function ( e, dt, type, indexes ) {
+    	this.theDataTable.off('deselect.dt');
+    	this.theDataTable.on( 'deselect.dt', function ( e, dt, type, indexes ) {
     	    if ( type === 'row' ) {
     	    	for (var i=0; i<indexes.length; i++){
         	        var modelMap = context.lookupModelMap(context.selectedModel);
         	    	var data = _.object(modelMap.columns, dt.row(indexes[i]).data());
-        	    	removeFromMap(data);
+        	    	unhighlightOnMap([data]);
+        	    	//removeFromMap(data);
     	    	}
     	    }
     	} );
@@ -852,7 +855,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     		}
 		} 
     	if (_.isNumber(data.lat)){
-			showOnMap([data]);
+    		highlightOnMap([data]);
 		}
     },
     handleTableSelection: function(index, theRow, context) {
@@ -862,31 +865,33 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     },
     listenToTableChanges: function() {
         var _this = this;
-        this.$("#searchResultsTable").on( 'page.dt', { _this : this }, function (event) {
+        var theTable = this.$("#searchResultsTable");
+        theTable.on( 'page.dt', { _this : this }, function (event) {
             var _this = event.data._this;
-            _this.filterMapData();
+            _this.filterMapData(undefined);
         });
-        this.$("#searchResultsTable").on( 'search.dt', { _this : this },  function (event) {
-            var _this = event.data._this;
-            _this.filterMapData();
+        theTable.on('xhr.dt', {_this: this}, function(event, settings, json, xhr){
+        	var _this = event.data._this;
+            _this.filterMapData(json.data);
         });
     },
     unListenToTableChanges: function() {
         this.$("#searchResultsTable").off( 'page.dt');
         this.$("#searchResultsTable").off( 'search.dt');
     },
-    filterMapData: function() {
-    	//TODO figure out what we are doing
-//        var thedt = this.theDataTable;
-//        var rowData = thedt.$('tr', {"page": "current", "filter": "applied"} );
-//        var data = [];
-//        $.each(rowData, function(index, value){
-//            var datum = thedt.fnGetData(value);
-//            if (!_.isUndefined(datum)){
-//                data.push(datum);
-//            }
-//        });
-//        app.vent.trigger("mapSearch:found", data);  
+    filterMapData: function(data) {
+    	// this shows all data from the current page
+        var modelMap = this.lookupModelMap(this.selectedModel);
+        if (_.isUndefined(data)){
+        	data = this.theDataTable.rows().data().toArray();
+        }
+        var fulldata = [];
+        _.each(data, function(datum){
+        	fulldata.push( _.object(modelMap.columns, datum));
+        });
+        if (!_.isEmpty(fulldata)){
+        	app.vent.trigger("mapSearch:found", fulldata);
+        }
     },
     calcDataTableHeight : function() {
         var h =  Math.floor($(window).height()*.4);

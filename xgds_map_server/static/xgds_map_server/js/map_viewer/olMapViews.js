@@ -25,6 +25,14 @@ function showOnMap(data){
 	app.vent.trigger('mapSearch:fit');
 }
 
+function highlightOnMap(data){
+	app.vent.trigger("mapSearch:highlight", data);
+}
+
+function unhighlightOnMap(data){
+	app.vent.trigger("mapSearch:unhighlight", data);
+}
+
 function removeFromMap(data){
 	app.vent.trigger("mapSearch:clear", data);
 }
@@ -183,11 +191,11 @@ $(function() {
                 	                           new ol.control.ScaleLine()];
                 }
                 this.map = new ol.Map(mapOptions);
-                this.map.on('precompose', function(evt) {
-                	  evt.context.imageSmoothingEnabled = false;
-                	  evt.context.mozImageSmoothingEnabled = false;
-                	  evt.context.msImageSmoothingEnabled = false;
-                	});
+//                this.map.on('precompose', function(evt) {
+//                	  evt.context.imageSmoothingEnabled = false;
+//                	  evt.context.mozImageSmoothingEnabled = false;
+//                	  evt.context.msImageSmoothingEnabled = false;
+//                	});
                 this.updateBbox();
                 this.buildStyles();
                 this.setupPopups();
@@ -1211,15 +1219,21 @@ $(function() {
             this.options = options || {};
             this.group = this.options.group;
             app.vent.on('mapSearch:found', function(data) {
-        	if (data != undefined && data.length > 0){
-        	    this.constructMapFeatures(data);
-        	}
+	        	if (data != undefined && data.length > 0){
+	        	    this.constructMapFeatures(data);
+	        	}
             }, this);
             app.vent.on('mapSearch:clear', function(e) {
                 this.clearDataAndFeatures();
             }, this);
             app.vent.on('mapSearch:fit', function(e){
-        	this.fitExtent();
+            	this.fitExtent();
+            }, this);
+            app.vent.on('mapSearch:highlight', function(data) {
+                this.selectFeatures(data);
+            }, this);
+            app.vent.on('mapSearch:unhighlight', function(data) {
+                this.deselectFeatures(data);
             }, this);
         },
         getExtent: function() {
@@ -1251,6 +1265,51 @@ $(function() {
 //            app.map.map.un("moveend",  _this.mapMoveHandler, _this);
             }
         },
+        deselectFeatures: function(data) {
+        	var foundFeatures = this.findFeaturesByPK(data);
+        	if (_.isEmpty(foundFeatures)){
+        		return;
+        	}
+        	_.each(foundFeatures, function(feature){
+        		var theClass = window[feature.get('type')];
+        		if (!_.isUndefined(theClass) && !_.isUndefined(theClass.deselectMapElement)) {
+        			theClass.deselectMapElement(feature);
+        		}
+        	});
+        },
+        selectFeatures: function(data){
+        	var foundFeatures = this.findFeaturesByPK(data);
+        	if (_.isEmpty(foundFeatures)){
+//        		app.vent.trigger("mapSearch:found", data);
+//        		app.vent.trigger("mapSearch:highlight", data);
+        		return;
+        	}
+        	_.each(foundFeatures, function(feature){
+        		var theClass = window[feature.get('type')];
+        		if (!_.isUndefined(theClass) && !_.isUndefined(theClass.selectMapElement)) {
+        			theClass.selectMapElement(feature);
+        		}
+        	}, this);
+        },
+        findFeaturesByPK: function(data){
+        	var foundFeatures = [];
+        	if (_.isUndefined(this.mapElement)) {
+        		return foundFeatures;
+        	}
+        	_.each(data, function(datum){
+        		var mapLayers = this.mapElement.getLayers().getArray();
+        		var mapLayer = mapLayers.find(function(layer){return layer.get('name') == datum.type});
+        		if (!_.isUndefined(mapLayer)) {
+        			var featureList = mapLayer.getSource().getFeatures();
+            		var foundElement = featureList.find(function(feature){return feature.get('pk') == datum.pk});
+            		if (!_.isUndefined(foundElement)){
+            			foundFeatures.push(foundElement);
+            		}
+        		}
+        		
+        	},this);
+        	return foundFeatures;
+        },
         constructMapFeatures: function(data) {
         	if (_.isUndefined(this.mapElement)){
         	    this.mapElement = new ol.layer.Group({name:"liveSearch"});
@@ -1279,7 +1338,7 @@ $(function() {
                 }
             }
             this.show();
-            app.vent.trigger('mapSearch:drewFeatures');
+            app.vent.trigger('mapSearch:drewFeatures', data);
 //            var _this = this;
 //            app.map.map.on("moveend",  _this.mapMoveHandler, _this);
         },
