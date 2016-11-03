@@ -243,29 +243,6 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
     	this.setupSaveSearchDialog();
     	return;
     	
-//        var theForm = this.$("#form-"+this.selectedModel);
-//        var postData = theForm.serializeArray();
-//        postData.push({'name':'modelClass', 'value':app.options.searchModels[this.selectedModel].model});
-//        this.setMessage("Searching...");
-//        $.ajax({
-//            url: '/xgds_map_server/doMapSearch',
-//            dataType: 'json',
-//            data: postData,
-//            success: $.proxy(function(data) {
-//                if (_.isUndefined(data) || data.length === 0){
-//                    this.setMessage("None found.");
-//                } else {
-//                    this.searchResultsView.updateContents(this.selectedModel, data);
-//                    this.setupSaveSearchDialog();
-//                    this.clearMessage();
-//                }
-//            }, this),
-//            error: $.proxy(function(data){
-//                app.vent.trigger("mapSearch:clear");
-//                this.searchResultsView.reset();
-//                this.setMessage("Search failed.")
-//            }, this)
-//          });
     },
     openSaveDialog: function() {
     	this.setupSaveSearchDialog();

@@ -623,7 +623,14 @@ $(function() {
                             var xcoords = inverseTransform(coords);
                             location = "<br/>lat: " + xcoords[1] + "<br/>lon:" + xcoords[0];
                         }
-                        this.popup.show(evt.coordinate, '<div><b>' + feature.get('name') + '</b><p>' + popup + location +  '</p></div>');
+                        var popupContents = '<div><b>' + feature.get('name') + '</b>';
+                        var view_url = feature.get("view_url");
+                        if (!_.isUndefined(view_url) && !_.isEmpty(view_url)){
+                        	popupContents += '&nbsp;&nbsp;<button class="small" onClick="window.open(\''
+                        					 + view_url + '\', \'_blank\');" >Open</button>'
+                        }
+                        popupContents += '<p>' + popup + location +  '</p></div>'
+                        this.popup.show(evt.coordinate, popupContents);
                     } else {
                         this.popup.hide();
                     }
