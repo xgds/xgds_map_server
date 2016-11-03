@@ -477,6 +477,7 @@ app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
 app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
 	initialize: function() {
 		this.modelMap = {};
+		this.firstLoad = true;
 		var context = this;
 		app.on('forceDetail', function(data){
 			var modelMap = context.lookupModelMap(data.type);
@@ -877,7 +878,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     },
     unListenToTableChanges: function() {
         this.$("#searchResultsTable").off( 'page.dt');
-        this.$("#searchResultsTable").off( 'search.dt');
+        this.$("#searchResultsTable").off( 'xhr.dt');
     },
     filterMapData: function(data) {
     	// this shows all data from the current page
@@ -891,6 +892,10 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
         });
         if (!_.isEmpty(fulldata)){
         	app.vent.trigger("mapSearch:found", fulldata);
+        	if (this.firstLoad){
+        		app.vent.trigger("mapSearch:fit");
+        		this.firstLoad = false;
+        	}
         }
     },
     calcDataTableHeight : function() {
