@@ -134,11 +134,11 @@ $(function() {
     // map to look up the different layers since we want to initialize them before the tree shows up
     app.nodeMap = {}; 
 
-    app.views.OLMapView = Marionette.View.extend({
+    app.views.OLMapView = Backbone.View.extend({
             el: "#map",
             initialize: function(options) {
                 this.options = options || {};
-                //_.bindAll(this);
+                _.bindAll(this);
                 var _this = this;
                 this.$el.resizable({
                     stop: function( event, ui ) {
@@ -202,11 +202,11 @@ $(function() {
                 
                 //events
                 var context = this;
-                app.vent.on('onMapSetup', this.postMapCreation, this);
-                app.vent.on('layers:loaded', this.render, this);
-                app.vent.on('layers:loaded', this.initializeMapData, this);
-                app.vent.on('treeNode:loaded', function(data) {context.updateNodesFromCookies(data)}, this);
-                app.vent.on('tree:loaded', this.updateMapLayers, this);
+                app.vent.on('onMapSetup', this.postMapCreation);
+                app.vent.on('layers:loaded', this.render);
+                app.vent.on('layers:loaded', this.initializeMapData);
+                app.vent.on('treeNode:loaded', function(data) {context.updateNodesFromCookies(data)});
+                app.vent.on('tree:loaded', this.updateMapLayers);
                 app.vent.trigger('layers:loaded');
                 
                 app.vent.on('mapNode:create', function(node) {
@@ -276,24 +276,6 @@ $(function() {
                     	this.createDynamicView(node);
                     }
                 }
-            },
-            
-            handleResize: function() {
-	        	if ( mapResizeTimeout ) {
-	        	    clearTimeout(mapResizeTimeout);
-	        	}
-	        	mapResizeTimeout = setTimeout( function() {
-	        	    var view = app.map.map.getView();
-	        	    app.map.map.updateSize();
-	        	}, 100);
-            },
-            
-            handleWindowResize: function() {
-             // window size changed, so variables need to be reset
-                if (!app.State.mapResized) {return false;} // until the element is resized once, resizing happens automatically
-                app.State.pageInnerWidth = app.State.pageContainer.innerWidth();
-                app.map.map.updateSize();
-                return true;
             },
             
             postMapCreation: function() {
@@ -390,6 +372,24 @@ $(function() {
             		                           render: compassRender,
             		                           resetNorth: compassResetNorth,
             		                           label: '\u27A4'});
+            },
+            
+            handleResize: function() {
+        	if ( mapResizeTimeout ) {
+        	    clearTimeout(mapResizeTimeout);
+        	}
+        	mapResizeTimeout = setTimeout( function() {
+        	    var view = app.map.map.getView();
+        	    app.map.map.updateSize();
+        	}, 100);
+            },
+            
+            handleWindowResize: function() {
+             // window size changed, so variables need to be reset
+                if (!app.State.mapResized) {return false;} // until the element is resized once, resizing happens automatically
+                app.State.pageInnerWidth = app.State.pageContainer.innerWidth();
+                app.map.map.updateSize();
+                return true;
             },
             
             updateBbox: function() {

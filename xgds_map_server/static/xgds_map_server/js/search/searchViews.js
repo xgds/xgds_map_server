@@ -732,9 +732,6 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
       });
     },
     updateDetailView: function(data, modelMap) {
-    	if (! app.options.showDetailView){
-    		return;
-    	}
     	if (this.detailView == undefined){
     		this.createDetailView(modelMap.handlebarSource, data);
         } else {
@@ -807,9 +804,6 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     	return data
     },
     forceDetailView: function(data, modelMap){
-    	if (! app.options.showDetailView){
-    		return;
-    	}
     	var context = this;
     	if (modelMap.viewHandlebars != undefined){
     		if (modelMap.handlebarSource == undefined){

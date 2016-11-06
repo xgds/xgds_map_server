@@ -58,7 +58,7 @@ var app = (function($, _, Backbone) {
     });
 
     app.addInitializer(function(options) {
-        this.options = options = _.defaults(options || {}, {showDetailView:true});
+        this.options = options = _.defaults(options || {});
         app.map = new app.views.OLMapView({
             el: '#map'
         });

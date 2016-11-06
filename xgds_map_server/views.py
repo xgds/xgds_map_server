@@ -1749,7 +1749,7 @@ def getLastObjectJson(request, object_name, theFilter=None):
 
 @never_cache
 def getMappedObjectsExtens(request, object_name, extens, today=False):
-    """ Get the note json information to show in the fancy tree. This gets all notes in the mapped area, ie map bounded search.
+    """ Get the note json information to show in the fancy tree. this gets all notes in the mapped area
     """
     splits = str(extens).split(',')
     minLon = float(splits[0])
