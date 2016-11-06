@@ -45,6 +45,8 @@
 		searchModels: {{ searchModelDict|safe }},
 		modelName: '{{modelName}}',
 		tableHeight: Math.floor($(window).height()*.7) + 'px',
+		{% block extraAppOptions %}
+		{% endblock extraAppOptions %}
 		settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }}
 	};
 	{% block jsInitPreApp %}
@@ -74,7 +76,7 @@
 		
 	});
 	
-{% endblock %}
+{% endblock jsInit %}
 
 {% block preDashboard %}
 <div id="buttonRow" class="row" style="padding-bottom:5px;">
@@ -137,7 +139,7 @@
 
 {% block map %}
 <div id="map-gridstack-item" class="grid-stack-item" 
-data-gs-x="3" data-gs-y="4"
+	  data-gs-x="3" data-gs-y="4"
       data-gs-width="2" data-gs-height="1" >
 	<div class="grid-stack-item-content" id="map-gridstack-item-content" >
 	<i class="icon-lock pinDiv warning"></i>
@@ -149,7 +151,7 @@ data-gs-x="3" data-gs-y="4"
 
 {% block layers %}
 <div id="map-gridstack-item" class="grid-stack-item" 
-data-gs-x="6" data-gs-y="4"
+	  data-gs-x="6" data-gs-y="4"
       data-gs-width="1" data-gs-height="1" >
 	<div class="grid-stack-item-content" id="layers-gridstack-item-content">
 	<i class="icon-cancel-circled"></i>
