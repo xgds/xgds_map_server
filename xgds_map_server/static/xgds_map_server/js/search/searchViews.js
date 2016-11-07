@@ -651,7 +651,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
         }
         this.theDataTable = $(this.theTable).DataTable( dataTableObj );
         var context = this;
-        connectSelectionCallback($("#searchResultsTable"), this.handleTableSelection, true, this);
+        this.connectSelectCallback();
         this.connectDeselectCallback();
         this.listenToTableChanges();
         this.filterMapData(undefined);
@@ -692,6 +692,25 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     	}
     	this.constructDatatable(selectedModel, data, postData);
     	
+    },
+    connectSelectCallback(table){
+    	var context = this;
+    	this.theDataTable.off('select.dt');
+    	this.theDataTable.on( 'select.dt', function ( e, dt, type, indexes ) {
+    	    if ( type === 'row' ) {
+    	    	for (var i=0; i<indexes.length; i++){
+        	        var modelMap = context.lookupModelMap(context.selectedModel);
+        	    	var data = _.object(modelMap.columns, dt.row(indexes[i]).data());
+        	    	if (app.options.showDetailView){
+            	    	context.forceDetailView(data,modelMap);
+        	    	} else {
+        	    		if (_.isNumber(data.lat)){
+        	        		highlightOnMap([data]);
+        	    		}
+        	    	}
+    	    	}
+    	    }
+    	} );
     },
     connectDeselectCallback(table){
     	var context = this;
@@ -842,11 +861,6 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     		highlightOnMap([data]);
 		}
     },
-    handleTableSelection: function(index, theRow, context) {
-    	var modelMap = context.lookupModelMap(context.selectedModel);
-    	var data = _.object(modelMap.columns, theRow);
-    	context.forceDetailView(data, modelMap);
-    },
     listenToTableChanges: function() {
         var _this = this;
         var theTable = this.$("#searchResultsTable");
@@ -898,6 +912,10 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
 var xgds_search = xgds_search || {};
 $.extend(xgds_search,{
 	hookAdvancedSearchButton : function() {
+		// turn off by default
+//		var sgi = $("#search-gridstack-item");
+//		xgds_gridstack.THE_GRIDSTACK.removeWidget(sgi);
+		
 		var advancedSearchButton = $("#advanced_search_button");
 		advancedSearchButton.off('click');
 		advancedSearchButton.on('click',function(event) {
@@ -909,12 +927,15 @@ $.extend(xgds_search,{
 		    	// show it and initialize
 		    	searchDiv.show();
 		    	searchGridstack.show();
+				xgds_gridstack.THE_GRIDSTACK.addWidget(searchGridstack);
+				
 		    	// TODO put advanced search at the top
 		    	//GridStackUI.Utils.sort($(".grid-stack-item"));
 		    	app.vent.trigger('searchDiv:visible');
 		    } else {
 		    	searchGridstack.hide();
 		    	searchDiv.hide();
+				xgds_gridstack.THE_GRIDSTACK.removeWidget(searchGridstack);
 		    }
 		});
 	}
