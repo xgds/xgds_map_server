@@ -1775,9 +1775,6 @@ def getMappedObjectsExtens(request, object_name, extens, today=False):
 
 def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSearch.html', forceUserSession=False):
     searchModelDict = settings.XGDS_MAP_SERVER_JS_MAP
-    if modelName:
-        searchModelDict = {}
-        searchModelDict[str(modelName)] = settings.XGDS_MAP_SERVER_JS_MAP[modelName]
     
     return render_to_response(templatePath, 
                               {'modelName': modelName,
