@@ -426,6 +426,7 @@ app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
     },
     setData: function(data) {
     	this.data = data;
+    	this.modelMap = app.options.searchModels[data.type];
     },
     updateContents: function() {
     	try {
