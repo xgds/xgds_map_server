@@ -4,6 +4,7 @@
 {{ block.super }}
 	<script type="text/javascript" src='{{ EXTERNAL_URL }}js-cookie/src/js.cookie.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-ui/jquery-ui.min.js'></script>
+    <script type="text/javascript" src='{{EXTERNAL_URL}}jquery-ui-contextmenu/jquery.ui-contextmenu.min.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}fancytree/dist/jquery.fancytree.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}fancytree/dist/src/jquery.fancytree.dnd.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}fancytree/dist/src/jquery.fancytree.filter.js'></script>
@@ -32,7 +33,7 @@
 </style>
 <div id="layertreeContainer">
 	<p class="small">
-	Drag and drop to reorganize tree.  Double-click to edit. <br/>
+	Drag and drop to reorganize tree.  Right-click to edit. <br/>
 	Checked = layer is turned on by default globally. <br/>
 	Transparency settings are global.
 	</p>
@@ -93,15 +94,28 @@
     	    }).focus();
     };
    var initializeTree = function(data) {
+   
+    	layertreeNode.contextmenu({
+    	      delegate: "span.fancytree-title",
+    	      menu: [
+    	          {title: "Edit", cmd: "edit", uiIcon: "ui-icon-pencil", disabled: false },
+    	          ],
+    	      beforeOpen: function(event, ui) {
+    	        var node = $.ui.fancytree.getNode(ui.target);
+    	        node.setActive();
+    	      },
+    	      select: function(event, ui) {
+    	        var node = $.ui.fancytree.getNode(ui.target);
+    	        window.open(node.data.href, '_edit');
+    	      }
+    	    });
+    	    
     layertreeNode.fancytree({
        source: data,
        checkbox: true,
        extensions: ['dnd','persist','filter', 'transparency_slider'],
        autoActivate: false,
        autoScroll: false,
-       dblclick: function(event, data) {
-         	window.location.href=data.node.data.href;
-       },
        filter: {
                     autoApply: true,  // Re-apply last filter if lazy data is loaded
                     counter: true,  // Show a badge with number of matching child nodes near parent icons

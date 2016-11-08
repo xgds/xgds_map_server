@@ -131,6 +131,22 @@ app.views.FancyTreeView = Backbone.View.extend({
     	      $("span#matches").text("(" + n + " matches)");
     	    }).focus();
     },
+    setupContextMenu: function(layertreeNode) {
+    	layertreeNode.contextmenu({
+    	      delegate: "span.fancytree-title",
+    	      menu: [
+    	          {title: "Edit", cmd: "edit", uiIcon: "ui-icon-pencil", disabled: false },
+    	          ],
+    	      beforeOpen: function(event, ui) {
+    	        var node = $.ui.fancytree.getNode(ui.target);
+    	        node.setActive();
+    	      },
+    	      select: function(event, ui) {
+    	        var node = $.ui.fancytree.getNode(ui.target);
+    	        window.open(node.data.href, '_edit');
+    	      }
+    	    });
+    },
     createTree: function() {
         if (_.isUndefined(app.tree) && !_.isUndefined(app.treeData)){
             var layertreeNode = this.$el.find("#layertree");
@@ -175,9 +191,6 @@ app.views.FancyTreeView = Backbone.View.extend({
                       }, this),
                     });
                 },
-                dblclick: function(event, data) {
-                    var win = window.open(data.node.data.href, '_edit');
-                },
                 select: function(event, data) {
                     // new simpler way
                     if (_.isUndefined(data.node.mapView)){
@@ -203,6 +216,7 @@ app.views.FancyTreeView = Backbone.View.extend({
                     }
             });
             app.tree = layertreeNode.fancytree("getTree");
+            this.setupContextMenu(layertreeNode);
             this.storedParent = this.$el.parent();
             app.vent.trigger('tree:loaded');
         }
