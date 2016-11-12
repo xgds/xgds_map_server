@@ -316,13 +316,13 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     	//highlightOnMap([this.data]);
         this.$el.empty().append(this.template(this.data));
     	try {
-			this.trigger('updateContents');
-
-//    		if (this.neverShown){
-//        		this.onShow();
-//    		} else {
-//    			this.trigger('updateContents');
-//    		}
+//			this.trigger('updateContents');
+//
+    		if (this.neverShown){
+        		this.onShow();
+    		} else {
+    			this.trigger('updateContents');
+    		}
     	} catch (err){
     		// gulp, the first time this will 
     	}
