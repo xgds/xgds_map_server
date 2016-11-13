@@ -872,7 +872,12 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
         });
         theTable.on('xhr.dt', {_this: this}, function(event, settings, json, xhr){
         	var _this = event.data._this;
-            _this.filterMapData(json.data);
+        	var founddata = undefined;
+        	if (!_.isEmpty(json) && !_.isEmpty(json.data)){
+        		founddata = json.data
+        	} 
+        	_this.filterMapData(founddata);
+
         });
     },
     unListenToTableChanges: function() {
