@@ -122,15 +122,6 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
     	
     },
     onRender: function() {
-//        var theKeys = Object.keys(app.options.searchModels);
-//        this.$el.empty().append(this.template({
-//            searchModels: theKeys,
-//            preselectModel: this.preselectModel
-//        }));
-//        this.searchResultsView = new app.views.SearchResultsView({template:'#template-search-results',
-//        														  viewRegion: this.viewRegion});
-//        app.searchResultsView = this.searchResultsView;
-//        this.searchResultsRegion.show(this.searchResultsView);
         app.vent.trigger("repack");
     },
     setupSearchForm: function(runSearch) {
@@ -508,10 +499,13 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     toTitleCase: function(str) {
     	return str.substr(0,1).toUpperCase()+str.substr(1);
     },
-    getColumnDefs: function(columns, searchableColumns, editableColumns){
+    getColumnDefs: function(columns, searchableColumns, editableColumns, unsortableColumns){
     	var result = [];
     	if (_.isUndefined(searchableColumns)){
     		searchableColumns = [];
+    	}
+    	if (_.isUndefined(unsortableColumns)){
+    		unsortableColumns = [];
     	}
     	for (var i=0; i<columns.length; i++){
     		var context = this;
@@ -520,6 +514,9 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     		columnDef['targets'] = i;
     		if ($.inArray(heading, searchableColumns) > -1){
     			columnDef['searchable'] = true;
+    		}
+    		if ($.inArray(heading, unsortableColumns) > -1){
+    			columnDef['orderable'] = false;
     		}
     		if (!_.isUndefined(editableColumns)){
     			if ($.inArray(heading, Object.keys(editableColumns)) > -1){
@@ -604,7 +601,7 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
         }
         this.columns = _.difference(this.columns, modelMap.hiddenColumns);
         this.columnTitles = modelMap.columnTitles;
-        this.columnHeaders = this.getColumnDefs(this.columns, modelMap.searchableColumns, modelMap.editableColumns);
+        this.columnHeaders = this.getColumnDefs(this.columns, modelMap.searchableColumns, modelMap.editableColumns, modelMap.unsortableColumns);
         this.editableColumns = this.getEditableColumnDefs(this.columns, modelMap.columnTitles, modelMap.editableColumns);
         $.fn.dataTable.moment( DEFAULT_TIME_FORMAT);
         $.fn.dataTable.moment( "MM/DD/YY HH:mm:ss");
