@@ -41,10 +41,19 @@ Handlebars.registerHelper('getColor', function(key) {
 //
 Handlebars.registerHelper('ifequal', function(val1, val2, options) {
     if (val1 === val2) {
-        return options.fn();
+        return options.fn(this);
     }
     else {
-        return options.inverse();
+        return options.inverse(this);
+    }
+});
+
+Handlebars.registerHelper('ifunequal', function(val1, val2, options) {
+    if (val1 !== val2) {
+        return options.fn(this);
+    }
+    else {
+        return options.inverse(this);
     }
 });
 
