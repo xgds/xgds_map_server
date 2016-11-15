@@ -66,7 +66,7 @@ Handlebars.registerHelper('filename', function(value) {
 });
 
 Handlebars.registerHelper('prettyDecimal', function(value) {
-	if (!_.isEmpty(value)){
+	if (_.isNumber(value)){
 		return value.toFixed(2);
 	}
 	return value;
