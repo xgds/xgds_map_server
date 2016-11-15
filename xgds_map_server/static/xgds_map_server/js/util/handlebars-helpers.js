@@ -57,6 +57,22 @@ Handlebars.registerHelper('ifunequal', function(val1, val2, options) {
     }
 });
 
+
+Handlebars.registerHelper('filename', function(value) {
+	if (!_.isEmpty(value)){
+		return value.split('/').pop();
+	}
+	return value;
+});
+
+Handlebars.registerHelper('prettyDecimal', function(value) {
+	if (!_.isEmpty(value)){
+		return value.toFixed(2);
+	}
+	return value;
+});
+
+
 Handlebars.registerHelper('getattr', function(obj, key) {
     return obj[key];
 });
