@@ -75,6 +75,7 @@ BOWER_INSTALLED_APPS += ['sprintf.js=sprintf.js',
 #                          'pngjs=git://github.com/arian/pngjs.git',
 #                          'jpeg-js=git://github.com/eugeneware/jpeg-js.git',
                          'pngtoy',
+                         'jquery-ui-contextmenu=ui-contextmenu'
                          ]
 
 # if you want to have a custom javascript included in your maps, override this in siteSettings.

@@ -31,7 +31,9 @@
     margin: 20px 0 10px;
     }
 </style>
+{% if 'xgds_notes2' in settings.INSTALLED_APPS %}
 {% include "xgds_notes2/NoteCSS.html" %}
+{% endif %}
 
 <div id="application" >
 	<div id="toolbar" class="row">
@@ -103,7 +105,9 @@
 	{{ block.super }}
 	{% include "xgds_core/timeJS.html" %}
    	{% include "MapJS.html" %}
-   	{% include "xgds_notes2/NoteJS.html" %}
+   	{% if 'xgds_notes2' in settings.INSTALLED_APPS %}
+	   	{% include "xgds_notes2/NoteJS.html" %}
+	{% endif %}
     <script type="text/javascript" src='{{ EXTERNAL_URL }}backbone-relational/backbone-relational.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}backbone-forms/distribution/backbone-forms.min.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}string-format/lib/string-format.js'></script>
