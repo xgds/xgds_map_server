@@ -131,26 +131,29 @@ def getMapTreePage(request):
                               context_instance=RequestContext(request))
 
 
-def populateSearchFormHash(key, entry, SEARCH_FORMS):
+def populateSearchFormHash(key, entry, SEARCH_FORMS, filter=None):
     if 'search_form_class' in entry:
         theForm = getFormByName(entry['search_form_class'])
         theFormSet = theForm()
         SEARCH_FORMS[key] = [theFormSet, entry['model']]
+        if filter:
+            SEARCH_FORMS[key][0].initial = buildFilterDict(filter)
+
 #     else:
 #         theClass = LazyGetModelByName(entry['model'])
 #         theForm = SpecializedForm(SearchForm, theClass.get())
 #         theFormSetMaker = formset_factory(theForm, extra=0)
 #         theFormSet = theFormSetMaker(initial=[{'modelClass': entry['model']}])
 
-def getSearchForms(key=None):
+def getSearchForms(key=None, filter=None):
     # get the dictionary of forms for searches
     SEARCH_FORMS = {}
     if not key:
         for key, entry in settings.XGDS_MAP_SERVER_JS_MAP.iteritems():
-            populateSearchFormHash(key, entry, SEARCH_FORMS)
+            populateSearchFormHash(key, entry, SEARCH_FORMS, filter)
     else:
         entry = settings.XGDS_MAP_SERVER_JS_MAP[key]
-        populateSearchFormHash(key, entry, SEARCH_FORMS)
+        populateSearchFormHash(key, entry, SEARCH_FORMS, filter)
     return SEARCH_FORMS
 
 
@@ -1773,15 +1776,17 @@ def getMappedObjectsExtens(request, object_name, extens, today=False):
                                 content_type="application/json")
         return ""
 
-def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSearch.html', forceUserSession=False):
+def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSearch.html', forceUserSession=False, searchForms=None, filter=None):
     searchModelDict = settings.XGDS_MAP_SERVER_JS_MAP
+    if modelName and not searchForms:
+        searchForms = getSearchForms(modelName, filter)
     
     return render_to_response(templatePath, 
                               {'modelName': modelName,
                                'help_content_path': 'xgds_map_server/help/mapSearch.rst',
                                'title': 'Map Search',
                                'templates': get_handlebars_templates(list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_HANDLEBARS_DIRS'),
-                               'searchForms': getSearchForms(modelName),
+                               'searchForms': searchForms,
                                'searchModelDict': searchModelDict, 
                                'forceUserSession': forceUserSession,
                                'saveSearchForm': MapSearchForm(),
