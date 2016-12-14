@@ -915,6 +915,11 @@ $(function() {
             	this.jsFunction = new Function("value", options.node.data.jsFunction);
             }
         	app.views.TileView.prototype.initialize.call(this, options);
+        	// register in global map so this can be used by other views such as plot views
+        	if (app.dataTile === undefined){
+        		app.dataTile = {};
+        	}
+        	app.dataTile[options.node.data.dataFileURL] = this;
         },
         checkRequired: function() {
             if (!this.dataFileURL) {
@@ -1056,6 +1061,7 @@ $(function() {
 				context.dataPng.decode().then(function(theBitmap) {
 					context.dataBitmap = theBitmap;
 					context.multiplier = (context.dataBitmap.depth / 8);
+					app.vent.trigger('dataTileLoaded', context.dataFileURL);
 				});
 			});
 		},

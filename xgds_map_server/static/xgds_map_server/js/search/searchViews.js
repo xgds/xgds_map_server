@@ -57,7 +57,10 @@ $.extend({
     	    context = context[namespaces[i]];
     	  }
     	  return context[func].apply(context, args);
-    	}
+    	},
+    getValueByName: function(functionName) {
+    	return eval(functionName);
+    }
 });
 
 app.views.SearchView = Backbone.Marionette.LayoutView.extend({
