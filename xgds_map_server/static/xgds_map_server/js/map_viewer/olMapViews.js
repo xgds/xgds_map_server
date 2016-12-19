@@ -915,6 +915,9 @@ $(function() {
             	this.jsFunction = new Function("value", options.node.data.jsFunction);
             }
         	app.views.TileView.prototype.initialize.call(this, options);
+        	if (this.valueLabel == ""){
+        		this.valueLabel = this.name;
+        	}
         	// register in global map so this can be used by other views such as plot views
         	if (app.dataTile === undefined){
         		app.dataTile = {};
