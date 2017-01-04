@@ -914,6 +914,10 @@ $(function() {
         	if (options.node.data.jsFunction != null){
             	this.jsFunction = new Function("value", options.node.data.jsFunction);
             }
+        	if (options.node.data.jsRawFunction != null){
+            	this.jsRawFunction = new Function("value", options.node.data.jsRawFunction);
+            }
+
         	app.views.TileView.prototype.initialize.call(this, options);
         	if (this.valueLabel == ""){
         		this.valueLabel = this.name;
@@ -1074,6 +1078,19 @@ $(function() {
 				var pngValue = this.getPngValue(pixelCoords[0], pixelCoords[1]);
 				if (this.jsFunction != null){
 					return this.jsFunction(pngValue);
+				}
+				return pngValue;
+			}
+			return null;
+		},
+		getRawDataValue: function(coords){
+			var pixelCoords = this.convertToPixelCoords(coords);
+			if (pixelCoords != null){
+				var pngValue = this.getPngValue(pixelCoords[0], pixelCoords[1]);
+				if (this.jsRawFunction != null){
+					return this.jsRawFunction(pngValue);
+				} else if (this.jsFunction != null){
+					return parseFloat(this.jsFunction(pngValue));
 				}
 				return pngValue;
 			}

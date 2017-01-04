@@ -300,6 +300,7 @@ class MapDataTile(AbstractMapTile):
     valueLabel = models.CharField(max_length=128, null=True, blank=True)
     unitsLabel = models.CharField(max_length=32, null=True, blank=True)
     jsFunction = models.TextField(null=True, blank=True)
+    jsRawFunction = models.TextField(null=True, blank=True)
     
     def getDataFileUrl(self):
         if self.dataFile:
@@ -320,11 +321,13 @@ class MapDataTile(AbstractMapTile):
         result["data"]["valueLabel"] = self.valueLabel
         result["data"]["unitsLabel"] = self.unitsLabel
         result["data"]["jsFunction"] = self.jsFunction
+        result["data"]["jsRawFunction"] = self.jsRawFunction
         
         return result
 
     def getEditHref(self):
         return reverse('mapEditDataTile', kwargs={'tileID': self.uuid})
+    
 
 class MapLayer(AbstractMap):
     """ A map layer which will have a collection of features that have content in them. """
