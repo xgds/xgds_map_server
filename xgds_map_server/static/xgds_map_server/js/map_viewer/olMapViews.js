@@ -207,6 +207,7 @@ $(function() {
                 app.vent.on('layers:loaded', this.initializeMapData, this);
                 app.vent.on('treeNode:loaded', function(data) {context.updateNodesFromCookies(data)}, this);
                 app.vent.on('tree:loaded', this.updateMapLayers, this);
+                app.vent.on('preloadNode', function(uuid){ this.preloadNode(uuid);}, this);
                 app.vent.trigger('layers:loaded');
                 
                 app.vent.on('mapNode:create', function(node) {
@@ -441,6 +442,19 @@ $(function() {
 	                }
                 }
                 
+            },
+            preloadNode: function(uuid){
+            	$.ajax({
+    	            url: '/xgds_map_server/uuidsjson/',
+    	            dataType: 'json',
+    	            type: "POST",
+    	            data: {'uuids':uuid},
+    	            success: $.proxy(function(data) {
+    	            	if (data != null){
+    	                    this.createNode(data[0]);
+    	            	}
+    	            }, this)
+    	          });
             },
             selectNodes: function(nodes){
             	// select specific nodes that were set in cookies
@@ -997,14 +1011,14 @@ $(function() {
 			for(var key in alignmentDict) {
 				  var value = alignmentDict[key];
 				  if (value.visible){
-					  if (value.control === undefined) {
+					  if (value.control === undefined || value.control === null) {
 						  try {
 								value.control = document.getElementById(value.name + "_legend_div");
 								value.width = theDiv.children[0].width;
 							} catch (err){
 								//pass
 							}
-						  if (value.control === undefined){
+						  if (value.control === undefined || value.control === null){
 							  continue;
 						  }
 					  }
