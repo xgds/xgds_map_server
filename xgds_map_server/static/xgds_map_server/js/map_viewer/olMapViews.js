@@ -1050,7 +1050,7 @@ $(function() {
 			return ol.extent.containsCoordinate(this.extent, coords);
 		},
 		convertToPixelCoords: function(coords){
-			if (this.checkBounds(coords)){
+			if (this.dataBitmap !== undefined && this.checkBounds(coords)){
 				var percentX =  (coords[0] - this.extent[0])/this.mapWidth;
 				var percentY =  1.0 - (coords[1] - this.extent[1])/this.mapHeight;
 				var pixelX = Math.round(percentX * this.dataBitmap.width);
@@ -1061,9 +1061,9 @@ $(function() {
 		},
 		getPngIndex:  function(x,y) {
 			// this is in pixel coordinates; image starts from top left 0,0
-			var row = this.multiplier * this.dataBitmap.width * y;
-			var column = this.multiplier * x;
-			return row + column;
+			var row = this.multiplier * (this.dataBitmap.width * this.dataBitmap.pixelWidth) * y;
+			var column = this.multiplier * x * this.dataBitmap.pixelWidth;
+			return (row + column);
 		},
 		getPngValue: function(x,y) {
 			// this is in pixel coordinates; image starts from top left 0,0
