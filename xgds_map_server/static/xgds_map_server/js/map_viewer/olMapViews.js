@@ -940,7 +940,7 @@ $(function() {
         	if (app.dataTile === undefined){
         		app.dataTile = {};
         	}
-        	app.dataTile[options.node.data.dataFileURL] = this;
+        	app.dataTile[options.node.title] = this;
         },
         checkRequired: function() {
             if (!this.dataFileURL) {
