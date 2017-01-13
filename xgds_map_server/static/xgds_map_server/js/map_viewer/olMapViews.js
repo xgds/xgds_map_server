@@ -1077,12 +1077,13 @@ $(function() {
 			// loads the data from a png
 			// gets the bitmap in a 1d array of r, g, b, a
 			this.dataPng = new PngToy([]);
+			var uuid = this.node.key;
 			var context = this;
 			this.dataPng.fetch(this.dataFileURL).then(function() {
 				context.dataPng.decode().then(function(theBitmap) {
 					context.dataBitmap = theBitmap;
 					context.multiplier = (context.dataBitmap.depth / 8);
-					app.vent.trigger('dataTileLoaded', context.dataFileURL);
+					app.vent.trigger('dataTileLoaded', uuid);
 				});
 			});
 		},
