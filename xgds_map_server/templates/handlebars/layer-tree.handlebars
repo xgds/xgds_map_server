@@ -3,6 +3,6 @@
   	<input name="searchTree" placeholder="Filter..." autocomplete="off">
     <button id="btnResetSearch" class="small">&times;</button>
     <span id="matches"></span>
-    <button id="btnTransparencyEditors" class="small" style="{float:right;}" onclick="toggleTransparencySliders();">Transparency</button>
+    <button id="btnTransparencyEditors" class="small" style="{float:right;}" onclick="toggleTransparencySliders();app.vent.trigger('toggleTransparency');">Transparency</button>
  	<div id="layertree" data-source="ajax" class="sampletree"></div>
  </div>
