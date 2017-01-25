@@ -258,6 +258,35 @@
                 return error;
             }
         });
+    
+    Form.editors.MultipleOfNumber = Form.editors.MinMaxNumber
+    .extend({
+        initialize: function(options) {
+            Form.editors.MinMaxNumber.prototype.initialize
+                .call(this, options);
+            this.multipleOf = _.isNumber(this.schema.multipleOf) ?
+            		this.schema.multipleOf : undefined;
+            if (_.isUndefined(this.multipleOf)) {
+                    console.warn('MultipleOfField initialized without supplying a multiple of');
+                }
+        },
+
+        validate: function() {
+            var error = Form.editors.MinMaxNumber.prototype.validate.call(this);
+            if (!_.isNull(error)) {
+                return error;
+            }
+            
+            var modulo = this.getValue() % this.multipleOf;
+            if (modulo != 0) {
+                    error = {
+                        type: 'multipleOf',
+                        message: 'Value must be a multiple of ' + this.multipleOf
+                    };
+                }
+            return error;
+        }
+    });
 
     Form.UnitField = Form.Field
         .extend({
