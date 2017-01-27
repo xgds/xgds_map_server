@@ -162,11 +162,11 @@ $(function() {
                 	}
                 }
                 
-                this.$el.bind('resize', this.handleResize, this);
+                this.$el.bind('resize', function(event){_this.handleResize()});
                 app.vent.on('doMapResize', this.handleResize, this);
                 // also bind to window to adjust on window size change
-                $(window).bind('resize', this.handleWindowResize, this);
-                
+                $(window).bind('resize',function(event){_this.handleWindowResize()});
+
                 this.buildLayersForMap();
                 this.layersInitialized = false;
                 
