@@ -16,7 +16,7 @@
 
 app.views = app.views || {};
 
-app.views.FancyTreeView = Backbone.View.extend({
+app.views.FancyTreeView = Marionette.View.extend({
     template: '#template-layer-tree',
     initialize: function() {
         this.listenTo(app.vent, 'refreshTree', function() {this.refreshTree()});
@@ -35,29 +35,30 @@ app.views.FancyTreeView = Backbone.View.extend({
         else {
             this.template = Handlebars.compile(source);
         }
-        _.bindAll(this, 'render', 'afterRender'); 
-        var _this = this; 
-        this.render = _.wrap(this.render, function(render) { 
-            render(); 
-            _this.afterRender(); 
-            return _this; 
-        }); 
+//        _.bindAll(this, 'render', 'afterRender'); 
+//        var _this = this; 
+//        this.render = _.wrap(this.render, function(render) { 
+//            render(); 
+//            _this.afterRender(); 
+//            return _this; 
+//        }); 
         this.storedParent = null;
     },
-    render: function() {
-        if (!_.isUndefined(app.tree) && !_.isNull(this.storedParent)){
-            // rerender existing tree
-            this.storedParent.append(this.$el);
-            this.$el.show();
-        } else {
-            this.$el.html(this.template());
-        }
-    },
-    onShow: function() {
+//    render: function() {
+//        if (!_.isUndefined(app.tree) && !_.isNull(this.storedParent)){
+//            // rerender existing tree
+//            this.storedParent.append(this.$el);
+//            this.$el.show();
+//        } else {
+//        	app.views.FancyTreeView.prototype.render.call(this);
+//            //this.$el.html(this.template());
+//        }
+//    },
+    onAttach: function() {
     	app.vent.trigger('layerView:onShow');
     	this.connectFilter();
     },
-    afterRender: function() {
+    onRender: function() {
         app.vent.trigger('layerView:onRender');
         if (!_.isUndefined(app.tree)) {
             // rerendering tree

@@ -3,8 +3,8 @@
 {% load siteFrames %}
 
 {% block contents %}
-<div id="application">
-	<div id="toolbar" class="row">
+<script type="x-template/underscore" id="application_contents">
+  <div id="toolbar" class="row">
 	</div>
 	<div class="row">
         <div id="overmap" class="six columns">
@@ -13,20 +13,27 @@
         <div id="overlayers" class="six columns"></div>
     </div>
 	<div class="row">
-        <div id="map" class="six columns"></div>
+        <div id="map" class="six columns">
+		</div>
         <div id="layers" class="six columns"></div>
     </div>
     <div class="row">
 		<div id="postmap"></div>
 		<div id="postpostmap"></div>
 	</div>
+</script>
+
+<div id="application">
+</div>
+
+<div id="poopsicle" style="width=200px; height=200px;">
 </div>
 {% endblock %}
 
 {% block cssExtras %}
 <style scoped>
   @import url('{{EXTERNAL_URL}}jquery-ui/themes/base/jquery-ui.css');
-  @import url('{{ EXTERNAL_URL }}openlayers3/ol.css');
+  @import url('{{ EXTERNAL_URL }}openlayers/ol.css');
   @import url('{{EXTERNAL_URL}}ol3-popup/src/ol3-popup.css');
   @import url('{{ EXTERNAL_URL }}fancytree/dist/skin-lion/ui.fancytree.min.css');
   @import url('{{ STATIC_URL }}xgds_map_server/css/fancytree_custom.css');
@@ -41,6 +48,23 @@
 {% block scripts %}
 {{ block.super }}
 	{% include "xgds_core/timeJS.html" %}
+	<script type='text/javascript'>
+		var appOptions = {
+				BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
+				DEFAULT_COORD_SYSTEM: '{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}',
+				SETUP_COORD_SYSTEM: '{{ settings.XGDS_MAP_SERVER_MAP_SETUP_COORD_SYSTEM }}',
+				DEFAULT_COORD_SYSTEM_CENTER: {{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM_CENTER }},
+				DEFAULT_ZOOM: {{ settings.XGDS_MAP_SERVER_DEFAULT_ZOOM }},
+				DEFAULT_ROTATION: {{ settings.XGDS_MAP_SERVER_DEFAULT_ROTATION }},
+				SHOW_COMPASS: {{ settings.XGDS_MAP_SERVER_SHOW_COMPASS}},
+				selectedLayerUrl: '{{ settings.XGDS_MAP_SERVER_SELECTED_LAYER_URL }}',
+				layerFeedUrl: '{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}',
+				siteFrame: {% siteframe settings.XGDS_CURRENT_SITEFRAME_ID %},
+				XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: '{{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }}',
+				dataUrl: '{{ settings.DATA_URL }}',
+				settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:'true,false' }}
+			};
+	</script>
    	{% include "MapJS.html" %}
    	{% for template_name, template in templates.items %}
 	<script type="text/handlebars" id="template-{{template_name}}">
@@ -53,22 +77,8 @@
 
 {% block jsInit %}
 	var siteFrames = {% siteframes_dict %};
-	var appOptions = {
-		BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
-		DEFAULT_COORD_SYSTEM: "{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}",
-		SETUP_COORD_SYSTEM: {{ settings.XGDS_MAP_SERVER_MAP_SETUP_COORD_SYSTEM }},
-		DEFAULT_COORD_SYSTEM_CENTER: {{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM_CENTER }},
-		DEFAULT_ZOOM: {{ settings.XGDS_MAP_SERVER_DEFAULT_ZOOM }},
-		DEFAULT_ROTATION: {{ settings.XGDS_MAP_SERVER_DEFAULT_ROTATION }},
-		SHOW_COMPASS: {{ settings.XGDS_MAP_SERVER_SHOW_COMPASS}},
-		selectedLayerUrl: "{{ settings.XGDS_MAP_SERVER_SELECTED_LAYER_URL }}",
-		layerFeedUrl: "{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}",
-		siteFrame: {% siteframe settings.XGDS_CURRENT_SITEFRAME_ID %},
-		XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: {{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }},
-		dataUrl: "{{ settings.DATA_URL }}",
-		settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }}
-	}
 	$(function(){
-    	app.start(appOptions);
+		//app = new App(appOptions);
+    	app.start();
 	});
 {% endblock jsInit %}

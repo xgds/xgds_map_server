@@ -30,11 +30,9 @@ var app = (function($, _, Backbone) {
     app = new Backbone.Marionette.Application();
 
     app.dirty = false;
-    app.addRegions({
-        'toolbar': '#toolbar',
-        'tabs' : '#tabs',
-        'editingTools': '#editingTools'
-    });
+    app.addRegion('toolbar', '#toolbar');
+    app.addRegion('tabs', '#tabs');
+    app.addRegion('editingTools', '#editingTools');
 
     app.module('State', function(options) {
         this.addInitializer(function(options) {

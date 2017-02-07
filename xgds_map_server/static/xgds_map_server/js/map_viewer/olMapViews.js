@@ -135,33 +135,19 @@ $(function() {
     app.nodeMap = {}; 
 
     app.views.OLMapView = Marionette.View.extend({
-            el: "#map",
+    		template: false,
             initialize: function(options) {
                 this.options = options || {};
-                //_.bindAll(this);
-                var _this = this;
-                this.$el.resizable({
-                    stop: function( event, ui ) {
-                        _this.handleResize();
-                    }
-                  });
-                
-                // pre-set certain variables to speed up this code
-                app.State.pageContainer = this.$el.parent();
-                app.State.pageInnerWidth = app.State.pageContainer.innerWidth();
-                var horizOrigin = this.$el.width();
-
-                var DEFAULT_ZOOM = app.options.DEFAULT_ZOOM;
-                var DEFAULT_ROTATION = app.options.DEFAULT_ROTATION;
 
                 proj4.defs('EPSG:3395', '+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs');
                 if (!_.isEmpty(app.options.DEFAULT_COORD_SYSTEM) && app.options.DEFAULT_COORD_SYSTEM != SPHERICAL_MERCATOR){
                 	if (!_.isNull(app.options.SETUP_COORD_SYSTEM)){
                 		DEFAULT_COORD_SYSTEM = app.options.DEFAULT_COORD_SYSTEM;
-                		app.options.SETUP_COORD_SYSTEM(app.options.DEFAULT_COORD_SYSTEM);
+                    	$.executeFunctionByName(app.options.SETUP_COORD_SYSTEM, window, [app.options.DEFAULT_COORD_SYSTEM]);
                 	}
                 }
                 
+                var _this = this;
                 this.$el.bind('resize', function(event){_this.handleResize()});
                 app.vent.on('doMapResize', this.handleResize, this);
                 // also bind to window to adjust on window size change
@@ -170,35 +156,6 @@ $(function() {
                 this.buildLayersForMap();
                 this.layersInitialized = false;
                 
-                app.mapView = new ol.View({
-                    // we will center the view later with updateBbox
-                    zoom: DEFAULT_ZOOM,
-                    projection: ol.proj.get(DEFAULT_COORD_SYSTEM),
-                    rotation: DEFAULT_ROTATION
-                });
-                
-                var mapOptions = {
-                        target: 'map',
-                        layers: this.layersForMap,
-                        view: app.mapView
-                      };
-                if (app.options.SHOW_COMPASS){
-                	mapOptions['controls'] =  [this.buildCompassControl(),
-                	                           new ol.control.Zoom(),
-                	                           new ol.control.ScaleLine()];
-                } else {
-                	mapOptions['controls'] =  [new ol.control.Zoom(),
-                	                           new ol.control.ScaleLine()];
-                }
-                this.map = new ol.Map(mapOptions);
-//                this.map.on('precompose', function(evt) {
-//                	  evt.context.imageSmoothingEnabled = false;
-//                	  evt.context.mozImageSmoothingEnabled = false;
-//                	  evt.context.msImageSmoothingEnabled = false;
-//                	});
-                this.updateBbox();
-                this.buildStyles();
-                this.setupPopups();
                 
                 //events
                 var context = this;
@@ -214,18 +171,64 @@ $(function() {
                     this.createNode(node);
                 }, this);
                 
-                // bind location dropdown change to zoom
-                $("select[id=id_siteFrame]").bind("change", {
-                	mapview: this.map.getView(),
-                	thisview: this
-                }, function(event) {
+                
+            },
+            
+            onAttach: function() {
+            	
+            	app.mapView = new ol.View({
+                    // we will center the view later with updateBbox
+                    zoom: app.options.DEFAULT_ZOOM,
+                    projection: ol.proj.get(DEFAULT_COORD_SYSTEM),
+                    rotation: app.options.DEFAULT_ROTATION
+                });
+            	
+            	var mapOptions = {
+                        target: this.el,
+                        layers: this.layersForMap,
+                        view: app.mapView
+                      };
+                if (app.options.SHOW_COMPASS){
+                	mapOptions['controls'] =  [this.buildCompassControl(),
+                	                           new ol.control.Zoom(),
+                	                           new ol.control.ScaleLine()];
+                } else {
+                	mapOptions['controls'] =  [new ol.control.Zoom(),
+                	                           new ol.control.ScaleLine()];
+                }
+            	this.map = new ol.Map(mapOptions);
+//              this.map.on('precompose', function(evt) {
+//              	  evt.context.imageSmoothingEnabled = false;
+//              	  evt.context.mozImageSmoothingEnabled = false;
+//              	  evt.context.msImageSmoothingEnabled = false;
+//              	});
+              this.updateBbox();
+              this.buildStyles();
+              this.setupPopups();
+              
+           // bind location dropdown change to zoom
+              $("select[id=id_siteFrame]").bind("change", {
+              	mapview: this.map.getView(),
+              	thisview: this
+              }, function(event) {
 	            	var sel=$("#id_siteFrame").val();
 	            	var projectionKey = event.data.thisview.getSiteFrameProjection(siteFrames[sel]);
 	            	coords = transformFromProjection([siteFrames[sel].east0, siteFrames[sel].north0], projectionKey);
 	            	event.data.mapview.setCenter(coords, 5);  // TOD0 hardcoding zoom level 5 for now ... would be good to fix
+              });
+              
+              // we should have a good $el by now
+              var _this = this;
+              this.$el.resizable({
+                  stop: function( event, ui ) {
+                      _this.handleResize();
+                  }
                 });
+              
+              // pre-set certain variables to speed up this code
+              app.State.pageContainer = this.$el.parent();
+              app.State.pageInnerWidth = app.State.pageContainer.innerWidth();
             },
-            
             getSiteFrameProjection: function(site){
             	projectionKey = site.projCode;
             	var foundProjection = ol.proj.get(projectionKey);
@@ -284,8 +287,10 @@ $(function() {
 	        	    clearTimeout(mapResizeTimeout);
 	        	}
 	        	mapResizeTimeout = setTimeout( function() {
-	        	    var view = app.map.map.getView();
-	        	    app.map.map.updateSize();
+	        		if (app.map !== undefined) {
+	        			var view = app.map.map.getView();
+	        			app.map.map.updateSize();
+	        		}
 	        	}, 100);
             },
             
@@ -301,8 +306,8 @@ $(function() {
                 this.handleResize();
                 this.createLiveSearchView();
                 var callback = app.options.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK;
-                if (callback != null) {
-                    callback();
+                if (!_.isEmpty(callback)) {
+                	$.executeFunctionByName(callback, window);
                 }
             },
             
@@ -601,7 +606,7 @@ $(function() {
                 }
             },
             
-            render: function() {
+            onRender: function() {
                 this.updateMapLayers();
             },
             
@@ -659,7 +664,8 @@ $(function() {
             }
         });
     
-    app.views.TreeMapElement = Backbone.View.extend({
+    app.views.TreeMapElement = Marionette.View.extend({
+    	template: false,
         initialize: function(options) {
             this.options = options || {};
             this.group = this.options.group;
@@ -703,7 +709,7 @@ $(function() {
         	this.opacity = calculateOpacity(transparency);
         	this.mapElement.setOpacity(this.opacity);
         },
-        render: function() {
+        onRender: function() {
             if (_.isUndefined(this.node)){
                 this.show();
             } else if (this.node.selected){
@@ -1262,7 +1268,8 @@ $(function() {
         }
     });
     
-    app.views.LiveSearchView = Backbone.View.extend({
+    app.views.LiveSearchView = Marionette.View.extend({
+    	template: false,
         initialize: function(options) {
             this.options = options || {};
             this.group = this.options.group;
@@ -1402,7 +1409,8 @@ $(function() {
         }
     });
     
-    app.views.MapLayerView = Backbone.View.extend({
+    app.views.MapLayerView = Marionette.View.extend({
+    	template: false,
         initialize: function(options) {
             this.options = options || {};
             if (!options.mapLayerGroup && !options.mapLayerJsonURL) {
@@ -1516,7 +1524,7 @@ $(function() {
                 this.features.push(newFeature);
             }
         },
-        render: function(selected) {
+        onRender: function(selected) {
             if (_.isUndefined(selected)){
         	selected = true;
             }
@@ -1550,7 +1558,8 @@ $(function() {
     });    
 
     
-    app.views.LayerFeatureView = Backbone.View.extend({
+    app.views.LayerFeatureView = Marionette.View.extend({
+    	template: false,
         initialize: function(options) {
             this.options = options || {};
             if (!options.layerGroup && !options.featureJson) {
@@ -1601,7 +1610,7 @@ $(function() {
             }
             return null;
         },
-        render: function() {
+        onRender: function() {
             var childLayer = this.getLayer();
             if (!_.isUndefined(childLayer)){
                 this.layerGroup.getLayers().push(childLayer);

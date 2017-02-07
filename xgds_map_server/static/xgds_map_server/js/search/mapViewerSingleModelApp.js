@@ -29,12 +29,10 @@ Backbone.Marionette.TemplateCache.prototype.compileTemplate = function(
 var app = (function($, _, Backbone) {
     app = new Backbone.Marionette.Application();
     app.views = app.views || {};
-    app.addRegions({
-        'mapRegion' : '#mapDiv',
-        'layersRegion': '#layers',
-        'viewRegion': '#viewDiv',
-        'notesRegion': '#notesDiv'
-    });
+    app.addRegion('mapRegion', '#mapDiv');
+    app.addRegion('layersRegion', '#layers');
+    app.addRegion('viewRegion', '#viewDiv');
+    app.addRegion('notesRegion', '#notesDiv');
 
     app.module('State', function(options) {
         this.addInitializer(function(options) {

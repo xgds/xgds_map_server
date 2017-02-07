@@ -63,7 +63,7 @@ $.extend({
     }
 });
 
-app.views.SearchView = Backbone.Marionette.LayoutView.extend({
+app.views.SearchView = Backbone.Marionette.View.extend({
     template: '#template-search',
     events: {
         'click #getSearchFormButton': 'setupSearchForm',
@@ -115,7 +115,7 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         this.searchResultsView = new app.views.SearchResultsView({template:'#template-search-results',
         														  viewRegion: this.viewRegion});
         app.searchResultsView = this.searchResultsView;
-        this.searchResultsRegion.show(this.searchResultsView);
+        this.getRegion('searchResultsRegion').show(this.searchResultsView);
     	if (this.preselectModel != undefined && this.preselectModel != 'None') {
     		this.setupSearchForm(true);
         }
@@ -150,7 +150,7 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         this.selectedModel = newModel;
         var templateName = '#template-' + this.selectedModel;
         this.searchFormView = new app.views.SearchFormView({template:templateName})
-        this.searchFormRegion.show(this.searchFormView);
+        this.getRegion('searchFormRegion').show(this.searchFormView);
         
         var theModelMap = app.options.searchModels[newModel];
         if (theModelMap.searchInitMethods != undefined){
@@ -275,10 +275,10 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
     }
 });
 
-app.views.SearchFormView = Backbone.Marionette.ItemView.extend({
+app.views.SearchFormView = Backbone.Marionette.View.extend({
 });
 
-app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
+app.views.SearchDetailView = Backbone.Marionette.View.extend({
     initialize: function(options) {
         Handlebars.registerHelper('prettyTime', function( sourceTime, timeZone ){
         	return getLocalTimeString(sourceTime, timeZone);
@@ -398,7 +398,7 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
 /*
  * This is the view for the notes that go with objects found by search.
  */
-app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
+app.views.SearchNotesView = Backbone.Marionette.View.extend({
     initialize: function(options) {
     	this.data = options.data;
     	this.modelMap = options.modelMap;
@@ -447,7 +447,7 @@ app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
     }
 });
 
-app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
+app.views.SearchResultsView = Backbone.Marionette.View.extend({
 	initialize: function() {
 		this.modelMap = {};
 		this.firstLoad = true;
