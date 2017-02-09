@@ -18,93 +18,90 @@
 ** Override the TemplateCache function responsible for
 ** rendering templates so that it will use Handlebars.
 */
-Backbone.Marionette.TemplateCache.prototype.compileTemplate = function(
+Marionette.TemplateCache.prototype.compileTemplate = function(
     rawTemplate) {
     return Handlebars.compile(rawTemplate);
 };
 
 	
-	const RootView = Backbone.Marionette.View.extend({
-		template: '#application_contents',
-		regions: {
-			mapRegion: '#map',
-			layersRegion: '#layers'
-		},
-		onRender: function() {
-			app.map = new app.views.OLMapView();
-			this.showChildView('mapRegion', app.map);
-			this.showChildView('layersRegion', new app.views.FancyTreeView());
-		}
-	});
-	
-    const App = Backbone.Marionette.Application.extend( {
-    	views: {},
-    	region: '#application',
-    	onStart: function() {
-    		this.rootView = new RootView();
-    		this.showView(this.rootView);
-    	},
-    	hasHandler: function(name) {
-            return !!this.reqres._wreqrHandlers[name];
-        },
-        State: {
-	    	featureSelected: undefined,
-	        mouseDownLocation: undefined,
-	        pageInnerWidth: undefined,
-	        mapResized: false,
-	        mapHeightSet: false,
-	        tree: undefined,
-	        treeData: null,
-        },
-        initialize: function(options){
-            this.options = options = _.defaults(options || {});
-        	this.views = this.views || {};
-            this.notes_views = this.notes_views || {};
-            this.vent = Backbone.Radio.channel('global');
-
-            var pageTopHeight = $('#page-top').outerHeight();
-            var pageElement = $('#page');
-            var pageContentElement = $('#page-content');
+const RootView = Marionette.View.extend({
+	template: '#application_contents',
+	regions: {
+		mapRegion: '#map',
+		layersRegion: '#layers'
+	},
+	onRender: function() {
+		app.map = new app.views.OLMapView();
+		this.showChildView('mapRegion', app.map);
+		this.showChildView('layersRegion', new app.views.FancyTreeView());
+	},
+	onAttach: function() {
+		var pageTopHeight = $('#page-top').outerHeight();
+        var pageElement = $('#page');
+        var pageContentElement = $('#page-content');
+        pageContentElement.outerHeight(pageElement.innerHeight() - pageTopHeight);
+        $(window).bind('resize', function() {
             pageContentElement.outerHeight(pageElement.innerHeight() - pageTopHeight);
-            $(window).bind('resize', function() {
-                pageContentElement.outerHeight(pageElement.innerHeight() - pageTopHeight);
-            });
-            
-        },
-        showDetailView: function(handlebarSource, data, modelMap, modelName){
-        	
-        	var detailView = new app.views.SearchDetailView({
-        		handlebarSource:handlebarSource,
-        		data:data,
-        		modelMap: modelMap
-        	});
-        	this.detail_view = detailView;
-        	var viewRegionName = 'viewRegion'+modelName;
-        	var viewDivName = '#viewDiv'+modelName;
-        	this.rootView.addRegion(viewRegionName, viewDivName);
-        	this.rootView.showChildView(viewRegionName, detailView);
-        	showOnMap(data); 
-        	
-        	// add the notes 
-        	var notesView = new app.views.SearchNotesView({
-        		data:data,
-        		modelMap: modelMap,
-        		modelName: modelName
-        	});
-        	this.notes_views[modelName] = notesView;
-        	var notesRegionName = 'notesRegion'+modelName;
-        	var notesDivName = '#notesDiv' + modelName;
-        	this.rootView.addRegion(notesRegionName, notesDivName);
-        	this.rootView.showChildView(notesRegionName, notesView);
-        	
-        	// hook up ajax reloading
-        	var reloadIconName = '#reload' + modelName;
-        	$(reloadIconName).click(function() {
-        		reloadModelData(modelName);
-        	});
-        	
-        }
-    });
+        });
+	}
+});
 
-    var app = new App(appOptions);
+const App = Marionette.Application.extend( {
+	views: {},
+	region: '#application',
+	vent: Backbone.Radio.channel('global'),
+    tree: undefined,
+    treeData: null,
+	onStart: function() {
+		this.rootView = new RootView();
+		this.showView(this.rootView);
+	},
+    State: {
+    	featureSelected: undefined,
+        mouseDownLocation: undefined,
+        pageInnerWidth: undefined,
+        mapResized: false,
+        mapHeightSet: false,
+    },
+    initialize: function(options){
+        this.options = options = _.defaults(options || {});
+    	this.views = this.views || {};
+        this.notes_views = this.notes_views || {};
+    },
+    showDetailView: function(handlebarSource, data, modelMap, modelName){
+    	
+    	var detailView = new app.views.SearchDetailView({
+    		handlebarSource:handlebarSource,
+    		data:data,
+    		modelMap: modelMap
+    	});
+    	this.detail_view = detailView;
+    	var viewRegionName = 'viewRegion'+modelName;
+    	var viewDivName = '#viewDiv'+modelName;
+    	this.rootView.addRegion(viewRegionName, viewDivName);
+    	this.rootView.showChildView(viewRegionName, detailView);
+    	showOnMap(data); 
+    	
+    	// add the notes 
+    	var notesView = new app.views.SearchNotesView({
+    		data:data,
+    		modelMap: modelMap,
+    		modelName: modelName
+    	});
+    	this.notes_views[modelName] = notesView;
+    	var notesRegionName = 'notesRegion'+modelName;
+    	var notesDivName = '#notesDiv' + modelName;
+    	this.rootView.addRegion(notesRegionName, notesDivName);
+    	this.rootView.showChildView(notesRegionName, notesView);
+    	
+    	// hook up ajax reloading
+    	var reloadIconName = '#reload' + modelName;
+    	$(reloadIconName).click(function() {
+    		reloadModelData(modelName);
+    	});
+    	
+    }
+});
+
+var app = new App(appOptions);
     

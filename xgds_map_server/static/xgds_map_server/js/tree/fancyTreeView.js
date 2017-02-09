@@ -27,35 +27,19 @@ app.views.FancyTreeView = Marionette.View.extend({
         	}
         });
         
-        var source = $(this.template).html();
-        if (_.isUndefined(source))
-            this.template = function() {
-                return '';
-            };
-        else {
-            this.template = Handlebars.compile(source);
-        }
-//        _.bindAll(this, 'render', 'afterRender'); 
-//        var _this = this; 
-//        this.render = _.wrap(this.render, function(render) { 
-//            render(); 
-//            _this.afterRender(); 
-//            return _this; 
-//        }); 
         this.storedParent = null;
     },
-//    render: function() {
-//        if (!_.isUndefined(app.tree) && !_.isNull(this.storedParent)){
-//            // rerender existing tree
-//            this.storedParent.append(this.$el);
-//            this.$el.show();
-//        } else {
-//        	app.views.FancyTreeView.prototype.render.call(this);
-//            //this.$el.html(this.template());
-//        }
-//    },
+    render: function() {
+        if (!_.isUndefined(app.tree) && !_.isNull(this.storedParent)){
+            // rerender existing tree
+            this.storedParent.append(this.$el);
+            this.$el.show();
+        } else {
+        	Marionette.View.prototype.render.call(this);
+        }
+    },
     onAttach: function() {
-    	app.vent.trigger('layerView:onShow');
+    	app.vent.trigger('layerView:onAttach');
     	this.connectFilter();
     },
     onRender: function() {

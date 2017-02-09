@@ -16,20 +16,16 @@
 
 app.views = app.views || {};
 
-app.views.LinksView = Backbone.Marionette.View.extend({
+app.views.LinksView = Marionette.View.extend({
     template: '#template-layer-links',
-    initialize: function() {
-        var source = $(this.template).html();
-        this.template = Handlebars.compile(source);
-    },
-    render: function() {
-        this.$el.html(this.template({
-            layerUuid: app.mapLayer.get('uuid')
-        }));
+    serializeData: function() {
+    	var data = this.model.toJSON();
+    	data.layerUuid = app.mapLayer.get('uuid');
+    	return data;
     }
 });
 
-app.views.ToolbarView = Backbone.Marionette.View.extend({
+app.views.ToolbarView = Marionette.View.extend({
     template: '#template-toolbar',
     events: {
         'click #btn-navigate': function() { app.vent.trigger('mapmode', 'navigate'); this.updateTip('clear');},
@@ -53,7 +49,7 @@ app.views.ToolbarView = Backbone.Marionette.View.extend({
         // todo listento sync of features
     },
 
-    onShow: function() {
+    onAttach: function() {
         if (!app.State.mapHeightSet) {
             var offset = this.$el.height() +
                 parseFloat(this.$el.parent().css('margin-top')) +
@@ -203,7 +199,7 @@ app.views.ToolbarView = Backbone.Marionette.View.extend({
 
 });
 
-app.views.EditingToolsView = Backbone.Marionette.View.extend({
+app.views.EditingToolsView = Marionette.View.extend({
 	template: '#template-editing-tools',
 	close: function() {
         this.ensureEl();
@@ -211,7 +207,7 @@ app.views.EditingToolsView = Backbone.Marionette.View.extend({
     }
 });
 
-app.views.LayerInfoTabView = Backbone.Marionette.View.extend({
+app.views.LayerInfoTabView = Marionette.View.extend({
 	template: '#template-layer-info',
 	initialize: function() {
 	},
@@ -232,7 +228,7 @@ app.views.LayerInfoTabView = Backbone.Marionette.View.extend({
 });
 
 
-app.views.FeaturesTabView = Backbone.Marionette.View.extend({
+app.views.FeaturesTabView = Marionette.View.extend({
 	template: '#template-features-view',
     regions: {
         //Column Headings
@@ -357,7 +353,7 @@ app.views.FeaturesTabView = Backbone.Marionette.View.extend({
 /**
  * Model this after PropertiesForm in plan so that the model is immediately updated.
  */
-app.views.FeatureStyleForm = Backbone.Marionette.View.extend({
+app.views.FeatureStyleForm = Marionette.View.extend({
 	template: '#template-feature-polygon-style-properties',
 	serializeData: function() {
 		var data = this.model.toJSON();
@@ -382,7 +378,7 @@ app.views.FeaturePointStyleForm = app.views.FeatureStyleForm.extend({
 });
 
 
-app.views.FeatureCoordinatesView = Backbone.Marionette.View.extend({
+app.views.FeatureCoordinatesView = Marionette.View.extend({
 	template: '#template-feature-coordinates',
 	events: {
 		"change input.featureCoords": "coordsChanged"
@@ -426,7 +422,7 @@ app.views.FeatureCoordinatesView = Backbone.Marionette.View.extend({
 });
 
 
-app.views.FeatureCoordinatesHeader = Backbone.Marionette.View.extend({
+app.views.FeatureCoordinatesHeader = Marionette.View.extend({
 	template: '#template-feature-coordinates-header',
 	serializeData: function() {
 		var data = this.model.toJSON();
@@ -435,7 +431,7 @@ app.views.FeatureCoordinatesHeader = Backbone.Marionette.View.extend({
 });
 
 
-app.views.FeatureStyleHeader = Backbone.Marionette.View.extend({
+app.views.FeatureStyleHeader = Marionette.View.extend({
 	template: '#template-feature-style-header',
 	serializeData: function() {
 		var data = this.model.toJSON();
@@ -444,7 +440,7 @@ app.views.FeatureStyleHeader = Backbone.Marionette.View.extend({
 });
 
 
-app.views.FeaturePropertiesView = Backbone.Marionette.CollectionView.extend({
+app.views.FeaturePropertiesView = Marionette.CollectionView.extend({
 	template: '#template-feature-properties',
 	events: {
 		'click .feature-style': function(evt) {
@@ -473,7 +469,7 @@ app.views.FeaturePropertiesView = Backbone.Marionette.CollectionView.extend({
 });
 
 
-app.views.FeaturesHeaderView = Backbone.Marionette.View.extend({
+app.views.FeaturesHeaderView = Marionette.View.extend({
     /*
      * This view also contains the copy, cut, delete btns for features.
      */
@@ -484,7 +480,7 @@ app.views.FeaturesHeaderView = Backbone.Marionette.View.extend({
 });
 
 
-app.views.FeaturePropertiesHeaderView = Backbone.Marionette.View.extend({
+app.views.FeaturePropertiesHeaderView = Marionette.View.extend({
 	template: '#template-feature-properties-header',
 	serializeData: function() {
 		var data = this.model.toJSON();
@@ -493,12 +489,12 @@ app.views.FeaturePropertiesHeaderView = Backbone.Marionette.View.extend({
 });
 
 
-app.views.NoFeaturesView = Backbone.Marionette.View.extend({
+app.views.NoFeaturesView = Marionette.View.extend({
     template: '#template-no-features'
 });
 
 
-app.views.FeatureElementView = Backbone.Marionette.View.extend({
+app.views.FeatureElementView = Marionette.View.extend({
 	/**
 	 * This view represents each feature element (each row in the first column).
 	 */
@@ -515,7 +511,7 @@ app.views.FeatureElementView = Backbone.Marionette.View.extend({
         return '<input class="select" type="checkbox" id="id_' + uuid + '"/></i>&nbsp;<label class="featureName" style="display:inline-block;" for="id_' + uuid + '">' + displayName + '</label><i/>';
     },
     serializeData: function() {
-        var data = Backbone.Marionette.ItemView.prototype.serializeData.call(this, arguments);
+        var data = Marionette.View.prototype.serializeData.call(this, arguments);
         data.model = this.model; // give the serialized object a reference back to the model
         data.view = this; // and view
         return data;
@@ -561,7 +557,7 @@ app.views.FeatureElementView = Backbone.Marionette.View.extend({
 });
 
 
-app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
+app.views.FeatureCollectionView = Marionette.CollectionView.extend({
 	/**
 	 * This view shows list of feature elements (entire first column)
 	 */
@@ -680,7 +676,7 @@ app.views.makeExpandable = function(view, expandClass) {
 };
 
 
-app.views.TabNavView = Backbone.Marionette.View.extend({
+app.views.TabNavView = Marionette.View.extend({
     template: '#template-tabnav',
     regions: {
         tabTarget: '#tab-target',

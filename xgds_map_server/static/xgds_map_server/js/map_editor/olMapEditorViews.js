@@ -46,8 +46,8 @@ $(function() {
         	this.mapEditorView.fitExtent();
             }
         },
-	render: function() {
-	    app.views.OLMapView.prototype.render.call(this);
+	onRender: function() {
+	    app.views.OLMapView.prototype.onRender.call(this);
 	    this.createMapEditorView();
 	    this.updateBbox();
 	}

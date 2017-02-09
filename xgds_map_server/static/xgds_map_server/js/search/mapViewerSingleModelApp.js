@@ -18,7 +18,7 @@
 ** Override the TemplateCache function responsible for
 ** rendering templates so that it will use Handlebars.
 */
-Backbone.Marionette.TemplateCache.prototype.compileTemplate = function(
+Marionette.TemplateCache.prototype.compileTemplate = function(
     rawTemplate) {
     return Handlebars.compile(rawTemplate);
 };
@@ -27,7 +27,7 @@ Backbone.Marionette.TemplateCache.prototype.compileTemplate = function(
 ** Main Application object
 */
 var app = (function($, _, Backbone) {
-    app = new Backbone.Marionette.Application();
+    app = new Marionette.Application();
     app.views = app.views || {};
     app.addRegion('mapRegion', '#mapDiv');
     app.addRegion('layersRegion', '#layers');
@@ -131,13 +131,6 @@ var app = (function($, _, Backbone) {
     });
 
 
-    /*
-     * Application-level Request & Respond services
-     */
-    app.hasHandler = function(name) {
-        return !!this.reqres._wreqrHandlers[name];
-    };
-    
     return app;
 
 }(jQuery, _, Backbone));

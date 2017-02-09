@@ -18,7 +18,7 @@
 ** Override the TemplateCache function responsible for
 ** rendering templates so that it will use Handlebars.
 */
-Backbone.Marionette.TemplateCache.prototype.compileTemplate = function(
+Marionette.TemplateCache.prototype.compileTemplate = function(
     rawTemplate) {
     return Handlebars.compile(rawTemplate);
 };
@@ -27,7 +27,7 @@ Backbone.Marionette.TemplateCache.prototype.compileTemplate = function(
 ** Main Application object
 */
 var app = (function($, _, Backbone) {
-    app = new Backbone.Marionette.Application();
+    app = new Marionette.Application();
 
     app.dirty = false;
     app.addRegion('toolbar', '#toolbar');
@@ -214,13 +214,6 @@ var app = (function($, _, Backbone) {
     
     app.addInitializer(_.bind(Backbone.history.start, Backbone.history));
 
-    /*
-     * Application-level Request & Respond services
-     */
-
-    app.hasHandler = function(name) {
-        return !!this.reqres._wreqrHandlers[name];
-    };
 
     // Return the color mapped to a given key.
     // If no color has been assigned to that key, allocate one to be forever associated with it.
