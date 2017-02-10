@@ -22,8 +22,8 @@ $(function() {
 	    app.views.OLMapView.prototype.initialize.call(this);
 	    app.State.tabsContainer = $('#tabs');
 	    app.State.tabsLeftMargin = parseFloat(app.State.tabsContainer.css('margin-left'));
-	    app.vent.on('layers:loaded', this.initializeMapEditor);
-	    app.vent.on('layers:loaded', this.createMapEditorView);
+	    this.listenTo(app.vent, 'layers:loaded', this.initializeMapEditor);
+	    this.listenTo(app.vent, 'layers:loaded', this.createMapEditorView);
 	},
 	buildLayersForMap: function() {
 	    app.views.OLMapView.prototype.buildLayersForMap.call(this);
@@ -61,35 +61,35 @@ $(function() {
     app.views.MapEditorView = app.views.MapLayerView.extend({
 	initialize: function(options) {
 	    app.views.MapLayerView.prototype.initialize.call(this, options); // call super
-	    app.vent.on('mapmode', this.setMode, this);
+	    this.listenTo(app.vent, 'mapmode', this.setMode);
 	    app.vent.trigger('mapmode', 'navigate');
 	    this.map = this.options.map;
-	    app.vent.on('editingToolsRendered', function(){
-		var _this = this;
-		var theEl = $('input:radio[name=addType]');
-		var selectedEl = $('input:radio[name=addType]:checked');
-		_this.typeSelect = selectedEl.val();
-		$('input:radio[name=addType]').change(function() {
-		    if (_this.featureAdder) {
-			_this.map.removeInteraction(_this.featureAdder);
-		    } 
-		    _this.typeSelect = $('input:radio[name=addType]:checked').val();
-		    _this.addDrawInteraction(_this.typeSelect);
-		});
-	    }, this);
-	    app.vent.on('updateFeaturePosition', this.updateFeaturePosition, this);
-	    app.vent.on('deleteFeatureSuccess', function(killedFeature) {
-		this.olFeatures.remove(killedFeature.olFeature);
-	    }, this);
-	    app.vent.on('selectFeature', function(feature){
-		feature.trigger('setBasicStyle', olStyles.styles['selected_' + feature.get('type').toLowerCase()]);
-	    }, this);
-	    app.vent.on('activeFeature', function(feature){
-		feature.trigger('setBasicStyle', olStyles.styles['active_' + feature.get('type').toLowerCase()]);
-	    }, this);
-	    app.vent.on('deselectFeature', function(feature){
-		feature.trigger('setBasicStyle', olStyles.styles[feature.get('type').toLowerCase()]);
-	    }, this);
+	    this.listenTo(app.vent, 'editingToolsRendered', function(){
+	    	var _this = this;
+	    	var theEl = $('input:radio[name=addType]');
+	    	var selectedEl = $('input:radio[name=addType]:checked');
+	    	_this.typeSelect = selectedEl.val();
+	    	$('input:radio[name=addType]').change(function() {
+	    		if (_this.featureAdder) {
+	    			_this.map.removeInteraction(_this.featureAdder);
+	    		} 
+	    		_this.typeSelect = $('input:radio[name=addType]:checked').val();
+	    		_this.addDrawInteraction(_this.typeSelect);
+	    	});
+	    });
+	    this.listenTo(app.vent, 'updateFeaturePosition', this.updateFeaturePosition);
+	    this.listenTo(app.vent, 'deleteFeatureSuccess', function(killedFeature) {
+	    	this.olFeatures.remove(killedFeature.olFeature);
+	    });
+	    this.listenTo(app.vent, 'selectFeature', function(feature){
+	    	feature.trigger('setBasicStyle', olStyles.styles['selected_' + feature.get('type').toLowerCase()]);
+	    });
+	    this.listenTo(app.vent, 'activeFeature', function(feature){
+	    	feature.trigger('setBasicStyle', olStyles.styles['active_' + feature.get('type').toLowerCase()]);
+	    });
+	    this.listenTo(app.vent, 'deselectFeature', function(feature){
+	    	feature.trigger('setBasicStyle', olStyles.styles[feature.get('type').toLowerCase()]);
+	    });
 	},
 	createFeaturesLayer: function() {
 	    this.olFeatures = new ol.Collection();

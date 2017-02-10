@@ -21,7 +21,7 @@ app.views.FancyTreeView = Marionette.View.extend({
     initialize: function() {
         this.listenTo(app.vent, 'refreshTree', function() {this.refreshTree()});
         this.listenTo(app.vent, 'treeData:loaded', function() {this.createTree()});
-        app.vent.on('tree:expanded', function(node) {
+        this.listenTo(app.vent, 'tree:expanded', function(node) {
         	if (transparencySlidersVisible) {
         		showTransparencySliders(node);
         	}

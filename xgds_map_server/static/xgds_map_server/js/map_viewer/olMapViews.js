@@ -148,28 +148,27 @@ $(function() {
                 }
                 
                 var _this = this;
-                this.$el.bind('resize', function(event){_this.handleResize()});
-                app.vent.on('doMapResize', this.handleResize, this);
+//                this.$el.bind('resize', function(event){_this.handleResize()});
+                this.listenTo(app.vent, 'doMapResize', this.handleResize);
                 // also bind to window to adjust on window size change
-                $(window).bind('resize',function(event){_this.handleWindowResize()});
-
+                
                 this.buildLayersForMap();
                 this.layersInitialized = false;
                 
                 
                 //events
                 var context = this;
-                app.vent.on('onMapSetup', this.postMapCreation, this);
-                app.vent.on('layers:loaded', this.render, this);
-                app.vent.on('layers:loaded', this.initializeMapData, this);
-                app.vent.on('treeNode:loaded', function(data) {context.updateNodesFromCookies(data)}, this);
-                app.vent.on('tree:loaded', this.updateMapLayers, this);
-                app.vent.on('preloadNode', function(uuid){ this.preloadNode(uuid);}, this);
+                this.listenTo(app.vent, 'onMapSetup', this.postMapCreation);
+                this.listenTo(app.vent, 'layers:loaded', this.render);
+                this.listenTo(app.vent, 'layers:loaded', this.initializeMapData);
+                this.listenTo(app.vent, 'treeNode:loaded', function(data) {context.updateNodesFromCookies(data)});
+                this.listenTo(app.vent, 'tree:loaded', this.updateMapLayers);
+                this.listenTo(app.vent, 'preloadNode', function(uuid){ this.preloadNode(uuid);});
                 app.vent.trigger('layers:loaded');
                 
-                app.vent.on('mapNode:create', function(node) {
+                this.listenTo(app.vent, 'mapNode:create', function(node) {
                     this.createNode(node);
-                }, this);
+                });
                 
                 
             },
@@ -228,6 +227,9 @@ $(function() {
               // pre-set certain variables to speed up this code
               app.State.pageContainer = this.$el.parent();
               app.State.pageInnerWidth = app.State.pageContainer.innerWidth();
+              
+              $(window).bind('resize',function(event){_this.handleWindowResize()});
+
             },
             getSiteFrameProjection: function(site){
             	projectionKey = site.projCode;
@@ -1273,23 +1275,23 @@ $(function() {
         initialize: function(options) {
             this.options = options || {};
             this.group = this.options.group;
-            app.vent.on('mapSearch:found', function(data) {
+            this.listenTo(app.vent, 'mapSearch:found', function(data) {
 	        	if (data != undefined && data.length > 0){
 	        	    this.constructMapFeatures(data);
 	        	}
-            }, this);
-            app.vent.on('mapSearch:clear', function(e) {
+            });
+            this.listenTo(app.vent, 'mapSearch:clear', function(e) {
                 this.clearDataAndFeatures();
-            }, this);
-            app.vent.on('mapSearch:fit', function(e){
+            });
+            this.listenTo(app.vent, 'mapSearch:fit', function(e){
             	this.fitExtent();
-            }, this);
-            app.vent.on('mapSearch:highlight', function(data) {
+            });
+            this.listenTo(app.vent, 'mapSearch:highlight', function(data) {
                 this.selectFeatures(data);
-            }, this);
-            app.vent.on('mapSearch:unhighlight', function(data) {
+            });
+            this.listenTo(app.vent, 'mapSearch:unhighlight', function(data) {
                 this.deselectFeatures(data);
-            }, this);
+            });
         },
         getExtent: function() {
             if (this.mapElement != undefined && this.mapElement.getLayers().getLength() > 0){

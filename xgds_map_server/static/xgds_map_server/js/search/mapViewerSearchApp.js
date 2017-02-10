@@ -77,26 +77,6 @@ var app = (function($, _, Backbone) {
         
     });
     
-    app.router = new Backbone.Router({
-        routes: {
-        	'layers' : 'layers'
-        }
-    });
-
-    /*
-    ** Debug global event triggering.
-    */
-    app.router.on('all', function(eventname) {
-        console.log('Router event: ' + eventname);
-    });
-
-    app.vent.on('all', function(eventname, args) {
-    });
-    
-    app.vent.on('repack', function(eventname, args) {
-    });
-    
-
     
     return app;
 
