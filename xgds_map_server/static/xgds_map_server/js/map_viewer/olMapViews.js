@@ -252,7 +252,10 @@ $(function() {
             },
             
             createNode: function(node){
-                if (!_.isUndefined(app.nodeMap[node.key])){
+            	if (_.isUndefined(node)){
+            		return;
+            	}
+                if (('key' in node) && !_.isUndefined(app.nodeMap[node.key])){
                     // render it
                     var foundView = app.nodeMap[node.key];
                     if (node.addNode != undefined){
