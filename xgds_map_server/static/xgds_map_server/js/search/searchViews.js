@@ -51,14 +51,14 @@ app.views.SearchView = Marionette.View.extend({
         	return input === modelName ? 'selected' : '';
         });
     },
-    serializeData: function() {
-        var data = this.model.toJSON();
-        data.label = this.model._sequenceLabel;
-        data.stationMoniker = app.options.stationMoniker;
-        data.searchModels = this.searchableModels;
-        data.preselectModel = this.preselectModel;
-        data.hideModelChoice = this.hideModelChoice;
-        return data;
+    templateContext: function() {
+    	var data = {label: this.model._sequenceLabel,
+    			stationMoniker: app.options.stationMoniker,
+    			searchModels: this.searchableModels,
+    			preselectModel: this.preselectModel,
+    			hideModelChoice: this.hideModelChoice
+    	}
+    	return data;
     },
     onAttach: function() {
     	

@@ -29,17 +29,9 @@ app.views.FancyTreeView = Marionette.View.extend({
         
         this.storedParent = null;
     },
-    render: function() {
-        if (!_.isUndefined(app.tree) && !_.isNull(this.storedParent)){
-            // rerender existing tree
-            this.storedParent.append(this.$el);
-            this.$el.show();
-        } else {
-        	Marionette.View.prototype.render.call(this);
-        }
-    },
     onAttach: function() {
     	app.vent.trigger('layerView:onAttach');
+    	this.createTree();
     	this.connectFilter();
     },
     onRender: function() {

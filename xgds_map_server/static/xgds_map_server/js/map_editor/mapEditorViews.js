@@ -18,10 +18,11 @@ app.views = app.views || {};
 
 app.views.LinksView = Marionette.View.extend({
     template: '#template-layer-links',
-    serializeData: function() {
-    	var data = this.model.toJSON();
-    	data.layerUuid = app.mapLayer.get('uuid');
-    	return data;
+    templateContext: function() {
+    	if (app.mapLayer !== undefined){
+    		return {layerUuid: app.mapLayer.get('uuid')};
+    	}
+		return {layerUuid: ''};
     }
 });
 
@@ -220,10 +221,6 @@ app.views.LayerInfoTabView = Marionette.View.extend({
 			this.model.set('description', evt.target.value);
 			this.model.save();
 		}    
-	},
-	serializeData: function() {
-		var data = this.model.toJSON();
-		return data;
 	}
 });
 
@@ -354,12 +351,7 @@ app.views.FeaturesTabView = Marionette.View.extend({
  * Model this after PropertiesForm in plan so that the model is immediately updated.
  */
 app.views.FeatureStyleForm = Marionette.View.extend({
-	template: '#template-feature-polygon-style-properties',
-	serializeData: function() {
-		var data = this.model.toJSON();
-		//TODO: add more later
-		return data;
-	}
+	template: '#template-feature-polygon-style-properties'
 });
 
 
@@ -405,7 +397,7 @@ app.views.FeatureCoordinatesView = Marionette.View.extend({
 		this.model.save();
 		this.model.trigger('change:coordinates');
 	},
-	serializeData: function() {
+	templateContext: function() {
 		var coordinates = null;
 		var markPolygon = false;
 		var type = this.model.get('type');
@@ -424,18 +416,16 @@ app.views.FeatureCoordinatesView = Marionette.View.extend({
 
 app.views.FeatureCoordinatesHeader = Marionette.View.extend({
 	template: '#template-feature-coordinates-header',
-	serializeData: function() {
-		var data = this.model.toJSON();
-		return {type: data.type};
+	templateContext: function() {
+		return {type: this.model.get('type')};
 	}
 });
 
 
 app.views.FeatureStyleHeader = Marionette.View.extend({
 	template: '#template-feature-style-header',
-	serializeData: function() {
-		var data = this.model.toJSON();
-		return {type: data.type};
+	templateContext: function() {
+		return {type: this.model.get('type')};
 	}
 });
 
@@ -482,9 +472,8 @@ app.views.FeaturesHeaderView = Marionette.View.extend({
 
 app.views.FeaturePropertiesHeaderView = Marionette.View.extend({
 	template: '#template-feature-properties-header',
-	serializeData: function() {
-		var data = this.model.toJSON();
-		return {type: data.type};
+	templateContext: function() {
+		return {type: this.model.get('type')};
 	}
 });
 
