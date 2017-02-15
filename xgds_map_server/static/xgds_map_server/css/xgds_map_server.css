@@ -9,3 +9,11 @@
 i.pinDiv {
 	float: right;
 }
+
+#postmap {
+	min-height: 20px;
+}
+
+#postpostmap {
+	min-height: 20px;
+}

@@ -148,9 +148,8 @@ $(function() {
                 }
                 
                 var _this = this;
-//                this.$el.bind('resize', function(event){_this.handleResize()});
+                this.$el.bind('resize', function(event){_this.handleResize()});
                 this.listenTo(app.vent, 'doMapResize', this.handleResize);
-                // also bind to window to adjust on window size change
                 
                 this.buildLayersForMap();
                 this.layersInitialized = false;
@@ -218,17 +217,11 @@ $(function() {
               
               // we should have a good $el by now
               var _this = this;
-              this.$el.resizable({
-                  stop: function( event, ui ) {
-                      _this.handleResize();
-                  }
-                });
               
               // pre-set certain variables to speed up this code
               app.State.pageContainer = this.$el.parent();
               app.State.pageInnerWidth = app.State.pageContainer.innerWidth();
               
-              $(window).bind('resize',function(event){_this.handleWindowResize()});
 
             },
             getSiteFrameProjection: function(site){
@@ -288,23 +281,19 @@ $(function() {
             },
             
             handleResize: function() {
+            	var mapEl = this.$el;
+            	var canvasEl = this.mapCanvas;
+            	
 	        	if ( mapResizeTimeout ) {
 	        	    clearTimeout(mapResizeTimeout);
 	        	}
 	        	mapResizeTimeout = setTimeout( function() {
 	        		if (app.map !== undefined) {
-	        			var view = app.map.map.getView();
+	        			var height = mapEl.parent().parent().height();
+	        			canvasEl.height(height - app.mapBottomPadding);
 	        			app.map.map.updateSize();
 	        		}
 	        	}, 100);
-            },
-            
-            handleWindowResize: function() {
-             // window size changed, so variables need to be reset
-                if (!app.State.mapResized) {return false;} // until the element is resized once, resizing happens automatically
-                app.State.pageInnerWidth = app.State.pageContainer.innerWidth();
-                app.map.map.updateSize();
-                return true;
             },
             
             postMapCreation: function() {
@@ -921,6 +910,7 @@ $(function() {
     app.views.DataTileView = app.views.TileView.extend({
     	/// A DataTile view has an optional legend and shows the value from the data file below the map (when turned on).
         initialize: function(options) {
+        	this.shown = false;
         	this.dataFileURL = options.node.data.dataFileURL;
         	this.tilePath = options.node.data.tilePath;
         	this.legendFileURL = options.node.data.legendFileURL;
@@ -1135,27 +1125,18 @@ $(function() {
 			}
 			return result;
 		},
-//		loadSlopeDataTiff: function() {
-//			var xhr = new XMLHttpRequest();
-//			xhr.open('GET', '/data/xgds_map_server/mapData/ldem_Erlanger_20m_slopes.tif', true);
-//			xhr.responseType = 'arraybuffer';
-//			xhr.onload = function(e) {
-//			  rp.slopeTiff = GeoTIFF.parse(this.response);
-//			  rp.slopeImage = rp.slopeTiff.getImage();
-//			  var rasterWindow = []; //left, top, right, bottom
-//			  
-//			}
-//			xhr.send();
-//		},
 		show: function() {
             if (!this.visible){
             	if (this.mapElement) {
             		this.group.getLayers().push(this.mapElement);
             		app.map.map.addControl(this.mousePositionControl);
+            		app.mapBottomPadding += 30;
+            		this.shown = true;
             		if (this.legendControl !== undefined) {
             			app.map.map.addControl(this.legendControl);
             			this.manageLegendHorizontalAlignment(true);
             		}
+            		app.vent.trigger('doMapResize');
             	}
                 this.visible = true;
             }
@@ -1165,10 +1146,14 @@ $(function() {
             	if (this.mapElement) {
             		this.group.getLayers().remove(this.mapElement);
             		app.map.map.removeControl(this.mousePositionControl);
+            		if (this.shown){
+            			app.mapBottomPadding -= 30;
+            		}
             		if (this.legendControl !== undefined) {
             			app.map.map.removeControl(this.legendControl);
             			this.manageLegendHorizontalAlignment(false);
             		}
+            		app.vent.trigger('doMapResize');
             	}
                 this.visible = false;
             }

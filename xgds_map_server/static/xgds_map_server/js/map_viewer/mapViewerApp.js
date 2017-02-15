@@ -52,6 +52,7 @@ const App = Marionette.Application.extend( {
 	vent: Backbone.Radio.channel('global'),
     tree: undefined,
     treeData: null,
+    mapBottomPadding: 120,
 	onStart: function() {
 		this.rootView = new RootView();
 		this.showView(this.rootView);
