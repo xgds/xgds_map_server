@@ -31,17 +31,10 @@ app.views.FancyTreeView = Marionette.View.extend({
     },
     onAttach: function() {
     	app.vent.trigger('layerView:onAttach');
-    	this.createTree();
     	this.connectFilter();
     },
     onRender: function() {
         app.vent.trigger('layerView:onRender');
-        if (!_.isUndefined(app.tree)) {
-            // rerendering tree
-            return;
-        }
-        this.createTree();
-        return;
     },
     refreshTree: function() {
         if (!_.isUndefined(app.tree)){
@@ -127,6 +120,9 @@ app.views.FancyTreeView = Marionette.View.extend({
     createTree: function() {
         if (_.isUndefined(app.tree) && !_.isUndefined(app.treeData)){
             var layertreeNode = this.$el.find("#layertree");
+            if (layertreeNode.length == 0){
+            	return;
+            }
             var context = this;
             var mytree = layertreeNode.fancytree({
                 extensions: ['persist', 'filter', 'transparency_slider'],

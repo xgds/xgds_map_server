@@ -3,6 +3,10 @@ span.fancytree-node.kmlFile > span.fancytree-icon {
   background-position: 0 5;
 }
 
+#btnResetSearch {
+	min-width: 30px;
+}
+
 ul.fancytree-container {
  	 height: 400px;
   	 width: 95%;

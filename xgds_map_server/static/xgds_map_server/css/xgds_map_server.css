@@ -5,3 +5,7 @@
 .maplegend {
 	top: 65px;
 }
+
+i.pinDiv {
+	float: right;
+}
