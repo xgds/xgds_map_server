@@ -6,21 +6,24 @@
 <script type="x-template/underscore" id="application_contents">
   <div id="toolbar" class="row">
 	</div>
-	<div class="row">
-        <div id="overmap" class="six columns">
-       {% siteframe_form %}
-        </div>
-        <div id="overlayers" class="six columns"></div>
-    </div>
-	<div class="row">
-        <div id="map" class="six columns">
+ <div class="grid-stack grid-stack-6" id="container">
+    	<div id="map-gridstack-item" class="grid-stack-item"  data-gs-x="0" data-gs-y="0" data-gs-width="4" data-gs-height="4" >
+			<div id="map-gridstack-item-content"  class="grid-stack-item-content" >
+				<i class="icon-lock pinDiv warning"></i>
+    			<div id="overmap">{% siteframe_form %}</div>
+    			<div id="map"></div>
+    			<div id="postmap" ></div>
+    			<div id="postpostmap" ></div>
+    		</div>
+    	</div>
+    	<div id="tabs-gridstack-item" class="grid-stack-item"  data-gs-x="4" data-gs-y="0" data-gs-width="2" data-gs-height="4" >
+    		<div id="tabs-gridstack-item-content" class="grid-stack-item-content" >
+    		<i class="icon-lock-open pinDiv warning"></i>
+		        <div id="overlayers"></div>
+		        <div id="layers"></div>
+		    </div>
 		</div>
-        <div id="layers" class="six columns"></div>
     </div>
-    <div class="row">
-		<div id="postmap"></div>
-		<div id="postpostmap"></div>
-	</div>
 </script>
 
 <div id="application">
@@ -36,6 +39,13 @@
   @import url('{{ EXTERNAL_URL }}fancytree/dist/skin-lion/ui.fancytree.min.css');
   @import url('{{ STATIC_URL }}xgds_map_server/css/fancytree_custom.css');
   @import url('{{ STATIC_URL }}xgds_map_server/css/xgds_map_server.css');
+  @import url('{{ EXTERNAL_URL }}gridstack/dist/gridstack.min.css');
+  @import url('{{ EXTERNAL_URL }}gridstack/dist/gridstack-extra.min.css');
+  .grid-stack-item-content {
+    display: block;
+    margin: 20px 0 10px;
+    }
+  
   #map {
   	 margin-top: 25px;
  	 height: 400px;
@@ -64,6 +74,9 @@
 			};
 	</script>
    	{% include "MapJS.html" %}
+   	<script type="text/javascript" src="{{ EXTERNAL_URL }}gridstack/dist/gridstack.min.js" ></script>
+   	<script type="text/javascript" src="{{ STATIC_URL }}xgds_core/js/gridstackUtils.js"></script>
+    
    	{% for template_name, template in templates.items %}
 	<script type="text/handlebars" id="template-{{template_name}}">
 		{{template|safe}}
@@ -77,5 +90,7 @@
 	var siteFrames = {% siteframes_dict %};
 	$(function(){
     	app.start();
+    	xgds_gridstack.initializeGridstack();
+	    	
 	});
 {% endblock jsInit %}

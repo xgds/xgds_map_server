@@ -493,18 +493,23 @@ app.views.FeatureElementView = Marionette.View.extend({
         this.options = options || {};
         app.views.makeExpandable(this, this.options.expandClass);
     },
-    template: function(data) {
-        //return '' + data.model.toString()+ ' <i/>';
-    	var displayName = data.model.toString();
-    	var uuid = data.model.get('uuid');
-        return '<input class="select" type="checkbox" id="id_' + uuid + '"/></i>&nbsp;<label class="featureName" style="display:inline-block;" for="id_' + uuid + '">' + displayName + '</label><i/>';
+    template: '<input class="select" type="checkbox" id="id_{{uuid}}"/></i>&nbsp;<label class="featureName" style="display:inline-block;" for="id_{{uuid}}">{{displayName}}</label><i/>',
+    templateContext: function() {
+    	return {displayName: this.model.toString(),
+    			uuid: this.model.get('uuid')};
     },
-    serializeData: function() {
-        var data = Marionette.View.prototype.serializeData.call(this, arguments);
-        data.model = this.model; // give the serialized object a reference back to the model
-        data.view = this; // and view
-        return data;
-    },
+//    template: function(data) {
+//        //return '' + data.model.toString()+ ' <i/>';
+//    	var displayName = data.model.toString();
+//    	var uuid = data.model.get('uuid');
+//        return '<input class="select" type="checkbox" id="id_' + uuid + '"/></i>&nbsp;<label class="featureName" style="display:inline-block;" for="id_' + uuid + '">' + displayName + '</label><i/>';
+//    },
+//    serializeData: function() {
+//        var data = Marionette.View.prototype.serializeData.call(this, arguments);
+//        data.model = this.model; // give the serialized object a reference back to the model
+//        data.view = this; // and view
+//        return data;
+//    },
     attributes: function() {
         return {
             'data-item-id': this.model.cid,
