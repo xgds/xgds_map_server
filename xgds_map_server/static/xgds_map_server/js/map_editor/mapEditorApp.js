@@ -14,14 +14,6 @@
 // specific language governing permissions and limitations under the License.
 //__END_LICENSE__
 
-/*
-** Override the TemplateCache function responsible for
-** rendering templates so that it will use Handlebars.
-*/
-Marionette.TemplateCache.prototype.compileTemplate = function(
-    rawTemplate) {
-    return Handlebars.compile(rawTemplate);
-};
 
 /*
 ** Main Application object
