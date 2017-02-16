@@ -29,6 +29,7 @@ Marionette.TemplateCache.prototype.compileTemplate = function(
 //A view that iterates over a Backbone.Collection
 //and renders an individual child view for each model.
 //This version supports having a custom template just like Marionette.View
+//You should define what element to use for the children with childrenEl property
 Marionette.TemplateCollectionView = Marionette.CollectionView.extend({
 
 	// You might need to override this if you've overridden attachHtml
