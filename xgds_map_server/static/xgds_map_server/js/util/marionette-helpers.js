@@ -143,3 +143,125 @@ Marionette.TemplateCollectionView = Marionette.CollectionView.extend({
 
 });
 
+(function( xGDS, $, _, Backbone, Marionette ) {
+
+	xGDS.Actions = { 
+		undoStack: new Array(),
+		redoStack: new Array(),
+		currentState: undefined,
+		enabled: true,
+		_disableCount: 0,
+		_inAction: false,
+		_enterAction: function() {
+			this._inAction = true;
+		},
+		_exitAction: function() {
+			this._inAction = false;
+		},
+		disable: function() {
+			if (this._inAction)
+				return;
+			this._enterAction();
+			this._disableCount += 1;
+			this.enabled = false;
+			this._exitAction();
+		},
+		enable: function() {
+			if (this._inAction)
+				return;
+			this._enterAction();
+			this._disableCount -= 1;
+			if (this._disableCount <= 0) {
+				this.enabled = true;
+				this._disableCount = 0;
+			}
+			this._exitAction();
+		},
+		undoEmpty: function() {
+			return this.undoStack.length == 0;
+		},
+		redoEmpty: function() {
+			return this.redoStack.length == 0;
+		},
+		setInitial: function(force) {
+			if (this.currentState == undefined || force !== undefined && force) {
+				this.currentState = JSON.stringify(app.getSerializableObject().toJSON());
+			}
+		},
+		resetCurrent: function() {
+			if (this._inAction)
+				return;
+			this._enterAction();
+			this.setInitial(true);
+			this._exitAction();
+		},
+		action: function() {
+			if (this._inAction)
+				return;
+			if (!this.enabled)
+			return;
+			if (this.currentState == undefined)
+				return;
+			this.disable();
+			this._enterAction();
+			var sObject = app.getSerializableObject().toJSON();
+			var sObjectString = JSON.stringify(sObject);
+			if (this.currentState == sObjectString) {
+				// unchanged from current state
+			} else {
+				this.undoStack.push(this.currentState);
+				this.currentState = sObjectString;
+				this.redoStack = new Array();
+				app.vent.trigger('undoNotEmpty');
+				app.vent.trigger('redoEmpty');
+				app.vent.trigger('actionOcurred');
+			}
+			this._exitAction();
+			this.enable();
+		},
+		undo: function() {
+			if (this._inAction)
+				return;
+			if (!this.enabled)
+				return;
+			this.disable();
+			this._enterAction();
+			var sObjectString = this.undoStack.pop();
+			var sObject = JSON.parse(sObjectString);
+			if (sObject == undefined) {
+				app.vent.trigger('undoEmpty');
+			} else {
+				this.redoStack.push(this.currentState);
+				this.currentState = sObjectString;
+				app.updateSerializableObject(sObject);
+				app.vent.trigger('redoNotEmpty');
+				if (this.undoStack.length == 0)
+					app.vent.trigger('undoEmpty');
+			}
+			this._exitAction();
+			this.enable();
+		},
+		redo: function() {
+			if (this._inAction)
+				return;
+			if (!this.enabled)
+				return;
+			this.disable();
+			this._enterAction();
+			var sObjectString = this.redoStack.pop();
+			var sObject = JSON.parse(sObjectString);
+			if (sObject == undefined) {
+				app.vent.trigger('redoEmpty');
+			} else {
+				this.undoStack.push(this.currentState);
+				this.currentState = sObjectString;
+				app.updateSerializableObject(sObject);
+				app.vent.trigger('undoNotEmpty');
+				if (this.redoStack.length == 0)
+					app.vent.trigger('redoEmpty');
+			}
+			this._exitAction();
+			this.enable();
+		}
+	}
+}( window.xGDS = window.xGDS || {}, jQuery, _, Backbone, Marionette ));
