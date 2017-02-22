@@ -52,6 +52,7 @@
 
 	xGDS.EditorApplication = xGDS.Application.extend( {
 		mapBottomPadding: 150,
+		expandableTab: 'features',
 		dirty: false,
 		getRootView: function() {
 			return new xGDS.EditorRootView();

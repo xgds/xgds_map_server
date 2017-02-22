@@ -413,7 +413,7 @@ app.views.FeatureStyleHeader = Marionette.View.extend({
 });
 
 
-app.views.FeaturePropertiesView = Marionette.CollectionView.extend({
+app.views.FeaturePropertiesView = Marionette.View.extend({
 	template: '#template-feature-properties',
 	events: {
 		'click .feature-style': function(evt) {
@@ -438,6 +438,9 @@ app.views.FeaturePropertiesView = Marionette.CollectionView.extend({
 			this.model.set('popup', evt.target.checked);
 			this.model.save();
 		}
+	},
+	onRender: function() {
+		app.vent.trigger('showCoordinates', this.model);
 	}
 });
 
@@ -474,25 +477,13 @@ app.views.FeatureElementView = Marionette.View.extend({
     tagName: 'li',
     initialize: function(options) {
         this.options = options || {};
-        app.views.makeExpandable(this, this.options.expandClass);
+        xGDS.makeExpandable(this, this.options.expandClass);
     },
-    template: '<input class="select" type="checkbox" id="id_{{uuid}}"/></i>&nbsp;<label class="featureName" style="display:inline-block;" for="id_{{uuid}}">{{displayName}}</label><i/>',
+    template: '<span><input class="select" type="checkbox" id="id_{{uuid}}"/>&nbsp;<label class="featureName" style="display:inline-block;" for="id_{{uuid}}">{{displayname}}</label></span>',
     templateContext: function() {
-    	return {displayName: this.model.toString(),
-    			uuid: this.model.get('uuid')};
+    	return  {displayname: this.model.toString(),
+    		     uuid: this.model.get('uuid')};
     },
-//    template: function(data) {
-//        //return '' + data.model.toString()+ ' <i/>';
-//    	var displayName = data.model.toString();
-//    	var uuid = data.model.get('uuid');
-//        return '<input class="select" type="checkbox" id="id_' + uuid + '"/></i>&nbsp;<label class="featureName" style="display:inline-block;" for="id_' + uuid + '">' + displayName + '</label><i/>';
-//    },
-//    serializeData: function() {
-//        var data = Marionette.View.prototype.serializeData.call(this, arguments);
-//        data.model = this.model; // give the serialized object a reference back to the model
-//        data.view = this; // and view
-//        return data;
-//    },
     attributes: function() {
         return {
             'data-item-id': this.model.cid,
@@ -512,15 +503,15 @@ app.views.FeatureElementView = Marionette.View.extend({
             app.vent.trigger('activeFeature', this.model);
             app.State.metaExpanded = true;
             app.State.featureSelected = this.model;
-            this.expand();
+            this.expand(this);
             app.vent.trigger('showFeature', this.model);
         },
     	'click .select': function(evt) {
         	if (app.State.featureSelected != this.model){
         	    if (evt.target.checked){
-        		app.vent.trigger('selectFeature', this.model);
+        	    	app.vent.trigger('selectFeature', this.model);
         	    } else {
-        		app.vent.trigger('deselectFeature', this.model);
+        	    	app.vent.trigger('deselectFeature', this.model);
         	    }
         	}
     	}
@@ -544,11 +535,11 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
 	emptyView: app.views.NoFeaturesView,
 	initialize: function(options) {
 		this.options = options || {};
-		this.on('childview:expand', this.onItemExpand, this);
 		this.listenTo(app.vent, 'selectedFeatures', this.getSelectedFeatures);
 		this.listenTo(app.vent, 'featuresSelected', this.enableFeatureActions);
 		this.listenTo(app.vent, 'featuresUnSelected', this.disableFeatureActions);
 		this.listenTo(app.vent, 'deleteSelectedFeatures', this.deleteSelectedFeatures);
+		this.on('childview:expand', function(childView) { this.onItemExpand(childView);}, this);
 	},
 	childViewOptions: {
 		expandClass: 'col1'
@@ -559,14 +550,8 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
 		 */
 		// if there is a previously selected feature, revert the style to default.
 		app.State.featureSelected = childView.model;
-
-		
+		app.vent.trigger('itemSelected', childView.model);
 	},   
-    onClose: function(){
-        this.children.each(function(view) {
-        	console.log(view);
-        });
-    },
     deleteSelectedFeatures: function(){
     	var features = this.getSelectedFeatures(); 
     	var selectParent = null;
@@ -592,67 +577,6 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
 
 
 
-
-app.views.makeExpandable = function(view, expandClass) {
-    /*
-     * Call this on a view to indicate it is a expandable item in the three-column layout.
-     * When the view's 'expand' event is triggered, it will display it's chevron and trigger
-     * the global 'viewExpanded' event.  On recieving a global 'viewExpoanded' event with an
-     * expandClass that matches its own, the view will remove it's chevron.
-     */
-    if (app.currentTab != 'features') {
-        // memory leak work around
-        return;
-    }
-    
-    var expandable = {
-        expand: function() {
-            this.trigger('expand');
-        },
-        _expand: function() {
-            var expandClass = this.options.expandClass;
-            this.expanded = true;
-            this._addIcon();
-            app.vent.trigger('viewExpanded', this, expandClass);
-            if (!_.isUndefined(this.onExpand) && _.isFunction(this.onExpand)) {
-                this.onExpand();
-            }
-        },
-        unexpand: function() {
-            this.expanded = false;
-            this.$el.find('i').removeClass('icon-play');
-        },
-        onExpandOther: function(target, expandClass) {
-            if (this.options.expandClass === expandClass && this != target && target.isClosed != true) {
-                this.unexpand();
-            }
-        },
-        _ensureIcon: function() {
-            if (view.$el.find('i').length == 0) {
-                view.$el.append('<i/>');
-            }
-        },
-        _restoreIcon: function() {
-            if (this.expanded) {
-                this._addIcon();
-            }
-        },
-        _addIcon: function() {
-            this._ensureIcon();
-            this.$el.find('i').addClass('icon-play');
-        },
-        onClose: function() {
-            this.stopListening();
-        }
-    };
-    view = _.defaults(view, expandable);
-    view.options = _.defaults(view.options, {expandClass: expandClass});
-    view.listenTo(app.vent, 'viewExpanded', view.onExpandOther, view);
-    view.on('expand', view._expand, view);
-    view.on('render', view._restoreIcon, view);
-};
-
-
 app.views.TabNavView = xGDS.TabNavView.extend({
     viewMap: {
     	'info': app.views.LayerInfoTabView,
@@ -675,78 +599,3 @@ app.views.TabNavView = xGDS.TabNavView.extend({
 
 });
 
-//app.views.TabNavView = Marionette.View.extend({
-//    template: '#template-tabnav',
-//    regions: {
-//        tabTarget: '#tab-target',
-//        tabContent: '#tab-content'
-//    },
-//    events: {
-//        'click ul.tab-nav li': 'clickSelectTab'
-//    },
-//
-//    
-//
-//    initialize: function() {
-//        this.on('tabSelected', this.setTab);
-//        this.listenTo(app.vent, 'setTabRequested', function(tabId) {
-//            this.setTab(tabId);
-//        });
-//        this.layersView = null;
-//    },
-//
-//    onRender: function() {
-//        if (! this.options.initialTab) {
-//            this.options.initialTab = 'info';
-//        }
-//        if (!_.isUndefined(app.currentTab)) {
-//            this.trigger('tabSelected', app.currentTab);
-//        } else {
-//            this.trigger('tabSelected', this.options.initialTab);
-//        }
-//    },
-//
-//    clickSelectTab: function(event) {
-//        var newmode = $(event.target).parents('li').data('target');
-//        this.trigger('tabSelected', newmode);
-//    },
-//
-//    setTab: function(tabId) {
-//    	 var oldTab = app.currentTab;
-//         app.currentTab = tabId;
-//         if (oldTab == tabId){
-//             return;
-//         }
-//    	
-//        var $tabList = this.$el.find('ul.tab-nav li');
-//        $tabList.each(function() {
-//            li = $(this);
-//            if (li.data('target') === tabId) {
-//                li.addClass('active');
-//            } else {
-//                li.removeClass('active');
-//            }
-//        });
-//        var viewClass = this.viewMap[tabId];
-//        if (! viewClass) { return undefined; }
-//        var view = new viewClass({
-//            model: app.mapLayer
-//        });
-//        if (oldTab == 'layers'){
-//            this.getRegion('tabContent').show(view, {preventClose: true});
-//        } else {
-//            if (tabId == 'layers'){
-//                if (!_.isNull(this.layersView)){
-//                    this.getRegion('tabContent').show(this.layersView);
-//                } else {
-//                    this.layersView = view;
-//                    this.getRegion('tabContent').show(view);
-//                }
-//            } else {
-//                this.getRegion('tabContent').show(view);
-//            }
-//        }
-//        
-//        app.vent.trigger('tab:change', tabId);
-//    }
-//});
