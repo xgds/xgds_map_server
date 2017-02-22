@@ -53,11 +53,6 @@ $(function() {
 				this.mapEditorView.fitExtent();
 			}
 		}
-//		onRender: function() {
-//		app.views.OLMapView.prototype.onRender.call(this);
-//		this.createMapEditorView();
-////		this.updateBbox();
-//		}
 
 	});
 
@@ -101,14 +96,6 @@ $(function() {
 			});
 	        this.listenTo(app.vent, 'mapmode', this.setMode);
 		},
-		//clean up, then re-enter the mode. Useful for redraws
-//		resetMode: function() {
-//			if (this.currentMode) {
-//				var mode = this.currentMode;
-//				mode.exit.call(this);
-//				mode.enter.call(this);
-//			}
-//		},
 		modeMap: {
 				'addFeatures' : 'addFeaturesMode',
 				'navigate' : 'navigateMode',
@@ -123,6 +110,9 @@ $(function() {
 			mode.enter.call(this);
 			this.currentMode = mode;
 			this.currentModeName = modeName;
+			if (modeName != 'navigate'){
+				app.vent.trigger('setTabRequested','features');
+			}
 		},
 		createFeaturesLayer: function() {
 			this.olFeatures = new ol.Collection();
@@ -204,6 +194,7 @@ $(function() {
 			this.initializeFeatureObjViews(featureObj, featureObj.json['type']);
 		},
 		initializeFeatureObjViews(featureObj, type){
+			var newFeatureView = undefined;
 			switch (type){
 			case 'GroundOverlay':
 				newFeatureView = new app.views.GroundOverlayEditView({
@@ -292,6 +283,7 @@ $(function() {
 			}, this);
 			this.featureAdder.on('drawend', function(event) { // finished drawing this feature
 				var featureObj = this.createBackboneFeatureObj(event.feature);
+				app.vent.trigger('showFeature', featureObj);
 			}, this);
 			this.map.addInteraction(this.featureAdder);
 		},
