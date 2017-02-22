@@ -17,8 +17,7 @@
 
 (function( xGDS, $, _, Backbone, Marionette ) {
 
-	xGDS.MapRootView = Marionette.View.extend({
-		template: '#application_contents',
+	xGDS.MapRootView = xGDS.RootView.extend({
 		regions: {
 			mapRegion: '#map',
 			layersRegion: '#layers'
@@ -27,15 +26,6 @@
 			app.map = new app.views.OLMapView();
 			this.showChildView('mapRegion', app.map);
 			this.showChildView('layersRegion', new app.views.FancyTreeView());
-		},
-		onAttach: function() {
-			var pageTopHeight = $('#page-top').outerHeight();
-			var pageElement = $('#page');
-			var pageContentElement = $('#page-content');
-			pageContentElement.outerHeight(pageElement.innerHeight() - pageTopHeight);
-			$(window).bind('resize', function() {
-				pageContentElement.outerHeight(pageElement.innerHeight() - pageTopHeight);
-			});
 		}
 	});
 
@@ -97,6 +87,22 @@
 				reloadModelData(modelName);
 			});
 
+		},
+		getColor: function(key) {
+			function allocateColor() {
+				return $.randomColor();
+			} 
+			if (!app.colors) {
+				app.colors = {};
+			}
+			var color;
+			if (_.has(app.colors, key)) {
+				color = app.colors[key];
+			} else {
+				color = allocateColor();
+				app.colors[key] = color;
+			}
+			return color;
 		}
 	});
 	

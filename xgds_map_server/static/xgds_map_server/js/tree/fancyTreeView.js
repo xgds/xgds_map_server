@@ -110,11 +110,15 @@ app.views.FancyTreeView = Marionette.View.extend({
     	          ],
     	      beforeOpen: function(event, ui) {
     	        var node = $.ui.fancytree.getNode(ui.target);
-    	        node.setActive();
+    	        if (node !== null){
+    	        	node.setActive();
+    	        }
     	      },
     	      select: function(event, ui) {
     	        var node = $.ui.fancytree.getNode(ui.target);
-    	        window.open(node.data.href, '_edit');
+    	        if (node !== null){
+    	        	window.open(node.data.href, '_edit');
+    	        }
     	      }
     	    });
     },

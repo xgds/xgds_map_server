@@ -47,41 +47,20 @@ app.views.ToolbarView = Marionette.View.extend({
         this.listenTo(app.vent, 'redoNotEmpty', this.enableRedo);
         this.listenTo(app.mapLayer, 'sync', function(model) {this.updateSaveStatus('sync')});
         this.listenTo(app.mapLayer, 'error', function(model) {this.updateSaveStatus('error')});
-        // todo listento sync of features
     },
 
-    onAttach: function() {
-        if (!app.State.mapHeightSet) {
-            var offset = this.$el.height() +
-                parseFloat(this.$el.parent().css('margin-top')) +
-                parseFloat(this.$el.parent().css('margin-bottom')) +
-                10; // this exact number is needed because jquery ui uses
-            // elements with absolute positioning for the resize handles
-            var pageContentElement = $('#page-content');
-            var oldMapHeight = app.map.$el.height();
-            var initialHeight = oldMapHeight - offset;
-            app.map.$el.height(initialHeight);
-            app.map.$el.css('max-height', initialHeight + 'px');
-            $(window).bind('resize', function() {
-                app.map.$el.css('max-height', (pageContentElement.height() - offset) + 'px');
-            });
-            app.State.mapHeightSet = true;
-            app.vent.trigger('doMapResize');
-        }
-    },
-
-    onRender: function() {
-        if (app.Actions.undoEmpty()) {
-            this.disableUndo();
-        } else {
-            this.enableUndo();
-        }
-        if (app.Actions.redoEmpty()) {
-            this.disableRedo();
-        } else {
-            this.enableRedo();
-        }
-    },
+//    onRender: function() {
+//        if (app.Actions.undoEmpty()) {
+//            this.disableUndo();
+//        } else {
+//            this.enableUndo();
+//        }
+//        if (app.Actions.redoEmpty()) {
+//            this.disableRedo();
+//        } else {
+//            this.enableRedo();
+//        }
+//    },
 
     disableForReadOnly: function() {
         this.$('#btn-save').attr('disabled', 'true');
@@ -206,6 +185,10 @@ app.views.EditingToolsView = Marionette.View.extend({
         this.ensureEl();
         this.$el.hide();
     }
+});
+
+app.views.NavigateView = Marionette.View.extend({
+	template: '<div>&nbsp;<br/></div>'
 });
 
 app.views.LayerInfoTabView = Marionette.View.extend({
@@ -562,7 +545,7 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
 	initialize: function(options) {
 		this.options = options || {};
 		this.on('childview:expand', this.onItemExpand, this);
-		app.reqres.setHandler('selectedFeatures', this.getSelectedFeatures, this);
+		this.listenTo(app.vent, 'selectedFeatures', this.getSelectedFeatures);
 		this.listenTo(app.vent, 'featuresSelected', this.enableFeatureActions);
 		this.listenTo(app.vent, 'featuresUnSelected', this.disableFeatureActions);
 		this.listenTo(app.vent, 'deleteSelectedFeatures', this.deleteSelectedFeatures);
@@ -593,17 +576,17 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
     }, 
     
     getSelectedFeatures: function() {
-	var features = [];
-	this.children.each(function(childView) {
-	    try {
-		if (childView.isSelected()) {
-		    features.push(childView.model);
-		}
-	    } catch (ex) {
-		// pass
-	    }
-	});
-	return features;
+		var features = [];
+		this.children.each(function(childView) {
+		    try {
+			if (childView.isSelected()) {
+			    features.push(childView.model);
+			}
+		    } catch (ex) {
+			// pass
+		    }
+		});
+		return features;
     }
 });
 
@@ -670,16 +653,7 @@ app.views.makeExpandable = function(view, expandClass) {
 };
 
 
-app.views.TabNavView = Marionette.View.extend({
-    template: '#template-tabnav',
-    regions: {
-        tabTarget: '#tab-target',
-        tabContent: '#tab-content'
-    },
-    events: {
-        'click ul.tab-nav li': 'clickSelectTab'
-    },
-
+app.views.TabNavView = xGDS.TabNavView.extend({
     viewMap: {
     	'info': app.views.LayerInfoTabView,
     	'features': app.views.FeaturesTabView,
@@ -689,65 +663,90 @@ app.views.TabNavView = Marionette.View.extend({
     },
 
     initialize: function() {
-        this.on('tabSelected', this.setTab);
-        this.listenTo(app.vent, 'setTabRequested', function(tabId) {
-            this.setTab(tabId);
-        });
-        this.layersView = null;
+    	xGDS.TabNavView.prototype.initialize.call(this);
+        var context = this;
+        this.listenTo(app.vent, 'onLayerLoaded', function() {
+        	 this.setTab('info');
+        }, this);
     },
-
-    onRender: function() {
-        if (! this.options.initialTab) {
-            this.options.initialTab = 'info';
-        }
-        if (!_.isUndefined(app.currentTab)) {
-            this.trigger('tabSelected', app.currentTab);
-        } else {
-            this.trigger('tabSelected', this.options.initialTab);
-        }
-    },
-
-    clickSelectTab: function(event) {
-        var newmode = $(event.target).parents('li').data('target');
-        this.trigger('tabSelected', newmode);
-    },
-
-    setTab: function(tabId) {
-    	 var oldTab = app.currentTab;
-         app.currentTab = tabId;
-         if (oldTab == tabId){
-             return;
-         }
-    	
-        var $tabList = this.$el.find('ul.tab-nav li');
-        $tabList.each(function() {
-            li = $(this);
-            if (li.data('target') === tabId) {
-                li.addClass('active');
-            } else {
-                li.removeClass('active');
-            }
-        });
-        var viewClass = this.viewMap[tabId];
-        if (! viewClass) { return undefined; }
-        var view = new viewClass({
-            model: app.mapLayer
-        });
-        if (oldTab == 'layers'){
-            this.getRegion('tabContent').show(view, {preventClose: true});
-        } else {
-            if (tabId == 'layers'){
-                if (!_.isNull(this.layersView)){
-                    this.getRegion('tabContent').show(this.layersView);
-                } else {
-                    this.layersView = view;
-                    this.getRegion('tabContent').show(view);
-                }
-            } else {
-                this.getRegion('tabContent').show(view);
-            }
-        }
-        
-        app.vent.trigger('tab:change', tabId);
+    getModel: function() {
+    	return app.mapLayer;
     }
+
 });
+
+//app.views.TabNavView = Marionette.View.extend({
+//    template: '#template-tabnav',
+//    regions: {
+//        tabTarget: '#tab-target',
+//        tabContent: '#tab-content'
+//    },
+//    events: {
+//        'click ul.tab-nav li': 'clickSelectTab'
+//    },
+//
+//    
+//
+//    initialize: function() {
+//        this.on('tabSelected', this.setTab);
+//        this.listenTo(app.vent, 'setTabRequested', function(tabId) {
+//            this.setTab(tabId);
+//        });
+//        this.layersView = null;
+//    },
+//
+//    onRender: function() {
+//        if (! this.options.initialTab) {
+//            this.options.initialTab = 'info';
+//        }
+//        if (!_.isUndefined(app.currentTab)) {
+//            this.trigger('tabSelected', app.currentTab);
+//        } else {
+//            this.trigger('tabSelected', this.options.initialTab);
+//        }
+//    },
+//
+//    clickSelectTab: function(event) {
+//        var newmode = $(event.target).parents('li').data('target');
+//        this.trigger('tabSelected', newmode);
+//    },
+//
+//    setTab: function(tabId) {
+//    	 var oldTab = app.currentTab;
+//         app.currentTab = tabId;
+//         if (oldTab == tabId){
+//             return;
+//         }
+//    	
+//        var $tabList = this.$el.find('ul.tab-nav li');
+//        $tabList.each(function() {
+//            li = $(this);
+//            if (li.data('target') === tabId) {
+//                li.addClass('active');
+//            } else {
+//                li.removeClass('active');
+//            }
+//        });
+//        var viewClass = this.viewMap[tabId];
+//        if (! viewClass) { return undefined; }
+//        var view = new viewClass({
+//            model: app.mapLayer
+//        });
+//        if (oldTab == 'layers'){
+//            this.getRegion('tabContent').show(view, {preventClose: true});
+//        } else {
+//            if (tabId == 'layers'){
+//                if (!_.isNull(this.layersView)){
+//                    this.getRegion('tabContent').show(this.layersView);
+//                } else {
+//                    this.layersView = view;
+//                    this.getRegion('tabContent').show(view);
+//                }
+//            } else {
+//                this.getRegion('tabContent').show(view);
+//            }
+//        }
+//        
+//        app.vent.trigger('tab:change', tabId);
+//    }
+//});

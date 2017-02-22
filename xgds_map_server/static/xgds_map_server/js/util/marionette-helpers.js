@@ -144,6 +144,43 @@ Marionette.TemplateCollectionView = Marionette.CollectionView.extend({
 });
 
 (function( xGDS, $, _, Backbone, Marionette ) {
+	xGDS.toSiteFrame =  function(coords, alternateCrs) {
+		if (alternateCrs.type == 'roversw' &&
+				alternateCrs.properties.projection == 'utm') {
+			var utmcoords = [null, null, null];
+			LLtoUTM(coords[1], coords[0], utmcoords, alternateCrs.properties.zone);
+			var x = utmcoords[1] - alternateCrs.properties.originNorthing;
+			var y = utmcoords[0] - alternateCrs.properties.originEasting;
+			return [x, y]; // northing, easting for roversw
+		} else if (alternateCrs.type == 'proj4') {
+			var proj = proj4(alternateCrs.properties.projection);
+			return proj.forward(coords);
+		} else {
+			console.warn('Alternate CRS unknown');
+			return coords;
+		}
+	};
+
+	xGDS.toLngLat = function(coords, alternateCrs) {
+		if (alternateCrs.type == 'roversw' &&
+				alternateCrs.properties.projection == 'utm') {
+			var oeasting = alternateCrs.properties.originEasting;
+			var onorthing = alternateCrs.properties.originNorthing;
+			var utmEasting = parseFloat(coords[1]) + alternateCrs.properties.originEasting;
+			var utmNorthing = parseFloat(coords[0]) + alternateCrs.properties.originNorthing;
+			var lonLat = {};
+			UTMtoLL(utmNorthing, utmEasting,
+					alternateCrs.properties.zone,
+					lonLat);
+			return [lonLat.lon, lonLat.lat];
+		} else if (alternateCrs.type == 'proj4') {
+			var proj = proj4(alternateCrs.properties.projection);
+			return proj.inverseTransform(coords);
+		} else {
+			console.warn('Alternate CRS unknown');
+			return coords;
+		}
+	};
 
 	xGDS.Actions = { 
 		undoStack: new Array(),
@@ -265,3 +302,108 @@ Marionette.TemplateCollectionView = Marionette.CollectionView.extend({
 		}
 	}
 }( window.xGDS = window.xGDS || {}, jQuery, _, Backbone, Marionette ));
+
+xGDS.TabNavView = Marionette.View.extend({
+    template: '#template-tabnav',
+    regions: {
+        tabTarget: '#tab-target',
+        tabContent: '#tab-content'
+    },
+    events: {
+        'click ul.tab-nav li': 'clickSelectTab'
+    },
+
+    initialize: function() {
+        this.layersView = null;
+        this.on('tabSelected', this.setTab);
+        var context = this;
+        this.listenTo(app.vent, 'setTabRequested', function(tabId) {
+            context.setTab(tabId);
+        });
+        $('#tabs-gridstack-item').on('resizestop', function(event, ui) {
+        	setTimeout(function(){
+        		context.handleGridstackResize();
+        	}, 105);
+        });
+    },
+
+    handleGridstackResize: function() {
+    	if (!_.isUndefined(app.State.tabsContainer)){
+    		var tabsDiv = this.$el.parent();
+    		var grandpa = this.$el.parent().parent();
+    		tabsDiv.width(grandpa.width());
+        }
+    },
+    
+
+    clickSelectTab: function(event) {
+        var newmode = $(event.target).parents('li').data('target');
+        this.trigger('tabSelected', newmode);
+    },
+
+    setTab: function(tabId) {
+        var oldTab = app.currentTab;
+        app.currentTab = tabId;
+        if (oldTab == tabId){
+            return;
+        }
+        var $tabList = this.$el.find('ul.tab-nav li');
+        $tabList.each(function() {
+            li = $(this);
+            if (li.data('target') === tabId) {
+                li.addClass('active');
+            } else {
+                li.removeClass('active');
+            }
+        });
+        
+        var view = undefined;
+        if (tabId == 'layers'){
+        	// we reuse the layers view
+            if (_.isNull(this.layersView)){
+            	this.layersView =  this.constructNewViewFromId(tabId);
+            }
+            view = this.layersView;
+        } else {
+        	if (oldTab == 'layers'){
+            	this.detachChildView('tabContent');
+            }
+        	view = this.constructNewViewFromId(tabId);
+        }
+        if (view == undefined){
+    		return;
+    	}
+        app.currentTabView = view;
+    	this.showChildView('tabContent', view);
+        
+        app.vent.trigger('tab:change', tabId);
+    },
+    getModel: function() {
+    	//override this
+    	return null;
+    },
+    constructNewViewFromId: function(tabId){
+    	var viewClass = this.viewMap[tabId];
+        if (! viewClass) { 
+        	return undefined; 
+        }
+        var view = new viewClass({
+            model: this.getModel()
+        });
+        return view;
+    }
+
+});
+
+xGDS.RootView = Marionette.View.extend({
+	template: '#application_contents',
+	onAttach: function() {
+		var pageTopHeight = $('#page-top').outerHeight();
+		var pageElement = $('#page');
+		var pageContentElement = $('#page-content');
+		pageContentElement.outerHeight(pageElement.innerHeight() - pageTopHeight);
+		$(window).bind('resize', function() {
+			pageContentElement.outerHeight(pageElement.innerHeight() - pageTopHeight);
+		});
+	}
+});

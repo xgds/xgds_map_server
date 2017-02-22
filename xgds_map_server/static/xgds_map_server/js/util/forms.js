@@ -122,7 +122,7 @@
             // in the background, always deal with lat, lon
             if (this.siteFrameMode) {
                 var coords = !_.isNull(this.alternateCrs) ?
-                    app.util.toLngLat(coords, this.alternateCrs) : coords;
+                    xGDS.toLngLat(coords, this.alternateCrs) : coords;
             }
             var lng = parseFloat(coords[0]);
             var lat = parseFloat(coords[1]);
@@ -143,7 +143,7 @@
             var decimalPlaces = 7;
             if (this.siteFrameMode) {
                 var coords = !_.isNull(this.alternateCrs) ?
-                    app.util.toSiteFrame(value.coordinates, this.alternateCrs) :
+                    xGDS.toSiteFrame(value.coordinates, this.alternateCrs) :
                     value.coordinates;
                     decimalPlaces = 2;
             } else {

@@ -147,13 +147,10 @@ $(function() {
                 	}
                 }
                 
-                var _this = this;
-                this.$el.bind('resize', function(event){_this.handleResize()});
                 this.listenTo(app.vent, 'doMapResize', this.handleResize);
                 
                 this.buildLayersForMap();
                 this.layersInitialized = false;
-                
                 
                 //events
                 var context = this;
@@ -169,9 +166,7 @@ $(function() {
                     this.createNode(node);
                 });
                 
-                
             },
-            
             onAttach: function() {
             	
             	app.mapView = new ol.View({
@@ -182,7 +177,7 @@ $(function() {
                 });
             	
             	var mapOptions = {
-                        target: this.el,
+            			target: this.el,
                         layers: this.layersForMap,
                         view: app.mapView
                       };
@@ -213,16 +208,18 @@ $(function() {
 	            	var projectionKey = event.data.thisview.getSiteFrameProjection(siteFrames[sel]);
 	            	coords = transformFromProjection([siteFrames[sel].east0, siteFrames[sel].north0], projectionKey);
 	            	event.data.mapview.setCenter(coords, 5);  // TOD0 hardcoding zoom level 5 for now ... would be good to fix
-              });
-              
-              // we should have a good $el by now
-              var _this = this;
-              
-              // pre-set certain variables to speed up this code
-              app.State.pageContainer = this.$el.parent();
-              app.State.pageInnerWidth = app.State.pageContainer.innerWidth();
-              
-
+                });
+                
+                // we should have a good $el by now
+                var _this = this;
+                
+                // pre-set certain variables to speed up this code
+                app.State.pageContainer = this.$el.parent();
+                app.State.pageInnerWidth = app.State.pageContainer.innerWidth();
+                this.mapCanvas = this.$el.find('canvas');
+                this.$el.bind('resize', function(event){_this.handleResize()});
+                app.vent.trigger('onMapSetup');
+                
             },
             getSiteFrameProjection: function(site){
             	projectionKey = site.projCode;
@@ -297,7 +294,6 @@ $(function() {
             },
             
             postMapCreation: function() {
-                this.handleResize();
                 this.createLiveSearchView();
                 var callback = app.options.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK;
                 if (!_.isEmpty(callback)) {
@@ -440,7 +436,6 @@ $(function() {
 		                  });
 	                }
                 }
-                
             },
             preloadNode: function(uuid){
             	$.ajax({
@@ -887,6 +882,12 @@ $(function() {
         initialize: function(options) {
             this.tileURL = options.tileURL;
             this.setupOpacity(options);
+            this.minx = options.node.data.minx;
+  		    this.miny = options.node.data.miny;
+		    this.maxx = options.node.data.maxx;
+		    this.maxy = options.node.data.maxy;
+		    this.name = options.node.title;
+		    this.resolutions = options.node.data.resolutions;
             app.views.TreeMapElement.prototype.initialize.call(this, options);
         },
         checkRequired: function() {
@@ -916,13 +917,7 @@ $(function() {
         	this.legendFileURL = options.node.data.legendFileURL;
         	this.legendVisible = options.node.data.legendVisible;
         	this.valueLabel = options.node.data.valueLabel;
-        	this.name = options.node.title;
-        	this.minx = options.node.data.minx;
-  		    this.miny = options.node.data.miny;
-		    this.maxx = options.node.data.maxx;
-		    this.maxy = options.node.data.maxy;
-		    this.resolutions = options.node.data.resolutions;
-            if (this.valueLabel == ""){
+        	if (this.valueLabel == ""){
         		this.valueLabel = this.name;
         	}
         	this.unitsLabel = options.node.data.unitsLabel;
@@ -932,7 +927,6 @@ $(function() {
         	if (options.node.data.jsRawFunction != null){
             	this.jsRawFunction = new Function("value", options.node.data.jsRawFunction);
             }
-
         	app.views.TileView.prototype.initialize.call(this, options);
         	if (this.valueLabel == ""){
         		this.valueLabel = this.name;
@@ -1084,7 +1078,7 @@ $(function() {
 				context.dataPng.decode().then(function(theBitmap) {
 					context.dataBitmap = theBitmap;
 					context.multiplier = (context.dataBitmap.depth / 8);
-					app.vent.trigger('dataTileLoaded', uuid);
+					app.vent.trigger('dataTileLoaded', uuid); 
 				});
 			});
 		},
@@ -1098,7 +1092,7 @@ $(function() {
 				return pngValue;
 			}
 			return null;
-		},
+		},	
 		getRawDataValue: function(coords){
 			var pixelCoords = this.convertToPixelCoords(coords);
 			if (pixelCoords != null){
@@ -1130,8 +1124,8 @@ $(function() {
             	if (this.mapElement) {
             		this.group.getLayers().push(this.mapElement);
             		app.map.map.addControl(this.mousePositionControl);
-            		app.mapBottomPadding += 30;
             		this.shown = true;
+            		app.mapBottomPadding += 30;
             		if (this.legendControl !== undefined) {
             			app.map.map.addControl(this.legendControl);
             			this.manageLegendHorizontalAlignment(true);
@@ -1264,9 +1258,9 @@ $(function() {
             this.options = options || {};
             this.group = this.options.group;
             this.listenTo(app.vent, 'mapSearch:found', function(data) {
-	        	if (data != undefined && data.length > 0){
-	        	    this.constructMapFeatures(data);
-	        	}
+        	if (data != undefined && data.length > 0){
+        	    this.constructMapFeatures(data);
+        	}
             });
             this.listenTo(app.vent, 'mapSearch:clear', function(e) {
                 this.clearDataAndFeatures();
