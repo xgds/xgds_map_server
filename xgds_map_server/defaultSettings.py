@@ -74,7 +74,7 @@ BOWER_INSTALLED_APPS += ['sprintf.js=sprintf.js',
                          #'geotiff.js=git://github.com/constantinius/geotiff.js.git',
 #                          'pngjs=git://github.com/arian/pngjs.git',
 #                          'jpeg-js=git://github.com/eugeneware/jpeg-js.git',
-                         'pngtoy',
+#                         'pngtoy',
                          'jquery-ui-contextmenu=ui-contextmenu'
                          ]
 
