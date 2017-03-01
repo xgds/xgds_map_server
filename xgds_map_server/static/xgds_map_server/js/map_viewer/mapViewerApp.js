@@ -25,7 +25,24 @@
 		onRender: function() {
 			app.map = new app.views.OLMapView();
 			this.showChildView('mapRegion', app.map);
-			this.showChildView('layersRegion', new app.views.FancyTreeView());
+			this.ensureLayersTemplate();
+			this.showChildView('layersRegion', new app.views.FancyTreeView({template: this.layersTemplate}));
+		},
+		ensureLayersTemplate: function() {
+			if (!$("#template-layer-tree").length){
+	    		var url = '/xgds_core/handlebar_string/xgds_map_server/templates/handlebars/layer-tree.handlebars';
+	    		var context = this;
+	    		$.ajax({
+	        	    async: false,
+	        	    url: url,
+	        	    success: function(handlebarSource, status){
+	        	    	context.handlebarSource = handlebarSource;
+	        	    	context.layersTemplate = Handlebars.compile(handlebarSource);
+	        	    }
+	        	});
+	    	} else {
+	    		this.layersTemplate = '#template-layer-tree';
+	    	}
 		}
 	});
 
@@ -35,7 +52,7 @@
 		vent: Backbone.Radio.channel('global'),
 		tree: undefined,
 		treeData: null,
-		mapBottomPadding: 120,
+		mapBottomPadding: 50,
 		getRootView: function() {
 			return new xGDS.MapRootView();
 		},
