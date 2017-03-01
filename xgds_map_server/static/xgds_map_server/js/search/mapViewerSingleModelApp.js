@@ -33,18 +33,13 @@
 	});
 	
 	xGDS.SingleModelApplication = xGDS.Application.extend( {
+		mapBottomPadding: 50,
 		initialize: function(options) {
 			xGDS.Application.prototype.initialize.call(this, options);
 			this.vent.on('onMapSetup', this.fetchDetailContents, this);
 		},
 		getRootView: function() {
 			return new xGDS.SingleModelRootView();
-		},
-		State: {
-			featureSelected: undefined,
-            mouseDownLocation: undefined,
-            pageInnerWidth: undefined,
-            mapHeightSet: false,
 		},
 		fetchDetailContents: function() {
 			var selectedModel = this.options.modelName;
@@ -110,23 +105,4 @@
 
 }( window.xGDS = window.xGDS || {}, jQuery, _, Backbone, Marionette ));
 
-//    app.showDetailView = function(handlebarSource, data, modelMap){
-//    	var detailView = new app.views.SearchDetailView({
-//    		handlebarSource:handlebarSource,
-//    		data:data,
-//    		modelMap: modelMap
-//    	});
-//    	app.viewRegion.show(detailView);
-//    	app.showNotesView(data, modelMap);
-//    	showOnMap([data]); 
-//    };
-//    
-//    app.showNotesView = function(data, modelMap){
-//    	var notesView = new app.views.SearchNotesView({
-//    		data:data,
-//    		modelMap: modelMap,
-//    		modelName: app.options.modelName
-//    	});
-//    	app.notesRegion.show(notesView);
-//    }
-    
+

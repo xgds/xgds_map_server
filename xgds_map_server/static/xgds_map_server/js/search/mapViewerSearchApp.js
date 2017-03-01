@@ -38,19 +38,10 @@
 	});
 	
 	xGDS.SearchApplication = xGDS.Application.extend( {
+		mapBottomPadding: 50,
 		getRootView: function() {
 			return new xGDS.SearchRootView();
-		},
-		State: {
-			featureSelected: undefined,
-            mouseDownLocation: undefined,
-            pageInnerWidth: undefined,
-//            mapResized: false,
-            mapHeightSet: false,
-//            tree: undefined,
-//            treeData: null
 		}
-		
 	});
 	
 	xGDS.Factory = {
