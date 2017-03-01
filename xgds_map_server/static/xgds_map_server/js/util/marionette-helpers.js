@@ -91,8 +91,13 @@ Marionette.TemplateCollectionView = Marionette.CollectionView.extend({
 	// Render children views. Override this method to provide your own implementation of a
 	// render function for the collection view.
 	render() {
-		this._ensureViewIsIntact();
+		if (this._isDestroyed) {
+			return this;
+		}
 		this.triggerMethod('before:render', this);
+		if (this._isRendered) {
+			this._reInitRegions();
+		}
 		this._renderTemplate();
 		this._renderChildren();
 		this.bindUIElements();

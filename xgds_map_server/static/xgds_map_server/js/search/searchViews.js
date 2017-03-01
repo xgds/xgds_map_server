@@ -22,13 +22,25 @@ app.views.SearchView = Marionette.View.extend({
         'click #doSearch': 'doSearch',
         'click #doSaveSearch': 'openSaveDialog'
     },
-    regions: function(){
-        return {
-        	modelChoiceRegion: '#modelChoiceDiv',
-            searchFormRegion: { el: '#searchFormDiv'},
-            searchResultsRegion: (this.options.searchResultsRegion != undefined) ? {el:"#searchResultsDiv"} : '#searchResultsDiv'
-        };
-      },
+    regions: {
+    	modelChoiceRegion: '#modelChoiceDiv'
+    },
+    addExtraRegions: function() {
+    	// add regions that should exist after attaching.  This is odd because we use the same views for embedded searches (ie within planner)
+    	// and top level searches on their own pages.
+    	var searchResultsDiv = this.$el.find('#searchResultsDiv');
+    	if (searchResultsDiv.length == 0){
+    		searchResultsDiv = $('#searchResultsDiv');
+    	}
+    	this.addRegion('searchResultsRegion', {el: searchResultsDiv});
+    	
+    	var searchFormDiv = this.$el.find('#searchFormDiv');
+    	if (searchFormDiv.length == 0){
+    		searchFormDiv = $('#searchFormDiv');
+    	}
+    	this.addRegion('searchFormRegion', { el: searchFormDiv});
+
+    },
     initialize: function(options) {
     	this.options = options || {};
     	var theKeys = Object.keys(app.options.searchModels);
@@ -52,21 +64,14 @@ app.views.SearchView = Marionette.View.extend({
         });
     },
     templateContext: function() {
-    	var data = {label: this.model._sequenceLabel,
-    			stationMoniker: app.options.stationMoniker,
-    			searchModels: this.searchableModels,
-    			preselectModel: this.preselectModel,
-    			hideModelChoice: this.hideModelChoice
-    	}
+    	var data = {searchModels: this.searchableModels,
+    				preselectModel: this.preselectModel,
+    				hideModelChoice: this.hideModelChoice
+    	};
     	return data;
     },
     onAttach: function() {
-    	
-//        this.$el.empty().append(this.template({
-//            searchModels: this.searchableModels,
-//            preselectModel: this.preselectModel,
-//            hideModelChoice: this.hideModelChoice
-//        }));
+    	this.addExtraRegions();
         this.searchResultsView = new app.views.SearchResultsView({template:'#template-search-results',
         														  viewRegion: this.viewRegion});
         app.searchResultsView = this.searchResultsView;
@@ -260,21 +265,13 @@ app.views.SearchDetailView = Marionette.View.extend({
     setModelMap: function(modelMap){
     	this.modelMap = modelMap;
     },
-    render: function() {
-    	// TODO by the time we get here the map should already have been highlighted?
-    	//highlightOnMap([this.data]);
-        this.$el.empty().append(this.template(this.data));
-    	try {
-//			this.trigger('updateContents');
-//
-    		if (this.neverShown){
-        		this.onAttach();
-    		} else {
-    			this.trigger('updateContents');
-    		}
-    	} catch (err){
-    		// gulp, the first time this will 
-    	}
+    onRender: function() {
+    	if (!this.neverShown){
+			this.trigger('updateContents');
+		}
+    },
+    templateContext: function() {
+    	return this.data;
     },
     updateContents: function() {
     	try {
@@ -294,25 +291,27 @@ app.views.SearchDetailView = Marionette.View.extend({
     	}
     },
     onAttach: function() {
-    	this.neverShown = false;
-    	this.updateContents();
-    	var context = this;
-    	$('.grid-stack').on('resizestop', function(event, ui) {
-    	    var element = event.target;
-    	    var found = $(event.target).find('#view-gridstack-item-content');
-    	    if (found.length > 0){
-    	    	if (context.modelMap.viewResizeMethod != undefined){
-    	    		context.handleResizeDetailView(found[0], context);
-    	    	}
-    	    }
-    		
-    	});
-    	$("#ajax_prev_button").click(function(event) {
-			context.selectPreviousAjax();
-		});
-		$("#ajax_next_button").click(function(event) {
-			context.selectNextAjax();
+    	if (this.neverShown){
+	    	this.neverShown = false;
+	    	this.updateContents();
+	    	var context = this;
+	    	$('.grid-stack').on('resizestop', function(event, ui) {
+	    	    var element = event.target;
+	    	    var found = $(event.target).find('#view-gridstack-item-content');
+	    	    if (found.length > 0){
+	    	    	if (context.modelMap.viewResizeMethod != undefined){
+	    	    		context.handleResizeDetailView(found[0], context);
+	    	    	}
+	    	    }
+	    		
+	    	});
+	    	$("#ajax_prev_button").click(function(event) {
+				context.selectPreviousAjax();
 			});
+			$("#ajax_next_button").click(function(event) {
+				context.selectNextAjax();
+				});
+    	}
     },
     handleResizeDetailView: function(theDiv, context){
     	var functionName = context.modelMap.viewResizeMethod[0];
@@ -412,13 +411,23 @@ app.views.SearchResultsView = Marionette.View.extend({
 			context.forceDetailView(data, modelMap);
 		});
 	},
-    regions: function(){
-        return {
-            viewRegion: (this.options.viewRegion) ? {el:"#viewDiv"} : '#viewDiv',
-            viewNotesRegion: (this.options.viewRegion) ? {el:"#notesDiv"} : '#notesDiv'
-        };
-      },
+	setupRegions: function() {
+		var viewDiv = this.$el.find('#viewDiv');
+		if (viewDiv.length == 0){
+			viewDiv = $('#viewDiv');
+		}
+		this.addRegion('viewRegion', {el: viewDiv});
+		var notesDiv = this.$el.find('#notesDiv');
+		if (notesDiv.length == 0){
+			notesDiv = $('#notesDiv');
+		}
+		this.addRegion('viewNotesRegion', {el: notesDiv});
+		
+		
+	},
     onAttach: function() {
+    	this.setupRegions();
+    	
     	// hook up ajax reloading
     	var reloadIconName = '#reloadSearchResults';
     	var context = this;
@@ -738,8 +747,8 @@ app.views.SearchResultsView = Marionette.View.extend({
     	});
     	try {
     		this.hookPrevNextButtons();
-    		this.viewRegion.show(this.detailView);
-    		this.viewNotesRegion.show(this.detailNotesView);
+    		this.showChildView('viewRegion', this.detailView);
+    		this.showChildView('viewNotesRegion', this.detailNotesView);
     	} catch (err){
     	}
     },

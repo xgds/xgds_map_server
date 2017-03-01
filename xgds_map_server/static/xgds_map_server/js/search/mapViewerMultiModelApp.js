@@ -15,6 +15,7 @@
 //__END_LICENSE__
 
 
+// TODO this is not used and has not been ported from Marionette 2.4.7
 /*
 ** Main Application object
 */

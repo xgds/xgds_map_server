@@ -15,61 +15,51 @@
 //__END_LICENSE__
 
 
-/*
-** Main Application object
-*/
-var app = (function($, _, Backbone) {
-    app = new Marionette.Application();
-    app.views = app.views || {};
-   )
-   
-   	app.addRegion('mapRegion' , '#mapDiv');
-	app.addRegion('layersRegion', '#layers');
-	app.addRegion('searchRegion', '#searchDiv');
+(function( xGDS, $, _, Backbone, Marionette ) {
 
-    app.module('State', function(options) {
-        this.addInitializer(function(options) {
-        	this.featureSelected = undefined;
-            this.mouseDownLocation = undefined;
-            this.pageInnerWidth = undefined;
-            this.mapResized = false;
-            this.mapHeightSet = false;
-            this.tree = undefined;
-            this.treeData = null;
-        });
-    });
+	xGDS.SearchRootView = xGDS.RootView.extend({
+		regions: {
+			mapRegion: '#map',
+			layersRegion: '#layers',
+			searchRegion: '#searchDiv'
+//			detailRegion: '#map',
+		},
+		onRender: function() {
+			app.map = new app.views.OLMapView();
+			this.showChildView('mapRegion', app.map);
+			this.showChildView('layersRegion', new app.views.FancyTreeView());
+			var hideModelChoice = (this.options.modelName !== undefined);
+	        this.showChildView('searchRegion', new app.views.SearchView({template: '#template-mapViewerSearch',
+	        													         searchResultsRegion: true,
+	        													         viewRegion: true,
+	        													         hideModelChoice: hideModelChoice,
+	        													         selectedModel: app.options.modelName}));
+		}
+	});
+	
+	xGDS.SearchApplication = xGDS.Application.extend( {
+		getRootView: function() {
+			return new xGDS.SearchRootView();
+		},
+		State: {
+			featureSelected: undefined,
+            mouseDownLocation: undefined,
+            pageInnerWidth: undefined,
+//            mapResized: false,
+            mapHeightSet: false,
+//            tree: undefined,
+//            treeData: null
+		}
+		
+	});
+	
+	xGDS.Factory = {
+			construct: function(options){
+				return new xGDS.SearchApplication(options);
+			}
+	};
 
-    app.addInitializer(function(options) {
-        var pageTopHeight = $('#page-top').outerHeight();
-        var pageElement = $('#page');
-        var pageContentElement = $('#page-content');
-        pageContentElement.outerHeight(pageElement.innerHeight() - pageTopHeight);
-        $(window).bind('resize', function() {
-            pageContentElement.outerHeight(pageElement.innerHeight() - pageTopHeight);
-        });
-    });
+}( window.xGDS = window.xGDS || {}, jQuery, _, Backbone, Marionette ));
+	
 
-    app.addInitializer(function(options) {
-        this.options = options = _.defaults(options || {}, {showDetailView:true});
-        app.map = new app.views.OLMapView({
-            el: '#map'
-        });
-        app.vent.trigger('onMapSetup');
-        app.layersRegion.show(new app.views.FancyTreeView());
-    });
     
-    app.addInitializer(function(options) {
-        this.options = options = _.defaults(options || {});
-        var hideModelChoice = (this.options.modelName !== undefined);
-        app.searchRegion.show(new app.views.SearchView({template: '#template-mapViewerSearch',
-        												searchResultsRegion: true,
-        												viewRegion: true,
-        												hideModelChoice: hideModelChoice,
-        												selectedModel: this.options.modelName}));
-        
-    });
-    
-    
-    return app;
-
-}(jQuery, _, Backbone));

@@ -25,8 +25,8 @@
     {% endfor %}
 {% endblock scripts %}
 
-
-{% block jsInit %}
+{% block preMapJS %}
+	<script type="text/javascript">
 	var siteFrames = {% siteframes_dict %};
 	appOptions = {
 		BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
@@ -39,13 +39,19 @@
 		selectedLayerUrl: "{{ settings.XGDS_MAP_SERVER_SELECTED_LAYER_URL }}",
 		layerFeedUrl: "{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}",
 		siteFrame: {% siteframe settings.XGDS_CURRENT_SITEFRAME_ID %},
-		XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: {{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }},
+		XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: '{{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }}',
 		dataUrl: "{{ settings.DATA_URL }}",
 		searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
 		modelName: '{{modelName}}',
 		modelPK: '{{modelPK}}',
-		settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }}
+		settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }},
+		showDetailView: true
 	};
+	</script>
+{% endblock preMapJS %}
+
+	{% block jsInit %}
+	
 	{% block jsInitPreApp %}
 	{% endblock jsInitPreApp %}
 	
