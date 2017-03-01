@@ -33,7 +33,7 @@ Handlebars.registerHelper('debug', function(optionalValue) {
 });
 
 Handlebars.registerHelper('getColor', function(key) {
-    return app.reqres.request('getColor', key);
+    return app.getColor(key);
 });
 
 //

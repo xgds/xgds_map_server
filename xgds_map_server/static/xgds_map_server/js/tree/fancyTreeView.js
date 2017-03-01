@@ -16,55 +16,26 @@
 
 app.views = app.views || {};
 
-app.views.FancyTreeView = Backbone.View.extend({
+app.views.FancyTreeView = Marionette.View.extend({
     template: '#template-layer-tree',
     initialize: function() {
         this.listenTo(app.vent, 'refreshTree', function() {this.refreshTree()});
         this.listenTo(app.vent, 'treeData:loaded', function() {this.createTree()});
-        app.vent.on('tree:expanded', function(node) {
+        this.listenTo(app.vent, 'tree:expanded', function(node) {
         	if (transparencySlidersVisible) {
         		showTransparencySliders(node);
         	}
         });
         
-        var source = $(this.template).html();
-        if (_.isUndefined(source))
-            this.template = function() {
-                return '';
-            };
-        else {
-            this.template = Handlebars.compile(source);
-        }
-        _.bindAll(this, 'render', 'afterRender'); 
-        var _this = this; 
-        this.render = _.wrap(this.render, function(render) { 
-            render(); 
-            _this.afterRender(); 
-            return _this; 
-        }); 
         this.storedParent = null;
     },
-    render: function() {
-        if (!_.isUndefined(app.tree) && !_.isNull(this.storedParent)){
-            // rerender existing tree
-            this.storedParent.append(this.$el);
-            this.$el.show();
-        } else {
-            this.$el.html(this.template());
-        }
-    },
-    onShow: function() {
-    	app.vent.trigger('layerView:onShow');
+    onAttach: function() {
+    	app.vent.trigger('layerView:onAttach');
     	this.connectFilter();
+    	this.createTree();
     },
-    afterRender: function() {
+    onRender: function() {
         app.vent.trigger('layerView:onRender');
-        if (!_.isUndefined(app.tree)) {
-            // rerendering tree
-            return;
-        }
-        this.createTree();
-        return;
     },
     refreshTree: function() {
         if (!_.isUndefined(app.tree)){
@@ -139,17 +110,24 @@ app.views.FancyTreeView = Backbone.View.extend({
     	          ],
     	      beforeOpen: function(event, ui) {
     	        var node = $.ui.fancytree.getNode(ui.target);
-    	        node.setActive();
+    	        if (node !== null){
+    	        	node.setActive();
+    	        }
     	      },
     	      select: function(event, ui) {
     	        var node = $.ui.fancytree.getNode(ui.target);
-    	        window.open(node.data.href, '_edit');
+    	        if (node !== null){
+    	        	window.open(node.data.href, '_edit');
+    	        }
     	      }
     	    });
     },
     createTree: function() {
-        if (_.isUndefined(app.tree) && !_.isUndefined(app.treeData)){
+        if (_.isUndefined(app.tree) && !_.isNull(app.treeData)){
             var layertreeNode = this.$el.find("#layertree");
+            if (layertreeNode.length == 0){
+            	return;
+            }
             var context = this;
             var mytree = layertreeNode.fancytree({
                 extensions: ['persist', 'filter', 'transparency_slider'],

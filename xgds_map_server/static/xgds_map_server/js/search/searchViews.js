@@ -14,70 +14,42 @@
 // specific language governing permissions and limitations under the License.
 //__END_LICENSE__
 
-$.extend({
-	getManyJS: function(urls, callback){
-		var ajaxRequests = [];
-        $.each(urls, function(i, url){
-        	ajaxRequests.push(
-            	$.ajax({
-            	    async: false,
-            	    url: url,
-            	    dataType: "script",
-            	    error: function(jqXHR, errorType, exception) {
-            	    	//TODO should probably handle this ...
-            	    	console.log(exception);
-            	    }
-            	}));
-        });
-        
-        $.when(ajaxRequests).then(function(){
-        	if (callback != undefined){
-        		if (typeof callback=='function') callback();
-        	}
-        });
-    },
-    getManyCss: function(urls, callback){
-        $.when(
-            $.each(urls, function(i, url){
-                $.get(url, function(){
-                    $('<link>', {rel:'stylesheet', type:'text/css', 'href':url}).appendTo('head');
-                });
-            })
-        ).done(function(){
-        	if (callback != undefined){
-        		if (typeof callback=='function') callback();
-        	}
-        });
-    },
-    executeFunctionByName: function(functionName, context, args) {
-    	  //var args = [].slice.call(arguments).splice(2);
-    	  var namespaces = functionName.split(".");
-    	  var func = namespaces.pop();
-    	  for(var i = 0; i < namespaces.length; i++) {
-    	    context = context[namespaces[i]];
-    	  }
-    	  return context[func].apply(context, args);
-    	},
-    getValueByName: function(functionName) {
-    	return eval(functionName);
-    }
-});
 
-app.views.SearchView = Backbone.Marionette.LayoutView.extend({
+app.views.SearchView = Marionette.View.extend({
     template: '#template-search',
     events: {
         'click #getSearchFormButton': 'setupSearchForm',
         'click #doSearch': 'doSearch',
         'click #doSaveSearch': 'openSaveDialog'
     },
-    regions: function(options){
-        return {
-        	modelChoiceRegion: '#modelChoiceDiv',
-            searchFormRegion: { el: '#searchFormDiv'},
-            searchResultsRegion: (options.searchResultsRegion != undefined) ? {el:"#searchResultsDiv"} : '#searchResultsDiv'
-        };
-      },
+    regions: {
+    	modelChoiceRegion: '#modelChoiceDiv'
+    },
+    addExtraRegions: function() {
+    	// add regions that should exist after attaching.  This is odd because we use the same views for embedded searches (ie within planner)
+    	// and top level searches on their own pages.
+    	var searchResultsDiv = this.$el.find('#searchResultsDiv');
+    	if (searchResultsDiv.length == 0){
+    		searchResultsDiv = $('#searchResultsDiv');
+    	}
+    	this.addRegion('searchResultsRegion', {el: searchResultsDiv});
+    	
+    	var searchFormDiv = this.$el.find('#searchFormDiv');
+    	if (searchFormDiv.length == 0){
+    		searchFormDiv = $('#searchFormDiv');
+    	}
+    	this.addRegion('searchFormRegion', { el: searchFormDiv});
+
+    },
     initialize: function(options) {
+    	this.options = options || {};
+    	var theKeys = Object.keys(app.options.searchModels);
+    	this.searchableModels = [];
+    	for (var i=0; i<theKeys.length; i++){
+    		if (!_.isUndefined(app.options.searchModels[theKeys[i]].search_form_class)){
+    			this.searchableModels.push(theKeys[i]);
+    		}
+    	}
     	this.viewRegionDef = false;
     	if (options.template != undefined){
     		this.template = options.template;
@@ -85,37 +57,25 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
     	if (options.viewRegion != undefined){
     		this.viewRegion = true;
     	}
-        var source = $(this.template).html();
-        if (_.isUndefined(source)) {
-            this.template = function() {
-                return '';
-            };
-        } else {
-            this.template = Handlebars.compile(source);
-        }
         this.hideModelChoice = options.hideModelChoice;
         this.preselectModel = app.options.modelName;
         Handlebars.registerHelper('modelSelected', function( input, modelName ){
         	return input === modelName ? 'selected' : '';
         });
     },
-    onShow: function() {
-    	var theKeys = Object.keys(app.options.searchModels);
-    	var searchableModels = [];
-    	for (var i=0; i<theKeys.length; i++){
-    		if (!_.isUndefined(app.options.searchModels[theKeys[i]].search_form_class)){
-    			searchableModels.push(theKeys[i]);
-    		}
-    	}
-        this.$el.empty().append(this.template({
-            searchModels: searchableModels,
-            preselectModel: this.preselectModel,
-            hideModelChoice: this.hideModelChoice
-        }));
+    templateContext: function() {
+    	var data = {searchModels: this.searchableModels,
+    				preselectModel: this.preselectModel,
+    				hideModelChoice: this.hideModelChoice
+    	};
+    	return data;
+    },
+    onAttach: function() {
+    	this.addExtraRegions();
         this.searchResultsView = new app.views.SearchResultsView({template:'#template-search-results',
         														  viewRegion: this.viewRegion});
         app.searchResultsView = this.searchResultsView;
-        this.searchResultsRegion.show(this.searchResultsView);
+        this.showChildView('searchResultsRegion', this.searchResultsView);
     	if (this.preselectModel != undefined && this.preselectModel != 'None') {
     		this.setupSearchForm(true);
         }
@@ -150,7 +110,7 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
         this.selectedModel = newModel;
         var templateName = '#template-' + this.selectedModel;
         this.searchFormView = new app.views.SearchFormView({template:templateName})
-        this.searchFormRegion.show(this.searchFormView);
+        this.getRegion('searchFormRegion').show(this.searchFormView);
         
         var theModelMap = app.options.searchModels[newModel];
         if (theModelMap.searchInitMethods != undefined){
@@ -275,10 +235,10 @@ app.views.SearchView = Backbone.Marionette.LayoutView.extend({
     }
 });
 
-app.views.SearchFormView = Backbone.Marionette.ItemView.extend({
+app.views.SearchFormView = Marionette.View.extend({
 });
 
-app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
+app.views.SearchDetailView = Marionette.View.extend({
     initialize: function(options) {
         Handlebars.registerHelper('prettyTime', function( sourceTime, timeZone ){
         	return getLocalTimeString(sourceTime, timeZone);
@@ -305,21 +265,13 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     setModelMap: function(modelMap){
     	this.modelMap = modelMap;
     },
-    render: function() {
-    	// TODO by the time we get here the map should already have been highlighted?
-    	//highlightOnMap([this.data]);
-        this.$el.empty().append(this.template(this.data));
-    	try {
-//			this.trigger('updateContents');
-//
-    		if (this.neverShown){
-        		this.onShow();
-    		} else {
-    			this.trigger('updateContents');
-    		}
-    	} catch (err){
-    		// gulp, the first time this will 
-    	}
+    onRender: function() {
+    	if (!this.neverShown){
+			this.trigger('updateContents');
+		}
+    },
+    templateContext: function() {
+    	return this.data;
     },
     updateContents: function() {
     	try {
@@ -338,26 +290,28 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
     		}
     	}
     },
-    onShow: function() {
-    	this.neverShown = false;
-    	this.updateContents();
-    	var context = this;
-    	$('.grid-stack').on('resizestop', function(event, ui) {
-    	    var element = event.target;
-    	    var found = $(event.target).find('#view-gridstack-item-content');
-    	    if (found.length > 0){
-    	    	if (context.modelMap.viewResizeMethod != undefined){
-    	    		context.handleResizeDetailView(found[0], context);
-    	    	}
-    	    }
-    		
-    	});
-    	$("#ajax_prev_button").click(function(event) {
-			context.selectPreviousAjax();
-		});
-		$("#ajax_next_button").click(function(event) {
-			context.selectNextAjax();
+    onAttach: function() {
+    	if (this.neverShown){
+	    	this.neverShown = false;
+	    	this.updateContents();
+	    	var context = this;
+	    	$('.grid-stack').on('resizestop', function(event, ui) {
+	    	    var element = event.target;
+	    	    var found = $(event.target).find('#view-gridstack-item-content');
+	    	    if (found.length > 0){
+	    	    	if (context.modelMap.viewResizeMethod != undefined){
+	    	    		context.handleResizeDetailView(found[0], context);
+	    	    	}
+	    	    }
+	    		
+	    	});
+	    	$("#ajax_prev_button").click(function(event) {
+				context.selectPreviousAjax();
 			});
+			$("#ajax_next_button").click(function(event) {
+				context.selectNextAjax();
+				});
+    	}
     },
     handleResizeDetailView: function(theDiv, context){
     	var functionName = context.modelMap.viewResizeMethod[0];
@@ -398,7 +352,7 @@ app.views.SearchDetailView = Backbone.Marionette.ItemView.extend({
 /*
  * This is the view for the notes that go with objects found by search.
  */
-app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
+app.views.SearchNotesView = Marionette.View.extend({
     initialize: function(options) {
     	this.data = options.data;
     	this.modelMap = options.modelMap;
@@ -435,7 +389,7 @@ app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
     render: function() {
         var appended = this.$el.empty().append(this.template(this.data));
     },
-    onShow: function() {
+    onAttach: function() {
     	// change the id of the table ...
     	var notesList = this.$el.find('.notes_list');
     	notesList.attr('id', 'notes_list' + this.modelName);
@@ -447,7 +401,7 @@ app.views.SearchNotesView = Backbone.Marionette.ItemView.extend({
     }
 });
 
-app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
+app.views.SearchResultsView = Marionette.View.extend({
 	initialize: function() {
 		this.modelMap = {};
 		this.firstLoad = true;
@@ -457,13 +411,23 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
 			context.forceDetailView(data, modelMap);
 		});
 	},
-    regions: function(options){
-        return {
-            viewRegion: (options.viewRegion) ? {el:"#viewDiv"} : '#viewDiv',
-            viewNotesRegion: (options.viewRegion) ? {el:"#notesDiv"} : '#notesDiv'
-        };
-      },
-    onShow: function() {
+	setupRegions: function() {
+		var viewDiv = this.$el.find('#viewDiv');
+		if (viewDiv.length == 0){
+			viewDiv = $('#viewDiv');
+		}
+		this.addRegion('viewRegion', {el: viewDiv});
+		var notesDiv = this.$el.find('#notesDiv');
+		if (notesDiv.length == 0){
+			notesDiv = $('#notesDiv');
+		}
+		this.addRegion('viewNotesRegion', {el: notesDiv});
+		
+		
+	},
+    onAttach: function() {
+    	this.setupRegions();
+    	
     	// hook up ajax reloading
     	var reloadIconName = '#reloadSearchResults';
     	var context = this;
@@ -783,8 +747,8 @@ app.views.SearchResultsView = Backbone.Marionette.LayoutView.extend({
     	});
     	try {
     		this.hookPrevNextButtons();
-    		this.viewRegion.show(this.detailView);
-    		this.viewNotesRegion.show(this.detailNotesView);
+    		this.showChildView('viewRegion', this.detailView);
+    		this.showChildView('viewNotesRegion', this.detailNotesView);
     	} catch (err){
     	}
     },

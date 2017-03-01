@@ -21,6 +21,15 @@
     Form.editors.Number = Form.editors.Number.extend({
         defaultValue: null
     });
+    
+    Form.editors.HiddenNumber = Form.editors.Hidden.extend({
+    	defaultValue: null,
+    	getValue: function() {
+    		var value = this.$el.val();
+
+    		return value === "" ? null : parseFloat(value, 10);
+    	}
+    });
 
     Form.editors.DateTime = Form.editors.Text.extend({
     	initialize: function(options) {
@@ -113,7 +122,7 @@
             // in the background, always deal with lat, lon
             if (this.siteFrameMode) {
                 var coords = !_.isNull(this.alternateCrs) ?
-                    app.util.toLngLat(coords, this.alternateCrs) : coords;
+                    xGDS.toLngLat(coords, this.alternateCrs) : coords;
             }
             var lng = parseFloat(coords[0]);
             var lat = parseFloat(coords[1]);
@@ -134,7 +143,7 @@
             var decimalPlaces = 7;
             if (this.siteFrameMode) {
                 var coords = !_.isNull(this.alternateCrs) ?
-                    app.util.toSiteFrame(value.coordinates, this.alternateCrs) :
+                    xGDS.toSiteFrame(value.coordinates, this.alternateCrs) :
                     value.coordinates;
                     decimalPlaces = 2;
             } else {
@@ -318,7 +327,17 @@
                 this.template = Handlebars.compile($('#template-unit-field').html());
                 this.listenTo(this.editor, 'change', this.updateUnits);
             },
+            render: function() {
+            	var schema = this.schema,
+                editor = this.editor,
+                $ = Backbone.$;
 
+	            //Only render the editor if Hidden
+	            if (schema.type == Form.editors.Hidden || schema.type == Form.editors.HiddenNumber) {
+	              return this.setElement(editor.render().el);
+	            }
+	            return Form.Field.prototype.render.call(this);
+            },
             updateUnits: function() {
                 if (_.isUndefined(this.unit)) {
                     // don't do anything if there isn't a unit defined

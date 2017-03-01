@@ -17,8 +17,36 @@
 <link href="/static/autocomplete_light/select2.css" type="text/css" media="all" rel="stylesheet" />
 {% endblock cssExtras %}
 
+{% block preMapJS %}
+<script type="text/javascript">
+	var siteFrames = {% siteframes_dict %};
+	var appOptions = {
+		BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
+		DEFAULT_COORD_SYSTEM: "{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}",
+		SETUP_COORD_SYSTEM: {{ settings.XGDS_MAP_SERVER_MAP_SETUP_COORD_SYSTEM }},
+		DEFAULT_COORD_SYSTEM_CENTER: {{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM_CENTER }},
+		DEFAULT_ZOOM: {{ settings.XGDS_MAP_SERVER_DEFAULT_ZOOM }},
+		DEFAULT_ROTATION: {{ settings.XGDS_MAP_SERVER_DEFAULT_ROTATION }},
+		SHOW_COMPASS: {{ settings.XGDS_MAP_SERVER_SHOW_COMPASS}},
+		selectedLayerUrl: "{{ settings.XGDS_MAP_SERVER_SELECTED_LAYER_URL }}",
+		layerFeedUrl: "{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}",
+		siteFrame: {% siteframe settings.XGDS_CURRENT_SITEFRAME_ID %},
+		XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: '{{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }}',
+		dataUrl: "{{ settings.DATA_URL }}",
+		searchModels: {{ searchModelDict|safe }},
+		modelName: '{{modelName}}',
+		tableHeight: Math.floor($(window).height()*.7) + 'px',
+		{% block extraAppOptions %}
+		{% endblock extraAppOptions %}
+		settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }},
+		showDetailView: true
+	};
+	</script>
+{% endblock preMapJS %}
+
 {% block scripts %}
-{{block.super}}
+	{{block.super}}
+	
 {% if 'xgds_notes2' in settings.INSTALLED_APPS %}
 	{% block notejs %}
 	{% include "xgds_notes2/NoteJS.html" with forceUserSession=forceUserSession%}
@@ -41,41 +69,24 @@
 {% endblock scripts %}
 
 {% block jsInit %}
-	var siteFrames = {% siteframes_dict %};
-	appOptions = {
-		BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
-		DEFAULT_COORD_SYSTEM: "{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}",
-		SETUP_COORD_SYSTEM: {{ settings.XGDS_MAP_SERVER_MAP_SETUP_COORD_SYSTEM }},
-		DEFAULT_COORD_SYSTEM_CENTER: {{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM_CENTER }},
-		DEFAULT_ZOOM: {{ settings.XGDS_MAP_SERVER_DEFAULT_ZOOM }},
-		DEFAULT_ROTATION: {{ settings.XGDS_MAP_SERVER_DEFAULT_ROTATION }},
-		SHOW_COMPASS: {{ settings.XGDS_MAP_SERVER_SHOW_COMPASS}},
-		selectedLayerUrl: "{{ settings.XGDS_MAP_SERVER_SELECTED_LAYER_URL }}",
-		layerFeedUrl: "{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}",
-		siteFrame: {% siteframe settings.XGDS_CURRENT_SITEFRAME_ID %},
-		XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: {{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }},
-		dataUrl: "{{ settings.DATA_URL }}",
-		searchModels: {{ searchModelDict|safe }},
-		modelName: '{{modelName}}',
-		tableHeight: Math.floor($(window).height()*.7) + 'px',
-		{% block extraAppOptions %}
-		{% endblock extraAppOptions %}
-		settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }}
-	};
+	
 	{% block jsInitPreApp %}
 	{% endblock jsInitPreApp %}
 	
 	$(function(){
-		app.start(appOptions);
-    	app.vent.on("mapSearch:drewFeatures", function(e) {
+		app.vent.on("mapSearch:drewFeatures", function(e) {
         	app.vent.trigger('mapSearch:fit');
+        });
+        
+        app.vent.on('onMapSetup', function() {
+        	xgds_gridstack.initializeGridstack();
+    		xgds_search.hookAdvancedSearchButton();
         });
         
         {% block preLayout %}
 		{% endblock preLayout %}
 		
-    	xgds_gridstack.initializeGridstack();
-    	xgds_search.hookAdvancedSearchButton();
+    	
     	
     	var searchDiv_initialized = false;
 		 app.vent.on('searchDiv:visible', function(){
@@ -84,6 +95,9 @@
 		        searchDiv_initialized = true;
 		 	} 
 		 });
+		 
+		 app.start();
+        
     	{% block otherJSInit %}
 		{% endblock otherJSInit %}
 		
