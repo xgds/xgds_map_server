@@ -13,7 +13,6 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License for the
 // specific language governing permissions and limitations under the License.
 //__END_LICENSE__
-
 var DEG2RAD = Math.PI / 180.0;
 var SPHERICAL_MERCATOR = 'EPSG:3857'; 
 var WGS_84 = 'EPSG:3395';
@@ -24,6 +23,14 @@ var mapResizeTimeout;
 function showOnMap(data){
 	app.vent.trigger("mapSearch:found", data);
 	app.vent.trigger('mapSearch:fit');
+}
+
+function highlightOnMap(data){
+	app.vent.trigger("mapSearch:highlight", data);
+}
+
+function unhighlightOnMap(data){
+	app.vent.trigger("mapSearch:unhighlight", data);
 }
 
 function removeFromMap(data){
@@ -113,58 +120,64 @@ function getExtens(coordinates){
 //    return [minY, minX, maxY, maxX];
 }
 
+function calculateOpacity(transparency){
+	if (transparency == undefined || transparency == 0){
+		return 1;
+	}
+	var t = transparency/100.0;
+	return 1.0 - t;
+}
+
 $(function() {
     app.views = app.views || {};
 
     // map to look up the different layers since we want to initialize them before the tree shows up
     app.nodeMap = {}; 
 
-    app.views.OLMapView = Backbone.View.extend({
-            el: "#map",
+    app.views.OLMapView = Marionette.View.extend({
+    		template: false,
             initialize: function(options) {
                 this.options = options || {};
-                _.bindAll(this);
-                var _this = this;
-                this.$el.resizable({
-                    stop: function( event, ui ) {
-                        _this.handleResize();
-                    }
-                  });
-                
-                // pre-set certain variables to speed up this code
-                app.State.pageContainer = this.$el.parent();
-                app.State.pageInnerWidth = app.State.pageContainer.innerWidth();
-                var horizOrigin = this.$el.width();
-
-                var DEFAULT_ZOOM = app.options.DEFAULT_ZOOM;
-                var DEFAULT_ROTATION = app.options.DEFAULT_ROTATION;
 
                 proj4.defs('EPSG:3395', '+proj=merc +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs');
                 if (!_.isEmpty(app.options.DEFAULT_COORD_SYSTEM) && app.options.DEFAULT_COORD_SYSTEM != SPHERICAL_MERCATOR){
                 	if (!_.isNull(app.options.SETUP_COORD_SYSTEM)){
                 		DEFAULT_COORD_SYSTEM = app.options.DEFAULT_COORD_SYSTEM;
-                		app.options.SETUP_COORD_SYSTEM(app.options.DEFAULT_COORD_SYSTEM);
+                    	$.executeFunctionByName(app.options.SETUP_COORD_SYSTEM, window, [app.options.DEFAULT_COORD_SYSTEM]);
                 	}
                 }
                 
-                this.$el.bind('resize', this.handleResize);
-                app.vent.on('doMapResize', this.handleResize);
-                // also bind to window to adjust on window size change
-                $(window).bind('resize', this.handleWindowResize);
-                
+                this.listenTo(app.vent, 'doMapResize', this.handleResize);
                 
                 this.buildLayersForMap();
                 this.layersInitialized = false;
                 
-                app.mapView = new ol.View({
-                    // we will center the view later with updateBbox
-                    zoom: DEFAULT_ZOOM,
-                    projection: ol.proj.get(DEFAULT_COORD_SYSTEM),
-                    rotation: DEFAULT_ROTATION
+                //events
+                var context = this;
+                this.listenTo(app.vent, 'onMapSetup', this.postMapCreation);
+                this.listenTo(app.vent, 'layers:loaded', this.render);
+                this.listenTo(app.vent, 'layers:loaded', this.initializeMapData);
+                this.listenTo(app.vent, 'treeNode:loaded', function(data) {context.updateNodesFromCookies(data)});
+                this.listenTo(app.vent, 'tree:loaded', this.updateMapLayers);
+                this.listenTo(app.vent, 'preloadNode', function(uuid){ this.preloadNode(uuid);});
+                app.vent.trigger('layers:loaded');
+                
+                this.listenTo(app.vent, 'mapNode:create', function(node) {
+                    this.createNode(node);
                 });
                 
-                var mapOptions = {
-                        target: 'map',
+            },
+            onAttach: function() {
+            	
+            	app.mapView = new ol.View({
+                    // we will center the view later with updateBbox
+                    zoom: app.options.DEFAULT_ZOOM,
+                    projection: ol.proj.get(DEFAULT_COORD_SYSTEM),
+                    rotation: app.options.DEFAULT_ROTATION
+                });
+            	
+            	var mapOptions = {
+            			target: this.el,
                         layers: this.layersForMap,
                         view: app.mapView
                       };
@@ -176,38 +189,42 @@ $(function() {
                 	mapOptions['controls'] =  [new ol.control.Zoom(),
                 	                           new ol.control.ScaleLine()];
                 }
-                this.map = new ol.Map(mapOptions);
-                this.updateBbox();
-                this.buildStyles();
-                this.setupPopups();
-                
-                //events
-                app.vent.on('onMapSetup', this.postMapCreation);
-                app.vent.on('layers:loaded', this.render);
-                app.vent.on('layers:loaded', this.initializeMapData);
-                app.vent.on('tree:loaded', this.updateMapLayers);
-                app.vent.trigger('layers:loaded');
-                
-                app.vent.on('mapNode:create', function(node) {
-                    this.createNode(node);
-                }, this);
-                
-                // bind location dropdown change to zoom
-                $("select[id=id_siteFrame]").bind("change", {
-                	mapview: this.map.getView(),
-                	thisview: this
-                }, function(event) {
+            	this.map = new ol.Map(mapOptions);
+//              this.map.on('precompose', function(evt) {
+//              	  evt.context.imageSmoothingEnabled = false;
+//              	  evt.context.mozImageSmoothingEnabled = false;
+//              	  evt.context.msImageSmoothingEnabled = false;
+//              	});
+              this.updateBbox();
+              this.buildStyles();
+              this.setupPopups();
+              
+           // bind location dropdown change to zoom
+              $("select[id=id_siteFrame]").bind("change", {
+              	mapview: this.map.getView(),
+              	thisview: this
+              }, function(event) {
 	            	var sel=$("#id_siteFrame").val();
 	            	var projectionKey = event.data.thisview.getSiteFrameProjection(siteFrames[sel]);
 	            	coords = transformFromProjection([siteFrames[sel].east0, siteFrames[sel].north0], projectionKey);
 	            	event.data.mapview.setCenter(coords, 5);  // TOD0 hardcoding zoom level 5 for now ... would be good to fix
                 });
+                
+                // we should have a good $el by now
+                var _this = this;
+                
+                // pre-set certain variables to speed up this code
+                app.State.pageContainer = this.$el.parent();
+                app.State.pageInnerWidth = app.State.pageContainer.innerWidth();
+                this.mapCanvas = this.$el.find('canvas');
+                this.$el.bind('resize', function(event){_this.handleResize()});
+                app.vent.trigger('onMapSetup');
+                
             },
-            
             getSiteFrameProjection: function(site){
             	projectionKey = site.projCode;
             	var foundProjection = ol.proj.get(projectionKey);
-            	if (_.isUndefined(foundProjection)){
+            	if (_.isUndefined(foundProjection) || _.isNull(foundProjection)){
             		var proj4js_def = site.projString;
             		proj4.defs(projectionKey, proj4js_def);
             		
@@ -225,11 +242,19 @@ $(function() {
             },
             
             createNode: function(node){
-                if (!_.isUndefined(app.nodeMap[node.key])){
+            	if (_.isUndefined(node)){
+            		return;
+            	}
+                if (('key' in node) && !_.isUndefined(app.nodeMap[node.key])){
                     // render it
                     var foundView = app.nodeMap[node.key];
-                    foundView.node = node;
-                    node.mapView = foundView;
+                    if (node.addNode != undefined){
+                    	foundView.node = node;
+                    	foundView.setupOpacity({'node':node});
+                    }
+                    if (node.mapView == undefined){
+                    	node.mapView = foundView;
+                    }
                     foundView.render();
                 } else {
                     if (node.data.type == "KmlMap"){
@@ -238,6 +263,8 @@ $(function() {
                         app.nodeMap[node.key] = this.createMapLayerView(node);
                     } else if (node.data.type == "MapTile"){
                         app.nodeMap[node.key] = this.createTileView(node);
+                    } else if (node.data.type == "MapDataTile"){
+                        app.nodeMap[node.key] = this.createDataTileView(node);
                     } else if (node.data.type == "MapCollection"){
                         app.nodeMap[node.key] = this.createCollectionView(node);
                     } else if (node.data.type == "MapSearch"){
@@ -250,12 +277,27 @@ $(function() {
                 }
             },
             
+            handleResize: function() {
+            	var mapEl = this.$el;
+            	var canvasEl = this.mapCanvas;
+            	
+	        	if ( mapResizeTimeout ) {
+	        	    clearTimeout(mapResizeTimeout);
+	        	}
+	        	mapResizeTimeout = setTimeout( function() {
+	        		if (app.map !== undefined) {
+	        			var height = mapEl.parent().parent().height();
+	        			canvasEl.height(height - app.mapBottomPadding);
+	        			app.map.map.updateSize();
+	        		}
+	        	}, 100);
+            },
+            
             postMapCreation: function() {
-                this.handleResize();
                 this.createLiveSearchView();
                 var callback = app.options.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK;
-                if (callback != null) {
-                    callback();
+                if (!_.isEmpty(callback)) {
+                	$.executeFunctionByName(callback, window);
                 }
             },
             
@@ -346,24 +388,6 @@ $(function() {
             		                           label: '\u27A4'});
             },
             
-            handleResize: function() {
-        	if ( mapResizeTimeout ) {
-        	    clearTimeout(mapResizeTimeout);
-        	}
-        	mapResizeTimeout = setTimeout( function() {
-        	    var view = app.map.map.getView();
-        	    app.map.map.updateSize();
-        	}, 100);
-            },
-            
-            handleWindowResize: function() {
-             // window size changed, so variables need to be reset
-                if (!app.State.mapResized) {return false;} // until the element is resized once, resizing happens automatically
-                app.State.pageInnerWidth = app.State.pageContainer.innerWidth();
-                app.map.map.updateSize();
-                return true;
-            },
-            
             updateBbox: function() {
             	var coords = null;
             	
@@ -384,19 +408,55 @@ $(function() {
             // load map tree ahead of time to load layers into map
             initializeMapData: function() {
                 if (!this.layersInitialized){
-                $.ajax({
-                    url: app.options.layerFeedUrl,
-                    dataType: 'json',
-                    success: $.proxy(function(data) {
-                    	if (data != null){
-	                        app.treeData = data;
-	                        this.layersInitialized = true;
-	                        app.vent.trigger('treeData:loaded');
-	                        this.initializeMapLayers(app.treeData[0]);
-                    	}
-                    }, this)
-                  });
+	                $.ajax({
+	                    url: app.options.layerFeedUrl,
+	                    dataType: 'json',
+	                    success: $.proxy(function(data) {
+	                    	if (data != null){
+		                        app.treeData = data;
+		                        this.layersInitialized = true;
+		                        app.vent.trigger('treeData:loaded');
+		                        this.initializeMapLayers(app.treeData[0]);
+	                    	}
+	                    }, this)
+	                  });
+	                // turn on layers that were turned on in the cookies
+	                var selected_uuids = Cookies.get('fancytree-1-selected');
+	                if (selected_uuids != undefined && selected_uuids.length > 0){
+		                $.ajax({
+		                    url: '/xgds_map_server/uuidsjson/',
+		                    dataType: 'json',
+		                    type: "POST",
+		                    data: {'uuids':selected_uuids},
+		                    success: $.proxy(function(data) {
+		                    	if (data != null){
+			                        this.selectNodes(data);
+		                    	}
+		                    }, this)
+		                  });
+	                }
                 }
+            },
+            preloadNode: function(uuid){
+            	$.ajax({
+    	            url: '/xgds_map_server/uuidsjson/',
+    	            dataType: 'json',
+    	            type: "POST",
+    	            data: {'uuids':uuid},
+    	            success: $.proxy(function(data) {
+    	            	if (data != null){
+    	                    this.createNode(data[0]);
+    	            	}
+    	            }, this)
+    	          });
+            },
+            selectNodes: function(nodes){
+            	// select specific nodes that were set in cookies
+            	for (var i=0; i<nodes.length; i++){
+            		var node = nodes[i];
+            		node.selected = true;
+            		this.createNode(nodes[i]);
+            	}
             },
             // read through the json data and turn on layers that should be on
             initializeMapLayers: function(node, index, collection) {
@@ -461,6 +521,15 @@ $(function() {
               node.mapView = tileView;
               return tileView;
             },
+            createDataTileView: function(node) {
+                var dataTileView = new app.views.DataTileView({
+                    node: node,
+                    group: this.tileGroup,
+                    tileURL: node.data.tileURL
+                });
+                node.mapView = dataTileView;
+                return dataTileView;
+              },
             createCollectionView: function(node){
                 var collectionView = new app.views.MapCollectionView({
                     node: node,
@@ -495,8 +564,28 @@ $(function() {
                 });
                 return liveSearchView;
             },
+            updateNodesFromCookies: function(rootNode) {
+            	var theCookies = Cookies.getJSON();
+            	for (var key in theCookies) {
+            		  if (theCookies.hasOwnProperty(key)) {
+            			  if (theCookies[key].transparency != undefined){
+            				  var node = undefined;
+            				  if (rootNode != undefined){
+            					  node = app.tree.getNodeByKey(key, app.tree.getNodeByKey(rootNode.key));
+            				  } else {
+            					  node = app.tree.getNodeByKey(key);
+            				  }
+                		    if (node != undefined) {
+                		    	node.data.transparency = theCookies[key].transparency;
+                		    }
+            			  }
+            		  }
+            	}
+            },
             updateMapLayers: function() {
-                if (!_.isUndefined(app.tree) && !_.isEmpty(app.tree)){
+            	if (!_.isUndefined(app.tree) && !_.isEmpty(app.tree)){
+            		this.updateNodesFromCookies();
+                	// must visit all the nodes and update transparency
                     var selectedNodes = app.tree.getSelectedNodes();
                     selectedNodes.forEach(function(node){
                         if (_.isUndefined(node.mapView)){
@@ -506,7 +595,7 @@ $(function() {
                 }
             },
             
-            render: function() {
+            onRender: function() {
                 this.updateMapLayers();
             },
             
@@ -542,7 +631,14 @@ $(function() {
                             var xcoords = inverseTransform(coords);
                             location = "<br/>lat: " + xcoords[1] + "<br/>lon:" + xcoords[0];
                         }
-                        this.popup.show(evt.coordinate, '<div><b>' + feature.get('name') + '</b><p>' + popup + location +  '</p></div>');
+                        var popupContents = '<div><b>' + feature.get('name') + '</b>';
+                        var view_url = feature.get("view_url");
+                        if (!_.isUndefined(view_url) && !_.isEmpty(view_url)){
+                        	popupContents += '&nbsp;&nbsp;<button class="small" onClick="window.open(\''
+                        					 + view_url + '\', \'_blank\');" >Open</button>'
+                        }
+                        popupContents += '<p>' + popup + location +  '</p></div>'
+                        this.popup.show(evt.coordinate, popupContents);
                     } else {
                         this.popup.hide();
                     }
@@ -557,7 +653,8 @@ $(function() {
             }
         });
     
-    app.views.TreeMapElement = Backbone.View.extend({
+    app.views.TreeMapElement = Marionette.View.extend({
+    	template: false,
         initialize: function(options) {
             this.options = options || {};
             this.group = this.options.group;
@@ -570,13 +667,38 @@ $(function() {
             this.checkRequired();
             this.constructMapElements();
             this.render();
+            this.node.mapView = this;
+        },
+        setupOpacity: function(options){
+        	var transparency = options.node.data.transparency;
+        	try {
+        		var cookieJSON = Cookies.getJSON(options.node.key);
+        		if (cookieJSON != undefined){
+        			transparency = cookieJSON.transparency;
+        			if (this.node != undefined){
+        				this.node.data.transparency = transparency;
+        			}
+        			options.node.data.transparency = transparency;
+        		}
+        	} catch (err) {
+        		//pass
+        		console.log(err);
+        	}
+        	if (transparency == undefined){
+        		transparency = 0;
+        	}
+            this.opacity = calculateOpacity(transparency);
         },
         checkRequired: function() {
             if (!this.group) {
                 throw 'Missing map group!';
             }
         },
-        render: function() {
+        setTransparency: function(transparency) {
+        	this.opacity = calculateOpacity(transparency);
+        	this.mapElement.setOpacity(this.opacity);
+        },
+        onRender: function() {
             if (_.isUndefined(this.node)){
                 this.show();
             } else if (this.node.selected){
@@ -692,6 +814,7 @@ $(function() {
     app.views.KmlLayerView = app.views.TreeMapElement.extend({
         initialize: function(options) {
             this.kmlFile = options.kmlFile;
+            this.setupOpacity(options);
             app.views.TreeMapElement.prototype.initialize.call(this, options);
         },
         checkRequired: function() {
@@ -706,7 +829,8 @@ $(function() {
                     source: new ol.source.Vector({
                         url: this.kmlFile,
                         format: new ol.format.KML()
-                    }) 
+                    }),
+                    opacity: this.opacity
                 });
             }
         }
@@ -757,6 +881,13 @@ $(function() {
     app.views.TileView = app.views.TreeMapElement.extend({
         initialize: function(options) {
             this.tileURL = options.tileURL;
+            this.setupOpacity(options);
+            this.minx = options.node.data.minx;
+  		    this.miny = options.node.data.miny;
+		    this.maxx = options.node.data.maxx;
+		    this.maxy = options.node.data.maxy;
+		    this.name = options.node.title;
+		    this.resolutions = options.node.data.resolutions;
             app.views.TreeMapElement.prototype.initialize.call(this, options);
         },
         checkRequired: function() {
@@ -770,8 +901,255 @@ $(function() {
                 this.mapElement = new ol.layer.Tile({
                     source: new ol.source.XYZ({
                         url: this.tileURL
-                    })
+                    }),
+                    opacity: this.opacity
                 });
+            }
+        }
+    });
+    
+    app.views.DataTileView = app.views.TileView.extend({
+    	/// A DataTile view has an optional legend and shows the value from the data file below the map (when turned on).
+        initialize: function(options) {
+        	this.shown = false;
+        	this.dataFileURL = options.node.data.dataFileURL;
+        	this.tilePath = options.node.data.tilePath;
+        	this.legendFileURL = options.node.data.legendFileURL;
+        	this.legendVisible = options.node.data.legendVisible;
+        	this.valueLabel = options.node.data.valueLabel;
+        	if (this.valueLabel == ""){
+        		this.valueLabel = this.name;
+        	}
+        	this.unitsLabel = options.node.data.unitsLabel;
+        	if (options.node.data.jsFunction != null){
+            	this.jsFunction = new Function("value", options.node.data.jsFunction);
+            }
+        	if (options.node.data.jsRawFunction != null){
+            	this.jsRawFunction = new Function("value", options.node.data.jsRawFunction);
+            }
+        	app.views.TileView.prototype.initialize.call(this, options);
+        	if (this.valueLabel == ""){
+        		this.valueLabel = this.name;
+        	}
+        	// register in global map so this can be used by other views such as plot views
+        	if (app.dataTile === undefined){
+        		app.dataTile = {};
+        	}
+        	app.dataTile[options.node.title] = this;
+        },
+        checkRequired: function() {
+            if (!this.dataFileURL) {
+                throw 'Missing data file URL option!';
+            }
+            app.views.TileView.prototype.checkRequired.call(this);
+        },
+        constructMapElements: function() {
+            if (_.isUndefined(this.mapElement)){
+            	app.views.TileView.prototype.constructMapElements.call(this);
+            	this.extent = this.mapElement.getExtent();
+            	if (this.extent === undefined){
+            		this.extent = [this.options.node.data.minx,
+            		               this.options.node.data.miny,
+            		               this.options.node.data.maxx,
+            		               this.options.node.data.maxy];
+            	}
+            	if (this.extent !== undefined){
+        			this.mapWidth = Math.abs(this.extent[2] - this.extent[0]);
+        			this.mapHeight = Math.abs(this.extent[3] - this.extent[1]);
+        		}
+            	this.loadData();
+            	this.constructMousePositionControl();
+            	if (this.legendVisible && !_.isUndefined(this.legendFileURL)){
+            		this.constructLegend()
+            	}
+            }
+        }, 
+        constructLegend: function() {
+        	if (this.legendVisible && this.legendFileURL != null){
+				var legendImage=document.createElement("img");
+				legendImage.setAttribute('src', this.legendFileURL);
+				legendImage.id = this.name+"_legend";
+				
+				var legendDiv = document.createElement('div');
+				legendDiv.className = 'ol-unselectable ol-control maplegend';
+				legendDiv.id = legendImage.id + '_div';
+				legendDiv.appendChild(legendImage);
+		        
+				this.legendControl = new ol.control.Control({element: legendDiv});
+        	}
+		},
+		manageLegendHorizontalAlignment: function(visible) {
+			var alignmentDict = app.alignmentDict;
+			if (alignmentDict === undefined){
+				app.alignmentDict = {};
+				alignmentDict = app.alignmentDict;
+			}
+			var stored = alignmentDict[this.name];
+			if (stored === undefined){
+				var theDiv = undefined;
+				var width = 0;
+				try {
+					var theDiv = document.getElementById(this.name + "_legend_div");
+					var width = theDiv.children[0].width;
+				} catch (err){
+					//pass
+				}
+				stored = {'control': theDiv, 
+						  'visible': visible,
+						  'name': this.name,
+						  'width': width};
+				alignmentDict[this.name] = stored;
+			} else {
+				stored.visible = visible;
+			}
+			var left = 0;
+			for(var key in alignmentDict) {
+				  var value = alignmentDict[key];
+				  if (value.visible){
+					  if (value.control === undefined || value.control === null) {
+						  try {
+								value.control = document.getElementById(value.name + "_legend_div");
+								value.width = theDiv.children[0].width;
+							} catch (err){
+								//pass
+							}
+						  if (value.control === undefined || value.control === null){
+							  continue;
+						  }
+					  }
+					  value.control.style.left = left + "px";
+					  if (value.width == 0){
+						  value.width = value.control.children[0].width;
+					  }
+					  if (value.width == 0){
+						  left += 50;
+					  } else {
+						  left += value.width;
+					  }
+				  }
+			}
+		},
+		constructMousePositionControl: function() {
+			var context = this;
+			this.mousePositionControl = new ol.control.MousePosition({
+				coordinateFormat:  function(coords) {
+					return context.getPrintedValue(coords);
+				},
+				projection: DEFAULT_COORD_SYSTEM,
+				className: 'custom-mouse-position',
+				target: document.getElementById('postpostmap'),
+				undefinedHTML: 'Unknown'
+			});
+		},
+		checkBounds: function(coords) {
+			return ol.extent.containsCoordinate(this.extent, coords);
+		},
+		convertToPixelCoords: function(coords){
+			if (this.dataBitmap !== undefined && this.checkBounds(coords)){
+				var percentX =  (coords[0] - this.extent[0])/this.mapWidth;
+				var percentY =  1.0 - (coords[1] - this.extent[1])/this.mapHeight;
+				var pixelX = Math.round(percentX * this.dataBitmap.width);
+				var pixelY = Math.round(percentY * this.dataBitmap.height);
+				return [pixelX, pixelY];
+			}
+			return null;
+		},
+		getPngIndex:  function(x,y) {
+			// this is in pixel coordinates; image starts from top left 0,0
+			var row = this.multiplier * (this.dataBitmap.width * this.dataBitmap.pixelWidth) * y;
+			var column = this.multiplier * x * this.dataBitmap.pixelWidth;
+			return (row + column);
+		},
+		getPngValue: function(x,y) {
+			// this is in pixel coordinates; image starts from top left 0,0
+			var index = this.getPngIndex(x,y);
+			return this.dataBitmap.bitmap[index];
+//			var u32bytes = this.dataBitmap.bitmap.slice(index, index+3);
+//			var uint = new Uint32Array(u32bytes)[0];
+//			return uint;
+		},
+		loadData: function() {
+			// loads the data from a png
+			// gets the bitmap in a 1d array of r, g, b, a
+			this.dataPng = new PngToy([]);
+			var uuid = this.node.key;
+			var context = this;
+			this.dataPng.fetch(this.dataFileURL).then(function() {
+				context.dataPng.decode().then(function(theBitmap) {
+					context.dataBitmap = theBitmap;
+					context.multiplier = (context.dataBitmap.depth / 8);
+					app.vent.trigger('dataTileLoaded', uuid); 
+				});
+			});
+		},
+		getDataValue: function(coords){
+			var pixelCoords = this.convertToPixelCoords(coords);
+			if (pixelCoords != null){
+				var pngValue = this.getPngValue(pixelCoords[0], pixelCoords[1]);
+				if (this.jsFunction != null){
+					return this.jsFunction(pngValue);
+				}
+				return pngValue;
+			}
+			return null;
+		},	
+		getRawDataValue: function(coords){
+			var pixelCoords = this.convertToPixelCoords(coords);
+			if (pixelCoords != null){
+				var pngValue = this.getPngValue(pixelCoords[0], pixelCoords[1]);
+				if (this.jsRawFunction != null){
+					return this.jsRawFunction(pngValue);
+				} else if (this.jsFunction != null){
+					return parseFloat(this.jsFunction(pngValue));
+				}
+				return pngValue;
+			}
+			return null;
+		},
+		getPrintedValue: function(coords) {
+			var result = this.valueLabel + ": ";
+			var value = this.getDataValue(coords);
+			if (value != null){
+				result += value;
+				if (this.unitsLabel != null){
+					result += " " + this.unitsLabel;
+				}
+			} else {
+				result += "undefined";
+			}
+			return result;
+		},
+		show: function() {
+            if (!this.visible){
+            	if (this.mapElement) {
+            		this.group.getLayers().push(this.mapElement);
+            		app.map.map.addControl(this.mousePositionControl);
+            		this.shown = true;
+            		app.mapBottomPadding += 30;
+            		if (this.legendControl !== undefined) {
+            			app.map.map.addControl(this.legendControl);
+            			this.manageLegendHorizontalAlignment(true);
+            		}
+            		app.vent.trigger('doMapResize');
+            	}
+                this.visible = true;
+            }
+        },
+        hide: function() {
+            if (this.visible){
+            	if (this.mapElement) {
+            		this.group.getLayers().remove(this.mapElement);
+            		app.map.map.removeControl(this.mousePositionControl);
+            		if (this.shown){
+            			app.mapBottomPadding -= 30;
+            		}
+            		if (this.legendControl !== undefined) {
+            			app.map.map.removeControl(this.legendControl);
+            			this.manageLegendHorizontalAlignment(false);
+            		}
+            		app.vent.trigger('doMapResize');
+            	}
+                this.visible = false;
             }
         }
     });
@@ -874,21 +1252,28 @@ $(function() {
         }
     });
     
-    app.views.LiveSearchView = Backbone.View.extend({
+    app.views.LiveSearchView = Marionette.View.extend({
+    	template: false,
         initialize: function(options) {
             this.options = options || {};
             this.group = this.options.group;
-            app.vent.on('mapSearch:found', function(data) {
+            this.listenTo(app.vent, 'mapSearch:found', function(data) {
         	if (data != undefined && data.length > 0){
         	    this.constructMapFeatures(data);
         	}
-            }, this);
-            app.vent.on('mapSearch:clear', function(e) {
+            });
+            this.listenTo(app.vent, 'mapSearch:clear', function(e) {
                 this.clearDataAndFeatures();
-            }, this);
-            app.vent.on('mapSearch:fit', function(e){
-        	this.fitExtent();
-            }, this);
+            });
+            this.listenTo(app.vent, 'mapSearch:fit', function(e){
+            	this.fitExtent();
+            });
+            this.listenTo(app.vent, 'mapSearch:highlight', function(data) {
+                this.selectFeatures(data);
+            });
+            this.listenTo(app.vent, 'mapSearch:unhighlight', function(data) {
+                this.deselectFeatures(data);
+            });
         },
         getExtent: function() {
             if (this.mapElement != undefined && this.mapElement.getLayers().getLength() > 0){
@@ -919,6 +1304,51 @@ $(function() {
 //            app.map.map.un("moveend",  _this.mapMoveHandler, _this);
             }
         },
+        deselectFeatures: function(data) {
+        	var foundFeatures = this.findFeaturesByPK(data);
+        	if (_.isEmpty(foundFeatures)){
+        		return;
+        	}
+        	_.each(foundFeatures, function(feature){
+        		var theClass = window[feature.get('type')];
+        		if (!_.isUndefined(theClass) && !_.isUndefined(theClass.deselectMapElement)) {
+        			theClass.deselectMapElement(feature);
+        		}
+        	});
+        },
+        selectFeatures: function(data){
+        	var foundFeatures = this.findFeaturesByPK(data);
+        	if (_.isEmpty(foundFeatures)){
+//        		app.vent.trigger("mapSearch:found", data);
+//        		app.vent.trigger("mapSearch:highlight", data);
+        		return;
+        	}
+        	_.each(foundFeatures, function(feature){
+        		var theClass = window[feature.get('type')];
+        		if (!_.isUndefined(theClass) && !_.isUndefined(theClass.selectMapElement)) {
+        			theClass.selectMapElement(feature);
+        		}
+        	}, this);
+        },
+        findFeaturesByPK: function(data){
+        	var foundFeatures = [];
+        	if (_.isUndefined(this.mapElement)) {
+        		return foundFeatures;
+        	}
+        	_.each(data, function(datum){
+        		var mapLayers = this.mapElement.getLayers().getArray();
+        		var mapLayer = mapLayers.find(function(layer){return layer.get('name') == datum.type});
+        		if (!_.isUndefined(mapLayer)) {
+        			var featureList = mapLayer.getSource().getFeatures();
+            		var foundElement = featureList.find(function(feature){return feature.get('pk') == datum.pk});
+            		if (!_.isUndefined(foundElement)){
+            			foundFeatures.push(foundElement);
+            		}
+        		}
+        		
+        	},this);
+        	return foundFeatures;
+        },
         constructMapFeatures: function(data) {
         	if (_.isUndefined(this.mapElement)){
         	    this.mapElement = new ol.layer.Group({name:"liveSearch"});
@@ -947,7 +1377,7 @@ $(function() {
                 }
             }
             this.show();
-            app.vent.trigger('mapSearch:drewFeatures');
+            app.vent.trigger('mapSearch:drewFeatures', data);
 //            var _this = this;
 //            app.map.map.on("moveend",  _this.mapMoveHandler, _this);
         },
@@ -963,7 +1393,8 @@ $(function() {
         }
     });
     
-    app.views.MapLayerView = Backbone.View.extend({
+    app.views.MapLayerView = Marionette.View.extend({
+    	template: false,
         initialize: function(options) {
             this.options = options || {};
             if (!options.mapLayerGroup && !options.mapLayerJsonURL) {
@@ -979,7 +1410,32 @@ $(function() {
             this.features = [];
             this.mapLayerGroup = this.options.mapLayerGroup;
             this.on( "readyToDraw", this.finishInitialization, this);
+            this.setupOpacity();
             this.initializeFeaturesJson();
+        },
+        setupOpacity: function(){
+        	if (this.node != undefined){
+	        	var transparency = this.node.data.transparency;
+	        	try {
+	        		var cookieJSON = Cookies.getJSON(this.node.key);
+	        		if (cookieJSON != undefined){
+	        			transparency = cookieJSON.transparency;
+	        			if (this.node != undefined){
+	        				this.node.data.transparency = transparency;
+	        			}
+	        			this.options.node.data.transparency = transparency;
+	        		}
+	        	} catch (err) {
+	        		//pass
+	        		console.log(err);
+	        	}
+	        	if (transparency == undefined){
+	        		transparency = 0;
+	        	}
+	            this.opacity = calculateOpacity(transparency);
+        	} else {
+        		this.opacity = 1.0;
+        	}
         },
         finishInitialization: function() {
             this.createFeaturesLayer();
@@ -998,12 +1454,26 @@ $(function() {
         },
         constructFeatures: function() {
             if (_.isUndefined(this.layerGroup)){
-                this.layerGroup = new ol.layer.Group({name:this.mapLayerJson.name});
+//            	var transparency = this.mapLayerJson.transparency;
+//            	try {
+//            		var cookieJSON = Cookies.getJSON(this.node.key);
+//            		if (cookieJSON != undefined){
+//            			transparency = cookieJSON.transparency;
+//            		}
+//            	} catch (err){
+//            		//pass
+//            	}
+                this.layerGroup = new ol.layer.Group({name:this.mapLayerJson.name,
+                								      opacity: this.opacity});
             };
             var _this = this;
             $.each(this.mapLayerJson.features, function( index, value ) {
                     _this.createFeature(value);
               });
+        },
+        setTransparency: function(transparency) {
+        	this.opacity = calculateOpacity(transparency);
+        	this.layerGroup.setOpacity(this.opacity);
         },
         createFeature: function(featureJson){
             var newFeature;
@@ -1038,7 +1508,7 @@ $(function() {
                 this.features.push(newFeature);
             }
         },
-        render: function(selected) {
+        onRender: function(selected) {
             if (_.isUndefined(selected)){
         	selected = true;
             }
@@ -1072,12 +1542,14 @@ $(function() {
     });    
 
     
-    app.views.LayerFeatureView = Backbone.View.extend({
+    app.views.LayerFeatureView = Marionette.View.extend({
+    	template: false,
         initialize: function(options) {
             this.options = options || {};
             if (!options.layerGroup && !options.featureJson) {
                 throw 'Missing a required option!';
             }
+            this.opacity = calculateOpacity(options.transparency);
             this.olFeature = this.options.olFeature;
             this.layerGroup = this.options.layerGroup;
             this.featureJson = this.options.featureJson; 
@@ -1122,7 +1594,7 @@ $(function() {
             }
             return null;
         },
-        render: function() {
+        onRender: function() {
             var childLayer = this.getLayer();
             if (!_.isUndefined(childLayer)){
                 this.layerGroup.getLayers().push(childLayer);
@@ -1148,7 +1620,8 @@ $(function() {
 //                    imageExtent: [22012.307, -101829.476, 65462.259,  -58379.524]
                     imageExtent: extensTrans
                 }),
-                style: this.getStyles()
+                style: this.getStyles(),
+                opacity: this.opacity
             });
             this.imageLayer.setZIndex(50);  // Be sure we're sitting on top of any base layers. FIXME: this shoudl be in DB
         },
@@ -1170,7 +1643,8 @@ $(function() {
                     source: new ol.source.Vector({
                         features: [this.feature]
                     }),
-                    style: this.getStyles()
+                    style: this.getStyles(),
+                    opacity: this.opacity
                 });    
             }
             var popup = this.getPopupContent();

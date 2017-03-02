@@ -3,14 +3,19 @@
 	<form  id="form-{{key}}" action="" method="post">
 		{{ value.0.management_form }}
 		{% csrf_token %}
-		{% for form in value.0 %}
 		<table>
-		{{ form.as_table }}
+		{{ value.0.as_table }}
+		</table>
+		<!--
+		{# for form in value.0 #}
+		<table>
+		{# form.as_table #}
 		{#value.0.0.as_table#}
 		</table>
-		{% endfor %}
+		{# endfor #}
+		-->
 		<button id="doSearch" class="small">Search</button>
-		<button id="doSaveSearch" class="small">Save Search</button>
+		<!--<button id="doSaveSearch" class="small">Save Search</button> -->
 	</form>
 	</script>
-   	{% endfor %}
+{% endfor %}

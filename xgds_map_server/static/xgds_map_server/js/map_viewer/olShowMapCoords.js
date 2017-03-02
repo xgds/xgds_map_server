@@ -23,7 +23,8 @@ xgds_map.getCoords = function(coords){
 }
 
 
-xgds_map.mousePositionControl = new ol.control.MousePosition({
+initializeMousePositionControl = function() {
+	xgds_map.mousePositionControl = new ol.control.MousePosition({
     coordinateFormat:  xgds_map.getCoords,
 //    coordinateFormat: ol.coordinate.createStringXY(4),
     projection: LONG_LAT,
@@ -33,6 +34,7 @@ xgds_map.mousePositionControl = new ol.control.MousePosition({
     target: document.getElementById('postmap'),
     undefinedHTML: 'Unknown Position'
   });
+}
 
 xgds_map.coordinator = {
 		
@@ -42,6 +44,7 @@ xgds_map.coordinator = {
     },
 
     init: function() {
+    	initializeMousePositionControl();
         app.map.map.addControl(xgds_map.mousePositionControl);
     },
     

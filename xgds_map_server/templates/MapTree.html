@@ -1,37 +1,54 @@
 {% extends "MapBase.html" %}
+
 {% block scripts %}
 {{ block.super }}
+	<script type="text/javascript" src='{{ EXTERNAL_URL }}js-cookie/src/js.cookie.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-ui/jquery-ui.min.js'></script>
+    <script type="text/javascript" src='{{EXTERNAL_URL}}jquery-ui-contextmenu/jquery.ui-contextmenu.min.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}fancytree/dist/jquery.fancytree.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}fancytree/dist/src/jquery.fancytree.dnd.js'></script>
-     <script type="text/javascript" src='{{ EXTERNAL_URL }}lodash/lodash.min.js'></script>
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}fancytree/dist/src/jquery.fancytree.filter.js'></script>
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}fancytree/dist/src/jquery.fancytree.persist.js'></script>
+    <!-- <script type="text/javascript" src='{{ EXTERNAL_URL }}lodash/lodash.min.js'></script> -->
+    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/tree/fancyTreeSlider.js'></script>
 {% endblock %}
 
 {% block contents %}
 <strong>Add</strong>
-<a href="{% url 'folderAdd' %}" class="mybutton">Folder</a>
-<a href="{% url 'addKml' %}" class="mybutton">Kml</a>
-<a href="{% url 'mapAddLayer' %}" class="mybutton">Layer</a>
-<a href="{% url 'mapAddTile' %}" class="mybutton">Tile</a>
+<a href="{% url 'folderAdd' %}" class="mybutton small">Folder</a>
+<a href="{% url 'addKml' %}" class="mybutton small">Kml</a>
+<a href="{% url 'mapAddLayer' %}" class="mybutton small">Layer</a>
+<a href="{% url 'mapAddTile' %}" class="mybutton small">Tile</a>
+<a href="{% url 'mapAddDataTile' %}" class="mybutton small">Data Tile</a>
 <!-- <a href="{% url 'mapAddMapCollection' %}" class="mybutton">Collection</a> -->
-<a href="{% url 'deletedNodes' %}" class="mybutton">Undelete</a>
+<a href="{% url 'deletedNodes' %}" class="mybutton small">Undelete</a>
 <style scoped>
   @import url('{{EXTERNAL_URL}}jquery-ui/themes/base/jquery-ui.css');
   @import url('{{ EXTERNAL_URL }}fancytree/dist/skin-lion/ui.fancytree.min.css');
+  @import url('{{ STATIC_URL }}xgds_map_server/css/fancytree_custom.css');
   ul.fancytree-container {
  	 height: 400px;
   	 width: 95%;
   }
 </style>
 <div id="layertreeContainer">
-	<i class="icon-arrows-ccw" alt="refresh" id="refreshTreeLink" onclick="javascript: refreshTree();"></i>
-	Drag and drop to reorganize tree.  Double-click to edit.  Checked = layer is turned on by default.
+	<p class="small">
+	Drag and drop to reorganize tree.  Right-click to edit. <br/>
+	Checked = layer is turned on by default globally. <br/>
+	Transparency settings are global.
+	</p>
+	<button alt="refresh" id="refreshTreeLink" class="small" onclick="javascript: refreshTree();">Refresh</button>
+	<input name="searchTree" placeholder="Filter..." autocomplete="off">
+   	<button id="btnResetSearch" class="small" >&times;</button>
+   	<span id="matches"></span></br/>
+	<button id="btnTransparencyEditors" class="small" style="margin-top:5px;"  onclick="toggleTransparencySliders();">Transparency</button>
 	<div id="layertree" ></div> <!-- data-source="ajax" class="sampletree"></div> -->
  </div>
 {% endblock %}
 
 {% block jsInit %}
 {{ block.super }}
+   persistTransparency = true;
    var setVisibilityURL = "{{ setVisibilityURL }}";
    var moveNodeURL = "{{ moveNodeURL }}";
    var layerFeedUrl =  "{{ JSONMapTreeURL }}"; // "{{ settings.XGDS_PLANNER2_LAYER_FEED_URL }}";
@@ -41,19 +58,73 @@
            dataType: 'json',
            success: $.proxy(function(data) {
            		initializeTree(data);
+           		connectFilter();
          	})
          });
-         
+   var connectFilter = function() {
+    	$("button#btnResetSearch").click(function(e){
+    	      $("input[name=searchTree]").val("");
+    	      $("span#matches").text("");
+    	      theTree.clearFilter();
+    	    }).attr("disabled", true);
+    	
+    	$("input[name=searchTree]").keyup(function(e){
+    	      var n,
+    	        opts = {
+    	          autoExpand: true,
+    	          leavesOnly: false
+    	        },
+    	        match = $(this).val();
+
+    	      if(e && e.which === $.ui.keyCode.ESCAPE || $.trim(match) === ""){
+    	        $("button#btnResetSearch").click();
+    	        return;
+    	      }
+//    	      if($("#regex").is(":checked")) {
+//    	        // Pass function to perform match
+//    	        n = theTree.filterNodes(function(node) {
+//    	          return new RegExp(match, "i").test(node.title);
+//    	        }, opts);
+//    	      } else {
+    	        // Pass a string to perform case insensitive matching
+    	        n = theTree.filterNodes(match, opts);
+//    	      }
+    	      $("button#btnResetSearch").attr("disabled", false);
+    	      $("span#matches").text("(" + n + " matches)");
+    	    }).focus();
+    };
    var initializeTree = function(data) {
+   
+    	layertreeNode.contextmenu({
+    	      delegate: "span.fancytree-title",
+    	      menu: [
+    	          {title: "Edit", cmd: "edit", uiIcon: "ui-icon-pencil", disabled: false },
+    	          ],
+    	      beforeOpen: function(event, ui) {
+    	        var node = $.ui.fancytree.getNode(ui.target);
+    	        node.setActive();
+    	      },
+    	      select: function(event, ui) {
+    	        var node = $.ui.fancytree.getNode(ui.target);
+    	        window.open(node.data.href, '_edit');
+    	      }
+    	    });
+    	    
     layertreeNode.fancytree({
        source: data,
        checkbox: true,
-       extensions: ["dnd"],
+       extensions: ['dnd','persist','filter', 'transparency_slider'],
        autoActivate: false,
        autoScroll: false,
-       dblclick: function(event, data) {
-         	window.location.href=data.node.data.href;
-       },
+       filter: {
+                    autoApply: true,  // Re-apply last filter if lazy data is loaded
+                    counter: true,  // Show a badge with number of matching child nodes near parent icons
+                    fuzzy: false,  // Match single characters in order, e.g. 'fb' will match 'FooBar'
+                    hideExpandedCounter: true,  // Hide counter badge, when parent is expanded
+                    highlight: true,  // Highlight matches by wrapping inside <mark> tags
+                    mode: "hide",  // Hide unmatched nodes (pass "dimm" to gray out unmatched nodes)
+                    autoExpand: true
+                  },
        select: function(event, data) {
 	       // toggle default visibility
 	       var params = { 'nodeUuid': data.node.key, 'visible': data.node.isSelected()};
@@ -97,6 +168,7 @@
 	      	},
    		}); 
    	 theTree = layertreeNode.fancytree("getTree");
+   	 app = {tree:theTree};
    };
    
    var refreshTree = function() {

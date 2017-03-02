@@ -16,20 +16,17 @@
 
 app.views = app.views || {};
 
-app.views.LinksView = Backbone.Marionette.ItemView.extend({
+app.views.LinksView = Marionette.View.extend({
     template: '#template-layer-links',
-    initialize: function() {
-        var source = $(this.template).html();
-        this.template = Handlebars.compile(source);
-    },
-    render: function() {
-        this.$el.html(this.template({
-            layerUuid: app.mapLayer.get('uuid')
-        }));
+    templateContext: function() {
+    	if (app.mapLayer !== undefined){
+    		return {layerUuid: app.mapLayer.get('uuid')};
+    	}
+		return {layerUuid: ''};
     }
 });
 
-app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
+app.views.ToolbarView = Marionette.View.extend({
     template: '#template-toolbar',
     events: {
         'click #btn-navigate': function() { app.vent.trigger('mapmode', 'navigate'); this.updateTip('clear');},
@@ -50,41 +47,20 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
         this.listenTo(app.vent, 'redoNotEmpty', this.enableRedo);
         this.listenTo(app.mapLayer, 'sync', function(model) {this.updateSaveStatus('sync')});
         this.listenTo(app.mapLayer, 'error', function(model) {this.updateSaveStatus('error')});
-        // todo listento sync of features
     },
 
-    onShow: function() {
-        if (!app.State.mapHeightSet) {
-            var offset = this.$el.height() +
-                parseFloat(this.$el.parent().css('margin-top')) +
-                parseFloat(this.$el.parent().css('margin-bottom')) +
-                10; // this exact number is needed because jquery ui uses
-            // elements with absolute positioning for the resize handles
-            var pageContentElement = $('#page-content');
-            var oldMapHeight = app.map.$el.height();
-            var initialHeight = oldMapHeight - offset;
-            app.map.$el.height(initialHeight);
-            app.map.$el.css('max-height', initialHeight + 'px');
-            $(window).bind('resize', function() {
-                app.map.$el.css('max-height', (pageContentElement.height() - offset) + 'px');
-            });
-            app.State.mapHeightSet = true;
-            app.vent.trigger('doMapResize');
-        }
-    },
-
-    onRender: function() {
-        if (app.Actions.undoEmpty()) {
-            this.disableUndo();
-        } else {
-            this.enableUndo();
-        }
-        if (app.Actions.redoEmpty()) {
-            this.disableRedo();
-        } else {
-            this.enableRedo();
-        }
-    },
+//    onRender: function() {
+//        if (app.Actions.undoEmpty()) {
+//            this.disableUndo();
+//        } else {
+//            this.enableUndo();
+//        }
+//        if (app.Actions.redoEmpty()) {
+//            this.disableRedo();
+//        } else {
+//            this.enableRedo();
+//        }
+//    },
 
     disableForReadOnly: function() {
         this.$('#btn-save').attr('disabled', 'true');
@@ -203,7 +179,7 @@ app.views.ToolbarView = Backbone.Marionette.ItemView.extend({
 
 });
 
-app.views.EditingToolsView = Backbone.Marionette.ItemView.extend({
+app.views.EditingToolsView = Marionette.View.extend({
 	template: '#template-editing-tools',
 	close: function() {
         this.ensureEl();
@@ -211,7 +187,11 @@ app.views.EditingToolsView = Backbone.Marionette.ItemView.extend({
     }
 });
 
-app.views.LayerInfoTabView = Backbone.Marionette.ItemView.extend({
+app.views.NavigateView = Marionette.View.extend({
+	template: '<div>&nbsp;<br/></div>'
+});
+
+app.views.LayerInfoTabView = Marionette.View.extend({
 	template: '#template-layer-info',
 	initialize: function() {
 	},
@@ -224,15 +204,11 @@ app.views.LayerInfoTabView = Backbone.Marionette.ItemView.extend({
 			this.model.set('description', evt.target.value);
 			this.model.save();
 		}    
-	},
-	serializeData: function() {
-		var data = this.model.toJSON();
-		return data;
 	}
 });
 
 
-app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
+app.views.FeaturesTabView = Marionette.View.extend({
 	template: '#template-features-view',
     regions: {
         //Column Headings
@@ -259,8 +235,8 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
     
     clearColumns: function() {
     	// Clears 2nd and 3rd columns
-        this.col2.reset();
-        this.col3.reset();
+        this.getRegion('col2').reset();
+        this.getRegion('col3').reset();
     },
     
     onClose: function() {
@@ -269,14 +245,14 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
     
     onRender: function() {
         try {
-            this.colhead1.close();
-            this.col1.close();
+            this.getRegion('colhead1').close();
+            this.getRegion('col1').close();
             this.clearColumns()
         } catch (err) { 
         	
         }
     	var headerView = new app.views.FeaturesHeaderView({});
-    	this.colhead1.show(headerView);
+    	this.getRegion('colhead1').show(headerView);
 
     	// view that shows list of feature elements
     	var featureCollectionView = new app.views.FeatureCollectionView ({
@@ -284,7 +260,7 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
     	});
     	
     	try {
-    		this.col1.show(featureCollectionView);
+    		this.getRegion('col1').show(featureCollectionView);
     	} catch (exception) {
     		console.log(exception)
     	}
@@ -293,8 +269,8 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
     showFeature: function(itemModel) {
     	// clear columns
     	try{
-    		this.col3.reset();
-    		this.colhead2.reset();
+    		this.getRegion('col3').reset();
+    		this.getRegion('colhead2').reset();
     	} catch (ex) {
     	}
     	
@@ -302,22 +278,22 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
     		model: itemModel
     	});
     	
-    	this.colhead2.show(headerView);
-    	this.col2.reset();
-    	this.colhead3.reset();
+    	this.getRegion('colhead2').show(headerView);
+    	this.getRegion('col2').reset();
+    	this.getRegion('colhead3').reset();
     	
     	var view = new app.views.FeaturePropertiesView({model: itemModel});
-    	this.col2.show(view);
+    	this.getRegion('col2').show(view);
     },
     
     showStyle: function(model){
     	try {
-    		this.col3.reset();
-    		this.colhead3.reset();
+    		this.getRegion('col3').reset();
+    		this.getRegion('colhead3').reset();
     	} catch (ex) {
     	}
     	var headerView = new app.views.FeatureStyleHeader({model: model});
-    	this.colhead3.show(headerView);
+    	this.getRegion('colhead3').show(headerView);
     	if (model.get('type') == 'Polygon') {
     		var view = new app.views.FeaturePolygonStyleForm({model: model});
     	} else if (model.get('type') == 'Point') {
@@ -325,28 +301,28 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
     	} else if (model.get('type') == 'LineString') {
     		var view = new app.views.FeatureLinestringStyleForm({model: model});
     	} 	
-    	this.col3.show(view);
-        this.col3.reset();
+    	this.getRegion('col3').show(view);
+        this.getRegion('col3').reset();
     }, 
     
     showCoordinates: function(model){
     	try {
-    	    this.colhead3.close();
+    	    this.getRegion('colhead3').close();
     	} catch (ex) {
     	}
     	var headerView = new app.views.FeatureCoordinatesHeader({model: model});
-    	this.colhead3.show(headerView);
-	var view = new app.views.FeatureCoordinatesView({model: model});
-    	this.col3.show(view);
+    	this.getRegion('colhead3').show(headerView);
+    	var view = new app.views.FeatureCoordinatesView({model: model});
+    	this.getRegion('col3').show(view);
     },
     
     showNothing: function() {
         // clear the columns
         try {
-            this.col2.close();
-            this.col3.close();
-            this.colhead2.close();
-            this.colhead3.close();
+            this.getRegion('col2').close();
+            this.getRegion('col3').close();
+            this.getRegion('colhead2').close();
+            this.getRegion('colhead3').close();
         } catch (ex) {
             
         }
@@ -357,13 +333,8 @@ app.views.FeaturesTabView = Backbone.Marionette.LayoutView.extend({
 /**
  * Model this after PropertiesForm in plan so that the model is immediately updated.
  */
-app.views.FeatureStyleForm = Backbone.Marionette.ItemView.extend({
-	template: '#template-feature-polygon-style-properties',
-	serializeData: function() {
-		var data = this.model.toJSON();
-		//TODO: add more later
-		return data;
-	}
+app.views.FeatureStyleForm = Marionette.View.extend({
+	template: '#template-feature-polygon-style-properties'
 });
 
 
@@ -382,7 +353,7 @@ app.views.FeaturePointStyleForm = app.views.FeatureStyleForm.extend({
 });
 
 
-app.views.FeatureCoordinatesView = Backbone.Marionette.ItemView.extend({
+app.views.FeatureCoordinatesView = Marionette.View.extend({
 	template: '#template-feature-coordinates',
 	events: {
 		"change input.featureCoords": "coordsChanged"
@@ -409,7 +380,7 @@ app.views.FeatureCoordinatesView = Backbone.Marionette.ItemView.extend({
 		this.model.save();
 		this.model.trigger('change:coordinates');
 	},
-	serializeData: function() {
+	templateContext: function() {
 		var coordinates = null;
 		var markPolygon = false;
 		var type = this.model.get('type');
@@ -426,25 +397,23 @@ app.views.FeatureCoordinatesView = Backbone.Marionette.ItemView.extend({
 });
 
 
-app.views.FeatureCoordinatesHeader = Backbone.Marionette.ItemView.extend({
+app.views.FeatureCoordinatesHeader = Marionette.View.extend({
 	template: '#template-feature-coordinates-header',
-	serializeData: function() {
-		var data = this.model.toJSON();
-		return {type: data.type};
+	templateContext: function() {
+		return {type: this.model.get('type')};
 	}
 });
 
 
-app.views.FeatureStyleHeader = Backbone.Marionette.ItemView.extend({
+app.views.FeatureStyleHeader = Marionette.View.extend({
 	template: '#template-feature-style-header',
-	serializeData: function() {
-		var data = this.model.toJSON();
-		return {type: data.type};
+	templateContext: function() {
+		return {type: this.model.get('type')};
 	}
 });
 
 
-app.views.FeaturePropertiesView = Backbone.Marionette.CompositeView.extend({
+app.views.FeaturePropertiesView = Marionette.View.extend({
 	template: '#template-feature-properties',
 	events: {
 		'click .feature-style': function(evt) {
@@ -469,11 +438,14 @@ app.views.FeaturePropertiesView = Backbone.Marionette.CompositeView.extend({
 			this.model.set('popup', evt.target.checked);
 			this.model.save();
 		}
+	},
+	onRender: function() {
+		app.vent.trigger('showCoordinates', this.model);
 	}
 });
 
 
-app.views.FeaturesHeaderView = Backbone.Marionette.ItemView.extend({
+app.views.FeaturesHeaderView = Marionette.View.extend({
     /*
      * This view also contains the copy, cut, delete btns for features.
      */
@@ -484,21 +456,20 @@ app.views.FeaturesHeaderView = Backbone.Marionette.ItemView.extend({
 });
 
 
-app.views.FeaturePropertiesHeaderView = Backbone.Marionette.ItemView.extend({
+app.views.FeaturePropertiesHeaderView = Marionette.View.extend({
 	template: '#template-feature-properties-header',
-	serializeData: function() {
-		var data = this.model.toJSON();
-		return {type: data.type};
+	templateContext: function() {
+		return {type: this.model.get('type')};
 	}
 });
 
 
-app.views.NoFeaturesView = Backbone.Marionette.ItemView.extend({
+app.views.NoFeaturesView = Marionette.View.extend({
     template: '#template-no-features'
 });
 
 
-app.views.FeatureElementView = Backbone.Marionette.ItemView.extend({
+app.views.FeatureElementView = Marionette.View.extend({
 	/**
 	 * This view represents each feature element (each row in the first column).
 	 */
@@ -506,19 +477,12 @@ app.views.FeatureElementView = Backbone.Marionette.ItemView.extend({
     tagName: 'li',
     initialize: function(options) {
         this.options = options || {};
-        app.views.makeExpandable(this, this.options.expandClass);
+        xGDS.makeExpandable(this, this.options.expandClass);
     },
-    template: function(data) {
-        //return '' + data.model.toString()+ ' <i/>';
-    	var displayName = data.model.toString();
-    	var uuid = data.model.get('uuid');
-        return '<input class="select" type="checkbox" id="id_' + uuid + '"/></i>&nbsp;<label class="featureName" style="display:inline-block;" for="id_' + uuid + '">' + displayName + '</label><i/>';
-    },
-    serializeData: function() {
-        var data = Backbone.Marionette.ItemView.prototype.serializeData.call(this, arguments);
-        data.model = this.model; // give the serialized object a reference back to the model
-        data.view = this; // and view
-        return data;
+    template: '<span><input class="select" type="checkbox" id="id_{{uuid}}"/>&nbsp;<label class="featureName" style="display:inline-block;" for="id_{{uuid}}">{{displayname}}</label></span>',
+    templateContext: function() {
+    	return  {displayname: this.model.toString(),
+    		     uuid: this.model.get('uuid')};
     },
     attributes: function() {
         return {
@@ -539,15 +503,15 @@ app.views.FeatureElementView = Backbone.Marionette.ItemView.extend({
             app.vent.trigger('activeFeature', this.model);
             app.State.metaExpanded = true;
             app.State.featureSelected = this.model;
-            this.expand();
+            this.expand(this);
             app.vent.trigger('showFeature', this.model);
         },
     	'click .select': function(evt) {
         	if (app.State.featureSelected != this.model){
         	    if (evt.target.checked){
-        		app.vent.trigger('selectFeature', this.model);
+        	    	app.vent.trigger('selectFeature', this.model);
         	    } else {
-        		app.vent.trigger('deselectFeature', this.model);
+        	    	app.vent.trigger('deselectFeature', this.model);
         	    }
         	}
     	}
@@ -561,7 +525,7 @@ app.views.FeatureElementView = Backbone.Marionette.ItemView.extend({
 });
 
 
-app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
+app.views.FeatureCollectionView = Marionette.CollectionView.extend({
 	/**
 	 * This view shows list of feature elements (entire first column)
 	 */
@@ -571,11 +535,11 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
 	emptyView: app.views.NoFeaturesView,
 	initialize: function(options) {
 		this.options = options || {};
-		this.on('childview:expand', this.onItemExpand, this);
-		app.reqres.setHandler('selectedFeatures', this.getSelectedFeatures, this);
+		this.listenTo(app.vent, 'selectedFeatures', this.getSelectedFeatures);
 		this.listenTo(app.vent, 'featuresSelected', this.enableFeatureActions);
 		this.listenTo(app.vent, 'featuresUnSelected', this.disableFeatureActions);
 		this.listenTo(app.vent, 'deleteSelectedFeatures', this.deleteSelectedFeatures);
+		this.on('childview:expand', function(childView) { this.onItemExpand(childView);}, this);
 	},
 	childViewOptions: {
 		expandClass: 'col1'
@@ -586,14 +550,8 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
 		 */
 		// if there is a previously selected feature, revert the style to default.
 		app.State.featureSelected = childView.model;
-
-		
+		app.vent.trigger('itemSelected', childView.model);
 	},   
-    onClose: function(){
-        this.children.each(function(view) {
-        	console.log(view);
-        });
-    },
     deleteSelectedFeatures: function(){
     	var features = this.getSelectedFeatures(); 
     	var selectParent = null;
@@ -603,93 +561,23 @@ app.views.FeatureCollectionView = Backbone.Marionette.CollectionView.extend({
     }, 
     
     getSelectedFeatures: function() {
-	var features = [];
-	this.children.each(function(childView) {
-	    try {
-		if (childView.isSelected()) {
-		    features.push(childView.model);
-		}
-	    } catch (ex) {
-		// pass
-	    }
-	});
-	return features;
+		var features = [];
+		this.children.each(function(childView) {
+		    try {
+			if (childView.isSelected()) {
+			    features.push(childView.model);
+			}
+		    } catch (ex) {
+			// pass
+		    }
+		});
+		return features;
     }
 });
 
 
 
-
-app.views.makeExpandable = function(view, expandClass) {
-    /*
-     * Call this on a view to indicate it is a expandable item in the three-column layout.
-     * When the view's 'expand' event is triggered, it will display it's chevron and trigger
-     * the global 'viewExpanded' event.  On recieving a global 'viewExpoanded' event with an
-     * expandClass that matches its own, the view will remove it's chevron.
-     */
-    if (app.currentTab != 'features') {
-        // memory leak work around
-        return;
-    }
-    
-    var expandable = {
-        expand: function() {
-            this.trigger('expand');
-        },
-        _expand: function() {
-            var expandClass = this.options.expandClass;
-            this.expanded = true;
-            this._addIcon();
-            app.vent.trigger('viewExpanded', this, expandClass);
-            if (!_.isUndefined(this.onExpand) && _.isFunction(this.onExpand)) {
-                this.onExpand();
-            }
-        },
-        unexpand: function() {
-            this.expanded = false;
-            this.$el.find('i').removeClass('icon-play');
-        },
-        onExpandOther: function(target, expandClass) {
-            if (this.options.expandClass === expandClass && this != target && target.isClosed != true) {
-                this.unexpand();
-            }
-        },
-        _ensureIcon: function() {
-            if (view.$el.find('i').length == 0) {
-                view.$el.append('<i/>');
-            }
-        },
-        _restoreIcon: function() {
-            if (this.expanded) {
-                this._addIcon();
-            }
-        },
-        _addIcon: function() {
-            this._ensureIcon();
-            this.$el.find('i').addClass('icon-play');
-        },
-        onClose: function() {
-            this.stopListening();
-        }
-    };
-    view = _.defaults(view, expandable);
-    view.options = _.defaults(view.options, {expandClass: expandClass});
-    view.listenTo(app.vent, 'viewExpanded', view.onExpandOther, view);
-    view.on('expand', view._expand, view);
-    view.on('render', view._restoreIcon, view);
-};
-
-
-app.views.TabNavView = Backbone.Marionette.LayoutView.extend({
-    template: '#template-tabnav',
-    regions: {
-        tabTarget: '#tab-target',
-        tabContent: '#tab-content'
-    },
-    events: {
-        'click ul.tab-nav li': 'clickSelectTab'
-    },
-
+app.views.TabNavView = xGDS.TabNavView.extend({
     viewMap: {
     	'info': app.views.LayerInfoTabView,
     	'features': app.views.FeaturesTabView,
@@ -699,65 +587,15 @@ app.views.TabNavView = Backbone.Marionette.LayoutView.extend({
     },
 
     initialize: function() {
-        this.on('tabSelected', this.setTab);
-        this.listenTo(app.vent, 'setTabRequested', function(tabId) {
-            this.setTab(tabId);
-        });
-        this.layersView = null;
+    	xGDS.TabNavView.prototype.initialize.call(this);
+        var context = this;
+        this.listenTo(app.vent, 'onLayerLoaded', function() {
+        	 this.setTab('info');
+        }, this);
     },
-
-    onRender: function() {
-        if (! this.options.initialTab) {
-            this.options.initialTab = 'info';
-        }
-        if (!_.isUndefined(app.currentTab)) {
-            this.trigger('tabSelected', app.currentTab);
-        } else {
-            this.trigger('tabSelected', this.options.initialTab);
-        }
-    },
-
-    clickSelectTab: function(event) {
-        var newmode = $(event.target).parents('li').data('target');
-        this.trigger('tabSelected', newmode);
-    },
-
-    setTab: function(tabId) {
-    	 var oldTab = app.currentTab;
-         app.currentTab = tabId;
-         if (oldTab == tabId){
-             return;
-         }
-    	
-        var $tabList = this.$el.find('ul.tab-nav li');
-        $tabList.each(function() {
-            li = $(this);
-            if (li.data('target') === tabId) {
-                li.addClass('active');
-            } else {
-                li.removeClass('active');
-            }
-        });
-        var viewClass = this.viewMap[tabId];
-        if (! viewClass) { return undefined; }
-        var view = new viewClass({
-            model: app.mapLayer
-        });
-        if (oldTab == 'layers'){
-            this.tabContent.show(view, {preventClose: true});
-        } else {
-            if (tabId == 'layers'){
-                if (!_.isNull(this.layersView)){
-                    this.tabContent.show(this.layersView);
-                } else {
-                    this.layersView = view;
-                    this.tabContent.show(view);
-                }
-            } else {
-                this.tabContent.show(view);
-            }
-        }
-        
-        app.vent.trigger('tab:change', tabId);
+    getModel: function() {
+    	return app.mapLayer;
     }
+
 });
+

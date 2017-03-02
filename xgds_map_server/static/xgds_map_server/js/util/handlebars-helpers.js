@@ -33,7 +33,7 @@ Handlebars.registerHelper('debug', function(optionalValue) {
 });
 
 Handlebars.registerHelper('getColor', function(key) {
-    return app.reqres.request('getColor', key);
+    return app.getColor(key);
 });
 
 //
@@ -41,12 +41,37 @@ Handlebars.registerHelper('getColor', function(key) {
 //
 Handlebars.registerHelper('ifequal', function(val1, val2, options) {
     if (val1 === val2) {
-        return options.fn();
+        return options.fn(this);
     }
     else {
-        return options.inverse();
+        return options.inverse(this);
     }
 });
+
+Handlebars.registerHelper('ifunequal', function(val1, val2, options) {
+    if (val1 !== val2) {
+        return options.fn(this);
+    }
+    else {
+        return options.inverse(this);
+    }
+});
+
+
+Handlebars.registerHelper('filename', function(value) {
+	if (!_.isEmpty(value)){
+		return value.split('/').pop();
+	}
+	return value;
+});
+
+Handlebars.registerHelper('prettyDecimal', function(value) {
+	if (_.isNumber(value)){
+		return value.toFixed(2);
+	}
+	return value;
+});
+
 
 Handlebars.registerHelper('getattr', function(obj, key) {
     return obj[key];

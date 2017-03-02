@@ -1,25 +1,44 @@
-	<script type="text/javascript">var map_api_key = '{{settings.XGDS_MAP_SERVER_MAP_API_KEY}}';</script>
-	<script type="text/javascript" src='{{ EXTERNAL_URL }}sprintf.js/dist/sprintf.min.js'></script>
-	<script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-ui/jquery-ui.min.js'></script>
-	<script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-cookie/jquery.cookie.js'></script>
-	<script type="text/javascript" src="{{ EXTERNAL_URL }}datatables/media/js/jquery.dataTables.min.js"></script>
-	<script type="text/javascript" src="{{ EXTERNAL_URL }}datatables-select/js/dataTables.select.js"></script>
-	<script type="text/javascript" src='{{ EXTERNAL_URL }}fancytree/dist/jquery.fancytree.js'></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}fancytree/dist/src/jquery.fancytree.persist.js'></script>
- 	<script type="text/javascript" src='{{ EXTERNAL_URL }}lodash/lodash.min.js'></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}handlebars/handlebars.min.js'></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}backbone/backbone.js'></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}marionette/lib/backbone.marionette.min.js'></script>
-    <script type="text/javascript" src='{{STATIC_URL}}{{ app }}'></script>
-    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/tree/fancyTreeView.js'></script>
-    <script type="text/javascript" src='{{EXTERNAL_URL}}proj4/dist/proj4.js'></script>
-    <script type="text/javascript" src="{{EXTERNAL_URL}}openlayers3/ol.js" ></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}ol3-popup/src/ol3-popup.js'></script>
-    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/util/util.js'></script>
-    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/search/searchViews.js'></script>
-    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/map_viewer/olStyles.js'></script>
-   	<script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/map_viewer/olMapViews.js'></script>
-   	<script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/map_viewer/olVehicleViews.js'></script>
+
+	<script type='text/javascript'>
+		var map_api_key = '{{settings.XGDS_MAP_SERVER_MAP_API_KEY}}';
+	</script>
+	<script type='text/javascript' src='{{ EXTERNAL_URL }}sprintf.js/dist/sprintf.min.js'></script>
+	<script type='text/javascript' src='{{ EXTERNAL_URL }}jquery-ui/jquery-ui.min.js'></script>
+	<script type='text/javascript' src='{{ EXTERNAL_URL }}js-cookie/src/js.cookie.js'></script>
+	<script type='text/javascript' src='{{ EXTERNAL_URL }}datatables/media/js/jquery.dataTables.min.js'></script>
+	<script type='text/javascript' src='{{ EXTERNAL_URL }}datatables-select/js/dataTables.select.js'></script>
+	<script type='text/javascript' src='{{ EXTERNAL_URL }}fancytree/dist/jquery.fancytree.js'></script>
+	<script type='text/javascript' src='{{ EXTERNAL_URL }}fancytree/dist/src/jquery.fancytree.filter.js'></script>
+    <script type='text/javascript' src='{{ EXTERNAL_URL }}fancytree/dist/src/jquery.fancytree.persist.js'></script>
+    <script type='text/javascript' src='{{ EXTERNAL_URL }}handlebars/handlebars.min.js'></script>
+    <script type='text/javascript' src='{{STATIC_URL}}xgds_map_server/js/util/handlebars-helpers.js'></script>
+	<!-- <script type='text/javascript' src='{{ EXTERNAL_URL }}bootstrap/dist/boostrap.js'></script> -->
+	<!-- <script src='{{ STATIC_URL }}js/backbone_marionette_browserify.js'></script>
+	 -->
+	<script type='text/javascript' src='{{ EXTERNAL_URL }}backbone/backbone.js'></script>
+	<script type='text/javascript' src='{{ EXTERNAL_URL }}backbone.radio/build/backbone.radio.min.js'></script>
+    <script type='text/javascript' src='{{ EXTERNAL_URL }}marionette/lib/backbone.marionette.js'></script>
+    <script type='text/javascript' src='{{STATIC_URL}}xgds_map_server/js/util/marionette-helpers.js'></script>
+    
+    
+    <script type='text/javascript' src='{{STATIC_URL}}xgds_map_server/js/map_viewer/mapViewerApp.js'></script>
+    {% if app %}
+    <script type='text/javascript' src='{{STATIC_URL}}{{ app }}'></script>
+    {% endif %}
+    <script>
+    	app = xGDS.Factory.construct(appOptions);
+    </script>
+    <script type='text/javascript' src='{{EXTERNAL_URL}}jquery-ui-contextmenu/jquery.ui-contextmenu.min.js'></script>
+    <script type='text/javascript' src='{{STATIC_URL}}xgds_map_server/js/tree/fancyTreeSlider.js'></script>
+    <script type='text/javascript' src='{{STATIC_URL}}xgds_map_server/js/tree/fancyTreeView.js'></script>
+    <script type='text/javascript' src='{{EXTERNAL_URL}}proj4/dist/proj4.js'></script>
+    <script type='text/javascript' src='{{EXTERNAL_URL}}openlayers/ol-debug.js' ></script>
+    <script type='text/javascript' src='{{ EXTERNAL_URL }}ol3-popup/src/ol3-popup.js'></script>
+    <script type='text/javascript' src='{{EXTERNAL_URL}}pngtoy/pngtoy.min.js'></script>
+    <script type='text/javascript' src='{{STATIC_URL}}xgds_map_server/js/search/searchViews.js'></script>
+    <script type='text/javascript' src='{{STATIC_URL}}xgds_map_server/js/map_viewer/olStyles.js'></script>
+   	<script type='text/javascript' src='{{STATIC_URL}}xgds_map_server/js/map_viewer/olMapViews.js'></script>
+   	<script type='text/javascript' src='{{STATIC_URL}}xgds_map_server/js/map_viewer/olVehicleViews.js'></script>
    	{% for key, value in settings.XGDS_MAP_SERVER_JS_MAP.items %}
-   		<script type="text/javascript" src='{{STATIC_URL}}{{ value.ol|safe }}'></script>
+   		{% if value.ol %}<script type='text/javascript' src='{{STATIC_URL}}{{ value.ol|safe }}'></script> {% endif %}
    	{% endfor %}

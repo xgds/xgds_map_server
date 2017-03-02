@@ -14,6 +14,9 @@
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
 
+import datetime
+import pytz
+
 from django import forms
 from django.conf import settings
 from django.core.urlresolvers import reverse
@@ -21,7 +24,7 @@ from django.forms.fields import IntegerField, ChoiceField
 
 from resumable.fields import ResumableFileField
 
-from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapCollection, MapSearch
+from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapCollection, MapSearch, MapDataTile
 from xgds_data.models import Collection, RequestLog
 
 # pylint: disable=C1001
@@ -29,12 +32,18 @@ from xgds_data.models import Collection, RequestLog
 
 class AbstractMapForm(forms.ModelForm):
     parent = forms.ModelChoiceField(queryset=MapGroup.objects.filter(deleted=False), empty_label=None, label="Parent Folder")
-
+    username = forms.CharField(required=False, widget=forms.HiddenInput())
+    
     def getModel(self):
         return None
 
     def getExclude(self):
         return ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted']
+
+    def getParentGroup(self):
+        mapGroupName = self.cleaned_data['parent']
+        foundParents = MapGroup.objects.filter(name=mapGroupName)
+        return foundParents[0]
 
     class Meta:
         abstract = True
@@ -63,28 +72,64 @@ class MapLayerForm(AbstractMapForm):
 
 
 class MapTileForm(AbstractMapForm):
-    minZoom = IntegerField(initial=12, label="Min Zoom")
-    maxZoom = IntegerField(initial=20, label="Max Zoom (UAV=23, Satellite=20)")
+    if settings.XGDS_MAP_SERVER_GDAL2TILES_ZOOM_LEVELS:
+        minZoom = IntegerField(initial=12, label="Min Zoom")
+        maxZoom = IntegerField(initial=20, label="Max Zoom (UAV=23, Satellite=20)")
+    
     resampleMethod = ChoiceField(choices=settings.XGDS_MAP_SERVER_GDAL_RESAMPLE_OPTIONS,
                                  label="Resampling Method")
 
     sourceFile = ResumableFileField(allowed_mimes=("image/tiff",),
-                                    upload_url=lambda: reverse('uploadGeoTiff'),
+                                    upload_url=lambda: reverse('uploadResumable'),
                                     chunks_dir=getattr(settings, 'FILE_UPLOAD_TEMP_DIR'),
-                                    label="File"
+                                    label="GeoTiff Source File"
                                     )
 
+    def save(self, commit=True):
+        instance = super(MapTileForm, self).save(commit=False)
+        if not instance.creator:
+            instance.creator = self.cleaned_data['username']
+            instance.creation_time = datetime.datetime.now(pytz.utc)
+        else:
+            instance.modifier = self.cleaned_data['username']
+            instance.modification_time = self.cleaned_data['username']
+        instance.parent = self.getParentGroup()
+        if commit:
+            instance.save()
+        
+    
     class Meta(AbstractMapForm.Meta):
         model = MapTile
-        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed']
+        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed', 'minx', 'miny', 'maxx', 'maxy', 'resolutions']
 
+
+class MapDataTileForm(MapTileForm):
+    dataFile = ResumableFileField(allowed_mimes=("image/png",),
+                                  upload_url=lambda: reverse('uploadResumable'),
+                                  chunks_dir=getattr(settings, 'FILE_UPLOAD_TEMP_DIR'),
+                                  label="Data File (png)"
+                                  )
+    
+    legendFile = ResumableFileField(allowed_mimes=("image/png",),
+                                  upload_url=lambda: reverse('uploadResumable'),
+                                  chunks_dir=getattr(settings, 'FILE_UPLOAD_TEMP_DIR'),
+                                  label="Legend File (png, vertical)"
+                                  )
+    
+    class Meta(AbstractMapForm.Meta):
+        model = MapDataTile
+        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed', 'minx', 'miny', 'maxx', 'maxy', 'resolutions']
 
 class EditMapTileForm(AbstractMapForm):
     
     class Meta(AbstractMapForm.Meta):
         model = MapTile
-        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed', 'sourceFile']
+        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed', 'sourceFile', 'minx', 'miny', 'maxx', 'maxy', 'resolutions']
 
+class EditMapDataTileForm(EditMapTileForm):
+    class Meta(AbstractMapForm.Meta):
+        model = MapDataTile
+        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed', 'sourceFile', 'minx', 'miny', 'maxx', 'maxy', 'resolutions']
 
 class CollectionModelChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):

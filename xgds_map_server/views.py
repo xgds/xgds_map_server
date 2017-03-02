@@ -38,7 +38,7 @@ from django.core.urlresolvers import resolve
 from django.core.urlresolvers import reverse
 from django.db import transaction
 from django.forms.formsets import formset_factory
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse, Http404, JsonResponse
 from django.http import HttpResponseRedirect
 from django.http import HttpResponseServerError
 from django.shortcuts import render_to_response
@@ -49,7 +49,7 @@ from django.views.decorators.http import condition
 
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
 from geocamUtil.geoEncoder import GeoDjangoEncoder
-from geocamUtil.loader import LazyGetModelByName
+from geocamUtil.loader import LazyGetModelByName, getClassByName, getModelByName, getFormByName
 from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
 from geocamUtil.models import SiteFrame
 from xgds_core.views import get_handlebars_templates, OrderListJson
@@ -57,11 +57,12 @@ from xgds_data.dlogging import recordList, recordRequest
 from xgds_data.forms import SearchForm, SpecializedForm
 from xgds_data.models import RequestLog, ResponseLog
 from xgds_data.views import searchHandoff, resultsIdentity
-from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm, MapSearchForm, MapCollectionForm, EditMapTileForm
-from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapSearch, MapCollection, MapLink, MAP_NODE_MANAGER, MAP_MANAGER
+from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm, MapDataTileForm, MapSearchForm, MapCollectionForm, EditMapTileForm, EditMapDataTileForm
+from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapDataTile, MapSearch, MapCollection, MapLink, MAP_NODE_MANAGER, MAP_MANAGER
 from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
 from xgds_map_server.kmlLayerExporter import exportMapLayer
 from geocamUtil.KmlUtil import wrapKmlForDownload
+from apps.xgds_data.introspection import modelName
 
 #from django.http import StreamingHttpResponse
 # pylint: disable=E1101,R0911
@@ -69,6 +70,20 @@ latestRequestG = None
 
 XGDS_MAP_SERVER_GEOTIFF_PATH = os.path.join(settings.DATA_ROOT, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR)
 SEARCH_FORMS = {}
+
+
+def setTransparency(request, uuid, mapType, value):
+    try:
+        theClass = getModelByName('xgds_map_server.' + mapType)
+        foundElement = theClass.objects.get(uuid=uuid)
+        foundElement.transparency = value
+        foundElement.save()
+        msg = "Transparency saved for " + foundElement.name
+        return JsonResponse({'status':'true','message':msg})
+    except:
+        traceback.print_exc()
+        msg = "Could not save transparency: " + uuid
+        return JsonResponse({'status':'false','message':msg}, status=500)
 
 def get_map_tree_templates(source):
     fullCache = get_handlebars_templates(source, 'XGDS_MAP_SERVER_HANDLEBARS_DIRS')
@@ -82,6 +97,8 @@ def getMapServerIndexPage(request):
     templates = get_map_tree_templates(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     return render_to_response('MapView.html',
                               {'templates': templates,
+                               'title': 'Map View',
+                               'help_content_path': 'xgds_map_server/help/viewMaps.rst',
                                'app': 'xgds_map_server/js/map_viewer/mapViewerApp.js'},
                               context_instance=RequestContext(request))
 
@@ -108,19 +125,35 @@ def getMapTreePage(request):
     return render_to_response("MapTree.html",
                               {'JSONMapTreeURL': jsonMapTreeUrl,
                                'moveNodeURL': moveNodeURL,
+                               'title': 'Edit Maps',
+                               'help_content_path': 'xgds_map_server/help/editMaps.rst',
                                'setVisibilityURL': setVisibilityURL},
                               context_instance=RequestContext(request))
 
 
-def getSearchForms():
+def populateSearchFormHash(key, entry, SEARCH_FORMS, filter=None):
+    if 'search_form_class' in entry:
+        theForm = getFormByName(entry['search_form_class'])
+        theFormSet = theForm()
+        SEARCH_FORMS[key] = [theFormSet, entry['model']]
+        if filter:
+            SEARCH_FORMS[key][0].initial = buildFilterDict(filter)
+
+#     else:
+#         theClass = LazyGetModelByName(entry['model'])
+#         theForm = SpecializedForm(SearchForm, theClass.get())
+#         theFormSetMaker = formset_factory(theForm, extra=0)
+#         theFormSet = theFormSetMaker(initial=[{'modelClass': entry['model']}])
+
+def getSearchForms(key=None, filter=None):
     # get the dictionary of forms for searches
     SEARCH_FORMS = {}
-    for key, entry in settings.XGDS_MAP_SERVER_JS_MAP.iteritems():
-        theClass = LazyGetModelByName(entry['model'])
-        theForm = SpecializedForm(SearchForm, theClass.get())
-        theFormSetMaker = formset_factory(theForm, extra=0)
-        theFormSet = theFormSetMaker(initial=[{'modelClass': entry['model']}])
-        SEARCH_FORMS[key] = [theFormSet, entry['model']]
+    if not key:
+        for key, entry in settings.XGDS_MAP_SERVER_JS_MAP.iteritems():
+            populateSearchFormHash(key, entry, SEARCH_FORMS, filter)
+    else:
+        entry = settings.XGDS_MAP_SERVER_JS_MAP[key]
+        populateSearchFormHash(key, entry, SEARCH_FORMS, filter)
     return SEARCH_FORMS
 
 
@@ -346,6 +379,7 @@ def getAddKmlPage(request):
             map_obj.openable = map_form.cleaned_data['openable']
             map_obj.visible = map_form.cleaned_data['visible']
             map_obj.parent = map_form.cleaned_data['parent']
+            map_obj.transparency = map_form.cleaned_data['transparency']
             map_obj.save()
             #
             # The file field may have changed our file name at save time
@@ -359,13 +393,18 @@ def getAddKmlPage(request):
             return render_to_response("AddKml.html",
                                       {'mapForm': map_form,
                                        'error': True,
+                                       'help_content_path': 'xgds_map_server/help/addKML.rst',
+                                       'title': 'Add KML',
                                        'errorText': 'Invalid form entries'},
                                       context_instance=RequestContext(request))
         return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
     else:
         map_form = MapForm()
         return render_to_response("AddKml.html",
-                                  {'mapForm': map_form},
+                                  {'mapForm': map_form,
+                                   'help_content_path': 'xgds_map_server/help/addKML.rst',
+                                   'title': 'Add KML',
+                                   },
                                   context_instance=RequestContext(request))
 
 
@@ -386,12 +425,15 @@ def getAddLayerPage(request):
             map_layer.deleted = False
             map_layer.locked = layer_form.cleaned_data['locked']
             map_layer.visible = layer_form.cleaned_data['visible']
+            map_layer.transparency = layer_form.cleaned_data['transparency']
             mapGroup = layer_form.cleaned_data['parent']
             map_layer.parent = MapGroup.objects.get(name=mapGroup)
             map_layer.save()
         else:
             return render_to_response("AddLayer.html",
                                       {'layerForm': layer_form,
+                                       'help_content_path':'xgds_map_server/help/addMapLayer.rst',
+                                       'title': 'Add Map Layer',
                                        'error': True},
                                       context_instance=RequestContext(request))
         return HttpResponseRedirect(request.build_absolute_uri(reverse('mapEditLayer', kwargs={'layerID': map_layer.uuid})))
@@ -399,6 +441,8 @@ def getAddLayerPage(request):
         layer_form = MapLayerForm()
         return render_to_response("AddLayer.html",
                                   {'layerForm': layer_form,
+                                   'help_content_path':'xgds_map_server/help/addMapLayer.rst',
+                                   'title': 'Add Map Layer',
                                    'error': False},
                                   context_instance=RequestContext(request))
 
@@ -409,34 +453,46 @@ def getAddTilePage(request):
     HTML view to create a new map tile
     """
     title = "Add Map Tile"
+    instructions = "Upload a GeoTiff file to create a map tile layer.<br/>Processing of GeoTiff files can take some time, please allow at least 30 minutes after the upload finishes.<br/>"
     if request.method == 'POST':
         tile_form = MapTileForm(request.POST, request.FILES)
         if tile_form.is_valid():
-            sourceFile = tile_form.cleaned_data['sourceFile']
-            mapTile = MapTile(sourceFile=sourceFile)
-            mapTile.name = tile_form.cleaned_data['name']
-            mapTile.description = tile_form.cleaned_data['description']
-            mapTile.creator = request.user.username
-            mapTile.creation_time = datetime.datetime.now(pytz.utc)
-            mapTile.deleted = False
-            mapGroupName = tile_form.cleaned_data['parent']
-            foundParents = MapGroup.objects.filter(name=mapGroupName)
-            mapTile.parent = foundParents[0] #TODO better handle same name folder
-            mapTile.save()
-            processTiles(request, mapTile.uuid, tile_form.cleaned_data['minZoom'],
-                         tile_form.cleaned_data['maxZoom'], tile_form.cleaned_data['resampleMethod'], mapTile)
+            tile_form.save()
+            mapTile = tile_form.instance
+#             sourceFile = tile_form.cleaned_data['sourceFile']
+#             mapTile = MapTile(sourceFile=sourceFile)
+#             mapTile.name = tile_form.cleaned_data['name']
+#             mapTile.description = tile_form.cleaned_data['description']
+#             mapTile.creator = request.user.username
+#             mapTile.creation_time = datetime.datetime.now(pytz.utc)
+#             mapTile.transparency = tile_form.cleaned_data['transparency']
+#             mapTile.deleted = False
+#             mapGroupName = tile_form.cleaned_data['parent']
+#             foundParents = MapGroup.objects.filter(name=mapGroupName)
+#             mapTile.parent = foundParents[0] #TODO better handle same name folder
+#             mapTile.save()
+            minZoom = -1
+            maxZoom = -1
+            if settings.XGDS_MAP_SERVER_GDAL2TILES_ZOOM_LEVELS:
+                minZoom = tile_form.cleaned_data['minZoom']
+                maxZoom = tile_form.cleaned_data['maxZoom']
+            processTiles(request, mapTile.uuid, minZoom, maxZoom, tile_form.cleaned_data['resampleMethod'], mapTile)
         else:
-            return render_to_response("AddTile.html",
+            return render_to_response('AddTile.html',
                                       {'form': tile_form,
                                        'error': True,
-                                       "title": title},
+                                       'help_content_path' : 'xgds_map_server/help/addMapTile.rst',
+                                       'instructions': instructions,
+                                       'title': title},
                                       context_instance=RequestContext(request))
         return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
     else:
-        tile_form = MapTileForm()
-        return render_to_response("AddTile.html",
+        tile_form = MapTileForm(initial={'username': request.user.username})
+        return render_to_response('AddTile.html',
                                   {'form': tile_form,
                                    'error': False,
+                                   'help_content_path' : 'xgds_map_server/help/addMapTile.rst',
+                                   'instructions': instructions,
                                    'title': title},
                                   context_instance=RequestContext(request))
 
@@ -467,26 +523,108 @@ def getEditTilePage(request, tileID):
             mapTile.locked = tile_form.cleaned_data['locked']
             mapTile.visible = tile_form.cleaned_data['visible']
             mapTile.parent = tile_form.cleaned_data['parent']
+            mapTile.transparency = tile_form.cleaned_data['transparency']
             mapTile.save()
             return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
         else:
             return render_to_response("EditNode.html",
                                       {"form": tile_form,
                                        "fromSave": False,
+                                       'help_content_path' : 'xgds_map_server/help/addMapTile.rst',
                                        "title": "Edit Map Tile",
                                        "error": True,
+                                       "extras": mapTile.sourceFileLink,
                                        "errorText": "Invalid form entries"},
                                       context_instance=RequestContext(request))
 
     # return form page with current form data
-    tile_form = EditMapTileForm(instance=mapTile,)
+    tile_form = EditMapTileForm(instance=mapTile, initial={'username': request.user.username})
     return render_to_response("EditNode.html",
                               {"form": tile_form,
                                "title": "Edit Map Tile",
+                               'help_content_path' : 'xgds_map_server/help/addMapTile.rst',
+                               "extras": mapTile.sourceFileLink,
                                "fromSave": fromSave,
                                },
                               context_instance=RequestContext(request))
 
+@csrf_protect
+@condition(etag_func=None)
+def getAddMapDataTilePage(request):
+    """
+    HTML view to create a new map data tile
+    """
+    title = "Add Map Data Tile"
+    instructions = "Upload a GeoTiff file to create a map tile layer.<br/>Upload a file to provide the data value, and an optional legend image.<br/>Processing of GeoTiff files can take some time, please allow at least 30 minutes after the upload finishes.<br/>"
+
+    if request.method == 'POST':
+        tile_form = MapDataTileForm(request.POST, request.FILES)
+        if tile_form.is_valid():
+            tile_form.save()
+            mapTile = tile_form.instance
+            minZoom = -1
+            maxZoom = -1
+            if settings.XGDS_MAP_SERVER_GDAL2TILES_ZOOM_LEVELS:
+                minZoom = tile_form.cleaned_data['minZoom']
+                maxZoom = tile_form.cleaned_data['maxZoom']
+            processTiles(request, mapTile.uuid, minZoom, maxZoom, tile_form.cleaned_data['resampleMethod'], mapTile)
+        else:
+            return render_to_response("AddTile.html",
+                                      {'form': tile_form,
+                                       'error': True,
+                                       'help_content_path' : 'xgds_map_server/help/addMapDataTile.rst',
+                                       'instructions': instructions,
+                                       'title': title},
+                                      context_instance=RequestContext(request))
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
+    else:
+        tile_form = MapDataTileForm(initial={'username': request.user.username})
+        return render_to_response("AddTile.html",
+                                  {'form': tile_form,
+                                   'error': False,
+                                   'help_content_path' : 'xgds_map_server/help/addMapDataTile.rst',
+                                   'instructions': instructions,
+                                   'title': title},
+                                  context_instance=RequestContext(request))
+        
+@csrf_protect
+@condition(etag_func=None)
+def getEditMapDataTilePage(request, tileID):
+    """
+    HTML view to edit an existing map data tile
+    """
+    try:
+        mapTile = MapDataTile.objects.get(pk=tileID)
+    except MapDataTile.DoesNotExist:
+        raise Http404
+    except MapDataTile.MultipleObjectsReturned:
+        # this really shouldn't happen, ever
+        return HttpResponseServerError()
+    title = "Edit Map Data Tile"
+    instructions = "You may modify anything except the original GeoTiff file.<br/>Upload a file to provide the data value, and an optional legend image.<br/>"
+
+    if request.method == 'POST':
+        tile_form = EditMapDataTileForm(request.POST, request.FILES, instance=mapTile)
+        if tile_form.is_valid():
+            tile_form.save()
+        else:
+            return render_to_response("EditNode.html",
+                                      {'form': tile_form,
+                                       'error': True,
+                                       'help_content_path' : 'xgds_map_server/help/addMapDataTile.rst',
+                                       'instructions': instructions,
+                                       'title': title},
+                                      context_instance=RequestContext(request))
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
+    else:
+        tile_form = EditMapDataTileForm(instance=mapTile, initial={'username': request.user.username})
+        return render_to_response("EditNode.html",
+                                  {'form': tile_form,
+                                   'error': False,
+                                   'help_content_path' : 'xgds_map_server/help/addMapDataTile.rst',
+                                   'instructions': instructions,
+                                   'title': title},
+                                  context_instance=RequestContext(request))
 
 def getAddFolderPage(request):
     """
@@ -504,6 +642,8 @@ def getAddFolderPage(request):
             return render_to_response("AddFolder.html",
                                       {'groupForm': group_form,
                                        'error': True,
+                                       'help_content_path': 'xgds_map_server/help/addFolder.rst',
+                                       'title': 'Add Folder',
                                        'errorText': "Invalid form entries"},
                                       context_instance=RequestContext(request))
         return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
@@ -511,6 +651,8 @@ def getAddFolderPage(request):
         group_form = MapGroupForm()
         return render_to_response("AddFolder.html",
                                   {'groupForm': group_form,
+                                   'help_content_path': 'xgds_map_server/help/addFolder.rst',
+                                   'title': 'Add Folder',
                                    'error': False},
                                   context_instance=RequestContext(request))
 
@@ -537,6 +679,8 @@ def getAddMapSearchPage(request):
             return render_to_response("AddMapSearch.html",
                                       {'form': form,
                                        'error': True,
+                                       'help_content_path' : 'xgds_map_server/help/editMapSearch.rst',
+                                       'title': 'Edit Map Search',
                                        'errorText': "Invalid form entries"},
                                       context_instance=RequestContext(request))
         return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
@@ -544,6 +688,8 @@ def getAddMapSearchPage(request):
         form = MapSearchForm()
         return render_to_response("AddMapSearch.html",
                                   {'form': form,
+                                   'help_content_path' : 'xgds_map_server/help/editMapSearch.rst',
+                                   'title': 'Edit Map Search',
                                    'error': False},
                                   context_instance=RequestContext(request))
 
@@ -578,6 +724,7 @@ def getEditMapSearchPage(request, mapSearchID):
                                       {"form": form,
                                        "title": title,
                                        "fromSave": False,
+                                       'help_content_path' : 'xgds_map_server/help/editMapSearch.rst',
                                        "error": True,
                                        "errorText": "Invalid form entries"},
                                       context_instance=RequestContext(request))
@@ -588,6 +735,7 @@ def getEditMapSearchPage(request, mapSearchID):
     return render_to_response("EditNode.html",
                               {"form": form,
                                "title": title,
+                               'help_content_path' : 'xgds_map_server/help/editMapSearch.rst',
                                "fromSave": fromSave,
                                },
                               context_instance=RequestContext(request))
@@ -777,6 +925,8 @@ def getFolderDetailPage(request, groupID):
                                       {"groupForm": group_form,
                                        "group_obj": map_group,
                                        "fromSave": fromSave,
+                                       'help_content_path': 'xgds_map_server/help/addFolder.rst',
+                                       'title': 'Edit Folder',
                                        "error": True,
                                        "errorText": "Invalid form entries"},
                                       context_instance=RequestContext(request))
@@ -786,6 +936,8 @@ def getFolderDetailPage(request, groupID):
     return render_to_response("EditFolder.html",
                               {"groupForm": group_form,
                                "group_obj": map_group,
+                               'help_content_path': 'xgds_map_server/help/addFolder.rst',
+                               'title': 'Edit Folder',
                                "fromSave": fromSave},
                               context_instance=RequestContext(request))
 
@@ -1066,6 +1218,17 @@ def getSelectedNodesJSON(request):
     json_data = json.dumps(node_dict, indent=4, cls=GeoDjangoEncoder)
     return HttpResponse(content=json_data,
                         content_type="application/json")
+
+def getNodesByUuidJSON(request):
+    if request.POST:
+        uuids = request.POST['uuids'].split('~')
+        nodes = MAP_MANAGER.filter(uuid__in=uuids)
+        node_dict = []
+        for node in nodes:
+            node_dict.append(node.getTreeJson())
+        json_data = json.dumps(node_dict, indent=4, cls=GeoDjangoEncoder)
+        return HttpResponse(content=json_data,
+                            content_type="application/json")
 
 @never_cache
 def getFancyTreeJSON(request):
@@ -1398,6 +1561,8 @@ def processTileSuccess(email, mapTile, out, err):
     print out
     print err
     mapTile.processed = True
+    mapTile.initResolutions()
+    mapTile.initBounds()
     mapTile.save()
     mail.send_mail(
         "Map tile has finished processing " + mapTile.name,
@@ -1453,11 +1618,15 @@ def processTiles(request, uuid, minZoom, maxZoom, resampleMethod, mapTile):
             fh.close()
 
     for source in sourceFiles:
-        tileCmd = ('%s -z %d-%d --resampling=%s %s %s'
-                   % (os.path.join(settings.PROJ_ROOT, "apps", settings.XGDS_MAP_SERVER_GDAL2TILES),
-                      minZoom,
-                      maxZoom,
+        executable = '%s' % os.path.join(settings.PROJ_ROOT, "apps", settings.XGDS_MAP_SERVER_GDAL2TILES)
+        zooms = ''
+        if settings.XGDS_MAP_SERVER_GDAL2TILES_ZOOM_LEVELS:
+            zooms = '-z %d-%d' % (minZoom, maxZoom)
+        tileCmd = ('%s %s --resampling=%s %s %s %s'
+                   % (executable,
+                      zooms,
                       resampleMethod,
+                      settings.XGDS_MAP_SERVER_GDAL2TILES_EXTRAS,
                       os.path.join(settings.DATA_ROOT,source),
                       outPath))
         print "Map Tile command: %s" % tileCmd
@@ -1583,7 +1752,7 @@ def getLastObjectJson(request, object_name, theFilter=None):
 
 @never_cache
 def getMappedObjectsExtens(request, object_name, extens, today=False):
-    """ Get the note json information to show in the fancy tree. this gets all notes in the mapped area
+    """ Get the note json information to show in the fancy tree. This gets all notes in the mapped area, ie map bounded search.
     """
     splits = str(extens).split(',')
     minLon = float(splits[0])
@@ -1607,11 +1776,19 @@ def getMappedObjectsExtens(request, object_name, extens, today=False):
                                 content_type="application/json")
         return ""
 
-def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSearch.html'):
+def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSearch.html', forceUserSession=False, searchForms=None, filter=None):
+    searchModelDict = settings.XGDS_MAP_SERVER_JS_MAP
+    if modelName and not searchForms:
+        searchForms = getSearchForms(modelName, filter)
+    
     return render_to_response(templatePath, 
                               {'modelName': modelName,
+                               'help_content_path': 'xgds_map_server/help/mapSearch.rst',
+                               'title': 'Map Search',
                                'templates': get_handlebars_templates(list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_HANDLEBARS_DIRS'),
-                               'searchForms': getSearchForms(),
+                               'searchForms': searchForms,
+                               'searchModelDict': searchModelDict, 
+                               'forceUserSession': forceUserSession,
                                'saveSearchForm': MapSearchForm(),
                                'app': 'xgds_map_server/js/search/mapViewerSearchApp.js'},
                               context_instance=RequestContext(request))
@@ -1675,7 +1852,7 @@ def viewMultiLast(request, mapNames):
                                'app': 'xgds_map_server/js/search/mapViewerMultiModelApp.js'},
                               context_instance=RequestContext(request))
     
-def lookupModel(request, mapName):
+def lookupModelAndMap(mapName):
     try:
         modelMap = settings.XGDS_MAP_SERVER_JS_MAP[mapName]
         object_name = modelMap['model']
@@ -1684,6 +1861,14 @@ def lookupModel(request, mapName):
         THE_OBJECT = LazyGetModelByName(object_name)
     return (THE_OBJECT, modelMap)
 
+def lookupForm(form_name):
+    try:
+        if form_name:
+            return getFormByName(form_name)
+    except:
+        pass
+    return None
+
 def viewDictResponse(request, current, modelMap):
     jsonResult = current.toMapList(modelMap['columns'])
     return HttpResponse(json.dumps(jsonResult, cls=DatetimeJsonEncoder),
@@ -1691,7 +1876,7 @@ def viewDictResponse(request, current, modelMap):
 
 def getObject(request, mapName, currentPK):
     try:
-        (THE_OBJECT, modelMap) = lookupModel(request, mapName)
+        (THE_OBJECT, modelMap) = lookupModelAndMap(mapName)
         current = THE_OBJECT.get().objects.get(pk=currentPK)
         return viewDictResponse(request, current, modelMap)
     except:
@@ -1704,7 +1889,7 @@ def getObject(request, mapName, currentPK):
 
 def getLastObject(request, mapName):
     try:
-        (THE_OBJECT, modelMap) = lookupModel(request, mapName)
+        (THE_OBJECT, modelMap) = lookupModelAndMap(mapName)
         current = THE_OBJECT.get().objects.last()
         return viewDictResponse(request, current, modelMap)
     except:
@@ -1717,7 +1902,7 @@ def getLastObject(request, mapName):
 def getPrevNextObject(request, currentPK, mapName, which='previous'):
     """ which is previous or next.  This builds up get_next_by_timeName or get_previous_by_timeName"""
     try:
-        (THE_OBJECT, modelMap) = lookupModel(request, mapName)
+        (THE_OBJECT, modelMap) = lookupModelAndMap(mapName)
         current = THE_OBJECT.get().objects.get(pk=currentPK)
         timeName = modelMap['event_time_field']
         methodName = 'get_%s_by_%s' % (which, timeName)
@@ -1746,6 +1931,7 @@ class MapOrderListJson(OrderListJson):
                 modelMap = settings.XGDS_MAP_SERVER_JS_MAP[mapName]
                 modelName = modelMap['model']
                 self.lookupModel(modelName)
+                self.form = lookupForm(modelMap['search_form_class'])
                 self.columns = modelMap['columns']
                 self.order_columns = self.columns
         return super(MapOrderListJson, self).dispatch(request, *args, **kwargs)

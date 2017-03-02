@@ -14,132 +14,95 @@
 // specific language governing permissions and limitations under the License.
 //__END_LICENSE__
 
-/*
-** Override the TemplateCache function responsible for
-** rendering templates so that it will use Handlebars.
-*/
-Backbone.Marionette.TemplateCache.prototype.compileTemplate = function(
-    rawTemplate) {
-    return Handlebars.compile(rawTemplate);
-};
 
-/*
-** Main Application object
-*/
-var app = (function($, _, Backbone) {
-    app = new Backbone.Marionette.Application();
-    app.views = app.views || {};
-    app.addRegions({
-        'mapRegion' : '#mapDiv',
-        'layersRegion': '#layers',
-        'viewRegion': '#viewDiv',
-        'notesRegion': '#notesDiv'
-    });
-
-    app.module('State', function(options) {
-        this.addInitializer(function(options) {
-        	this.featureSelected = undefined;
-            this.mouseDownLocation = undefined;
-            this.pageInnerWidth = undefined;
-            this.mapResized = false;
-            this.mapHeightSet = false;
-            this.tree = undefined;
-            this.treeData = null;
-        });
-    });
-
-    app.addInitializer(function(options) {
-        var pageTopHeight = $('#page-top').outerHeight();
-        var pageElement = $('#page');
-        var pageContentElement = $('#page-content');
-        pageContentElement.outerHeight(pageElement.innerHeight() - pageTopHeight);
-        $(window).bind('resize', function() {
-            pageContentElement.outerHeight(pageElement.innerHeight() - pageTopHeight);
-        });
-    });
-
-    app.addInitializer(function(options) {
-        this.options = options = _.defaults(options || {});
-        app.map = new app.views.OLMapView({
-            el: '#map'
-        });
-        app.vent.trigger('onMapSetup');
-        app.layersRegion.show(new app.views.FancyTreeView());
-    });
-    
-    app.showDetailView = function(handlebarSource, data, modelMap){
-    	var detailView = new app.views.SearchDetailView({
-    		handlebarSource:handlebarSource,
-    		data:data,
-    		modelMap: modelMap
-    	});
-    	app.viewRegion.show(detailView);
-    	app.showNotesView(data, modelMap);
-    	showOnMap(data); 
-    };
-    
-    app.showNotesView = function(data, modelMap){
-    	var notesView = new app.views.SearchNotesView({
-    		data:data,
-    		modelMap: modelMap,
-    		modelName: app.options.modelName
-    	});
-    	app.notesRegion.show(notesView);
-    }
-    
-    app.addInitializer(function(options) {
-        this.options = options = _.defaults(options || {});
-        
-        var selectedModel = app.options.modelName;
-        var modelMap = app.options.searchModels[selectedModel];
-    	if (modelMap.viewHandlebars != undefined){
-    		var data = undefined;
-    		var url = '/xgds_map_server/fmapJson/' + modelMap.model + '/pk:' + this.options.modelPK;
-			
-				$.when($.get(url)
-				).then(function(incomingData, status) {
-					var data = incomingData[0];
-					var url = '/xgds_core/handlebar_string/' + modelMap.viewHandlebars;
-					$.get(url, function(handlebarSource, status){
-						modelMap['handlebarSource'] = handlebarSource;
-						if (modelMap.viewJS != undefined){
-							$.getManyJS( modelMap.viewJS, function() {
-								if (modelMap.viewCss != undefined){
-									$.getManyCss(modelMap.viewCss, function(){
-										app.showDetailView(modelMap.handlebarSource, data, modelMap);
-									});
-								} else {
-									app.showDetailView(modelMap.handlebarSource, data, modelMap);
-								}
-							});
-						} else if (modelMap.viewCss != undefined){
-							$.getManyCss(modelMap.viewCss, function(){
-								app.showDetailView(modelMap.handlebarSource, data, modelMap);
-							});
-						} else {
-							app.showDetailView(modelMap.handlebarSource, data, modelMap);
-						}
+(function( xGDS, $, _, Backbone, Marionette ) {
+	
+	xGDS.SingleModelRootView = xGDS.RootView.extend({
+		regions: {
+			mapRegion: '#map',
+			layersRegion: '#layers',
+			viewRegion: '#viewDiv',
+			notesRegion: '#notesDiv'
+		},
+		onRender: function() {
+			app.map = new app.views.OLMapView();
+			this.showChildView('mapRegion', app.map);
+			this.showChildView('layersRegion', new app.views.FancyTreeView());
+		}
+		
+	});
+	
+	xGDS.SingleModelApplication = xGDS.Application.extend( {
+		mapBottomPadding: 50,
+		initialize: function(options) {
+			xGDS.Application.prototype.initialize.call(this, options);
+			this.vent.on('onMapSetup', this.fetchDetailContents, this);
+		},
+		getRootView: function() {
+			return new xGDS.SingleModelRootView();
+		},
+		fetchDetailContents: function() {
+			var selectedModel = this.options.modelName;
+	        var modelMap = this.options.searchModels[selectedModel];
+	        var context = this;
+	    	if (modelMap.viewHandlebars != undefined){
+	    		var data = undefined;
+	    		var url = '/xgds_map_server/fmapJson/' + modelMap.model + '/pk:' + this.options.modelPK;
+				
+					$.when($.get(url)
+					).then(function(incomingData, status) {
+						var data = incomingData[0];
+						var url = '/xgds_core/handlebar_string/' + modelMap.viewHandlebars;
+						$.get(url, function(handlebarSource, status){
+							modelMap['handlebarSource'] = handlebarSource;
+							if (modelMap.viewJS != undefined){
+								$.getManyJS( modelMap.viewJS, function() {
+									if (modelMap.viewCss != undefined){
+										$.getManyCss(modelMap.viewCss, function(){
+											context.showDetailView(modelMap.handlebarSource, data, modelMap);
+										});
+									} else {
+										context.showDetailView(modelMap.handlebarSource, data, modelMap);
+									}
+								});
+							} else if (modelMap.viewCss != undefined){
+								$.getManyCss(modelMap.viewCss, function(){
+									context.showDetailView(modelMap.handlebarSource, data, modelMap);
+								});
+							} else {
+								context.showDetailView(modelMap.handlebarSource, data, modelMap);
+							}
+						});
 					});
-				});
-    	}
-					
-        
-    });
-    
-    app.router = new Backbone.Router({
-        routes: {
-        	'layers' : 'layers'
-        }
-    });
+	    	}
+		},
+		showDetailView : function(handlebarSource, data, modelMap){
+	    	var detailView = new app.views.SearchDetailView({
+	    		handlebarSource:handlebarSource,
+	    		data:data,
+	    		modelMap: modelMap
+	    	});
+	    	app.rootView.showChildView('viewRegion', detailView);
+	    	app.showNotesView(data, modelMap);
+	    	showOnMap([data]); 
+	    },
+	    showNotesView: function(data, modelMap){
+	    	var notesView = new app.views.SearchNotesView({
+	    		data:data,
+	    		modelMap: modelMap,
+	    		modelName: app.options.modelName
+	    	});
+	    	app.rootView.showChildView('notesRegion', notesView);
+	    }
+		
+	});
+	
+	xGDS.Factory = {
+			construct: function(options){
+				return new xGDS.SingleModelApplication(options);
+			}
+	};
+
+}( window.xGDS = window.xGDS || {}, jQuery, _, Backbone, Marionette ));
 
 
-    /*
-     * Application-level Request & Respond services
-     */
-    app.hasHandler = function(name) {
-        return !!this.reqres._wreqrHandlers[name];
-    };
-    
-    return app;
-
-}(jQuery, _, Backbone));

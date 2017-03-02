@@ -14,20 +14,13 @@
 // specific language governing permissions and limitations under the License.
 //__END_LICENSE__
 
-/*
-** Override the TemplateCache function responsible for
-** rendering templates so that it will use Handlebars.
-*/
-Backbone.Marionette.TemplateCache.prototype.compileTemplate = function(
-    rawTemplate) {
-    return Handlebars.compile(rawTemplate);
-};
 
+// TODO this is not used and has not been ported from Marionette 2.4.7
 /*
 ** Main Application object
 */
 var app = (function($, _, Backbone) {
-    app = new Backbone.Marionette.Application();
+    app = new Marionette.Application();
     app.views = app.views || {};
     app.detail_views = app.detail_views || {};
     app.notes_views = app.notes_views || {};
@@ -172,13 +165,6 @@ var app = (function($, _, Backbone) {
     });
 
 
-    /*
-     * Application-level Request & Respond services
-     */
-    app.hasHandler = function(name) {
-        return !!this.reqres._wreqrHandlers[name];
-    };
-    
     return app;
 
 }(jQuery, _, Backbone));

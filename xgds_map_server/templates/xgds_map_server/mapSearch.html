@@ -3,32 +3,24 @@
 {% block sitemenu-content-secondary %}
 	{% include "xgds_map_server/mapSearch_subnav.html" %}
 {% endblock %}
+{% block siteSection %}{{modelName}} Search{% endblock %}
 
 {% load siteFrames %}
 
 {% block cssExtras %}
 {{ block.super }}
+{% if 'xgds_notes2' in settings.INSTALLED_APPS %}
 {% include "xgds_notes2/NoteCSS.html" %}
+{% endif %}
 <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}jqueryui-timepicker-addon/dist/jquery-ui-timepicker-addon.css" ></link>
+<link href="/static/autocomplete_light/vendor/select2/dist/css/select2.css" type="text/css" media="all" rel="stylesheet" />
+<link href="/static/autocomplete_light/select2.css" type="text/css" media="all" rel="stylesheet" />
 {% endblock cssExtras %}
 
-{% block scripts %}
-{{block.super}}
-	{% include "xgds_notes2/NoteJS.html" with forceUserSession=False%}
-	<script type="text/javascript" src="{{ EXTERNAL_URL }}jqueryui-timepicker-addon/dist/jquery-ui-timepicker-addon.min.js"></script>
-	<script type="text/javascript" src='{{ STATIC_URL }}xgds_core/js/datetimepickerUtils.js'></script>
-    {% for template_name, template in templates.items %}
-	<script type="text/handlebars" id="template-{{template_name}}">
-		{{template|safe}}
-	</script>
-    {% endfor %}
-    {% include "xgds_map_server/SearchForms.html" with searchForms=searchForms %}
-{% endblock scripts %}
-
-
-{% block jsInit %}
+{% block preMapJS %}
+<script type="text/javascript">
 	var siteFrames = {% siteframes_dict %};
-	appOptions = {
+	var appOptions = {
 		BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
 		DEFAULT_COORD_SYSTEM: "{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}",
 		SETUP_COORD_SYSTEM: {{ settings.XGDS_MAP_SERVER_MAP_SETUP_COORD_SYSTEM }},
@@ -39,42 +31,109 @@
 		selectedLayerUrl: "{{ settings.XGDS_MAP_SERVER_SELECTED_LAYER_URL }}",
 		layerFeedUrl: "{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}",
 		siteFrame: {% siteframe settings.XGDS_CURRENT_SITEFRAME_ID %},
-		XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: {{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }},
+		XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: '{{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }}',
 		dataUrl: "{{ settings.DATA_URL }}",
-		searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
+		searchModels: {{ searchModelDict|safe }},
 		modelName: '{{modelName}}',
 		tableHeight: Math.floor($(window).height()*.7) + 'px',
-		settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }}
+		{% block extraAppOptions %}
+		{% endblock extraAppOptions %}
+		settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }},
+		showDetailView: true
 	};
+	</script>
+{% endblock preMapJS %}
+
+{% block scripts %}
+	{{block.super}}
+	
+{% if 'xgds_notes2' in settings.INSTALLED_APPS %}
+	{% block notejs %}
+	{% include "xgds_notes2/NoteJS.html" with forceUserSession=forceUserSession%}
+	{% endblock notejs %}
+{% endif %}
+	
+	<script type="text/javascript" src="{{ EXTERNAL_URL }}jqueryui-timepicker-addon/dist/jquery-ui-timepicker-addon.min.js"></script>
+	<script type="text/javascript" src='{{ STATIC_URL }}xgds_core/js/datetimepickerUtils.js'></script>
+	<script type="text/javascript" src="/static/autocomplete_light/jquery.init.js"></script>
+	<script type="text/javascript" src="/static/autocomplete_light/autocomplete.init.js"></script>
+	<script type="text/javascript" src="/static/autocomplete_light/vendor/select2/dist/js/select2.full.js"></script>
+	<script type="text/javascript" src="/static/autocomplete_light/forward.js"></script>
+	<script type="text/javascript" src="/static/autocomplete_light/select2.js"></script>
+    {% for template_name, template in templates.items %}
+	<script type="text/handlebars" id="template-{{template_name}}">
+		{{template|safe}}
+	</script>
+    {% endfor %}
+    {% include "xgds_map_server/SearchForms.html" with searchForms=searchForms %}
+{% endblock scripts %}
+
+{% block jsInit %}
+	
 	{% block jsInitPreApp %}
 	{% endblock jsInitPreApp %}
 	
 	$(function(){
-		app.start(appOptions);
-    	app.vent.on("mapSearch:drewFeatures", function(e) {
+		app.vent.on("mapSearch:drewFeatures", function(e) {
         	app.vent.trigger('mapSearch:fit');
+        });
+        
+        app.vent.on('onMapSetup', function() {
+        	xgds_gridstack.initializeGridstack();
+    		xgds_search.hookAdvancedSearchButton();
         });
         
         {% block preLayout %}
 		{% endblock preLayout %}
 		
-    	xgds_gridstack.initializeGridstack();
     	
+    	
+    	var searchDiv_initialized = false;
+		 app.vent.on('searchDiv:visible', function(){
+		 	if (!searchDiv_initialized){
+		        addDateTimePickers();
+		        searchDiv_initialized = true;
+		 	} 
+		 });
+		 
+		 app.start();
+        
     	{% block otherJSInit %}
 		{% endblock otherJSInit %}
 		
 	});
 	
-{% endblock %}
+{% endblock jsInit %}
+
+{% block preDashboard %}
+<div id="buttonRow" class="row" style="padding-bottom:5px;">
+{% block buttonRow %}
+<button id="advanced_search_button" class="small pull_right">Advanced Search</button>
+{% endblock buttonRow %}
+</div>
+{% endblock preDashboard %}
 
 {% block preMap %}
+
+{% block searchDiv %}
+<div id="search-gridstack-item" class="grid-stack-item" 
+		data-gs-x="0" data-gs-y="0"
+        data-gs-width="3" data-gs-height="2" hidden="true">
+        <div class="grid-stack-item-content" id="search-gridstack-item-content" >
+	        <i class="icon-lock pinDiv warning"></i>
+	    	<i class="icon-cancel-circled"></i>
+			<div id="searchDiv" hidden="true"></div>
+		</div>
+</div>
+{% endblock searchDiv %}
+
 {% block searchResultsDiv %}
 <div id="search-results-gridstack-item" class="grid-stack-item" 
 		data-gs-x="0" data-gs-y="0"
         data-gs-width="3" data-gs-height="3" >
         <div class="grid-stack-item-content" id="search-results-gridstack-item-content" >
         <!-- <input type="checkbox" id="today" value="today" checked>Today -->
-        <i class="icon-lock-open pinDiv warning"></i>
+        <i class="icon-lock pinDiv warning"></i>
 		<i class="icon-cancel-circled"></i>
 		<i class="icon-arrows-ccw right" title="Reload Latest" id="reloadSearchResults"></i>
 			<div id="searchResultsDiv"></div>
@@ -82,14 +141,13 @@
 </div>
 {% endblock searchResultsDiv %}
 
-<div id="searchDiv" hidden></div>
 
 {% block viewDiv %}
 <div id="view-gridstack-item" class="grid-stack-item" 
 		data-gs-x="3" data-gs-y="0"
         data-gs-width="3" data-gs-height="3" >
         <div class="grid-stack-item-content" id="view-gridstack-item-content" >
-			<i class="icon-lock-open pinDiv warning"></i>
+			<i class="icon-lock pinDiv warning"></i>
 			<i class="icon-cancel-circled"></i>
 			<div class="small default btn icon-right entypo icon-window" id="new-window-btn">
 				<a href="#" id="view-new-window-target" target="_blank">New Window</a>
@@ -108,7 +166,7 @@
 
 {% block map %}
 <div id="map-gridstack-item" class="grid-stack-item" 
-data-gs-x="3" data-gs-y="4"
+	  data-gs-x="3" data-gs-y="4"
       data-gs-width="2" data-gs-height="1" >
 	<div class="grid-stack-item-content" id="map-gridstack-item-content" >
 	<i class="icon-lock pinDiv warning"></i>
@@ -120,11 +178,11 @@ data-gs-x="3" data-gs-y="4"
 
 {% block layers %}
 <div id="map-gridstack-item" class="grid-stack-item" 
-data-gs-x="6" data-gs-y="4"
+	  data-gs-x="6" data-gs-y="4"
       data-gs-width="1" data-gs-height="1" >
 	<div class="grid-stack-item-content" id="layers-gridstack-item-content">
 	<i class="icon-cancel-circled"></i>
-	<i class="icon-lock-open pinDiv warning"></i>
+	<i class="icon-lock pinDiv warning"></i>
 	<div id="layers"></div>
 	</div>
 </div>

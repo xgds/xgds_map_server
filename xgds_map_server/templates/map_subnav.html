@@ -1,7 +1,9 @@
 {% block sitemenu-content-secondary %}
 {% load nav %}
+{% load help_button %}
 <div class="sitemenu-nav-secondary">
 	<nav class="subnav">
+	{% help_button help_content_path title %}
 	<ul>
 		<li{% currentnav xgds_map_server_index %}><a href="{% url 'xgds_map_server_index' %}">View</a></li>
 		<li {% currentnav map* folder* addKml deletedMaps %}><a href="{% url 'mapTree' %}">Edit</a></li>

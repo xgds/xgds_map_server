@@ -16,49 +16,26 @@
 
 app.views = app.views || {};
 
-app.views.FancyTreeView = Backbone.View.extend({
+app.views.FancyTreeView = Marionette.View.extend({
     template: '#template-layer-tree',
     initialize: function() {
         this.listenTo(app.vent, 'refreshTree', function() {this.refreshTree()});
         this.listenTo(app.vent, 'treeData:loaded', function() {this.createTree()});
+        this.listenTo(app.vent, 'tree:expanded', function(node) {
+        	if (transparencySlidersVisible) {
+        		showTransparencySliders(node);
+        	}
+        });
         
-        var source = $(this.template).html();
-        if (_.isUndefined(source))
-            this.template = function() {
-                return '';
-            };
-        else {
-            this.template = Handlebars.compile(source);
-        }
-        _.bindAll(this, 'render', 'afterRender'); 
-        var _this = this; 
-        this.render = _.wrap(this.render, function(render) { 
-            render(); 
-            _this.afterRender(); 
-            return _this; 
-        }); 
         this.storedParent = null;
     },
-    render: function() {
-        if (!_.isUndefined(app.tree) && !_.isNull(this.storedParent)){
-            // rerender existing tree
-            this.storedParent.append(this.$el);
-            this.$el.show();
-        } else {
-            this.$el.html(this.template());
-        }
+    onAttach: function() {
+    	app.vent.trigger('layerView:onAttach');
+    	this.connectFilter();
+    	this.createTree();
     },
-    onShow: function() {
-    	app.vent.trigger('layerView:onShow');
-    },
-    afterRender: function() {
+    onRender: function() {
         app.vent.trigger('layerView:onRender');
-        if (!_.isUndefined(app.tree)) {
-            // rerendering tree
-            return;
-        }
-        this.createTree();
-        return;
     },
     refreshTree: function() {
         if (!_.isUndefined(app.tree)){
@@ -88,22 +65,91 @@ app.views.FancyTreeView = Backbone.View.extend({
 	            return image + "maplayer.png"; //TODO change it to whatever you want.
 	        case "MapTile":
 	            return image + "tif.png";
+	        case "MapDataTile":
+	            return image + "dataTif.png";
 	    }
     	return null
     },
+    connectFilter: function() {
+    	$("button#btnResetSearch").click(function(e){
+    	      $("input[name=searchTree]").val("");
+    	      $("span#matches").text("");
+    	      app.tree.clearFilter();
+    	    }).attr("disabled", true);
+    	
+    	$("input[name=searchTree]").keyup(function(e){
+    	      var n,
+    	        opts = {
+    	          autoExpand: true,
+    	          leavesOnly: false
+    	        },
+    	        match = $(this).val();
+
+    	      if(e && e.which === $.ui.keyCode.ESCAPE || $.trim(match) === ""){
+    	        $("button#btnResetSearch").click();
+    	        return;
+    	      }
+//    	      if($("#regex").is(":checked")) {
+//    	        // Pass function to perform match
+//    	        n = app.tree.filterNodes(function(node) {
+//    	          return new RegExp(match, "i").test(node.title);
+//    	        }, opts);
+//    	      } else {
+    	        // Pass a string to perform case insensitive matching
+    	        n = app.tree.filterNodes(match, opts);
+//    	      }
+    	      $("button#btnResetSearch").attr("disabled", false);
+    	      $("span#matches").text("(" + n + " matches)");
+    	    }).focus();
+    },
+    setupContextMenu: function(layertreeNode) {
+    	layertreeNode.contextmenu({
+    	      delegate: "span.fancytree-title",
+    	      menu: [
+    	          {title: "Edit", cmd: "edit", uiIcon: "ui-icon-pencil", disabled: false },
+    	          ],
+    	      beforeOpen: function(event, ui) {
+    	        var node = $.ui.fancytree.getNode(ui.target);
+    	        if (node !== null){
+    	        	node.setActive();
+    	        }
+    	      },
+    	      select: function(event, ui) {
+    	        var node = $.ui.fancytree.getNode(ui.target);
+    	        if (node !== null){
+    	        	window.open(node.data.href, '_edit');
+    	        }
+    	      }
+    	    });
+    },
     createTree: function() {
-        if (_.isUndefined(app.tree) && !_.isUndefined(app.treeData)){
+        if (_.isUndefined(app.tree) && !_.isNull(app.treeData)){
             var layertreeNode = this.$el.find("#layertree");
+            if (layertreeNode.length == 0){
+            	return;
+            }
             var context = this;
             var mytree = layertreeNode.fancytree({
-                extensions: ["persist"],
+                extensions: ['persist', 'filter', 'transparency_slider'],
                 source: app.treeData,
+                filter: {
+                    autoApply: true,  // Re-apply last filter if lazy data is loaded
+                    counter: true,  // Show a badge with number of matching child nodes near parent icons
+                    fuzzy: false,  // Match single characters in order, e.g. 'fb' will match 'FooBar'
+                    hideExpandedCounter: true,  // Hide counter badge, when parent is expanded
+                    highlight: true,  // Highlight matches by wrapping inside <mark> tags
+                    mode: "hide",  // Hide unmatched nodes (pass "dimm" to gray out unmatched nodes)
+                    autoExpand: true
+                  },
                 checkbox: true,
                 icon: function(event, data) {
                 	  if( !data.node.isFolder() ) { 
                 		  return context.getTreeIcon(data.node.data.type); 
                 	  }
                 	},
+                expand: function(event, data){
+                	app.vent.trigger('tree:expanded', data.node);
+                },
                 lazyLoad: function(event, data){
                     data.result = $.ajax({
                       url: data.node.data.childNodesUrl,
@@ -111,6 +157,7 @@ app.views.FancyTreeView = Backbone.View.extend({
                       success: $.proxy(function(data) {
                           if (!_.isUndefined(data) && data.length > 0){
                               $.each(data, function(index, datum){
+                            	  app.vent.trigger('treeNode:loaded', datum);
                                   app.vent.trigger('mapNode:create', datum);
                                   if (!_.isUndefined(datum.children)){
                                       $.each(datum.children, function(index, child){
@@ -122,9 +169,6 @@ app.views.FancyTreeView = Backbone.View.extend({
                       }, this),
                     });
                 },
-                dblclick: function(event, data) {
-                    var win = window.open(data.node.data.href, '_edit');
-                },
                 select: function(event, data) {
                     // new simpler way
                     if (_.isUndefined(data.node.mapView)){
@@ -134,10 +178,9 @@ app.views.FancyTreeView = Backbone.View.extend({
                     }
                   },
                   persist: {
-                      // Available options with their default:
                       cookieDelimiter: "~",    // character used to join key strings
                       cookiePrefix: undefined, // 'fancytree-<treeId>-' by default
-                      cookie: { // settings passed to jquery.cookie plugin
+                      cookie: { // settings passed to js.cookie plugin
                         raw: false,
                         expires: "",
                         path: "",
@@ -146,11 +189,12 @@ app.views.FancyTreeView = Backbone.View.extend({
                       },
                       expandLazy: false, // true: recursively expand and load lazy nodes
                       overrideSource: true,  // true: cookie takes precedence over `source` data attributes.
-                      store: "auto",     // 'cookie': use cookie, 'local': use localStore, 'session': use sessionStore
+                      store: "cookie",     // 'cookie': use cookie, 'local': use localStore, 'session': use sessionStore
                       types: "active expanded focus selected"  // which status types to store
                     }
             });
             app.tree = layertreeNode.fancytree("getTree");
+            this.setupContextMenu(layertreeNode);
             this.storedParent = this.$el.parent();
             app.vent.trigger('tree:loaded');
         }

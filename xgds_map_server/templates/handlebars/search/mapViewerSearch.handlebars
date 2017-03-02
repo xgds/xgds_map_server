@@ -1,8 +1,7 @@
 
-    <div class="grid-stack-item-content" id="searchContainer" style="minHeight:100px">
-    	<i class="icon-lock-open pinDiv warning"></i>
-		<i class="icon-cancel-circled"></i>
+    <div id="searchContainer" style="minHeight:100px">
 		<div id="message" style="color:red;" class='item auto'><br/></div>
+		{{#unless hideModelChoice }}
 		<div id="modelChoiceDiv" class='item auto '>
 			Search for:
 			<select id="searchModelSelector">
@@ -12,6 +11,7 @@
 			</select>
 			<button id="getSearchFormButton" class="small">Start</button>
 		</div>
+		{{/unless}}
 		<div id="searchFormDiv" ></div>
 	</div>
 	

@@ -1,3 +1,4 @@
+
 #__BEGIN_LICENSE__
 # Copyright (c) 2015, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
@@ -17,8 +18,12 @@
 import re
 import os
 import shutil
+import gdal
+import untangle
+import traceback
 
 from django.core.urlresolvers import reverse
+from django.core.validators import MaxValueValidator
 from django.db import models
 from django.contrib.gis.db import models
 from django.conf import settings
@@ -44,7 +49,7 @@ class AbstractMapNode(models.Model):
     Abstract Map Node for an entry in the map tree, which can have a parent.
     """
     uuid = UuidField(primary_key=True)
-    name = models.CharField('name', max_length=200, db_index=True)
+    name = models.CharField('name', max_length=128, db_index=True)
     description = models.CharField('description', max_length=1024, blank=True)
     creator = models.CharField('creator', max_length=200)
     modifier = models.CharField('modifier', max_length=200, null=True, blank=True)
@@ -107,6 +112,7 @@ class AbstractMap(AbstractMapNode):
     """
     locked = models.BooleanField(blank=True, default=False)
     visible = models.BooleanField(blank=False, default=False)
+    transparency = models.PositiveSmallIntegerField(default=0, validators=[MaxValueValidator(100)], help_text="100=transparent") #100=fully transparent, 0=fully opaque
     parent = models.ForeignKey(MapGroup, db_column='parentId',
                                null=True, blank=True,
                                verbose_name='group')
@@ -114,6 +120,7 @@ class AbstractMap(AbstractMapNode):
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
         result = super(AbstractMap, self).getTreeJson()
+        result["data"]["transparency"] = self.transparency
         result["selected"] = self.visible
         return result
 
@@ -174,19 +181,74 @@ class KmlMap(AbstractMap):
         result = super(KmlMap, self).getTreeJson()
         result["data"]["openable"] = self.openable
         result["data"]["kmlFile"] = self.getUrl()
+#         result["data"]["transparency"] = self.transparency
         if self.localFile:
             result["data"]["localFile"] = self.localFile.url
         return result
 
 
-class MapTile(AbstractMap):
+class AbstractMapTile(AbstractMap):
     """
-    A reference to an external or local KML file.  Note we can't render all KML features in all libraries
+    A reference to a tiled geoTiff.
     """
     sourceFile = models.FileField(upload_to=settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR, max_length=256,
                                   null=True, blank=True)
     processed = models.BooleanField(default=False)
     
+    minx = models.FloatField(null=True)
+    miny = models.FloatField(null=True)
+    maxx = models.FloatField(null=True)
+    maxy = models.FloatField(null=True)
+    resolutions = models.CharField(null=True, max_length=256)
+    
+    def initResolutions(self):
+        if not self.resolutions:
+            try:
+                result = ''
+                filepath = os.path.join(settings.DATA_ROOT, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR, self.name.replace(' ', '_'), 'tilemapresource.xml')
+                tilemapresource = untangle.parse(str(filepath))
+                for t in tilemapresource.TileMap.TileSets.children:
+                    result += str(int(float(t['units-per-pixel']))) + ' '
+                result = result.strip()
+                if result:
+                    self.resolutions = result
+                    self.save()
+            except:
+                traceback.print_exc()
+                pass
+    
+    @property
+    def intResolutions(self):
+        self.initResolutions()
+        if self.resolutions:
+            return [int(n) for n in self.resolutions.split()] 
+    
+    def initBounds(self):
+        if not self.minx:
+            try:
+                bounds = self.getBounds()
+                self.minx = bounds[0][0]
+                self.miny = bounds[0][1]
+                self.maxx = bounds[1][0]
+                self.maxy = bounds[1][1]
+                self.save()
+            except:
+                pass
+    
+    def getBounds(self):
+        src = gdal.Open(self.sourceFile.path)
+        minx, xres, xskew, maxy, yskew, yres  = src.GetGeoTransform()
+        maxx = minx + (src.RasterXSize * xres)
+        miny = maxy + (src.RasterYSize * yres)
+        return [[minx, miny], [maxx, maxy]]
+    
+    @property
+    def sourceFileLink(self):
+        if self.sourceFile:
+            return "<a href='%s'>Download %s (%d MB)</a>" % (self.sourceFile.url, os.path.basename(self.sourceFile.name), self.sourceFile.size / 1000000)
+        else:
+            return "No Source File"
+        
     def getUrl(self):
         return self.getXYZTileSourceUrl()
 
@@ -198,13 +260,18 @@ class MapTile(AbstractMap):
         result = os.path.join(settings.DATA_URL, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR, self.name.replace(' ', '_'))
         return result
 
-    def getEditHref(self):
-        return reverse('mapEditTile', kwargs={'tileID': self.uuid})
-
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
-        result = super(MapTile, self).getTreeJson()
+        result = super(AbstractMapTile, self).getTreeJson()
         result["data"]["tileURL"] = self.getUrl()
+        result["data"]["tilePath"] = self.getTilePath()
+        if self.minx:
+            result["data"]["minx"] = self.minx
+            result["data"]["miny"] = self.miny
+            result["data"]["maxx"] = self.maxx
+            result["data"]["maxy"] = self.maxy
+        if self.resolutions:
+            result["data"]["resolutions"] = self.intResolutions
         return result
     
     def rename(self, newName):
@@ -213,6 +280,54 @@ class MapTile(AbstractMap):
         newPath = os.path.join(settings.PROJ_ROOT, self.getTilePath()[1:])
         shutil.move(oldPath, newPath)
 
+    class Meta:
+        abstract = True
+
+class MapTile(AbstractMapTile):
+    
+    def getEditHref(self):
+        return reverse('mapEditTile', kwargs={'tileID': self.uuid})
+
+class MapDataTile(AbstractMapTile):
+    """
+    A MapTile layer that has meaningful data, an optional legend, a file containing the data and javascript to render the data value below the map.
+    """
+    dataFile = models.FileField(upload_to=settings.XGDS_MAP_SERVER_MAPDATA_SUBDIR, max_length=256,
+                                null=True, blank=True)
+    legendFile = models.FileField(upload_to=settings.XGDS_MAP_SERVER_MAPDATA_SUBDIR, max_length=256,
+                                  null=True, blank=True)
+    legendDefaultVisible = models.BooleanField(default=True)
+    valueLabel = models.CharField(max_length=128, null=True, blank=True)
+    unitsLabel = models.CharField(max_length=32, null=True, blank=True)
+    jsFunction = models.TextField(null=True, blank=True)
+    jsRawFunction = models.TextField(null=True, blank=True)
+    
+    def getDataFileUrl(self):
+        if self.dataFile:
+            return self.dataFile.url
+        return None
+    
+    def getLegendFileUrl(self):
+        if self.legendFile:
+            return self.legendFile.url
+        return None
+    
+    def getTreeJson(self):
+        """ Get the json block that the fancy tree needs to render this node """
+        result = super(MapDataTile, self).getTreeJson()
+        result["data"]["dataFileURL"] = self.getDataFileUrl()
+        result["data"]["legendFileURL"] = self.getLegendFileUrl()
+        result["data"]["legendVisible"] = self.legendDefaultVisible
+        result["data"]["valueLabel"] = self.valueLabel
+        result["data"]["unitsLabel"] = self.unitsLabel
+        result["data"]["jsFunction"] = self.jsFunction
+        result["data"]["jsRawFunction"] = self.jsRawFunction
+        
+        return result
+
+    def getEditHref(self):
+        return reverse('mapEditDataTile', kwargs={'tileID': self.uuid})
+    
 
 class MapLayer(AbstractMap):
     """ A map layer which will have a collection of features that have content in them. """
@@ -318,6 +433,10 @@ class MapLink(AbstractMap):
             result['lazy'] = True
         result["data"]["mapBounded"] = self.mapBounded
         result["data"]["sseUrl"] = self.sseUrl
+        try:
+            del result["data"]["transparency"]
+        except:
+            pass
         return result
 
 
@@ -512,7 +631,7 @@ STYLE_MANAGER = ModelCollectionManager(AbstractStyle,
                                         DrawingStyle,
                                         GroundOverlayStyle])
 
-MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile, MapCollection, MapSearch, MapLink])
+MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile, MapDataTile, MapCollection, MapSearch, MapLink])
 
 # this manager does not include groups
-MAP_MANAGER = ModelCollectionManager(AbstractMap, [MapLayer, KmlMap, MapTile, MapCollection, MapSearch, MapLink])
+MAP_MANAGER = ModelCollectionManager(AbstractMap, [MapLayer, KmlMap, MapTile, MapDataTile, MapCollection, MapSearch, MapLink])
