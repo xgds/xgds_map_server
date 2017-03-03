@@ -67,10 +67,8 @@ BOWER_INSTALLED_APPS += ['sprintf.js=sprintf.js',
                          'backbone-forms',
                          'fancytree=fancytree',
                          'js-cookie',
-#                          'openlayers3=https://github.com/tamarmot/ol3/releases/download/3.18.3/ol.zip',
-                        'openlayers=https://github.com/openlayers/openlayers/releases/download/v3.20.1/v3.20.1-dist.zip',
-#                          'openlayers=https://github.com/openlayers/openlayers/releases/download/v4.0.0/v4.0.0-dist.zip',  # need to do some refactoring for this to work, can't use popup, plan does not draw
-                         'ol3-popup',
+                        'openlayers=https://github.com/openlayers/openlayers/releases/download/v4.0.1/v4.0.1-dist.zip',  # need to do some refactoring for this to work, can't use popup, plan does not draw
+                         'ol3-popup=git://github.com/walkermatt/ol3-popup.git#master',
                          'proj4',
                          'resumable=git://github.com/23/resumable.js.git',
                          #'geotiff.js=git://github.com/constantinius/geotiff.js.git',
