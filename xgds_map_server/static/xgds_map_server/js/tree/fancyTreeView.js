@@ -174,7 +174,7 @@ app.views.FancyTreeView = Marionette.View.extend({
                     if (_.isUndefined(data.node.mapView)){
                         app.vent.trigger('mapNode:create', data.node);
                     } else {
-                        data.node.mapView.render(data.node.selected);
+                        data.node.mapView.onRender(data.node.selected);
                     }
                   },
                   persist: {
