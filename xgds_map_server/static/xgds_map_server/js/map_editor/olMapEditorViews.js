@@ -95,6 +95,7 @@ $(function() {
 				this.render();
 			});
 	        this.listenTo(app.vent, 'mapmode', this.setMode);
+	        app.vent.trigger('mapEditorLayerInitialized');
 		},
 		modeMap: {
 				'addFeatures' : 'addFeaturesMode',

@@ -27,7 +27,7 @@
 					this.showChildView('editingTools', new app.views.NavigateView());
 				}
 			});
-			this.listenTo(app.vent, 'onLayerLoaded', function() {
+			this.listenTo(app.vent, 'mapEditorLayerInitialized', function() {
 	        	app.vent.trigger('clearSaveStatus');
 	        	if (app.mapLayer.attributes.features.length == 0){
 	    		    app.vent.trigger('mapmode', 'addFeatures');
