@@ -10,7 +10,7 @@
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
 {{ form.as_p }}
 <input type="submit" value="Save" />
-<a href="{% url 'nodeDelete' form.instance.uuid %}" class="mybutton">{% if form.instance.deleted %}Undelete{% else %}Delete{% endif %}</a>
+<a href="{% url 'nodeDelete' form.instance.uuid %}" class="btn btn-primary">{% if form.instance.deleted %}Undelete{% else %}Delete{% endif %}</a>
 </form>
 {% endblock %}
 

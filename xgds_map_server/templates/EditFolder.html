@@ -8,7 +8,7 @@
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
 {{ groupForm.as_p }}
 <input type="submit" id="saveButton" value="{% if fromSave %}Success!{% else %}Save{% endif %}" />
-<a href="{% url 'folderDelete' groupForm.instance.uuid %}" class="mybutton">{% if groupForm.instance.deleted %}Undelete{% else %}Delete{% endif %}</a>
+<a href="{% url 'folderDelete' groupForm.instance.uuid %}" class="btn btn-primary">{% if groupForm.instance.deleted %}Undelete{% else %}Delete{% endif %}</a>
 </form>
 {% endblock %}
 
