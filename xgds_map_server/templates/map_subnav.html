@@ -4,11 +4,24 @@
 <div class="sitemenu-nav-secondary">
 	<nav class="subnav">
 	{% help_button help_content_path title %}
+	<ul class="nav nav-pills">
+		<li class='nav-item {% currentnav xgds_map_server_index %}'><a class="nav-link {% currentnav xgds_map_server_index %}" href="{% url 'xgds_map_server_index' %}">View</a></li>
+		<li class='nav-item {% currentnav map* folder* addKml deletedMaps %}'><a class="nav-link {% currentnav map* folder* addKml deletedMaps %}" href="{% url 'mapTree' %}">Edit</a></li>
+		<li class='nav-item {% currentnav xgds_map_server_feed %}'><a class="nav-link {% currentnav xgds_map_server_feed %}" href="{% url 'xgds_map_server_feed' %}">Google Earth Feed</a></li>
+  	</ul>
+  	</nav>
+</div>
+
+<!--
+<div class="sitemenu-nav-secondary">
+	<nav class="subnav">
+	{% help_button help_content_path title %}
 	<ul>
 		<li{% currentnav xgds_map_server_index %}><a href="{% url 'xgds_map_server_index' %}">View</a></li>
 		<li {% currentnav map* folder* addKml deletedMaps %}><a href="{% url 'mapTree' %}">Edit</a></li>
 		<li{% currentnav xgds_map_server_feed %}><a href="{% url 'xgds_map_server_feed' %}">Google Earth Feed</a></li>
   	</ul>
   	</nav>
-</div>
+</div> 
+ -->
 {% endblock %}
