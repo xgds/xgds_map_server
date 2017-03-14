@@ -87,6 +87,10 @@ Marionette.TemplateCollectionView = Marionette.CollectionView.extend({
 			this.$childreneEl = this.$el;
 		}
 	},
+	
+	_reInitRegions: function _reInitRegions() {
+	    _.invoke(this._regions, 'reset');
+	  },
 
 	// Render children views. Override this method to provide your own implementation of a
 	// render function for the collection view.
