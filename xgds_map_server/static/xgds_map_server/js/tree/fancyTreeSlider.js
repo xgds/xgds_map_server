@@ -61,14 +61,16 @@ saveTransparency = function(event, ui){
 	var newValue = ui.value;
 	var node_id = ui.handle.parentElement.id.substring(0, ui.handle.parentElement.id.length - 7);
 	var node = app.tree.getNodeByKey(node_id);
-	theUrl = '/xgds_map_server/setTransparency/' + node_id + '/' + node.data.type + '/' + newValue;
-	$.ajax({
-        url: theUrl,
-        dataType: "json",
-        error: function(data){
-        	alert('Problem saving transparency.');
-        }
-      });
+	if (node != null) {
+		theUrl = '/xgds_map_server/setTransparency/' + node_id + '/' + node.data.type + '/' + newValue;
+		$.ajax({
+	        url: theUrl,
+	        dataType: "json",
+	        error: function(data){
+	        	alert('Problem saving transparency.');
+	        }
+	      });
+	}
 };
 
 
