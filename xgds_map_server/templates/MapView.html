@@ -1,6 +1,11 @@
-{% extends "MapBase.html" %}
+{% extends "dashboard_base.html" %}
 {% load pipeline %}
 {% load siteFrames %}
+
+{% block siteSection %}Maps{% endblock %}
+{% block sitemenu-content-secondary %}
+{% include "map_subnav.html" %}
+{% endblock %}
 
 {% block contents %}
 <script type="x-template/underscore" id="application_contents">
@@ -85,10 +90,3 @@
     
 {% endblock scripts %}
 
-{% block jsInit %}
-	var siteFrames = {% siteframes_dict %};
-	$(function(){
-    	app.start();
-    	xgds_gridstack.initializeGridstack();
-	});
-{% endblock jsInit %}
