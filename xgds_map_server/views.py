@@ -62,7 +62,7 @@ from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapDataT
 from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
 from xgds_map_server.kmlLayerExporter import exportMapLayer
 from geocamUtil.KmlUtil import wrapKmlForDownload
-from apps.xgds_data.introspection import modelName
+from xgds_data.introspection import modelName
 
 #from django.http import StreamingHttpResponse
 # pylint: disable=E1101,R0911
@@ -1262,7 +1262,7 @@ def addGroupToFancyJSON(group, map_tree_json):
     for node in nodes:
 #         if node.deleted:
 #             continue
-        if node.__class__.__name__ == MapGroup.__name__:
+        if node.__class__.__name__ == MapGroup.__name__:  # @UndefinedVariable
             sub_nodes.append(addGroupToFancyJSON(node, [])[0])
         else:
             treeJson = node.getTreeJson()
