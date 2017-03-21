@@ -69,7 +69,10 @@ Marionette.TemplateCollectionView = Marionette.CollectionView.extend({
 //	object literal, or a function that returns an object
 //	literal. All methods and attributes from this object
 //	are copies to the object passed in.
-	mixinTemplateContext(target = {}) {
+	mixinTemplateContext(target) {
+		if (target === undefined){
+			target = {};
+		}
 		const templateContext = _.result(this, 'templateContext');
 		return _.extend(target, templateContext);
 	},
@@ -127,11 +130,11 @@ Marionette.TemplateCollectionView = Marionette.CollectionView.extend({
 
 	// Internal method. Check whether we need to insert the view into the correct position.
 	_insertBefore(childView, index) {
-		let currentView;
+		var currentView;
 		const findPosition = this.sort && (index < this.children.length - 1);
 		if (findPosition) {
 			// Find the view after this one
-			currentView = this.children.find((view) => {
+			currentView = this.children.find(function(view){
 				return view._index === index + 1;
 			});
 		}
