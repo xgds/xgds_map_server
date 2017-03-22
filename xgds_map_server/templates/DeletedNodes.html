@@ -2,13 +2,19 @@
 {% load get_class_name from utils %}
 
 {% block contents %}
+<h6>Deleted Elements</h6>
 <p>Click an element to undelete it.</p>
-<h3>Deleted Elements</h3>
+<table class="table-striped">
 {% for node in nodes %}
+<tr>
+<td>
 {% if node|get_class_name = 'MapGroup' %}
 <a href="{% url 'folderDelete' node.uuid %}">{{ node.name }}</a><br>
 {% else %}
 <a href="{% url 'nodeDelete' node.uuid %}">{{ node.name }}</a><br>
 {% endif %}
+</td>
+</tr>
 {% endfor %}
+</table>
 {% endblock %}

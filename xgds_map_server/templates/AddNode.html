@@ -4,7 +4,9 @@
 {{ block.super }}
 {% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
 <h6>{{ title }}</h6>
+<p>
 {{ instruction }}
+</p>
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
 {{ form.as_p }}
 <input type="submit" value="Create" />

@@ -4,7 +4,7 @@
 {{ block.super }}
 <form action="#" method="post">{% csrf_token %}
 <p>Are you sure you want to {% if mapObj.deleted %}undelete{% else %}delete{% endif %} map "{{ mapObj.name }}"?</p>
-<input type="submit" value="{% if mapObj.deleted %}Undelete{% else %}Delete{% endif %}" />
-<input type="button" onclick="document.location.href = '{% url 'mapTree' %}'" value="Cancel" />
+<input type="submit" class="btn btn-primary" value="{% if mapObj.deleted %}Undelete{% else %}Delete{% endif %}" />
+<input type="button" class="btn btn-primary" onclick="document.location.href = '{% url 'mapTree' %}'" value="Cancel" />
 </form>
 {% endblock %}

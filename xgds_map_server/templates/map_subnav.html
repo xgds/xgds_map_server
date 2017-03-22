@@ -1,6 +1,5 @@
 {% block sitemenu-content-secondary %}
 {% load nav %}
-<div class="sitemenu-nav-secondary">
 	<nav class="subnav">
 	<ul class="nav nav-pills">
 		<li class='nav-item {% currentnav xgds_map_server_index %}'><a class="nav-link {% currentnav xgds_map_server_index %}" href="{% url 'xgds_map_server_index' %}">View</a></li>
@@ -8,5 +7,4 @@
 		<li class='nav-item {% currentnav xgds_map_server_feed %}'><a class="nav-link {% currentnav xgds_map_server_feed %}" href="{% url 'xgds_map_server_feed' %}">Google Earth Feed</a></li>
   	</ul>
   	</nav>
-</div>
 {% endblock %}
