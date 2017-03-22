@@ -3,7 +3,7 @@
 {% block contents %}
 {{ block.super }}
 {% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
-<h2>Add Map Search</h2>
+<h6>Add Map Search</h6>
 Create a new map search -- a search for objects that can be turned on and off on the map. 
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
 {{ form.as_p }}

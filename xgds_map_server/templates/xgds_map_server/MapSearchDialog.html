@@ -1,6 +1,6 @@
 <div id="save-search-dialog" title="Save Search" hidden>
-<h2 style="color:red" id="saveSearchError"></h2>
-<h2>Save Search</h2>
+<h2 style="color:red" id="saveSearchError"></h6>
+<h6>Save Search</h6>
 Save the search as a layer in the map tree.  Note that the search will not take into account any filtering or sorting you have done in the table.
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
 {{ saveSearchForm.as_table }}

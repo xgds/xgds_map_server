@@ -13,14 +13,19 @@
 {% endblock %}
 
 {% block contents %}
-<strong>Add</strong>
-<a href="{% url 'folderAdd' %}" class="btn btn-primary small">Folder</a>
-<a href="{% url 'addKml' %}" class="btn btn-primary small">Kml</a>
-<a href="{% url 'mapAddLayer' %}" class="btn btn-primary small">Layer</a>
-<a href="{% url 'mapAddTile' %}" class="btn btn-primary small">Tile</a>
-<a href="{% url 'mapAddDataTile' %}" class="btn btn-primary small">Data Tile</a>
-<!-- <a href="{% url 'mapAddMapCollection' %}" class="btn btn-primary">Collection</a> -->
-<a href="{% url 'deletedNodes' %}" class="btn btn-primary small">Undelete</a>
+<div class="btn-toolbar" role="toolbar" >
+  <div class="btn-group mr-2" role="group" >
+	<a href="{% url 'folderAdd' %}" class="btn btn-primary"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Folder</a>
+	<a href="{% url 'addKml' %}" class="btn btn-primary"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Kml</a>
+	<a href="{% url 'mapAddLayer' %}" class="btn btn-primary "><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Layer</a>
+	<a href="{% url 'mapAddTile' %}" class="btn btn-primary"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Tile</a>
+	<a href="{% url 'mapAddDataTile' %}" class="btn btn-primary"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Data Tile</a>
+<!-- <a href="{% url 'mapAddMapCollection' %}" class="btn btn-primary"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Collection</a> -->
+  </div>
+  <div class="btn-group" role="group" >
+	<a href="{% url 'deletedNodes' %}" class="btn btn-primary ">Undelete</a>
+  </div>
+ </div>
 <style scoped>
   @import url('{{EXTERNAL_URL}}jquery-ui/themes/base/jquery-ui.css');
   @import url('{{ EXTERNAL_URL }}fancytree/dist/skin-lion/ui.fancytree.min.css');
@@ -31,9 +36,9 @@
   }
 </style>
 <div id="layertreeContainer">
-	<p class="small">
+	<p class="mt-2">
 	Drag and drop to reorganize tree.  Right-click to edit. <br/>
-	Checked = layer is turned on by default globally. <br/>
+	Checked means the layer is turned on by default globally. It is not recursive.<br/>
 	Transparency settings are global.
 	</p>
 	<div class="btn-toolbar mb-1" role="toolbar">

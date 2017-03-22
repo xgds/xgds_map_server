@@ -3,7 +3,7 @@
 {% block contents %}
 {{ block.super }}
 {% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
-<h2>{{ title }}</h2>
+<h6>{{ title }}</h6>
 {% if extras %}
 {{ extras|safe }}
 {% endif %}
