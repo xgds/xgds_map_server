@@ -36,11 +36,23 @@
 	Checked = layer is turned on by default globally. <br/>
 	Transparency settings are global.
 	</p>
-	<button alt="refresh" id="refreshTreeLink" class="small" onclick="javascript: refreshTree();">Refresh</button>
-	<input name="searchTree" placeholder="Filter..." autocomplete="off">
-   	<button id="btn btn-primaryResetSearch" class="small" >&times;</button>
-   	<span id="matches"></span></br/>
-	<button id="btn btn-primaryTransparencyEditors" class="small" style="margin-top:5px;"  onclick="toggleTransparencySliders();">Transparency</button>
+	<div class="btn-toolbar mb-1" role="toolbar">
+		<div class="btn-group mr-2" role="group">
+			<button id="refreshTreeLink"
+				class="fa fa-refresh btn btn-primary btn-sm"
+				onclick="javascript: app.vent.trigger('refreshTree');"></button>
+		</div>
+		<div class="input-group">
+			<input name="searchTree" placeholder="Filter..." autocomplete="off"
+				class="form-control"> <span
+				class="input-group-addon fa fa-close" id="btnResetSearch"></span>
+		</div>
+	</div>
+	<div class="mb-2" role="group">
+		<button id="btnTransparencyEditors" class="btn btn-primary"
+			onclick="toggleTransparencySliders();app.vent.trigger('toggleTransparency');">Transparency</button>
+		<span id="matches"></span>
+	</div>
 	<div id="layertree" ></div> <!-- data-source="ajax" class="sampletree"></div> -->
  </div>
 {% endblock %}

@@ -446,7 +446,7 @@ xGDS.makeExpandable = function(view, expandClass) {
         },
         unexpand: function() {
             this.expanded = false;
-            this.$el.find('i').removeClass('icon-play');
+            this.$el.find('i').removeClass('fa-play');
         },
         onExpandOther: function(target, expandClass) {
             if (this.options.expandClass === expandClass && this != target && target.isClosed != true) {
@@ -465,7 +465,7 @@ xGDS.makeExpandable = function(view, expandClass) {
         },
         _addIcon: function() {
             this._ensureIcon();
-            this.$el.find('i').addClass('icon-play');
+            this.$el.find('i').addClass('fa-play');
         },
         onClose: function() {
             this.stopListening();

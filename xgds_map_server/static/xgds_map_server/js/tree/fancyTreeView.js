@@ -71,7 +71,7 @@ app.views.FancyTreeView = Marionette.View.extend({
     	return null
     },
     connectFilter: function() {
-    	$("button#btnResetSearch").click(function(e){
+    	$("#btnResetSearch").click(function(e){
     	      $("input[name=searchTree]").val("");
     	      $("span#matches").text("");
     	      app.tree.clearFilter();
