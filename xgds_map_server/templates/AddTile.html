@@ -11,17 +11,32 @@ input[type='file'] {
 {% block contents %}
 {{ block.super }}
 {% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
- <h6>{{ title }}</h6>
-{{instructions|safe }}
+<div >
 <form action="#" enctype="multipart/form-data" method="post">
-{% csrf_token %}
+ <label></label>
+ <span><h6>{{ title }}</h6></span>
+ <p>
+ <label></label>
+<span>{{instructions|safe }}</span>
+</p>
+
 {{ form.as_p }}
-<br/>
+
+<p>
+<label for="alert_span"></label>
+<span class="alert alert-danger" role="alert" id="alert_span">
 <strong>You cannot click the Create button until your upload finishes.</strong><br/>
-<input type="submit" value="Create" id="create_button" disabled="disabled"/>
-<br/>
 After the processing completes, you should get an email with the results.
+</span>
+</p>
+<p class="form-group">
+<label for="create_button"></label>
+<input type="submit" value="Create" id="create_button" disabled="disabled"/>
+</p>
+{% csrf_token %}
+
 </form>
+</div>
 {% endblock %}
 
 {% block scripts %}

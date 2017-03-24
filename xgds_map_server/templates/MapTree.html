@@ -17,7 +17,7 @@
   <div class="btn-group mr-2" role="group" >
 	<a href="{% url 'folderAdd' %}" class="btn btn-primary"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Folder</a>
 	<a href="{% url 'addKml' %}" class="btn btn-primary"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Kml</a>
-	<a href="{% url 'mapAddLayer' %}" class="btn btn-primary "><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Layer</a>
+	<a href="{% url 'mapAddLayer' %}" class="btn btn-primary "><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Map Layer</a>
 	<a href="{% url 'mapAddTile' %}" class="btn btn-primary"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Tile</a>
 	<a href="{% url 'mapAddDataTile' %}" class="btn btn-primary"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Data Tile</a>
 <!-- <a href="{% url 'mapAddMapCollection' %}" class="btn btn-primary"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Collection</a> -->
@@ -49,7 +49,7 @@
 		</div>
 		<div class="input-group">
 			<input name="searchTree" placeholder="Filter..." autocomplete="off"
-				class="form-control"> <span
+				class="form-control col-6"> <span
 				class="input-group-addon fa fa-close" id="btnResetSearch"></span>
 		</div>
 	</div>

@@ -3,9 +3,11 @@
 {% block contents %}
 {{ block.super }}
 {% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
-<h6>Add Folder</h6>
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
+<label></label>
+<h6>Add Folder</h6>
 {{ groupForm.as_p }}
-<input type="submit" value="Create" />
+<label for="id_createButton"></label>
+<input type="submit" value="Create"  id="id_createButton"/>
 </form>
 {% endblock %}

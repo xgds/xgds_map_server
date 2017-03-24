@@ -14,7 +14,7 @@ Transparency
 	Percentage transparency by default; 100% is fully transparent.  You can control 
 	transparency later while viewing; this setting is a default.
 
-Parent Folder
+Folder
 	The containing Folder in the map tree.
  
 

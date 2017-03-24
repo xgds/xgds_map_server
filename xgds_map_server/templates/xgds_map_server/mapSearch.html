@@ -106,9 +106,10 @@
 {% endblock jsInit %}
 
 {% block preDashboard %}
-<div id="buttonRow" class="row" style="padding-bottom:5px;">
+
+<div id="buttonRow" class="d-flex justify-content-end mb-2" >
 {% block buttonRow %}
-<button id="advanced_search_button" class="small pull_right">Advanced Search</button>
+<button id="advanced_search_button" role="button" class="btn btn-primary">Advanced Search</button>
 {% endblock buttonRow %}
 </div>
 {% endblock preDashboard %}
@@ -132,11 +133,12 @@
 		data-gs-x="0" data-gs-y="0"
         data-gs-width="3" data-gs-height="3" >
         <div class="grid-stack-item-content" id="search-results-gridstack-item-content" >
-        <!-- <input type="checkbox" id="today" value="today" checked>Today -->
-        <i class="fa fa-lock pinDiv warning"></i>
-		<i class="fa fa-window-close fa-lg"></i>
-		<i class="fa fa-refresh right" title="Reload Latest" id="reloadSearchResults"></i>
-			<div id="searchResultsDiv"></div>
+        <ul class="nav justify-content-end">
+			<i class="fa fa-refresh right mr-2" title="Reload Latest" id="reloadSearchResults"></i>
+        	<i class="fa fa-lock pinDiv mr-2"></i>
+			<i class="fa fa-window-close fa-lg"></i>
+		</ul>
+		<div id="searchResultsDiv"></div>
 		</div>
 </div>
 {% endblock searchResultsDiv %}
@@ -147,14 +149,16 @@
 		data-gs-x="3" data-gs-y="0"
         data-gs-width="3" data-gs-height="3" >
         <div class="grid-stack-item-content" id="view-gridstack-item-content" >
-			<i class="fa fa-lock pinDiv warning"></i>
-			<i class="fa fa-window-close fa-lg"></i>
-			<div class="small default btn btn-primary icon-right fa fa-window-restore" id="new-window-btn btn-primary">
+        	<ul class="nav justify-content-end">
+				<i class="fa fa-lock pinDiv mr-2"></i>
+				<i class="fa fa-window-close fa-lg"></i>
+			</ul>
+			<div class="default btn btn-primary icon-right fa fa-window-restore" id="new-window-btn btn-primary">
 				<a href="#" id="view-new-window-target" target="_blank">New Window</a>
 			</div>
-			<button class="small info btn btn-primary prev-button" id="prev_button"><i class="fa fa-step-backward"></i></button>
+			<button class="info btn btn-primary prev-button" id="prev_button"><i class="fa fa-step-backward"></i></button>
 			<strong id="nameBlock"></strong>
-			<button class="small info btn btn-primary next-button" id="next_button"><i class="fa fa-step-forward"></i></button>
+			<button class="info btn btn-primary next-button" id="next_button"><i class="fa fa-step-forward"></i></button>
 			<div id="viewDiv">
 			</div>
 			<div id="notesDiv">

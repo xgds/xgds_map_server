@@ -296,7 +296,7 @@ class MapDataTile(AbstractMapTile):
                                 null=True, blank=True)
     legendFile = models.FileField(upload_to=settings.XGDS_MAP_SERVER_MAPDATA_SUBDIR, max_length=256,
                                   null=True, blank=True)
-    legendDefaultVisible = models.BooleanField(default=True)
+    legendDefaultVisible = models.BooleanField(default=True, verbose_name='Show Legend:', help_text='Check to show legend when tile layer is turned on')
     valueLabel = models.CharField(max_length=128, null=True, blank=True)
     unitsLabel = models.CharField(max_length=32, null=True, blank=True)
     jsFunction = models.TextField(null=True, blank=True)

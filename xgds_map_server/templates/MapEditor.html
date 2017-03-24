@@ -17,7 +17,9 @@
 	<div class="grid-stack grid-stack-6" id="container">
     	<div id="map-gridstack-item" class="grid-stack-item"  data-gs-x="0" data-gs-y="0" data-gs-width="2" data-gs-height="4" >
 			<div id="map-gridstack-item-content"  class="grid-stack-item-content" >
-				<i class="fa fa-lock pinDiv warning"></i>
+				<ul class="nav justify-content-end">
+					<i class="fa fa-lock pinDiv"></i>
+				</ul>
 				<div id="overmap">
         			{% if mapLayerDict.features|length == 0 %}
         			{% siteframe_form %}

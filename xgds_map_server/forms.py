@@ -31,7 +31,7 @@ from xgds_data.models import Collection, RequestLog
 
 
 class AbstractMapForm(forms.ModelForm):
-    parent = forms.ModelChoiceField(queryset=MapGroup.objects.filter(deleted=False), empty_label=None, label="Parent Folder")
+    parent = forms.ModelChoiceField(queryset=MapGroup.objects.filter(deleted=False), empty_label=None, label="Folder")
     username = forms.CharField(required=False, widget=forms.HiddenInput())
     
     def getModel(self):
@@ -74,15 +74,15 @@ class MapLayerForm(AbstractMapForm):
 class MapTileForm(AbstractMapForm):
     if settings.XGDS_MAP_SERVER_GDAL2TILES_ZOOM_LEVELS:
         minZoom = IntegerField(initial=12, label="Min Zoom")
-        maxZoom = IntegerField(initial=20, label="Max Zoom (UAV=23, Satellite=20)")
+        maxZoom = IntegerField(initial=20, label="Max Zoom", help_text="(UAV=23, Satellite=20)")
     
     resampleMethod = ChoiceField(choices=settings.XGDS_MAP_SERVER_GDAL_RESAMPLE_OPTIONS,
-                                 label="Resampling Method")
+                                 label="Resampling")
 
     sourceFile = ResumableFileField(allowed_mimes=("image/tiff",),
                                     upload_url=lambda: reverse('uploadResumable'),
                                     chunks_dir=getattr(settings, 'FILE_UPLOAD_TEMP_DIR'),
-                                    label="GeoTiff Source File"
+                                    label="GeoTiff File"
                                     )
 
     def save(self, commit=True):

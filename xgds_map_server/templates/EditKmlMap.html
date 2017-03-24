@@ -7,9 +7,11 @@
 
 {% block contents %}
 {{ block.super }}
-<h3>Edit KML</h3>
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
+<label for="heading"></label>
+<h6 id="heading">Edit KML</h6>
 {% include "MapForm.html" %}
+{% csrf_token %}
 <input type="submit" id="saveButton" value="{% if fromSave %}Success!{% else %}Save{% endif %}" />
 <a href="{%  url 'nodeDelete' map_obj.uuid %}" class="btn btn-primary"> {% if map_obj.deleted %}Undelete{% else %}Delete{% endif %}</a>
 </form>

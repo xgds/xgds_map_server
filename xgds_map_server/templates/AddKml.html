@@ -7,9 +7,14 @@
 
 {% block contents %}
 {{ block.super }}
-<h6>Add Kml</h6>
-<form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
+<form action="#" enctype="multipart/form-data" method="post">
+ <label></label>
+ <h6>Add Kml</h6>
 {% include "MapForm.html" %}
+<p>
+<label></label>
 <input type="submit" value="Create" />
+</p>
+{% csrf_token %}
 </form>
 {% endblock %}

@@ -1,27 +1,73 @@
 <!--<form action="http://some.url/" enctype="multipart/form-data" method="post">-->
 <!--requires a variable called "mapForm"-->
+{% if mapForm.non_field_errors %}<div class="alert alert-danger" role="alert">{{ mapForm.non_field_errors }}</div>{% endif %}
+{% if mapForm.name.errors %}<div class="alert alert-danger" role="alert">{{ mapForm.name.errors }}</div>{% endif %}
+
+<p>
+<label></label>
+<span>
 The files you specify here will be available in the planner as a layer and in Google Earth via a map feed.
-WARNING: Right now we do not support kmz files, nor do we support ground overlay in kml.
-You can create ground overlays in Map Layers.</br>  
-{% if mapForm.non_field_errors %}<span style="color:red">{{ mapForm.non_field_errors }}</span>{% endif %}
-{% if mapForm.name.errors %}<span style="color:red">{{ mapForm.name.errors }}</span>{% endif %}
+</span>
+</p>
+<p>
+<label for="type_warning"></label>
+<span class="alert alert-danger" role="alert" id="type_warning">
+WARNING: Right now we do not support kmz files, nor do we support ground overlay in kml.<br/>
+You can create ground overlays in Map Layers.
+</span>
+</p>
+<p>
 <label for="id_name">Map Name:</label> {{ mapForm.name }}<br/>
 {% if mapForm.description.errors %}<span style="color:red">{{ mapForm.description.errors }}</span>{% endif %}
+</p>
+<p>
 <label for="id_description">Description:</label> {{ mapForm.description }}<br>
-<label for="typeChooser">Choose file type:</label>
-<input type="radio" value="kml" name="typeChooser" {% if kmlChecked %}checked{% endif %} id="typeChooser">KML Url</input>
-<input type="radio" value="file" name="typeChooser" {% if not kmlChecked %}checked{% endif %} id="typeChooser">File Upload</input><br/>
-<div id="kmlFile_div">
-{% if mapForm.kmlFile.errors %}<span style="color:red">{{ mapForm.kmlFile.errors }}</span>{% endif %}
-<label for="id_kmlFile">KML File:</label> {{ mapForm.kmlFile }}<br/>
-</div><div id="localFile_div">
-{% if mapForm.localFile.errors %}<span style="color:red">{{ mapForm.localFile.errors }}</span>{% endif %}
-<label for="id_localFile">Upload File:</label> {{ mapForm.localFile }}<br/></div>
+</p>
+<p>
 {% if mapForm.openable.errors %}<span style="color:red">{{ mapForm.openable.errors }}</span>{% endif %}
 <label for="id_openable">Openable:</label> {{ mapForm.openable }}<br/>
+</p>
+<p class="form-group">
 {% if mapForm.visible.errors %}<span style="color:red">{{ mapForm.visible.errors }}</span>{% endif %}
-<label for="id_visible">Visible:</label> {{ mapForm.visible }}<span style="color: gray"> Checking visible will make this layer turned ON by default.</span><br/>
+	<label for="id_visible">Visible:</label>
+	<span class="form-check">
+		<input id="id_visible" name="visible" type="checkbox"> 
+		<span style="width:300px;" class="ml-3">
+			Check to turn ON by default.
+		</span>
+	</span>
+</p>
+<p>
 {% if mapForm.transparency.errors %}<span style="color:red">{{ mapForm.transparency.errors }}</span>{% endif %}
-<label for="id_transparency">Transparency:</label> {{ mapForm.transparency }}<span style="color: gray">(100=transparent)</span><br/>
+<label for="id_transparency">Transparency:</label> {{ mapForm.transparency }}<span class="helptext">(100=transparent)</span><br/>
+</p>
+<p>
 {% if mapForm.parentId.errors %}<span style="color:red">{{ mapForm.parentId.errors }}</span>{% endif %}
 <label for="id_parent">In Folder:</label> {{ mapForm.parent }}<br/>
+</p>
+<div class="form-group">
+	<label class="col-form-label col-5 d-flex justify-content-end">Type:</label>
+	<div class="form-check form-check-inline">
+		<label class="form-check-label">
+			<input class="form-check-input" type="radio" value="kml" name="typeChooser" {% if kmlChecked %}checked{% endif %} id="typeChooser"></input>
+			KML Url
+		</label>
+	</div>
+	<div class="form-check form-check-inline">
+		<label class="form-check-label">
+			<input class="form-check-input" type="radio" value="file" name="typeChooser" {% if not kmlChecked %}checked{% endif %} id="typeChooser"></input>
+			File Upload
+		</label>
+	</div>
+</div>
+<div id="kmlFile_div" class="input-group">
+{% if mapForm.kmlFile.errors %}<span style="color:red">{{ mapForm.kmlFile.errors }}</span>{% endif %}
+<label for="id_kmlFile" class="col-form-label col-sm-2 d-flex justify-content-end">KML URL:</label> 
+<input id="id_kmlFile" maxlength="200" name="kmlFile" type="text" style="width:300px;">
+</div>
+<div id="localFile_div" class="input-group">
+{% if mapForm.localFile.errors %}<span style="color:red">{{ mapForm.localFile.errors }}</span>{% endif %}
+<label for="id_localFile" class="col-form-label col-sm-2 d-flex justify-content-end">Upload File:</label> 
+<input id="id_localFile" name="localFile" type="file" style="width:300px;">
+</div>
+

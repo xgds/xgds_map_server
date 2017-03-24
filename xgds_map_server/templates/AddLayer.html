@@ -3,13 +3,18 @@
 {% block contents %}
 {{ block.super }}
 {% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
-<h6>Add Layer</h6>
-<p>
-Create a new map layer. You can add polygons, lines and points to the 
-map layer with the map layer editor.
-</p> 
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
+<label></label><h6>Add Map Layer</h6>
+<p>
+<label></label>
+<span>
+Create a new Map Layer. You can add polygons, lines and points to the 
+Map Layer in the Map Layer editor.
+</span>
+</p> 
+
 {{ layerForm.as_p }}
+<label></label>
 <input type="submit" value="Create" />
 </form>
 {% endblock %}
