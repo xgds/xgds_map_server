@@ -275,10 +275,9 @@ app.views.SearchDetailView = Marionette.View.extend({
     },
     updateContents: function() {
     	try {
-	    	var new_window_btn = this.$el.parent().siblings("#new-window-btn");
+	    	var new_window_btn = this.$el.parent().siblings("#view-new-window-target");
 	    	if (new_window_btn.length > 0){
-	    		var theLink = new_window_btn.children("#view-new-window-target");
-	    		theLink.attr("href","/xgds_map_server/view/" + this.selectedModel + "/" + this.data.pk );
+	    		new_window_btn.attr("href","/xgds_map_server/view/" + this.selectedModel + "/" + this.data.pk );
 	    	}
     	} catch (err) {
     		// gulp we do not always have a new window button
