@@ -8,6 +8,10 @@
 {{ extras|safe }}
 {% endif %}
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
+<p>
+<label></label>
+<span class="h6">{{ title }}</span>
+</p>
 {{ form.as_p }}
 <input type="submit" value="Save" />
 <a href="{% url 'nodeDelete' form.instance.uuid %}" class="btn btn-primary">{% if form.instance.deleted %}Undelete{% else %}Delete{% endif %}</a>

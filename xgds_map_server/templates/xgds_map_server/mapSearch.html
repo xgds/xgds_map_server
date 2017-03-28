@@ -123,7 +123,7 @@
         <div class="grid-stack-item-content" id="search-gridstack-item-content" >
 	        <i class="fa fa-lock pinDiv warning"></i>
 	    	<i class="fa fa-window-close fa-lg"></i>
-			<div id="searchDiv" hidden="true"></div>
+			<div id="searchDiv" hidden="true" class="mt-negative-1rem"></div>
 		</div>
 </div>
 {% endblock searchDiv %}
@@ -138,7 +138,7 @@
         	<i class="fa fa-lock pinDiv mr-2"></i>
 			<i class="fa fa-window-close fa-lg"></i>
 		</ul>
-		<div id="searchResultsDiv"></div>
+		<div id="searchResultsDiv" class="mt-negative-1rem"></div>
 		</div>
 </div>
 {% endblock searchResultsDiv %}
@@ -153,10 +153,12 @@
 				<i class="fa fa-lock pinDiv mr-2"></i>
 				<i class="fa fa-window-close fa-lg"></i>
 			</ul>
-			<a href="#" id="view-new-window-target" target="_blank" class="btn btn-primary"><i class="fa fa-window-restore fa-fw mr-1" aria-hidden="true"></i>New Window</a>
-			<button class="info btn btn-primary prev-button" id="prev_button"><i class="fa fa-backward"></i></button>
-			<strong id="nameBlock"></strong>
-			<button class="info btn btn-primary next-button" id="next_button"><i class="fa fa-forward"></i></button>
+			<div class="mt-negative-1rem">
+				<a href="#" id="view-new-window-target" target="_blank" class="btn btn-primary"><i class="fa fa-window-restore fa-fw mr-1" aria-hidden="true"></i>New Window</a>
+				<button class="info btn btn-primary prev-button" id="prev_button"><i class="fa fa-backward"></i></button>
+				<strong id="nameBlock"></strong>
+				<button class="info btn btn-primary next-button" id="next_button"><i class="fa fa-forward"></i></button>
+			</div>
 			<div id="viewDiv">
 			</div>
 			<div id="notesDiv">
@@ -185,7 +187,7 @@
 	<div class="grid-stack-item-content" id="layers-gridstack-item-content">
 	<i class="fa fa-window-close fa-lg"></i>
 	<i class="fa fa-lock pinDiv warning"></i>
-	<div id="layers"></div>
+	<div id="layers" class="mt-negative-1rem"></div>
 	</div>
 </div>
 {% endblock layers %}

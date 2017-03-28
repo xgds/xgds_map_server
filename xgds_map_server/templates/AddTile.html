@@ -13,8 +13,10 @@ input[type='file'] {
 {% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
 <div >
 <form action="#" enctype="multipart/form-data" method="post">
- <label></label>
- <span><h6>{{ title }}</h6></span>
+ <p>
+<label></label>
+<span class="h6">{{ title }}</span>
+</p>
  <p>
  <label></label>
 <span>{{instructions|safe }}</span>

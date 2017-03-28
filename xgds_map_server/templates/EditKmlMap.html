@@ -8,8 +8,10 @@
 {% block contents %}
 {{ block.super }}
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
-<label for="heading"></label>
-<h6 id="heading">Edit KML</h6>
+<p>
+<label></label>
+<span class="h6"> Edit KML</span>
+</p>
 {% include "MapForm.html" %}
 {% csrf_token %}
 <input type="submit" id="saveButton" value="{% if fromSave %}Success!{% else %}Save{% endif %}" />

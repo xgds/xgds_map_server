@@ -6,6 +6,10 @@
 
 {% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
+<p>
+<label></label>
+<span class="h6"> Edit Folder</span>
+</p>
 {{ groupForm.as_p }}
 <input type="submit" id="saveButton" value="{% if fromSave %}Success!{% else %}Save{% endif %}" />
 <a href="{% url 'folderDelete' groupForm.instance.uuid %}" class="btn btn-primary">{% if groupForm.instance.deleted %}Undelete{% else %}Delete{% endif %}</a>

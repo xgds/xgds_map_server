@@ -4,7 +4,10 @@
 {{ block.super }}
 {% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
-<label></label><h6>Add Map Layer</h6>
+<p>
+<label></label>
+<span class="h6"> Add Map Layer</span>
+</p>
 <p>
 <label></label>
 <span>
