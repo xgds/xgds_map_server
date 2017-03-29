@@ -10,6 +10,8 @@ span.fancytree-node.kmlFile > span.fancytree-icon {
 ul.fancytree-container {
  	 height: 400px;
   	 width: 95%;
+  	 background-color: initial;
+  	 border: none;
   }
 
 span.fancytree-title {

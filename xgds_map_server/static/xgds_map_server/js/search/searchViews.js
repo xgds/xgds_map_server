@@ -709,7 +709,7 @@ app.views.SearchResultsView = Marionette.View.extend({
         return this.modelMap[selectedModel];
     },
     setupColumnHeaders: function() {
-      this.theTable.append('<thead class="table_header"><tr id="columnRow"></tr></thead>');
+      this.theTable.append('<thead><tr id="columnRow"></tr></thead>');
       var columnRow = this.$('#columnRow');
       $.each(this.columns, function(index, col){
           columnRow.append("<th>"+ col +"</th>");
