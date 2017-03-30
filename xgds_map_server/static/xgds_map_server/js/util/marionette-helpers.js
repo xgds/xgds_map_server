@@ -322,7 +322,7 @@ xGDS.TabNavView = Marionette.View.extend({
         tabContent: '#tab-content'
     },
     events: {
-        'click ul.tab-nav li': 'clickSelectTab'
+        'click ul.nav-tabs li': 'clickSelectTab'
     },
 
     initialize: function() {
@@ -359,13 +359,14 @@ xGDS.TabNavView = Marionette.View.extend({
         if (oldTab == tabId){
             return;
         }
-        var $tabList = this.$el.find('ul.tab-nav li');
+        var $tabList = this.$el.find('ul.nav-tabs li');
         $tabList.each(function() {
-            li = $(this);
+            var li = $(this); 
+            var theLink = li.find('a');
             if (li.data('target') === tabId) {
-                li.addClass('active');
+                theLink.addClass('active');
             } else {
-                li.removeClass('active');
+            	theLink.removeClass('active');
             }
         });
         
@@ -446,7 +447,9 @@ xGDS.makeExpandable = function(view, expandClass) {
         },
         unexpand: function() {
             this.expanded = false;
-            this.$el.find('i').removeClass('fa-play');
+            this.$el.css('background-color', this.$el['oldBackground']);
+            this.$el.find('i').removeClass('fa');
+            this.$el.find('i').removeClass('fa-chevron-right');
         },
         onExpandOther: function(target, expandClass) {
             if (this.options.expandClass === expandClass && this != target && target.isClosed != true) {
@@ -465,7 +468,10 @@ xGDS.makeExpandable = function(view, expandClass) {
         },
         _addIcon: function() {
             this._ensureIcon();
-            this.$el.find('i').addClass('fa-play');
+            this.$el['oldBackground'] = this.$el.css('background-color');
+            this.$el.css('background-color', 'DarkSeaGreen');
+            this.$el.find('i').addClass('fa');
+            this.$el.find('i').addClass('fa-chevron-right');
         },
         onClose: function() {
             this.stopListening();
