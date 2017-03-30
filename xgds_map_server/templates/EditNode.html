@@ -13,8 +13,13 @@
 <span class="h6">{{ title }}</span>
 </p>
 {{ form.as_p }}
-<input type="submit" value="Save" />
+<p class="form-group">
+<label for="save_button"></label>
+<div>
+<input type="submit" value="Save" id="save_button"/>
 <a href="{% url 'nodeDelete' form.instance.uuid %}" class="btn btn-primary">{% if form.instance.deleted %}Undelete{% else %}Delete{% endif %}</a>
+</div>
+</p>
 </form>
 {% endblock %}
 
