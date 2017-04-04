@@ -66,14 +66,13 @@ $(function() {
 			this.map = this.options.map;
 			this.listenTo(app.vent, 'editingToolsRendered', function(){
 				var _this = this;
-				var theEl = $('input:radio[name=addType]');
-				var selectedEl = $('input:radio[name=addType]:checked');
-				_this.typeSelect = selectedEl.val();
-				$('input:radio[name=addType]').change(function() {
+				var theEl = $('label[name=addType].active');
+				_this.typeSelect = $(theEl[0]).attr('data');
+				$('label[name=addType]').click(function(event) {
 					if (_this.featureAdder) {
 						_this.map.removeInteraction(_this.featureAdder);
-					} 
-					_this.typeSelect = $('input:radio[name=addType]:checked').val();
+					}
+					_this.typeSelect = $(event.target).attr('data');
 					_this.addDrawInteraction(_this.typeSelect);
 				});
 			});

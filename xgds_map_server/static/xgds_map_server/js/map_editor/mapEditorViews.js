@@ -479,7 +479,17 @@ app.views.FeatureElementView = Marionette.View.extend({
         this.options = options || {};
         xGDS.makeExpandable(this, this.options.expandClass);
     },
-    template: '<span><input class="select" type="checkbox" id="id_{{uuid}}"/>&nbsp;<label class="featureName" style="display:inline-block;" for="id_{{uuid}}">{{displayname}}</label></span>',
+    //template: '<span><input class="select" type="checkbox" id="id_{{uuid}}"/>&nbsp;<label class="featureName" style="display:inline-block;" for="id_{{uuid}}">{{displayname}}</label></span>',
+    template: '<div><div class="form-check form-check-inline"><label class="form-check-label featureRow" for="id_{{uuid}}"><input class="form-check-input select" type="checkbox" id="id_{{uuid}}"/>{{displayname}}<i/></label></div></div>',
+    onRender: function() {
+    	var index = app.mapLayer.get('features').indexOf(this.model.json);
+    	var odd = index % 2;
+    	var color = 'white';
+    	if (odd) {
+    		color = '#f2f2f2';
+    	}
+        this.$el.css('background-color', color);
+    },
     templateContext: function() {
     	return  {displayname: this.model.toString(),
     		     uuid: this.model.get('uuid')};
@@ -490,22 +500,42 @@ app.views.FeatureElementView = Marionette.View.extend({
             'class': '-sequence-item' //only for css style purposes.
         };
     },
-    events: {
-        'click .featureName': function() {
-            if (app.State.featureSelected != undefined){
+    onExpand: function() {
+    	console.log('EXPAND');
+    	if (app.State.featureSelected != undefined){
         	var checkbox = $('#id_' + app.State.featureSelected.get('uuid'));
         	if (checkbox.prop('checked')){
     			app.vent.trigger('selectFeature', app.State.featureSelected);
         	} else {
         	    app.vent.trigger('deselectFeature', app.State.featureSelected);
         	}
-            }
-            app.vent.trigger('activeFeature', this.model);
-            app.State.metaExpanded = true;
-            app.State.featureSelected = this.model;
-            this.expand(this);
-            app.vent.trigger('showFeature', this.model);
-        },
+        }
+        app.vent.trigger('activeFeature', this.model);
+        app.State.metaExpanded = true;
+        app.State.featureSelected = this.model;
+        app.vent.trigger('showFeature', this.model);
+    },
+    events: {
+    	'click .featureRow': function() {
+    		this.expand(this);
+    	},
+//        'click .featureRow': function() {
+//            this.expand(this);
+
+//            if (app.State.featureSelected != undefined){
+//            	var checkbox = $('#id_' + app.State.featureSelected.get('uuid'));
+//	        	if (checkbox.prop('checked')){
+//	    			app.vent.trigger('selectFeature', app.State.featureSelected);
+//	        	} else {
+//	        	    app.vent.trigger('deselectFeature', app.State.featureSelected);
+//	        	}
+//            }
+//            app.vent.trigger('activeFeature', this.model);
+//            app.State.metaExpanded = true;
+//            app.State.featureSelected = this.model;
+            //this.expand(this);
+            //app.vent.trigger('showFeature', this.model);
+  //      },
     	'click .select': function(evt) {
         	if (app.State.featureSelected != this.model){
         	    if (evt.target.checked){

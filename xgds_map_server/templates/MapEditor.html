@@ -11,7 +11,7 @@
 
 {% block content %}
 <script type="x-template/underscore" id="application_contents">
-	<div id="toolbar" class="row">
+	<div id="toolbar" class="container-fluid">
 	</div>
 	
 	<div class="grid-stack grid-stack-6" id="container">
@@ -34,7 +34,7 @@
     	<div id="tabs-gridstack-item" class="grid-stack-item"  data-gs-x="2" data-gs-y="0" data-gs-width="4" data-gs-height="4" >
     		<div id="tabs-gridstack-item-content" class="grid-stack-item-content" >
     		<i class="fa fa-unlock-alt pinDiv warning"></i>
-		    <div id="tabs" class="mt-negative-1rem"></div>
+		    <div id="tabs" ></div>
 		    </div>
 		</div>
     </div>
@@ -67,13 +67,10 @@
   @import url('{{ STATIC_URL }}xgds_planner2/css/forms_adjust.css');
   @import url('{{ EXTERNAL_URL }}gridstack/dist/gridstack.min.css');
   @import url('{{ EXTERNAL_URL }}gridstack/dist/gridstack-extra.min.css');
-  .grid-stack-item-content {
-    display: block;
-    margin: 20px 0 10px;
-    }
-    #map {
-  	 margin-top: 25px;
-  }
+  /*.grid-stack-item-content {
+    	display: block;
+    	margin: 20px 0 10px;
+    } */
 </style>
 {% if 'xgds_notes2' in settings.INSTALLED_APPS %}
 {% include "xgds_notes2/NoteCSS.html" %}

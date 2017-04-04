@@ -1,5 +1,13 @@
-   <div class="pill">
-       <input type="radio"  id="btn-polygon" name="addType" class="pill-left radio checked" value="Polygon" checked="checked">Polygon</input>
-       <input type="radio"  id="btn-point" name="addType" class="pill radio" value="Point">Point</input>
-       <input type="radio"  id="btn-line" name="addType" class="pill-right radio" value="LineString">Line</input>
+    <div id="map-buttons" data-toggle="buttons-radio" >
+        <div class="btn-group" role="group" data-toggle="buttons">
+        	<label class="btn btn-primary active" name="addType" id="btn-polygon" data="Polygon">
+        		<input type="radio"  autocomplete="off" checked/>Polygon
+        	</label>
+        	<label class="btn btn-primary" name="addType" id="btn-point" data="Point">
+        		<input type="radio"  autocomplete="off"/>Point
+        	</label>
+        	<label class="btn btn-primary" name="addType" id="btn-line" data="LineString">
+        		<input type="radio" autocomplete="off"/>Line
+        	</label>
+        </div>
     </div>
