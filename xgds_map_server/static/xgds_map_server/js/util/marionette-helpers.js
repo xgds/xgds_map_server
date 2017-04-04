@@ -468,7 +468,9 @@ xGDS.makeExpandable = function(view, expandClass) {
         },
         _addIcon: function() {
             this._ensureIcon();
-            this.$el['oldBackground'] = this.$el.css('background-color');
+            if (!('oldBackground' in this.$el)) {
+            	this.$el['oldBackground'] = this.$el.css('background-color');
+            }
             this.$el.css('background-color', 'DarkSeaGreen');
             this.$el.find('i').addClass('fa');
             this.$el.find('i').addClass('fa-chevron-right');
