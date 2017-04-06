@@ -905,7 +905,7 @@ $.extend(xgds_search,{
 		    } else {
 		    	searchGridstack.hide();
 		    	searchDiv.hide();
-				xgds_gridstack.THE_GRIDSTACK.removeWidget(searchGridstack);
+				xgds_gridstack.THE_GRIDSTACK.removeWidget(searchGridstack, false);
 		    }
 		});
 	}

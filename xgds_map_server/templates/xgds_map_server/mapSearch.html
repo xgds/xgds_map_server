@@ -121,11 +121,11 @@
 {% block searchDiv %}
 <div id="search-gridstack-item" class="grid-stack-item" 
 		data-gs-x="0" data-gs-y="0"
-        data-gs-width="3" data-gs-height="2" hidden="true">
+        data-gs-width="3" data-gs-height="2" style="display: none;">
         <div class="grid-stack-item-content" id="search-gridstack-item-content" >
-	        <i class="fa fa-lock pinDiv warning"></i>
-	    	<i class="fa fa-window-close fa-lg"></i>
-			<div id="searchDiv" hidden="true" class="mt-negative-1rem"></div>
+	        <i class="fa fa-lock pinDiv gray-light"></i>
+	    	<i class="fa fa-window-close gray-light fa-lg"></i>
+			<div id="searchDiv" style="display:none;" class="mt-negative-1rem"></div>
 		</div>
 </div>
 {% endblock searchDiv %}
@@ -136,9 +136,9 @@
         data-gs-width="3" data-gs-height="3" >
         <div class="grid-stack-item-content" id="search-results-gridstack-item-content" >
         <ul class="nav justify-content-end">
-			<i class="fa fa-refresh right mr-2" title="Reload Latest" id="reloadSearchResults"></i>
-        	<i class="fa fa-lock pinDiv mr-2"></i>
-			<i class="fa fa-window-close fa-lg"></i>
+			<i class="fa fa-refresh gray-light mr-2" title="Reload Latest" id="reloadSearchResults"></i>
+        	<i class="fa fa-lock pinDiv gray-light mr-2"></i>
+			<i class="fa fa-window-close gray-light fa-lg"></i>
 		</ul>
 		<div id="searchResultsDiv" class="mt-negative-1rem"></div>
 		</div>
@@ -152,8 +152,8 @@
         data-gs-width="3" data-gs-height="3" >
         <div class="grid-stack-item-content" id="view-gridstack-item-content" >
         	<ul class="nav justify-content-end">
-				<i class="fa fa-lock pinDiv mr-2"></i>
-				<i class="fa fa-window-close fa-lg"></i>
+				<i class="fa fa-lock pinDiv gray-light mr-2"></i>
+				<i class="fa fa-window-close gray-light fa-lg"></i>
 			</ul>
 			<div class="mt-negative-1rem">
 				<a href="#" id="view-new-window-target" target="_blank" class="btn btn-primary"><i class="fa fa-window-restore fa-fw mr-1" aria-hidden="true"></i>New Window</a>
@@ -175,7 +175,7 @@
 	  data-gs-x="3" data-gs-y="4"
       data-gs-width="2" data-gs-height="1" >
 	<div class="grid-stack-item-content" id="map-gridstack-item-content" >
-	<i class="fa fa-lock pinDiv warning"></i>
+	<i class="fa fa-lock pinDiv"></i>
       		{% siteframe_form %}
 		<div id="map"></div>
 	</div>
@@ -187,8 +187,8 @@
 	  data-gs-x="6" data-gs-y="4"
       data-gs-width="1" data-gs-height="1" >
 	<div class="grid-stack-item-content" id="layers-gridstack-item-content">
-	<i class="fa fa-window-close fa-lg"></i>
-	<i class="fa fa-lock pinDiv warning"></i>
+	<i class="fa fa-window-close gray-light fa-lg"></i>
+	<i class="fa fa-lock gray-light pinDiv"></i>
 	<div id="layers" class="mt-negative-1rem"></div>
 	</div>
 </div>
