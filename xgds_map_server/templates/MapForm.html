@@ -45,29 +45,29 @@ You can create ground overlays in Map Layers.
 {% if mapForm.parentId.errors %}<span style="color:red">{{ mapForm.parentId.errors }}</span>{% endif %}
 <label for="id_parent">In Folder:</label> {{ mapForm.parent }}<br/>
 </p>
-<div class="form-group">
-	<label class="col-form-label col-5 d-flex justify-content-end">Type:</label>
-	<div class="form-check form-check-inline">
-		<label class="form-check-label">
-			<input class="form-check-input" type="radio" value="kml" name="typeChooser" {% if kmlChecked %}checked{% endif %} id="typeChooser"></input>
-			KML Url
-		</label>
-	</div>
-	<div class="form-check form-check-inline">
-		<label class="form-check-label">
-			<input class="form-check-input" type="radio" value="file" name="typeChooser" {% if not kmlChecked %}checked{% endif %} id="typeChooser"></input>
+<p>
+	<label >Type:</label>
+	<span class="btn-group" role="group" data-toggle="buttons">
+		<label class="btn btn-primary {% if not kmlChecked %} active {% endif %}"> 
+			<input type="radio" value="file" name="typeChooser"
+			{% if not kmlChecked %} checked {% endif %} id="typeChooser"></input>
 			File Upload
 		</label>
-	</div>
-</div>
-<div id="kmlFile_div" class="input-group">
+		<label class="btn btn-primary {% if kmlChecked %} active {% endif %}"> 
+			<input type="radio" value="kml" name="typeChooser"
+			{% if kmlChecked %}checked{% endif %} id="typeChooser"></input> KML
+			Url
+		</label>
+	</span>
+</p>
+<p id="kmlFile_div" >
 {% if mapForm.kmlFile.errors %}<span style="color:red">{{ mapForm.kmlFile.errors }}</span>{% endif %}
 <label for="id_kmlFile" class="col-form-label col-sm-2 d-flex justify-content-end">KML URL:</label> 
 <input id="id_kmlFile" maxlength="200" name="kmlFile" type="text" style="width:300px;">
-</div>
-<div id="localFile_div" class="input-group">
+</p>
+<p id="localFile_div" >
 {% if mapForm.localFile.errors %}<span style="color:red">{{ mapForm.localFile.errors }}</span>{% endif %}
 <label for="id_localFile" class="col-form-label col-sm-2 d-flex justify-content-end">Upload File:</label> 
 <input id="id_localFile" name="localFile" type="file" style="width:300px;">
-</div>
+</p>
 
