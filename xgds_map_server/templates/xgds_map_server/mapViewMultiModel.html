@@ -77,9 +77,11 @@
 		data-gs-x="{{ forloop.counter0|multiply:3 }}" data-gs-y="{{ forloop.counter0|multiply:2 }}"
         data-gs-width="3" data-gs-height="{% if forloop.counter0 == 0 %}4{% else %}3{% endif %}" >
         <div class="grid-stack-item-content" id="view-gridstack-item-content-{{modelName}}" >
-				<i class="fa fa-refresh right" title="Load Latest" id="reload{{modelName}}"></i>
-				<i class="fa fa-unlock-alt pinDiv gray-light"></i>
+        	<ul class="nav justify-content-end ">
+				<i class="fa fa-refresh mr-1" title="Load Latest" id="reload{{modelName}}"></i>
+				<i class="fa fa-unlock-alt pinDiv gray-light mr-1"></i>
 				<i class="fa fa-window-close fa-lg gray-light"></i>
+			</ul>
 				<div class="mt-negative-1rem">
 					<button class="info btn btn-primary prev-button" id="ajax_prev_button"><i class="fa fa-step-backward"></i></button>
 					<strong id="nameBlock"></strong>
@@ -113,8 +115,10 @@ data-gs-x="3" data-gs-y="0"
 data-gs-x="6" data-gs-y="0"
       data-gs-width="1" data-gs-height="1" >
 	<div class="grid-stack-item-content" id="layers-gridstack-item-content">
-	<i class="fa fa-window-close fa-lg"></i>
-	<i class="fa fa-unlock-alt pinDiv warning"></i>
+	<ul class="nav justify-content-end ">
+		<i class="fa fa-unlock-alt pinDiv warning"></i>
+		<i class="fa fa-window-close fa-lg"></i>
+	</ul>
 	<div id="layers" class="mt-negative-1rem"></div>
 	</div>
 </div>
