@@ -275,7 +275,7 @@ app.views.SearchDetailView = Marionette.View.extend({
     },
     updateContents: function() {
     	try {
-	    	var new_window_btn = this.$el.parent().siblings("#view-new-window-target");
+	    	var new_window_btn = this.$el.parent().parent().find("#view-new-window-target");
 	    	if (new_window_btn.length > 0){
 	    		new_window_btn.attr("href","/xgds_map_server/view/" + this.selectedModel + "/" + this.data.pk );
 	    	}
