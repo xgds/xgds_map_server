@@ -145,10 +145,12 @@
   					type: 'POST',
   					dataType: 'json',
   					data: params,
-				}).success(function() {
-				}).error(function() {
-					data.node.setSelected(!data.node.isSelected());
-					alert("Problem changing visibility for " + data.node.label);
+  					success: function() {
+  					},
+  					error: function() {
+						data.node.setSelected(!data.node.isSelected());
+						alert("Problem changing visibility for " + data.node.label);
+  					}
 				});
         },
         dnd: {
@@ -172,10 +174,12 @@
 	  					type: 'POST',
 	  					dataType: 'json',
 	  					data: params,
-					}).success(function() {
-						data.otherNode.moveTo(node, data.hitMode);
-					}).error(function() {
-						alert("Problem moving node, try again.");
+	  					success: function() {
+							data.otherNode.moveTo(node, data.hitMode);
+						},
+						error: function() {
+							alert("Problem moving node, try again.");
+						}
 					});
 	        	}
 	      	},
