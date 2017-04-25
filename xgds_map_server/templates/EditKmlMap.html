@@ -1,8 +1,8 @@
 {% extends "MapBase.html" %}
-
+{% load static %}
 {% block scripts %}
 {{ block.super }}
-<script src="{{ STATIC_URL }}xgds_map_server/js/util/kmlLayerForm.js" type="text/javascript"></script>
+<script src="{% static 'xgds_map_server/js/util/kmlLayerForm.js' %}" type="text/javascript"></script>
 {% endblock %}
 
 {% block contents %}
@@ -14,8 +14,11 @@
 </p>
 {% include "MapForm.html" %}
 {% csrf_token %}
-<input type="submit" id="saveButton" value="{% if fromSave %}Success!{% else %}Save{% endif %}" />
+<p>
+<label></label>
+<input type="submit" id="saveButton" value="{% if fromSave %}Success!{% else %}Save{% endif %}" class="mr-1"/>
 <a href="{%  url 'nodeDelete' map_obj.uuid %}" class="btn btn-primary"> {% if map_obj.deleted %}Undelete{% else %}Delete{% endif %}</a>
+</p>
 </form>
 {% endblock %}
 

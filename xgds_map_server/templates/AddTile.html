@@ -1,5 +1,5 @@
 {% extends "MapBase.html" %}
-{% load staticfiles %}
+{% load static %}
 
 {% block cssExtras %}
 <style scoped>
@@ -54,7 +54,7 @@ After the processing completes, you should get an email with the results.
 {% block scripts %}
     {{ block.super }}
     <script type="text/javascript" src='{{ EXTERNAL_URL }}resumable/resumable.js'></script>
-    <script type="text/javascript" src='{{ STATIC_URL }}resumable/js/django-resumable.js'></script>
+    <script type="text/javascript" src="{% static 'resumable/js/django-resumable.js' %}"></script>
 {% endblock scripts %}
 
 {% block jsInit %}

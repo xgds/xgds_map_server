@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% load pipeline %}
 {% load siteFrames %}
+{% load static %}
 
 {% block sitemenu-content-secondary %}
 {% include "map_subnav.html" %}
@@ -54,17 +55,17 @@
   {# stylesheet 'planner_app' #}
   @import url('{{EXTERNAL_URL}}jquery-ui/themes/base/jquery-ui.min.css');
   @import url('{{EXTERNAL_URL}}ol3-popup/src/ol3-popup.css');
-  @import url('{{STATIC_URL}}xgds_planner2/css/planner.css');
+  @import url("{% static 'xgds_planner2/css/planner.css' %}");
   @import url('{{EXTERNAL_URL}}jqueryui-timepicker-addon/dist/jquery-ui-timepicker-addon.css');
                              
   /* for some reason compressing this in the css does not work so it's separate in the planner_app */
   @import url('{{ EXTERNAL_URL }}backbone-forms/distribution/templates/old.css');
   @import url('{{ EXTERNAL_URL }}openlayers/ol.css');
-  @import url('{{ STATIC_URL}}geocamUtil/css/datatable.css');
+  @import url("{% static 'geocamUtil/css/datatable.css'%}");
   @import url('{{ EXTERNAL_URL }}fancytree/dist/skin-lion/ui.fancytree.min.css');
-  @import url('{{ STATIC_URL }}xgds_map_server/css/fancytree_custom.css');
-  @import url('{{ STATIC_URL }}xgds_map_server/css/xgds_map_server.css');
-  @import url('{{ STATIC_URL }}xgds_planner2/css/forms_adjust.css');
+  @import url("{% static 'xgds_map_server/css/fancytree_custom.css' %}");
+  @import url("{% static 'xgds_map_server/css/xgds_map_server.css' %}");
+  @import url("{% static 'xgds_planner2/css/forms_adjust.css' %}");
   @import url('{{ EXTERNAL_URL }}gridstack/dist/gridstack.min.css');
   @import url('{{ EXTERNAL_URL }}gridstack/dist/gridstack-extra.min.css');
   /*.grid-stack-item-content {
@@ -113,7 +114,7 @@
 	
 	<script type="text/javascript" src="{{ EXTERNAL_URL }}jqueryui-timepicker-addon/dist/jquery-ui-timepicker-addon.min.js"></script>
      <script type="text/javascript" src="{{ EXTERNAL_URL }}moment-duration-format/lib/moment-duration-format.js"></script>
-     <script type="text/javascript" src="{{ STATIC_URL }}geocamUtil/js/datatable_helpers.js"></script>
+     <script type="text/javascript" src="{% static 'geocamUtil/js/datatable_helpers.js' %}"></script>
      <script type="text/javascript" src="{{ EXTERNAL_URL }}datatables-sorting-datetime-moment/index.js"></script>
     
      <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-migrate/index.js'></script>
@@ -124,14 +125,14 @@
     <script type="text/javascript" src='{{ EXTERNAL_URL }}usng/usng.js'></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}pure-uuid/uuid.min.js'></script>
     <script type="text/javascript" src="{{ EXTERNAL_URL }}gridstack/dist/gridstack.min.js" ></script>
-	<script type="text/javascript" src="{{ STATIC_URL }}xgds_core/js/gridstackUtils.js"></script>
+	<script type="text/javascript" src="{% static 'xgds_core/js/gridstackUtils.js' %}"></script>
     
-    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/util/handlebars-helpers.js'></script>
-    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/util/geo.js'></script>
-    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/util/forms.js'></script>
-    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/map_editor/mapEditorModels.js'></script>
-    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/map_editor/mapEditorViews.js'></script>
-    <script type="text/javascript" src='{{STATIC_URL}}xgds_map_server/js/map_editor/olMapEditorViews.js'></script>
+    <script type="text/javascript" src="{% static 'xgds_map_server/js/util/handlebars-helpers.js' %}"></script>
+    <script type="text/javascript" src="{% static 'xgds_map_server/js/util/geo.js' %}"></script>
+    <script type="text/javascript" src="{% static 'xgds_map_server/js/util/forms.js' %}"></script>
+    <script type="text/javascript" src="{% static 'xgds_map_server/js/map_editor/mapEditorModels.js' %}"></script>
+    <script type="text/javascript" src="{% static 'xgds_map_server/js/map_editor/mapEditorViews.js' %}"></script>
+    <script type="text/javascript" src="{% static 'xgds_map_server/js/map_editor/olMapEditorViews.js' %}"></script>
    	
     {% for template_name, template in templates.items %}
 		<script type="text/handlebars" id="template-{{template_name}}">

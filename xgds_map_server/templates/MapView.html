@@ -1,6 +1,7 @@
 {% extends "dashboard_base.html" %}
 {% load pipeline %}
 {% load siteFrames %}
+{% load static %}
 
 {% block siteSection %}Maps{% endblock %}
 {% block sitemenu-content-secondary %}
@@ -46,8 +47,8 @@
   @import url('{{ EXTERNAL_URL }}openlayers/ol.css');
   @import url('{{EXTERNAL_URL}}ol3-popup/src/ol3-popup.css');
   @import url('{{ EXTERNAL_URL }}fancytree/dist/skin-lion/ui.fancytree.min.css');
-  @import url('{{ STATIC_URL }}xgds_map_server/css/fancytree_custom.css');
-  @import url('{{ STATIC_URL }}xgds_map_server/css/xgds_map_server.css');
+  @import url("{% static 'xgds_map_server/css/fancytree_custom.css' %}");
+  @import url("{% static 'xgds_map_server/css/xgds_map_server.css' %}");
   @import url('{{ EXTERNAL_URL }}gridstack/dist/gridstack.min.css');
   @import url('{{ EXTERNAL_URL }}gridstack/dist/gridstack-extra.min.css');
   .grid-stack-item-content {
@@ -79,7 +80,7 @@
 			};
 	</script>
    	<script type="text/javascript" src="{{ EXTERNAL_URL }}gridstack/dist/gridstack.min.js" ></script>
-   	<script type="text/javascript" src="{{ STATIC_URL }}xgds_core/js/gridstackUtils.js"></script>
+   	<script type="text/javascript" src="{% static 'xgds_core/js/gridstackUtils.js' %}"></script>
     
    	{% for template_name, template in templates.items %}
 	<script type="text/handlebars" id="template-{{template_name}}">
