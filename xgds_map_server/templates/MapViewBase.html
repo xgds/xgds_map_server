@@ -1,0 +1,93 @@
+{% extends "dashboard_base.html" %}
+{% load pipeline %}
+{% load siteFrames %}
+{% load static %}
+
+{% block siteSection %}Maps{% endblock %}
+{% block sitemenu-content-secondary %}
+{% include "map_subnav.html" %}
+{% endblock %}
+
+{% block contents %}
+<script type="x-template/underscore" id="application_contents">
+  <div id="toolbar" class="row">
+	</div>
+ <div class="grid-stack grid-stack-6" id="container">
+    	<div id="map-gridstack-item" class="grid-stack-item"  data-gs-x="0" data-gs-y="0" data-gs-width="4" data-gs-height="4" >
+			<div id="map-gridstack-item-content"  class="grid-stack-item-content" >
+				<ul class="nav justify-content-end">
+					<i class="fa fa-lock pinDiv gray-light"></i>
+				</ul>
+    			<div id="overmap" class="mb-1 mt-negative-1rem"><form>{% siteframe_form %}</form></div>
+    			<div id="map"></div>
+    			<div id="postmap" ></div>
+    			<div id="postpostmap" ></div>
+    		</div>
+    	</div>
+    	<div id="layers-gridstack-item" class="grid-stack-item"  data-gs-x="4" data-gs-y="0" data-gs-width="2" data-gs-height="4" >
+    		<div id="layers-gridstack-item-content" class="grid-stack-item-content" >
+				<ul class="nav justify-content-end">
+    				<i class="fa fa-unlock-alt pinDiv gray-light"></i>
+				</ul>
+	        	<div id="overlayers" class="mt-negative-1rem"></div>
+	        	<div id="layers"></div>
+	    	</div>
+		</div>
+    </div>
+</script>
+
+<div id="application">
+</div>
+
+{% endblock %}
+
+{% block cssExtras %}
+<style scoped>
+  @import url('{{EXTERNAL_URL}}jquery-ui/themes/base/jquery-ui.css');
+  @import url('{{ EXTERNAL_URL }}openlayers/ol.css');
+  @import url('{{EXTERNAL_URL}}ol3-popup/src/ol3-popup.css');
+  @import url('{{ EXTERNAL_URL }}fancytree/dist/skin-lion/ui.fancytree.min.css');
+  @import url("{% static 'xgds_map_server/css/fancytree_custom.css' %}");
+  @import url("{% static 'xgds_map_server/css/xgds_map_server.css' %}");
+  @import url('{{ EXTERNAL_URL }}gridstack/dist/gridstack.min.css');
+  @import url('{{ EXTERNAL_URL }}gridstack/dist/gridstack-extra.min.css');
+  .grid-stack-item-content {
+    display: block;
+    margin: 20px 0 10px;
+    }
+  
+</style>
+{% endblock cssExtras %}
+
+{% block scripts %}
+{{ block.super }}
+	{% include "xgds_core/timeJS.html" %}
+	<script type='text/javascript'>
+		var appOptions = {
+				BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
+				DEFAULT_COORD_SYSTEM: '{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}',
+				SETUP_COORD_SYSTEM: '{{ settings.XGDS_MAP_SERVER_MAP_SETUP_COORD_SYSTEM }}',
+				DEFAULT_COORD_SYSTEM_CENTER: {{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM_CENTER }},
+				DEFAULT_ZOOM: {{ settings.XGDS_MAP_SERVER_DEFAULT_ZOOM }},
+				DEFAULT_ROTATION: {{ settings.XGDS_MAP_SERVER_DEFAULT_ROTATION }},
+				SHOW_COMPASS: {{ settings.XGDS_MAP_SERVER_SHOW_COMPASS}},
+				selectedLayerUrl: '{{ settings.XGDS_MAP_SERVER_SELECTED_LAYER_URL }}',
+				layerFeedUrl: '{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}',
+				siteFrame: {% siteframe settings.XGDS_CURRENT_SITEFRAME_ID %},
+				XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: '{{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }}',
+				dataUrl: '{{ settings.DATA_URL }}',
+				settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:'true,false' }}
+			};
+	</script>
+   	<script type="text/javascript" src="{{ EXTERNAL_URL }}gridstack/dist/gridstack.min.js" ></script>
+   	<script type="text/javascript" src="{% static 'xgds_core/js/gridstackUtils.js' %}"></script>
+    
+   	{% for template_name, template in templates.items %}
+	<script type="text/handlebars" id="template-{{template_name}}">
+		{{template|safe}}
+	</script>
+    {% endfor %}
+    {% javascript 'custom_map' %}
+    
+{% endblock scripts %}
+
