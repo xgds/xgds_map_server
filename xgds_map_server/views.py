@@ -64,6 +64,8 @@ from xgds_map_server.kmlLayerExporter import exportMapLayer
 from geocamUtil.KmlUtil import wrapKmlForDownload
 from xgds_data.introspection import modelName
 
+from xgds_core.views import buildFilterDict
+
 #from django.http import StreamingHttpResponse
 # pylint: disable=E1101,R0911
 latestRequestG = None
@@ -1736,17 +1738,6 @@ def getMappedObjectsJson(request, object_name, filter=None, range=0, isLive=Fals
                             content_type='application/json',
                             status=406)
 
-def buildFilterDict(theFilter):
-    filterDict = {}
-    dictEntries = str(theFilter).split(",")
-    for entry in dictEntries:
-        splits = str(entry).split(":")
-        try:
-            value = int(splits[1]);
-            filterDict[splits[0]] = value
-        except:
-            filterDict[splits[0]] = splits[1]
-    return filterDict
 
 @never_cache
 def getLastObjectJson(request, object_name, theFilter=None):
