@@ -26,7 +26,8 @@ app.views.SearchView = Marionette.View.extend({
     	modelChoiceRegion: '#modelChoiceDiv'
     },
     addExtraRegions: function() {
-    	// add regions that should exist after attaching.  This is odd because we use the same views for embedded searches (ie within planner)
+    	// add regions that should exist after attaching.  
+    	// This is odd because we use the same views for embedded searches (ie within planner)
     	// and top level searches on their own pages.
     	var searchResultsDiv = this.$el.find('#searchResultsDiv');
     	if (searchResultsDiv.length == 0){
@@ -51,11 +52,13 @@ app.views.SearchView = Marionette.View.extend({
     		}
     	}
     	this.viewRegionDef = false;
-    	if (options.template != undefined){
+    	if (options.template !== undefined){
     		this.template = options.template;
     	}
-    	if (options.viewRegion != undefined){
+    	if (options.viewRegion !== undefined && options.viewRegion !== false){
     		this.viewRegion = true;
+    	} else {
+    		this.viewRegion = false;
     	}
         this.hideModelChoice = options.hideModelChoice;
         this.preselectModel = app.options.modelName;

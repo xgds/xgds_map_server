@@ -87,8 +87,6 @@
         {% block preLayout %}
 		{% endblock preLayout %}
 		
-    	
-    	
     	var searchDiv_initialized = false;
 		 app.vent.on('searchDiv:visible', function(){
 		 	if (!searchDiv_initialized){
@@ -118,6 +116,9 @@
 {% endblock preDashboard %}
 
 {% block preMap %}
+
+{% block preSearchDiv %}
+{% endblock preSearchDiv %}
 
 {% block searchDiv %}
 <div id="search-gridstack-item" class="grid-stack-item" 

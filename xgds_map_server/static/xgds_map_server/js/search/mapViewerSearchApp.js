@@ -22,7 +22,6 @@
 			mapRegion: '#map',
 			layersRegion: '#layers',
 			searchRegion: '#searchDiv'
-//			detailRegion: '#map',
 		},
 		onRender: function() {
 			app.map = new app.views.OLMapView();
