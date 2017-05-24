@@ -270,20 +270,18 @@ $(function() {
 		},
 		addDrawInteraction: function(typeSelect) {
 			var theFeaturesCollection = this.olFeatures;
-			if (this.featureAdder === undefined){
-				this.featureAdder = new ol.interaction.Draw({
-					features: theFeaturesCollection,
-					type:  /** @type {ol.geom.GeometryType} */ (typeSelect),
-					deleteCondition: function(event) {
-						return ol.events.condition.shiftKeyOnly(event) &&
-						ol.events.condition.singleClick(event);
-					}
-				}, this);
-				this.featureAdder.on('drawend', function(event) { // finished drawing this feature
-					var featureObj = this.createBackboneFeatureObj(event.feature);
-					app.vent.trigger('showFeature', featureObj);
-				}, this);
-			}
+			this.featureAdder = new ol.interaction.Draw({
+				features: theFeaturesCollection,
+				type:  /** @type {ol.geom.GeometryType} */ (typeSelect),
+				deleteCondition: function(event) {
+					return ol.events.condition.shiftKeyOnly(event) &&
+					ol.events.condition.singleClick(event);
+				}
+			}, this);
+			this.featureAdder.on('drawend', function(event) { // finished drawing this feature
+				var featureObj = this.createBackboneFeatureObj(event.feature);
+				app.vent.trigger('showFeature', featureObj);
+			}, this);
 			this.map.addInteraction(this.featureAdder);
 		},
 		addFeaturesMode: {
