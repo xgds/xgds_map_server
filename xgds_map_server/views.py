@@ -53,6 +53,7 @@ from geocamUtil.loader import LazyGetModelByName, getClassByName, getModelByName
 from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
 from geocamUtil.models import SiteFrame
 from xgds_core.views import get_handlebars_templates, OrderListJson
+from xgds_core.util import addPort
 from xgds_data.dlogging import recordList, recordRequest
 from xgds_data.forms import SearchForm, SpecializedForm
 from xgds_data.models import RequestLog, ResponseLog
@@ -1482,7 +1483,7 @@ def printLinkToKml(out, opts, node, level=0):
 
 @never_cache
 def getMapFeed(request, feedname):
-    logging.debug('called getMapFeed(%s)', feedname)
+#     logging.debug('called getMapFeed(%s)', feedname)
     if feedname == '':
         return getMapFeedTop(request)
     if 'all' in feedname:
@@ -1527,10 +1528,12 @@ def getMapFeedTop(request):
     # qualified URL.  The target of that URL is full of relative URL's
     # from there on.  The good news is Django can reverse the view
     # name to get the URL that resolves to that view.
-    m.url = (request
-             .build_absolute_uri
+    m.url = (request.build_absolute_uri
              (reverse(getMapFeed,
                       kwargs={'feedname': 'all.kml'})))
+    
+    if settings.GEOCAM_TRACK_URL_PORT:
+        m.url = addPort(m.url, settings.GEOCAM_TRACK_URL_PORT)
 
     # pass on url parameters, if any
     if request.GET:
