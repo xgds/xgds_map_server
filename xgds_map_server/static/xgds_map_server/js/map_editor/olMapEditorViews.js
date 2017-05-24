@@ -270,21 +270,20 @@ $(function() {
 		},
 		addDrawInteraction: function(typeSelect) {
 			var theFeaturesCollection = this.olFeatures;
-			/*if (typeSelect == 'Point'){
-		theFeaturesCollection = this.pointFeatures;
-	    }*/
-			this.featureAdder = new ol.interaction.Draw({
-				features: theFeaturesCollection,
-				type:  /** @type {ol.geom.GeometryType} */ (typeSelect),
-				deleteCondition: function(event) {
-					return ol.events.condition.shiftKeyOnly(event) &&
-					ol.events.condition.singleClick(event);
-				}
-			}, this);
-			this.featureAdder.on('drawend', function(event) { // finished drawing this feature
-				var featureObj = this.createBackboneFeatureObj(event.feature);
-				app.vent.trigger('showFeature', featureObj);
-			}, this);
+			if (this.featureAdder === undefined){
+				this.featureAdder = new ol.interaction.Draw({
+					features: theFeaturesCollection,
+					type:  /** @type {ol.geom.GeometryType} */ (typeSelect),
+					deleteCondition: function(event) {
+						return ol.events.condition.shiftKeyOnly(event) &&
+						ol.events.condition.singleClick(event);
+					}
+				}, this);
+				this.featureAdder.on('drawend', function(event) { // finished drawing this feature
+					var featureObj = this.createBackboneFeatureObj(event.feature);
+					app.vent.trigger('showFeature', featureObj);
+				}, this);
+			}
 			this.map.addInteraction(this.featureAdder);
 		},
 		addFeaturesMode: {
@@ -313,6 +312,7 @@ $(function() {
 		repositionMode: {
 			// in this mode, user can edit any existing features but cannot add a new feature.
 			enter: function() {
+				//TODO when you enter a map layer editor with no features popups should be disabled by default.
 				app.State.popupsEnabled = false;
 				if (_.isUndefined(this.repositioner)) {
 					this.repositioner = new ol.interaction.Modify({
@@ -385,6 +385,7 @@ $(function() {
 			var coords = this.model.get('polygon');
 			var xcoords = transformList(coords);
 			var geom = this.olFeature.getGeometry();
+			//TODO this ought to have changed the openlayers geometry but does not seem to.
 			geom.setCoordinates([xcoords], 'XY');
 			this.olFeature.changed();
 		},
@@ -422,6 +423,7 @@ $(function() {
 		updateGeometryFromCoords: function(){
 			var coords = this.model.get('point');
 			var xcoords = transform(coords);
+			//TODO this ought to have changed the openlayers geometry but does not seem to.
 			this.olFeature.getGeometry().setCoordinates(xcoords);
 			this.olFeature.changed();
 		},
@@ -463,6 +465,7 @@ $(function() {
 		updateGeometryFromCoords: function(){
 			var coords = this.model.get('lineString');
 			var xcoords = transformList(coords);
+			//TODO this ought to have changed the openlayers geometry but does not seem to.
 			this.olFeature.getGeometry().setCoordinates(xcoords,'XY');
 			this.olFeature.changed();
 		},

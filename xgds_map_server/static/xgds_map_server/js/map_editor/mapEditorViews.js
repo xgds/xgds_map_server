@@ -142,7 +142,8 @@ app.views.ToolbarView = Marionette.View.extend({
     },
 
     saveEntireLayer: function(){
-        var theFeatures = app.mapLayer.get('feature');
+        //TODO when we are saving as one big json blob, can delete all this feature stuff.
+    	var theFeatures = app.mapLayer.get('feature');
         for (i = 0; i < theFeatures.models.length; i++){
             theFeatures.models[i].save();
         }
