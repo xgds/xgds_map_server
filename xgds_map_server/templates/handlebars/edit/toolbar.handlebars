@@ -1,4 +1,4 @@
-    <div class="row">
+    <div class="row justify-content-between">
 	    <div id="map-buttons" data-toggle="buttons-radio" class="col-9">
 	        <div class="btn-group" role="group" data-toggle="buttons">
 	            <label class="btn btn-primary active" id="btn-navigate">
@@ -13,10 +13,15 @@
 	        </div>
 	    </div>
 	    
-	    <div class="btn-group col-3" role="group">
+	    <div class="btn-group col-2" role="group">
     		<button  id="btn-delete" class="btn btn-primary">Delete</button>
             <button  id="btn-save" class="btn btn-primary">Save</button>
 	    </div>
+	    
+	    <div >
+	    <button id="gridstack_toggleAll" class='btn btn-primary fa fa-lock my-1' role='button' style="color:white; max-height:1.8rem;" onclick="xgds_gridstack.handleToggleAllClick();"></button>
+	    </div>
+	    
     </div> <!-- end row -->
 	    
     <div class="row">
