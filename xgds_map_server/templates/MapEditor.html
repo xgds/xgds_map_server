@@ -151,19 +151,6 @@
 {% block jsInit %}
 	var siteFrames = {% siteframes_dict %};
 
-    $("#color-picker").spectrum({
-        preferredFormat: "rgb",
-        showInput: "true",
-        showAlpha: true,
-        color: "blue",
-        showPalette: true,
-        palette: [
-            ['white'],
-            ['green'],
-            ['yellow'],
-        ]
-    });
-
 	$(function(){
 	    app.vent.on('onMapSetup', function() {
 		    xgds_gridstack.initializeGridstack();
