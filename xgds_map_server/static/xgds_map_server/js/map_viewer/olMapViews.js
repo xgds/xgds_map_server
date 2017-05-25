@@ -1658,7 +1658,7 @@ $(function() {
         },
         getStyle: function() {
             if (this.basicStyle == undefined){
-        	this.basicStyle = olStyles.styles[this.featureJson.type.toLowerCase()];
+        	    this.basicStyle = olStyles.styles[this.featureJson.type.toLowerCase()];
             }
             return this.basicStyle;
         },

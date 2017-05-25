@@ -182,6 +182,33 @@ app.views.ToolbarView = Marionette.View.extend({
 
 app.views.EditingToolsView = Marionette.View.extend({
 	template: '#template-editing-tools',
+	initialize: function() {
+		this.listenTo(app.vent, 'initializeColorPicker', this.initializeColorPicker);
+		this.listenTo(app.vent, 'changeColor', this.changeColor);
+    },
+
+	initializeColorPicker: function(){
+		$("#color-picker").spectrum({
+			preferredFormat: "rgb",
+			showInput: "true",
+			showAlpha: true,
+			color: "blue",
+			showPalette: true,
+			palette: [
+				['white'],
+				['green'],
+				['yellow'],
+			],
+			change: function(color){
+				app.vent.trigger('changeColor', color);
+			}
+		});
+	},
+
+	changeColor: function(color){
+		//alert(color.toHexString());
+	},
+
 	close: function() {
         this.ensureEl();
         this.$el.hide();

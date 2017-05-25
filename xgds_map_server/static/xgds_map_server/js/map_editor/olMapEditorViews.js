@@ -64,7 +64,12 @@ $(function() {
 		initialize: function(options) {
 			app.views.MapLayerView.prototype.initialize.call(this, options); // call super
 			this.map = this.options.map;
+
+			/* Fires when the editingTools are rendered (ie. 'Add Features') is clicked.
+			Gets the active draw type (polygon/point/line) and runs addDrawInteraction to start the interaction with the map. */
 			this.listenTo(app.vent, 'editingToolsRendered', function(){
+				app.vent.trigger('initializeColorPicker');
+
 				var _this = this;
 				var theEl = $('label[name=addType].active');
 				_this.typeSelect = $(theEl[0]).attr('data');

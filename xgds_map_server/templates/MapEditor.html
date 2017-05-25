@@ -68,6 +68,7 @@
   @import url("{% static 'xgds_planner2/css/forms_adjust.css' %}");
   @import url('{{ EXTERNAL_URL }}gridstack/dist/gridstack.min.css');
   @import url('{{ EXTERNAL_URL }}gridstack/dist/gridstack-extra.min.css');
+  @import url('{{ EXTERNAL_URL }}spectrum/spectrum.css');
   /*.grid-stack-item-content {
     	display: block;
     	margin: 20px 0 10px;
@@ -133,6 +134,7 @@
     <script type="text/javascript" src="{% static 'xgds_map_server/js/map_editor/mapEditorModels.js' %}"></script>
     <script type="text/javascript" src="{% static 'xgds_map_server/js/map_editor/mapEditorViews.js' %}"></script>
     <script type="text/javascript" src="{% static 'xgds_map_server/js/map_editor/olMapEditorViews.js' %}"></script>
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}spectrum/spectrum.js'></script>
    	
     {% for template_name, template in templates.items %}
 		<script type="text/handlebars" id="template-{{template_name}}">
@@ -148,8 +150,20 @@
 
 {% block jsInit %}
 	var siteFrames = {% siteframes_dict %};
-    
-	
+
+    $("#color-picker").spectrum({
+        preferredFormat: "rgb",
+        showInput: "true",
+        showAlpha: true,
+        color: "blue",
+        showPalette: true,
+        palette: [
+            ['white'],
+            ['green'],
+            ['yellow'],
+        ]
+    });
+
 	$(function(){
 	    app.vent.on('onMapSetup', function() {
 		    xgds_gridstack.initializeGridstack();
@@ -175,7 +189,7 @@
         if (app.dirty) {
             return 'Unsaved changes, are you sure you want to exit?';
         }
-    }); 
+    });
     
 {% endblock jsInit %}
   

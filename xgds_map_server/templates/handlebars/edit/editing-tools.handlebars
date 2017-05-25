@@ -1,4 +1,5 @@
-    <div id="map-buttons" data-toggle="buttons-radio" >
+<div class="row">
+    <div class="col-md-6" id="map-buttons" data-toggle="buttons-radio" >
         <div class="btn-group" role="group" data-toggle="buttons">
         	<label class="btn btn-primary active" name="addType" id="btn-polygon" data="Polygon">
         		<input type="radio"  autocomplete="off" checked/>Polygon
@@ -11,3 +12,26 @@
         	</label>
         </div>
     </div>
+
+    <div class="col-md-6" id="color-buttons" data-toggle="buttons-radio" >
+        <div class="btn-group pull-right" role="group">
+        	<input type='text' id="color-picker" />
+        </div>
+    </div>
+</div>
+
+<!--
+<script>
+    $("#color-picker").spectrum({
+        preferredFormat: "rgb",
+        showInput: "true",
+        showAlpha: true,
+        color: "blue",
+        showPalette: true,
+        palette: [
+            ['white'],
+            ['green'],
+            ['yellow'],
+        ]
+    });
+</script>-->
