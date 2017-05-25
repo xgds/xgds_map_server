@@ -123,4 +123,15 @@ olStyles.buildStyles = function() {
           src: '/static/xgds_map_server/icons/robot_red_16.png'
         }))
       });
+
+    olStyles.styles['predefined_green'] = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+            color: '#42f48c',
+            width: 4
+        }),
+
+        fill: new ol.style.Fill({
+            color: 'rgba(66, 244, 140, 0.2)'
+        })
+    });
 }

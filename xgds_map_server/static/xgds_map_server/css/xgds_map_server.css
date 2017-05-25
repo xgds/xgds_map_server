@@ -1,3 +1,14 @@
+.btn-draw-color{
+	height: 15px;
+	width: 35px;
+	margin-top: 6px;
+}
+
+.colorpicker{
+	height: 15px;
+	width: 50px;
+}
+
 .coords-error-msg {
 	color: red;
 }

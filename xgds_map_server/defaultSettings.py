@@ -74,6 +74,7 @@ BOWER_INSTALLED_APPS += ['sprintf.js=sprintf.js',
                          'jquery-ui-contextmenu=ui-contextmenu',
                          'jquery-migrate=http://code.jquery.com/jquery-migrate-1.2.1.js',
                          'datatables-sorting-datetime-moment=https://cdn.datatables.net/plug-ins/1.10.11/sorting/datetime-moment.js',
+                         'spectrum'
                          ]
 
 # if you want to have a custom javascript included in your maps, override this in siteSettings.
