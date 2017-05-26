@@ -195,9 +195,11 @@ app.views.EditingToolsView = Marionette.View.extend({
 			color: "blue",
 			showPalette: true,
 			palette: [
-				['white'],
-				['green'],
-				['yellow'],
+				["#ffffff", "#000000"],
+				["#ff0000", "#ff8000"],
+				["#ffff00", "#008000"],
+				["#0000ff", "#4b0082"],
+				["#9400d3", "#f442df"]
 			],
 			change: function(color){
 				app.vent.trigger('changeColor', color);
@@ -206,7 +208,13 @@ app.views.EditingToolsView = Marionette.View.extend({
 	},
 
 	changeColor: function(color){
-		//alert(color.toHexString());
+		//alert(color.toRgbString());
+		var rgbColor = color.toRgbString();
+		app.vent.trigger('createStyle', rgbColor);
+	},
+
+	createStyle: function(rgbCode){
+
 	},
 
 	close: function() {
