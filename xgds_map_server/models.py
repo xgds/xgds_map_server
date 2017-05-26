@@ -31,6 +31,7 @@ from django.conf import settings
 from geocamUtil.models.UuidField import UuidField
 from geocamUtil.models.managers import ModelCollectionManager
 from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
+from geocamUtil.models.ExtrasDotField import ExtrasDotField
 from xgds_data.models import Collection, RequestLog
 from xgds_core.couchDbStorage import CouchDbStorage
 
@@ -331,6 +332,7 @@ class MapDataTile(AbstractMapTile):
 
 class MapLayer(AbstractMap):
     """ A map layer which will have a collection of features that have content in them. """
+    jsonFeatures = ExtrasDotField()
 
     def getEditHref(self):
         return reverse('mapEditLayer', kwargs={'layerID': self.uuid})

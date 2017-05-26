@@ -130,16 +130,16 @@ $(function() {
 				source: this.featuresVector
 			});
 			/*
-	    this.pointFeatures = new ol.Collection();
-	    this.pointVector = new ol.source.Vector({
-		features: this.pointFeatures,
-		useSpatialIndex: true,
-	    });
-	    this.pointLayer = new ol.layer.Vector({
-		map: this.options.map,
-		source: this.pointVector,
-		style: olStyles.getDefaultStyle()
-	    }); */
+			this.pointFeatures = new ol.Collection();
+			this.pointVector = new ol.source.Vector({
+			features: this.pointFeatures,
+			useSpatialIndex: true,
+			});
+			this.pointLayer = new ol.layer.Vector({
+			map: this.options.map,
+			source: this.pointVector,
+			style: olStyles.getDefaultStyle()
+			}); */
 
 		},
 		fitExtent: function() {
@@ -245,10 +245,10 @@ $(function() {
 					view.updateCoordsFromGeometry(geometry);
 				});
 				/*if (featureJson['type'] == 'Point'){
-		    this.pointFeatures.push(featureObj.olFeature);
-		} else {
-		    this.olFeatures.push(featureObj.olFeature);
-		}*/
+					this.pointFeatures.push(featureObj.olFeature);
+				} else {
+					this.olFeatures.push(featureObj.olFeature);
+				}*/
 				var last = this.olFeatures.item(this.olFeatures.getLength() - 1);
 				if (last != featureObj.olFeature){
 					this.olFeatures.push(featureObj.olFeature);
