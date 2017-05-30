@@ -57,6 +57,11 @@ class AbstractMapNode(models.Model):
     creation_time = models.DateTimeField(null=True, blank=True, db_index=True)
     modification_time = models.DateTimeField(null=True, blank=True, db_index=True)
     deleted = models.BooleanField(blank=True, default=False)
+    minLat = models.FloatField(blank=True, null=True)
+    minLon = models.FloatField(blank=True, null=True)
+    maxLat = models.FloatField(blank=True, null=True)
+    maxLon = models.FloatField(blank=True, null=True)
+    region = models.ForeignKey('geocamUtil.SiteFrame', null = True)
 
     @property
     def parent(self):
