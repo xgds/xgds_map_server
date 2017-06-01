@@ -69,6 +69,7 @@ class MapGroupForm(AbstractMapForm):
 class MapLayerForm(AbstractMapForm):
     class Meta(AbstractMapForm.Meta):
         model = MapLayer
+        exclude = ['minLat', 'minLon', 'maxLat', 'maxLon', 'jsonFeatures']
 
 
 class MapTileForm(AbstractMapForm):
