@@ -61,7 +61,7 @@ class AbstractMapNode(models.Model):
     minLon = models.FloatField(blank=True, null=True)
     maxLat = models.FloatField(blank=True, null=True)
     maxLon = models.FloatField(blank=True, null=True)
-    region = models.ForeignKey('geocamUtil.SiteFrame', null = True)
+    region = models.ForeignKey('geocamUtil.SiteFrame', null=True)
 
     @property
     def parent(self):
