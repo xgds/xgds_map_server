@@ -190,8 +190,10 @@ $(function() {
 			featureObj.set('mapLayerName', mapLayer.get('name'));
 			featureObj.olFeature =  olFeature;
 			var _this = this;
-			featureObj.save( {}, {wait: true, 
-				success: function () {_this.initializeFeatureObjViews(featureObj, type)}});
+
+			featureObj.save( {}, {wait: true,
+			 	success: function () {_this.initializeFeatureObjViews(featureObj, type)}});
+			//_this.initializeFeatureObjViews(featureObj, type)
 
 			return featureObj;
 		},
@@ -253,6 +255,8 @@ $(function() {
 				if (last != featureObj.olFeature){
 					this.olFeatures.push(featureObj.olFeature);
 				}
+
+				//Sets the starting style for each feature
 				newFeatureView.updateStyle(newFeatureView.basicStyle);
 				this.features.push(newFeatureView);
 
@@ -379,7 +383,6 @@ $(function() {
 			this.model.on('setBasicStyle', function(basicStyle) {
 				this.updateStyle(basicStyle);
 			}, this);
-
 		},
 		render: function() {
 			//no op

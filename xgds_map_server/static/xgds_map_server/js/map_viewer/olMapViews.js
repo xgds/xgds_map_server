@@ -1445,7 +1445,7 @@ $(function() {
         initializeFeaturesJson: function() {
             var thisMapLayerView = this;
             $.getJSON(this.options.mapLayerJsonURL, function(data){
-                thisMapLayerView.mapLayerJson = data.data.layerData;
+                thisMapLayerView.mapLayerJson = data.data.layerData.jsonFeatures;
                 thisMapLayerView.trigger('readyToDraw');
             });
         },

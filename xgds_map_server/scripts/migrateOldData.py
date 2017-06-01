@@ -21,14 +21,14 @@ for row in cur.fetchall():
 
     features = "{\"features\": " + json.dumps(data['data']['layerData']['features']) + "}"
     features = features.replace("'", "''")
-    # features = features.replace(""", "''")
 
-    print features
+    #print features
 
     cur.execute("update xgds_map_server_maplayer "
                 "set jsonFeatures = '{0}' "
                 "where uuid = '{1}'".format(features, row[0]))
 
+    # Resets all jsonFeatures attributes to empty.
     # cur.execute("update xgds_map_server_maplayer "
     #             "set jsonFeatures = '{}' ")
 
@@ -36,5 +36,7 @@ for row in cur.fetchall():
 
     count += 1
     print "updated jsonFeatures for: " + row[0] + "\n"
+
+print "Updated " + str(count) + " rows."
 
 db.close()
