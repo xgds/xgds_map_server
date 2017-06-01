@@ -142,12 +142,13 @@ app.views.ToolbarView = Marionette.View.extend({
     },
 
     saveEntireLayer: function(){
-        //TODO when we are saving as one big json blob, can delete all this feature stuff.
-    	var theFeatures = app.mapLayer.get('feature');
-        for (i = 0; i < theFeatures.models.length; i++){
-            theFeatures.models[i].save();
-        }
-        app.mapLayer.save();
+		var jsonFeaturesFormatter = {};
+		jsonFeaturesFormatter['features'] = app.mapLayer.get('feature');
+
+		app.mapLayer.set('jsonFeatures', JSON.stringify(jsonFeaturesFormatter));
+		app.mapLayer.save();
+
+		$('#layer-saved').show();
     },
     
     showSaveAsDialog: function() {
@@ -518,7 +519,8 @@ app.views.FeatureElementView = Marionette.View.extend({
     //template: '<span><input class="select" type="checkbox" id="id_{{uuid}}"/>&nbsp;<label class="featureName" style="display:inline-block;" for="id_{{uuid}}">{{displayname}}</label></span>',
     template: '<div><div class="form-check form-check-inline"><label class="form-check-label featureRow" for="id_{{uuid}}"><input class="form-check-input select" type="checkbox" id="id_{{uuid}}"/>{{displayname}}<i/></label></div></div>',
     onRender: function() {
-    	var index = app.mapLayer.get('features').indexOf(this.model.json);
+    	var index = app.mapLayer.get('jsonFeatures').features.indexOf(this.model.json);
+
     	var odd = index % 2;
     	var color = 'white';
     	if (odd) {

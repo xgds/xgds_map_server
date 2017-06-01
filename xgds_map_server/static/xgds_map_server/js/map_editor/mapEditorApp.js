@@ -80,22 +80,23 @@
             disableAddFeature: false,
             popupsEnabled: true
         },
-//        Actions: xGDS.Actions,
-//        getSerializableObject: function() {
-//			if (!_.isUndefined(this.mapLayer)) {
-//				return this.mapLayer;
-//			} else {
-//				return '';
-//			}
-//		},
-//		updateSerializableObject: function(sObject){
-//			this.updateMapLayer(sObject);
-//		},
+       /*Actions: xGDS.Actions,
+       getSerializableObject: function() {
+			if (!_.isUndefined(this.mapLayer)) {
+				return this.mapLayer;
+			} else {
+				return '';
+			}
+		},*/
+		updateSerializableObject: function(sObject){
+			this.updateMapLayer(sObject);
+		},
         parseJSON: function() {
         	// create the map layer from map layer obj passed in from server as json
             app.mapLayer = new app.models.MapLayer(app.options.mapLayerDict);
-         // create backbone feature objects already existing in mapLayer's attributes
-    		$.each(app.mapLayer.attributes.features, function(index, featureJson) {
+
+         	// create backbone feature objects already existing in mapLayer's attributes
+    		$.each(app.mapLayer.attributes.jsonFeatures.features, function(index, featureJson) {
     			var featureObj = new app.models.Feature(featureJson);
     			featureObj.json = featureJson;
     			featureObj.set('mapLayer', app.mapLayer);  // set up the relationship.

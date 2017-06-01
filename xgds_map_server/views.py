@@ -252,6 +252,7 @@ def saveMaplayer(request):
         mapLayer.description = data.get('description', "")
         mapLayer.modification_time = datetime.datetime.now(pytz.utc)
         mapLayer.modifier = request.user.first_name + " " + request.user.last_name
+        mapLayer.jsonFeatures = data.get('jsonFeatures', '{}')
         mapLayer.save()
 
         #TODO have to return 
@@ -1965,3 +1966,7 @@ class MapOrderListJson(OrderListJson):
                 self.columns = modelMap['columns']
                 self.order_columns = self.columns
         return super(MapOrderListJson, self).dispatch(request, *args, **kwargs)
+
+
+
+

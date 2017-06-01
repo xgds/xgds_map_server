@@ -2,6 +2,10 @@
 	color: red;
 }
 
+.layer-saved{
+	display: none;
+}
+
 .maplegend {
 	top: 65px;
 }
