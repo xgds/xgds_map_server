@@ -296,7 +296,7 @@ $(function() {
 		addFeaturesMode: {
 			// in this mode, user can add features (all other features are locked)
 			enter: function() {
-				
+				app.State.popupsEnabled = false;
 				app.State.disableAddFeature = false;
 				if (this.featureAdder) {
 					this.map.removeInteraction(this.featureAdder);
