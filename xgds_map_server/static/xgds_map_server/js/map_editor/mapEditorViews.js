@@ -519,7 +519,7 @@ app.views.FeatureElementView = Marionette.View.extend({
     //template: '<span><input class="select" type="checkbox" id="id_{{uuid}}"/>&nbsp;<label class="featureName" style="display:inline-block;" for="id_{{uuid}}">{{displayname}}</label></span>',
     template: '<div><div class="form-check form-check-inline"><label class="form-check-label featureRow" for="id_{{uuid}}"><input class="form-check-input select" type="checkbox" id="id_{{uuid}}"/>{{displayname}}<i/></label></div></div>',
     onRender: function() {
-    	var index = app.mapLayer.get('jsonFeatures').features.indexOf(this.model.json);
+    	var index = 0; //TODO fix app.mapLayer.get('jsonFeatures').features.indexOf(this.model.json);
 
     	var odd = index % 2;
     	var color = 'white';
@@ -621,7 +621,7 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
 		app.vent.trigger('itemSelected', childView.model);
 	},   
     deleteSelectedFeatures: function(){
-    	var features = this.getSelectedFeatures(); 
+    	var features = this.getSelectedFeatures();
     	var selectParent = null;
     	_.each(features, function(feature) {
     	    app.vent.trigger('deleteFeature', feature);
