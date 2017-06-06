@@ -39,7 +39,7 @@ app.models = app.models || {};
 		            	  type: Backbone.HasMany,
 		            	  relatedModel: 'app.models.Feature',
 		            	  key: 'feature',
-		            	  autofetch: true,
+		            	  //autofetch: true,
 		            	  collectionType: 'app.models.FeatureCollection',
 		            	  createModels: true,
 		            	  reverseRelation: {
@@ -59,10 +59,10 @@ app.models = app.models || {};
 	 */
 	models.Feature = Backbone.RelationalModel.extend({
 		idAttribute: 'uuid',
-		urlRoot: '/xgds_map_server/feature',
-                toString: function() {
-                    return this.get('name');
-                },
+		//urlRoot: '/xgds_map_server/feature',
+		toString: function() {
+			return this.get('name');
+		},
 		toJSON: toJsonWithFilters
 	});
 

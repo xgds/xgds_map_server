@@ -188,19 +188,20 @@ $(function() {
 			var mapLayer = app.mapLayer;
 			featureObj.set('mapLayer', mapLayer);
 			featureObj.set('mapLayerName', mapLayer.get('name'));
+			featureObj.set('uuid', new UUID(4).format());
 			featureObj.olFeature =  olFeature;
-			var _this = this;
 
-			featureObj.save( {}, {wait: true,
-			 	success: function () {_this.initializeFeatureObjViews(featureObj, type)}});
-			//_this.initializeFeatureObjViews(featureObj, type)
+			// featureObj.save( {}, {wait: true,
+			//    	success: function () {this.initializeFeatureObjViews(featureObj, type)}});
+
+			this.initializeFeatureObjViews(featureObj, type, true);
 
 			return featureObj;
 		},
 		createFeature: function(featureObj){
 			this.initializeFeatureObjViews(featureObj, featureObj.json['type']);
 		},
-		initializeFeatureObjViews(featureObj, type){
+		initializeFeatureObjViews(featureObj, type, skipAdd=false){
 			var newFeatureView = undefined;
 			switch (type){
 			case 'GroundOverlay':
@@ -251,8 +252,12 @@ $(function() {
 				} else {
 					this.olFeatures.push(featureObj.olFeature);
 				}*/
-				var last = this.olFeatures.item(this.olFeatures.getLength() - 1);
-				if (last != featureObj.olFeature){
+				// var last = this.olFeatures.item(this.olFeatures.getLength() - 1);
+				// if (last != featureObj.olFeature){
+				// 	this.olFeatures.push(featureObj.olFeature);
+				// }
+
+				if (!(featureObj.olFeature in this.olFeatures) && !skipAdd) {
 					this.olFeatures.push(featureObj.olFeature);
 				}
 
