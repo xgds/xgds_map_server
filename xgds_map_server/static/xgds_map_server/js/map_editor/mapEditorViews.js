@@ -185,37 +185,21 @@ app.views.EditingToolsView = Marionette.View.extend({
 	template: '#template-editing-tools',
 	initialize: function() {
 		this.listenTo(app.vent, 'initializeColorPicker', this.initializeColorPicker);
-		this.listenTo(app.vent, 'changeColor', this.changeColor);
     },
 
 	initializeColorPicker: function(){
 		$("#color-picker").spectrum({
-			preferredFormat: "rgb",
-			showInput: "true",
-			showAlpha: true,
+			showPaletteOnly: true,
+			preferredFormat: "hex",
 			color: "blue",
 			showPalette: true,
 			palette: [
-				["#ffffff", "#000000"],
-				["#ff0000", "#ff8000"],
-				["#ffff00", "#008000"],
-				["#0000ff", "#4b0082"],
-				["#9400d3", "#f442df"]
-			],
-			change: function(color){
-				app.vent.trigger('changeColor', color);
-			}
+				["#000", "#f90"],
+				["#ff0", "#0f0"],
+				["#0ff", "#00f"],
+				["#90f", "#f0f"]
+			]
 		});
-	},
-
-	changeColor: function(color){
-		//alert(color.toRgbString());
-		var rgbColor = color.toRgbString();
-		app.vent.trigger('createStyle', rgbColor);
-	},
-
-	createStyle: function(rgbCode){
-
 	},
 
 	close: function() {

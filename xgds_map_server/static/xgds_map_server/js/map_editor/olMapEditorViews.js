@@ -189,7 +189,10 @@ $(function() {
 			featureObj.set('mapLayer', mapLayer);
 			featureObj.set('mapLayerName', mapLayer.get('name'));
 			featureObj.set('uuid', new UUID(4).format());
+			featureObj.set('style', $('#color-picker').spectrum('get').toHexString());
 			featureObj.olFeature =  olFeature;
+
+			console.log(featureObj);
 
 			// featureObj.save( {}, {wait: true,
 			//    	success: function () {this.initializeFeatureObjViews(featureObj, type)}});
@@ -261,11 +264,34 @@ $(function() {
 					this.olFeatures.push(featureObj.olFeature);
 				}
 
+				//Set color of feature
+				if (skipAdd == true)
+					var color = $('#color-picker').spectrum('get').toHexString();
+
+				else
+					var color = featureObj.attributes.style;
+
 				//Sets the starting style for each feature
-				newFeatureView.updateStyle(newFeatureView.basicStyle);
+				this.setFeatureStyle(color, newFeatureView);
 				this.features.push(newFeatureView);
 
 			}
+		},
+		setFeatureStyle: function(color, featureView){
+			var style = new ol.style.Style({
+				stroke: new ol.style.Stroke({
+					color: color,
+					width: 3
+				}),
+				image: new ol.style.Circle({
+					radius: 6,
+					stroke: new ol.style.Stroke({color: 'white', width: 2}),
+					fill: new ol.style.Fill({
+						color: color
+					})
+				})
+			});
+			featureView.updateStyle(style);
 		},
 		updateFeaturePosition: function(feature) {
 			var olFeature = feature.olFeature;
