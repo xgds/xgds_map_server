@@ -1503,10 +1503,27 @@ $(function() {
                     featureJson: featureJson
                 });
                 break;
-            } 
+            }
+            this.setFeatureStyle(featureJson.style, newFeature);
             if (!_.isUndefined(newFeature)){
                 this.features.push(newFeature);
             }
+        },
+        setFeatureStyle: function(color, olFeature){
+            var style = new ol.style.Style({
+				stroke: new ol.style.Stroke({
+					color: color,
+					width: 3
+				}),
+				image: new ol.style.Circle({
+					radius: 6,
+					stroke: new ol.style.Stroke({color: 'white', width: 2}),
+					fill: new ol.style.Fill({
+						color: color
+					})
+				})
+			});
+			olFeature.updateStyle(style);
         },
         onRender: function(selected) {
             if (_.isUndefined(selected)){
