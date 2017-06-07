@@ -278,20 +278,26 @@ $(function() {
 			}
 		},
 		setFeatureStyle: function(color, featureView){
-			var style = new ol.style.Style({
-				stroke: new ol.style.Stroke({
-					color: color,
-					width: 3
-				}),
-				image: new ol.style.Circle({
-					radius: 6,
-					stroke: new ol.style.Stroke({color: 'white', width: 2}),
-					fill: new ol.style.Fill({
-						color: color
+			if (color == null){
+				featureView.updateStyle(featureView.basicStyle);
+			}
+
+			else{
+				var style = new ol.style.Style({
+					stroke: new ol.style.Stroke({
+						color: color,
+						width: 3
+					}),
+					image: new ol.style.Circle({
+						radius: 6,
+						stroke: new ol.style.Stroke({color: 'white', width: 2}),
+						fill: new ol.style.Fill({
+							color: color
+						})
 					})
-				})
-			});
-			featureView.updateStyle(style);
+				});
+				featureView.updateStyle(style);
+			}
 		},
 		updateFeaturePosition: function(feature) {
 			var olFeature = feature.olFeature;

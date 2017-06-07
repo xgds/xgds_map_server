@@ -1510,20 +1510,26 @@ $(function() {
             }
         },
         setFeatureStyle: function(color, olFeature){
-            var style = new ol.style.Style({
-				stroke: new ol.style.Stroke({
-					color: color,
-					width: 3
-				}),
-				image: new ol.style.Circle({
-					radius: 6,
-					stroke: new ol.style.Stroke({color: 'white', width: 2}),
-					fill: new ol.style.Fill({
-						color: color
-					})
-				})
-			});
-			olFeature.updateStyle(style);
+            if (color == null){
+                olFeature.updateStyle(olFeature.basicStyle);
+            }
+
+            else {
+                var style = new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: color,
+                        width: 3
+                    }),
+                    image: new ol.style.Circle({
+                        radius: 6,
+                        stroke: new ol.style.Stroke({color: 'white', width: 2}),
+                        fill: new ol.style.Fill({
+                            color: color
+                        })
+                    })
+                });
+                olFeature.updateStyle(style);
+            }
         },
         onRender: function(selected) {
             if (_.isUndefined(selected)){
