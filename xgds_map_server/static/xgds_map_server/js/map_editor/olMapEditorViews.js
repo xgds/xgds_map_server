@@ -92,7 +92,22 @@ $(function() {
 				feature.trigger('setBasicStyle', olStyles.styles['active_' + feature.get('type').toLowerCase()]);
 			});
 			this.listenTo(app.vent, 'deselectFeature', function(feature){
-				feature.trigger('setBasicStyle', olStyles.styles[feature.get('type').toLowerCase()]);
+				var color = feature.get('style');
+				var style = new ol.style.Style({
+					stroke: new ol.style.Stroke({
+						color: color,
+						width: 3
+					}),
+					image: new ol.style.Circle({
+						radius: 6,
+						stroke: new ol.style.Stroke({color: 'white', width: 2}),
+						fill: new ol.style.Fill({
+							color: color
+						})
+					})
+				});
+
+				feature.trigger('setBasicStyle', style);
 			});
 			this.listenTo(app.vent, 'onLayerLoaded', function() {
 				this.constructFeatures();
