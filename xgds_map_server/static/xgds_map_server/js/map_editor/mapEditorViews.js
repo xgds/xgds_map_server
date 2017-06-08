@@ -194,10 +194,9 @@ app.views.EditingToolsView = Marionette.View.extend({
 			color: "blue",
 			showPalette: true,
 			palette: [
+				["#00f", "#f0f"],
 				["#000", "#f90"],
-				["#ff0", "#0f0"],
-				["#0ff", "#00f"],
-				["#90f", "#f0f"]
+				["#ff0", "#0f0"]
 			]
 		});
 	},
@@ -414,7 +413,7 @@ app.views.FeatureCoordinatesView = Marionette.View.extend({
 			coordinates = [this.model.get('point')];
 		}
 		return {coords: coordinates, polygon: markPolygon};
-	}, 
+	},
 });
 
 
@@ -458,10 +457,38 @@ app.views.FeaturePropertiesView = Marionette.View.extend({
 		'click #popup': function(evt) {
 			this.model.set('popup', evt.target.checked);
 			this.model.save();
-		}
+		},
+	},
+	initialize: function(){
+		this.listenTo(app.vent, 'initializeEditColorPicker', this.initializeEditColorPicker);
+		this.listenTo(app.vent, 'editPickerChanged', this.updateFeatureStyle);
 	},
 	onRender: function() {
 		app.vent.trigger('showCoordinates', this.model);
+	},
+	initializeEditColorPicker: function(){
+		$("#edit-color-picker").spectrum({
+			showPaletteOnly: true,
+			color: "blue",
+			showPalette: true,
+			palette: [
+				["#00f", "#f0f"],
+				["#000", "#f90"],
+				["#ff0", "#0f0"]
+			],
+			change: function(color){
+				app.vent.trigger('editPickerChanged', color.toHexString());
+			}
+		});
+
+		this.setColorPicker();
+	},
+	setColorPicker: function(){
+		$("#edit-color-picker").spectrum("set", this.model.attributes.style);
+	},
+	updateFeatureStyle: function(color){
+		this.model.set('style', color);
+		this.model.updateStyle(color);
 	}
 });
 
@@ -536,6 +563,7 @@ app.views.FeatureElementView = Marionette.View.extend({
         app.State.metaExpanded = true;
         app.State.featureSelected = this.model;
         app.vent.trigger('showFeature', this.model);
+		app.vent.trigger('initializeEditColorPicker');
     },
     events: {
     	'click .featureRow': function() {
