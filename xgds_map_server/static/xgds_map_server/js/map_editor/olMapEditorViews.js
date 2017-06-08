@@ -92,20 +92,9 @@ $(function() {
 				feature.trigger('setBasicStyle', olStyles.styles['active_' + feature.get('type').toLowerCase()]);
 			});
 			this.listenTo(app.vent, 'deselectFeature', function(feature){
+				//Create style from feature's style attribute.
 				var color = feature.get('style');
-				var style = new ol.style.Style({
-					stroke: new ol.style.Stroke({
-						color: color,
-						width: 3
-					}),
-					image: new ol.style.Circle({
-						radius: 6,
-						stroke: new ol.style.Stroke({color: 'white', width: 2}),
-						fill: new ol.style.Fill({
-							color: color
-						})
-					})
-				});
+				var style = this.createFeatureStyle(color);
 
 				feature.trigger('setBasicStyle', style);
 			});
@@ -298,21 +287,26 @@ $(function() {
 			}
 
 			else{
-				var style = new ol.style.Style({
-					stroke: new ol.style.Stroke({
-						color: color,
-						width: 3
-					}),
-					image: new ol.style.Circle({
-						radius: 6,
-						stroke: new ol.style.Stroke({color: 'white', width: 2}),
-						fill: new ol.style.Fill({
-							color: color
-						})
-					})
-				});
+				var style = this.createFeatureStyle(color);
 				featureView.updateStyle(style);
 			}
+		},
+		createFeatureStyle: function(color){
+			var style = new ol.style.Style({
+				stroke: new ol.style.Stroke({
+					color: color,
+					width: 3
+				}),
+				image: new ol.style.Circle({
+					radius: 6,
+					stroke: new ol.style.Stroke({color: 'white', width: 2}),
+					fill: new ol.style.Fill({
+						color: color
+					})
+				})
+			});
+
+			return style;
 		},
 		updateFeaturePosition: function(feature) {
 			var olFeature = feature.olFeature;
