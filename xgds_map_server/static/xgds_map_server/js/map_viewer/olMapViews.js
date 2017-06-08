@@ -1509,28 +1509,33 @@ $(function() {
                 this.features.push(newFeature);
             }
         },
-        setFeatureStyle: function(color, olFeature){
-            if (color == null){
-                olFeature.updateStyle(olFeature.basicStyle);
-            }
+        setFeatureStyle: function(color, featureView){
+			if (color == null){
+				featureView.updateStyle(featureView.basicStyle);
+			}
 
-            else {
-                var style = new ol.style.Style({
-                    stroke: new ol.style.Stroke({
-                        color: color,
-                        width: 3
-                    }),
-                    image: new ol.style.Circle({
-                        radius: 6,
-                        stroke: new ol.style.Stroke({color: 'white', width: 2}),
-                        fill: new ol.style.Fill({
-                            color: color
-                        })
-                    })
-                });
-                olFeature.updateStyle(style);
-            }
-        },
+			else{
+				var style = this.createFeatureStyle(color);
+				featureView.updateStyle(style);
+			}
+		},
+		createFeatureStyle: function(color){
+			var style = new ol.style.Style({
+				stroke: new ol.style.Stroke({
+					color: color,
+					width: 3
+				}),
+				image: new ol.style.Circle({
+					radius: 6,
+					stroke: new ol.style.Stroke({color: 'white', width: 2}),
+					fill: new ol.style.Fill({
+						color: color
+					})
+				})
+			});
+
+			return style;
+		},
         onRender: function(selected) {
             if (_.isUndefined(selected)){
         	selected = true;
