@@ -29,7 +29,7 @@
 			});
 			this.listenTo(app.vent, 'mapEditorLayerInitialized', function() {
 	        	app.vent.trigger('clearSaveStatus');
-	        	if (app.mapLayer.attributes.features.length == 0){
+	        	if (app.mapLayer.attributes.jsonFeatures.features == 0){
 	    		    app.vent.trigger('mapmode', 'addFeatures');
 	    		} else {
 	    		    app.vent.trigger('mapmode', 'navigate');;
