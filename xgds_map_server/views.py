@@ -1954,6 +1954,35 @@ def getPrevNextObject(request, currentPK, mapName, which='previous'):
                                         }),
                             content_type='application/json', status=406)
 
+def createLayerFromSelected(request):
+    if request.method == 'POST':
+        layer_form = MapLayerForm(request.POST)
+        if layer_form.is_valid():
+            map_layer = MapLayer()
+            map_layer.name = layer_form.cleaned_data['name']
+            map_layer.description = layer_form.cleaned_data['description']
+            map_layer.creator = request.user.first_name + " " +  request.user.last_name
+            map_layer.modifier = map_layer.creator
+            map_layer.creation_time = datetime.datetime.now(pytz.utc)
+            map_layer.modification_time = datetime.datetime.now(pytz.utc)
+            map_layer.deleted = False
+            map_layer.locked = layer_form.cleaned_data['locked']
+            map_layer.visible = layer_form.cleaned_data['visible']
+            map_layer.transparency = layer_form.cleaned_data['transparency']
+            map_layer.jsonFeatures = layer_form.cleaned_data['jsonFeatures'];
+            mapGroup = layer_form.cleaned_data['parent']
+            map_layer.parent = MapGroup.objects.get(name=mapGroup)
+            map_layer.save()
+        else:
+            return HttpResponse(json.dumps({'failed': 'Form was not valid'}),
+                                content_type='application/json', status=500)
+
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapEditLayer', kwargs={'layerID': map_layer.uuid})))
+
+    return HttpResponse(json.dumps({'failed': 'Must be a POST but got %s instead' % request.method}),
+                        content_type='application/json', status=406)
+
+
 class MapOrderListJson(OrderListJson):
     
     def dispatch(self, request, *args, **kwargs):

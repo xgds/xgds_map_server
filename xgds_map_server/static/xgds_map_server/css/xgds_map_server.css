@@ -1,9 +1,9 @@
-#btn-copy{
-	margin-left: 25px;
+#id_description, #id_name, #id_region, #id_region, #id_transparency, #id_parent{
+	width: 100%;
 }
 
-#btn-paste{
-	margin-left: 3px;
+#id_visible, #id_locked{
+	margin-top: 3px;
 }
 
 .newLayerInput{
