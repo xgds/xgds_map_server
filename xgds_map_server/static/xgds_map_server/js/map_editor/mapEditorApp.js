@@ -36,6 +36,9 @@
 	    		}
         	});
 		},
+		events:{
+			'click #btn-submit-layer': function(){ app.vent.trigger('getSelectedFeatures'); }
+		},
 		regions: {
 			mapRegion: '#map',
 			toolbar: '#toolbar',

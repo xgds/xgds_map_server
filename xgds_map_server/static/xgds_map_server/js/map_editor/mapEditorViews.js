@@ -38,12 +38,7 @@ app.views.ToolbarView = Marionette.View.extend({
         'click #btn-save': function() { this.saveEntireLayer();},
         'click #btn-delete': function() {window.location.href=app.options.deleteUrl},
 		'click #btn-newLayer': function() {
-        	newLayerModal = new app.views.NewLayerModalView();
-			newLayerModal.render();
-
-			var $modalEl = $("#newLayerModal");
-			$modalEl.html(newLayerModal.el);
-			$modalEl.modal();
+			$('#newLayerModal').modal();
         }
     },
 
@@ -55,6 +50,7 @@ app.views.ToolbarView = Marionette.View.extend({
         this.listenTo(app.vent, 'redoNotEmpty', this.enableRedo);
         this.listenTo(app.mapLayer, 'sync', function(model) {this.updateSaveStatus('sync')});
         this.listenTo(app.mapLayer, 'error', function(model) {this.updateSaveStatus('error')});
+        this.listenTo(app.vent, 'sendSelectedFeatures', this.createNewLayer);
     },
 
 //    onRender: function() {
@@ -185,21 +181,18 @@ app.views.ToolbarView = Marionette.View.extend({
             },
             dialogClass: 'saveAs'
     	});
-    }
-
-});
-
-app.views.NewLayerModalView = Marionette.View.extend({
-    template: '#template-new-layer-modal',
-	events: {
-    	'click #btn_submit_layer': function(){ this.createNewLayer(); }
+    },
+	createNewLayer: function(selectedFeatures){
+		var featureJSON = this.formatFeatures(selectedFeatures);
+		console.log(featureJSON);
 	},
-	initialize: function(){
+	formatFeatures: function(features){
+		var featureFormatter = {};
+		featureFormatter['features'] = features;
 
-	},
-	createNewLayer: function(){
-		console.log('createNewLayer');
+		return JSON.stringify(featureFormatter);
 	}
+
 });
 
 app.views.EditingToolsView = Marionette.View.extend({
@@ -640,6 +633,7 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
 		this.listenTo(app.vent, 'featuresSelected', this.enableFeatureActions);
 		this.listenTo(app.vent, 'featuresUnSelected', this.disableFeatureActions);
 		this.listenTo(app.vent, 'deleteSelectedFeatures', this.deleteSelectedFeatures);
+		this.listenTo(app.vent, 'getSelectedFeatures', this.sendSelectedFeatures);
 		this.on('childview:expand', function(childView) { this.onItemExpand(childView);}, this);
 	},
 	childViewOptions: {
@@ -673,7 +667,12 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
 		    }
 		});
 		return features;
-    }
+    },
+
+	sendSelectedFeatures:function(){
+    	var features = this.getSelectedFeatures();
+    	app.vent.trigger('sendSelectedFeatures', features);
+	}
 });
 
 

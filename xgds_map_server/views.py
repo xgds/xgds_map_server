@@ -173,6 +173,7 @@ def getMapEditorPage(request, layerID=None):
     return render(request,
                   "MapEditor.html",
                   {'templates': templates,
+                   'layerForm': MapLayerForm(),
                    'saveSearchForm': MapSearchForm(),
                    'searchForms': getSearchForms(),
                    'app': 'xgds_map_server/js/map_editor/mapEditorApp.js',
