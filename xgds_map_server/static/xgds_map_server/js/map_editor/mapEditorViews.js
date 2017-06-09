@@ -36,7 +36,15 @@ app.views.ToolbarView = Marionette.View.extend({
         'click #btn-undo': function() { app.Actions.undo(); },
         'click #btn-redo': function() { app.Actions.redo(); },
         'click #btn-save': function() { this.saveEntireLayer();},
-        'click #btn-delete': function() {window.location.href=app.options.deleteUrl}
+        'click #btn-delete': function() {window.location.href=app.options.deleteUrl},
+		'click #btn-newLayer': function() {
+        	newLayerModal = new app.views.NewLayerModalView();
+			newLayerModal.render();
+
+			var $modalEl = $("#newLayerModal");
+			$modalEl.html(newLayerModal.el);
+			$modalEl.modal();
+        }
     },
 
     initialize: function() {
@@ -179,6 +187,19 @@ app.views.ToolbarView = Marionette.View.extend({
     	});
     }
 
+});
+
+app.views.NewLayerModalView = Marionette.View.extend({
+    template: '#template-new-layer-modal',
+	events: {
+    	'click #btn_submit_layer': function(){ this.createNewLayer(); }
+	},
+	initialize: function(){
+
+	},
+	createNewLayer: function(){
+		console.log('createNewLayer');
+	}
 });
 
 app.views.EditingToolsView = Marionette.View.extend({
