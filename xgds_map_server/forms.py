@@ -71,6 +71,12 @@ class MapLayerForm(AbstractMapForm):
         model = MapLayer
         exclude = ['minLat', 'minLon', 'maxLat', 'maxLon', 'jsonFeatures', 'creator', 'modifier', 'creation_time', 'modification_time', 'deleted']
 
+class MapLayerFromSelectedForm(AbstractMapForm):
+    jsonFeatures = forms.CharField(widget=forms.HiddenInput())
+
+    class Meta(AbstractMapForm.Meta):
+        model = MapLayer
+        exclude = ['minLat', 'minLon', 'maxLat', 'maxLon', 'creator', 'modifier', 'creation_time', 'modification_time', 'deleted']
 
 class MapTileForm(AbstractMapForm):
     if settings.XGDS_MAP_SERVER_GDAL2TILES_ZOOM_LEVELS:

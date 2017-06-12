@@ -52,7 +52,7 @@
 	</div>
 
     <div id="newLayerModal" class="modal hide fade">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
               <div class="modal-header">
                 <h5 class="modal-title">Create new layer from selected features</h5>
@@ -61,10 +61,13 @@
                 </button>
               </div>
               <div class="modal-body">
-                {{ layerForm.as_p }}
+                  <form action="/xgds_map_server/addLayerFromSelected/" method="post">
+                    {% csrf_token %}
+                    {{ layerForm.as_p }}
+                    <input type="submit" class="btn btn-primary" id="btn-new-layer-selected">
+                  </form>
               </div>
               <div class="modal-footer">
-                <button type="button" id="btn-submit-layer" class="btn btn-primary">Submit</button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
               </div>
             </div>

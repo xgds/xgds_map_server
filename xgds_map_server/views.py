@@ -58,7 +58,7 @@ from xgds_data.dlogging import recordList, recordRequest
 from xgds_data.forms import SearchForm, SpecializedForm
 from xgds_data.models import RequestLog, ResponseLog
 from xgds_data.views import searchHandoff, resultsIdentity
-from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm, MapDataTileForm, MapSearchForm, MapCollectionForm, EditMapTileForm, EditMapDataTileForm
+from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapLayerFromSelectedForm, MapTileForm, MapDataTileForm, MapSearchForm, MapCollectionForm, EditMapTileForm, EditMapDataTileForm
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapDataTile, MapSearch, MapCollection, MapLink, MAP_NODE_MANAGER, MAP_MANAGER
 from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
 from xgds_map_server.kmlLayerExporter import exportMapLayer
@@ -173,7 +173,7 @@ def getMapEditorPage(request, layerID=None):
     return render(request,
                   "MapEditor.html",
                   {'templates': templates,
-                   'layerForm': MapLayerForm(),
+                   'layerForm': MapLayerFromSelectedForm(),
                    'saveSearchForm': MapSearchForm(),
                    'searchForms': getSearchForms(),
                    'app': 'xgds_map_server/js/map_editor/mapEditorApp.js',
@@ -1954,9 +1954,9 @@ def getPrevNextObject(request, currentPK, mapName, which='previous'):
                                         }),
                             content_type='application/json', status=406)
 
-def createLayerFromSelected(request):
+def addLayerFromSelected(request):
     if request.method == 'POST':
-        layer_form = MapLayerForm(request.POST)
+        layer_form = MapLayerFromSelectedForm(request.POST)
         if layer_form.is_valid():
             map_layer = MapLayer()
             map_layer.name = layer_form.cleaned_data['name']
@@ -1969,7 +1969,7 @@ def createLayerFromSelected(request):
             map_layer.locked = layer_form.cleaned_data['locked']
             map_layer.visible = layer_form.cleaned_data['visible']
             map_layer.transparency = layer_form.cleaned_data['transparency']
-            map_layer.jsonFeatures = layer_form.cleaned_data['jsonFeatures'];
+            map_layer.jsonFeatures = layer_form.cleaned_data['jsonFeatures']
             mapGroup = layer_form.cleaned_data['parent']
             map_layer.parent = MapGroup.objects.get(name=mapGroup)
             map_layer.save()
