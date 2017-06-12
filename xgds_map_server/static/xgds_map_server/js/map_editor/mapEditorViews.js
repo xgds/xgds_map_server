@@ -39,6 +39,7 @@ app.views.ToolbarView = Marionette.View.extend({
         'click #btn-delete': function() {window.location.href=app.options.deleteUrl},
 		'click #btn-newLayer': function() {
 			$('#newLayerModal').modal();
+			app.vent.trigger('getSelectedFeatures');
         }
     },
 
@@ -183,15 +184,8 @@ app.views.ToolbarView = Marionette.View.extend({
     	});
     },
 	createNewLayer: function(selectedFeatures){
-		var featureJSON = this.formatFeatures(selectedFeatures);
-		var name = $('#id_name').val();
-		var description = $('#id_description').val();
-		var region = $("#id_region option:selected").text();
-		var visible = $('#id_visible').is(':checked');
-		var locked = $('#id_locked').is(':checked');
-		var transparency = $('#id_transparency').val();
-		var folder = $("#id_parent option:selected").text();
-
+		var jsonFeatures = this.formatFeatures(selectedFeatures);
+		$('#id_jsonFeatures').val(jsonFeatures);
 
 	},
 	formatFeatures: function(features){

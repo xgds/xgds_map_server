@@ -2,6 +2,15 @@
 	width: 100%;
 }
 
+form > p > label {
+    justify-content: flex-start !important;
+}
+
+#btn-new-layer-selected{
+	margin-left: 15px;
+	margin-top: 20px;
+}
+
 #id_visible, #id_locked{
 	margin-top: 3px;
 }
