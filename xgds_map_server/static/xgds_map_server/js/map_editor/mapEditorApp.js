@@ -111,19 +111,6 @@
 
         util: {
 	        deleteFeature: function(feature){
-                // feature.destroy({
-				// 	data: { 'uuid': feature.attributes.uuid },
-				// 	wait: true,
-				// 	success: function(model, response) {
-				// 		if(!_.isUndefined(feature.collection)) {
-				// 			feature.collection.remove(feature);
-				// 			}
-				// 		app.vent.trigger('deleteFeatureSuccess', feature);
-				// 	},
-				// 	error: function() {
-				// 		console.log("Error in deleting a feature");
-				// 	}
-				// });
 				if (!_.isUndefined(feature.collection)){
 					feature.collection.remove(feature);
 				}
