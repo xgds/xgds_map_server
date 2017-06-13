@@ -338,6 +338,7 @@ class MapDataTile(AbstractMapTile):
 class MapLayer(AbstractMap):
     """ A map layer which will have a collection of features that have content in them. """
     jsonFeatures = ExtrasDotField()
+    defaultColor = models.CharField(max_length=32, null=True, blank=True)
 
     def getEditHref(self):
         return reverse('mapEditLayer', kwargs={'layerID': self.uuid})
