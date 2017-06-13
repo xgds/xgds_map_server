@@ -51,7 +51,7 @@ app.views.ToolbarView = Marionette.View.extend({
         this.listenTo(app.vent, 'redoNotEmpty', this.enableRedo);
         this.listenTo(app.mapLayer, 'sync', function(model) {this.updateSaveStatus('sync')});
         this.listenTo(app.mapLayer, 'error', function(model) {this.updateSaveStatus('error')});
-        this.listenTo(app.vent, 'sendSelectedFeatures', this.createNewLayer);
+        this.listenTo(app.vent, 'sendSelectedFeatures', this.getJsonFeatures);
     },
 
 //    onRender: function() {
@@ -183,7 +183,7 @@ app.views.ToolbarView = Marionette.View.extend({
             dialogClass: 'saveAs'
     	});
     },
-	createNewLayer: function(selectedFeatures){
+	getJsonFeatures: function(selectedFeatures){
 		var jsonFeatures = this.formatFeatures(selectedFeatures);
 		$('#id_jsonFeatures').val(jsonFeatures);
 
@@ -215,8 +215,18 @@ app.views.EditingToolsView = Marionette.View.extend({
 				["#ff0", "#0f0"]
 			]
 		});
-	},
 
+		this.setColor();
+	},
+	setColor: function(){
+		if (app.mapLayer.attributes.defaultColor == null || app.mapLayer.attributes.defaultColor == ""){
+			$("#color-picker").spectrum("set", "#00f");
+		}
+
+		else{
+			$("#color-picker").spectrum("set", app.mapLayer.attributes.defaultColor);
+		}
+	},
 	close: function() {
         this.ensureEl();
         this.$el.hide();
@@ -230,16 +240,52 @@ app.views.NavigateView = Marionette.View.extend({
 app.views.LayerInfoTabView = Marionette.View.extend({
 	template: '#template-layer-info',
 	initialize: function() {
+		this.listenTo(app.vent, 'initializeInfoColorPicker', this.initializeInfoColorPicker);
+		this.listenTo(app.vent, 'infoPickerChanged', this.setDefaultStyle);
 	},
 	events: {
 		'change #mapLayerName': function(evt) {
 			this.model.set('name', evt.target.value);
-			this.model.save()
+			//this.model.save()
 		},
 		'change #mapLayerDescription': function(evt) {
 			this.model.set('description', evt.target.value);
-			this.model.save();
+			//this.model.save();
 		}    
+	},
+	//This function supports navigating away from the info tab and back to it, fires after the onShow
+	// event so we know the color picker is actually in the view (part of Marionette)
+	onDomRefresh: function(){
+		app.vent.trigger('initializeInfoColorPicker');
+	},
+	initializeInfoColorPicker: function(){
+		$("#info-color-picker").spectrum({
+			showPaletteOnly: true,
+			color: "blue",
+			showPalette: true,
+			palette: [
+				["#00f", "#f0f"],
+				["#000", "#f90"],
+				["#ff0", "#0f0"]
+			],
+			change: function(color){
+				app.vent.trigger('infoPickerChanged', color.toHexString());
+			}
+		});
+
+		this.setColorPicker();
+	},
+	setColorPicker: function(){
+		if (this.model.attributes.defaultColor == null || this.model.attributes.defaultColor == ""){
+			$("#info-color-picker").spectrum("set", "#00f");
+		}
+
+		else{
+			$("#info-color-picker").spectrum("set", this.model.attributes.defaultColor);
+		}
+	},
+	setDefaultStyle: function(color){
+		this.model.set('defaultColor', color);
 	}
 });
 
@@ -693,6 +739,7 @@ app.views.TabNavView = xGDS.TabNavView.extend({
         var context = this;
         this.listenTo(app.vent, 'onLayerLoaded', function() {
         	 this.setTab('info');
+        	 app.vent.trigger('initializeInfoColorPicker');
         }, this);
     },
     getModel: function() {
