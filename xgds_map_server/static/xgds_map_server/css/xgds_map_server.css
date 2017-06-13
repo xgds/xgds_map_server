@@ -2,6 +2,15 @@
 	width: 100%;
 }
 
+.copy-warning-info, .paste-warning-info{
+	color: #ff5238;
+	display: none;
+}
+
+.copy-success-info, .paste-success-info{
+	display: none;
+}
+
 form > p > label {
     justify-content: flex-start !important;
 }
