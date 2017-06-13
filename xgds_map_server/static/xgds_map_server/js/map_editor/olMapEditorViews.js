@@ -455,7 +455,6 @@ $(function() {
 				}
 				this.model.set('polygon',coords);
 				this.model.trigger('coordsChanged');
-				this.model.save();
 			}
 		}
 	});
@@ -484,7 +483,6 @@ $(function() {
 			if (!$.arrayEquals(coords, this.model.get('point'))){
 				this.model.set('point',coords);
 				this.model.trigger('coordsChanged');
-				this.model.save();
 			}
 		}, 
 		destroy: function() {
@@ -529,7 +527,6 @@ $(function() {
 			if (!$.arrayEquals(coords, this.model.get('lineString'))){
 				this.model.set('lineString',coords);
 				this.model.trigger('coordsChanged');
-				this.model.save();
 			}
 		}
 	});
@@ -559,7 +556,6 @@ $(function() {
 			}));
 			this.model.set('polygon',coords);
 			this.model.trigger('coordsChanged');
-			this.model.save();
 		}
 	});
 

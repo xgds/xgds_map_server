@@ -246,11 +246,9 @@ app.views.LayerInfoTabView = Marionette.View.extend({
 	events: {
 		'change #mapLayerName': function(evt) {
 			this.model.set('name', evt.target.value);
-			//this.model.save()
 		},
 		'change #mapLayerDescription': function(evt) {
 			this.model.set('description', evt.target.value);
-			//this.model.save();
 		}    
 	},
 	//This function supports navigating away from the info tab and back to it, fires after the onShow
@@ -459,7 +457,6 @@ app.views.FeatureCoordinatesView = Marionette.View.extend({
 			return;
 		}
 		app.util.updateFeatureCoordinate(this.model.get('type'), this.model, newX, newY, coordIndex);
-		this.model.save();
 		this.model.trigger('change:coordinates');
 	},
 	templateContext: function() {
@@ -506,19 +503,15 @@ app.views.FeaturePropertiesView = Marionette.View.extend({
 		}, 
 		'change #featureName': function(evt) {
 			this.model.set('name', evt.target.value);
-			this.model.save();
 		}, 
 		'change #featureDescription': function(evt) {
 			this.model.set('description', evt.target.value);
-			this.model.save();
 		},
 		'click #showLabel': function(evt) {
 			this.model.set('showLabel', evt.target.checked);
-			this.model.save();
 		},
 		'click #popup': function(evt) {
 			this.model.set('popup', evt.target.checked);
-			this.model.save();
 		},
 	},
 	initialize: function(){
