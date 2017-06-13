@@ -1684,7 +1684,7 @@ def processTiles(request, uuid, minZoom, maxZoom, resampleMethod, mapTile):
 def getMapLayerKML(request, layerID):
     if layerID:
         mapLayer = MapLayer.objects.get(pk=layerID)
-        result =  exportMapLayer(request,mapLayer)
+        result = exportMapLayer(request, mapLayer)
         return wrapKmlForDownload(result, mapLayer.name)
 
 @never_cache

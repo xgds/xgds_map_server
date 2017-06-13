@@ -184,15 +184,7 @@ app.views.ToolbarView = Marionette.View.extend({
     	});
     },
 	getJsonFeatures: function(selectedFeatures){
-		var jsonFeatures = this.formatFeatures(selectedFeatures);
-		$('#id_jsonFeatures').val(jsonFeatures);
-
-	},
-	formatFeatures: function(features){
-		var featureFormatter = {};
-		featureFormatter['features'] = features;
-
-		return JSON.stringify(featureFormatter);
+		$('#id_jsonFeatures').val(selectedFeatures);
 	}
 
 });
@@ -555,7 +547,9 @@ app.views.FeaturesHeaderView = Marionette.View.extend({
 	template: '#template-features-header',
 	events: {
 		'click #btn-delete': function() { app.vent.trigger('deleteSelectedFeatures', this.model)},
-	}
+		'click #btn-copy': function() { app.vent.trigger('copyFeatures'); },
+		'click #btn-paste': function() { app.vent.trigger('pasteFeatures') }
+	},
 });
 
 
@@ -675,6 +669,8 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
 		this.listenTo(app.vent, 'featuresUnSelected', this.disableFeatureActions);
 		this.listenTo(app.vent, 'deleteSelectedFeatures', this.deleteSelectedFeatures);
 		this.listenTo(app.vent, 'getSelectedFeatures', this.sendSelectedFeatures);
+		this.listenTo(app.vent, 'copyFeatures', this.copyFeatures);
+		this.listenTo(app.vent, 'pasteFeatures', this.pasteFeatures);
 		this.on('childview:expand', function(childView) { this.onItemExpand(childView);}, this);
 	},
 	childViewOptions: {
@@ -694,8 +690,7 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
     	_.each(features, function(feature) {
     	    app.vent.trigger('deleteFeature', feature);
     	});
-    }, 
-    
+    },
     getSelectedFeatures: function() {
 		var features = [];
 		this.children.each(function(childView) {
@@ -709,10 +704,41 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
 		});
 		return features;
     },
+	copyFeatures: function(){
+		var features = this.getSelectedFeatures();
+		features = this.formatFeatures(features);
 
+		if (features == null){
+			$('#copy-success').hide();
+			$('#copy-warning').show();
+		}
+
+		else{
+			$('#copy-warning').hide();
+			var clipboard = new Clipboard('#btn-copy', {
+				text: function(trigger){
+					return features;
+				}
+			});
+			$('#copy-success').show();
+		}
+	},
+	pasteFeatures: function(){
+
+	},
 	sendSelectedFeatures:function(){
     	var features = this.getSelectedFeatures();
+    	features = this.formatFeatures(features);
     	app.vent.trigger('sendSelectedFeatures', features);
+	},
+	formatFeatures: function(features){
+		if (features.length <= 0)
+			return null;
+
+		var featureFormatter = {};
+		featureFormatter['features'] = features;
+
+		return JSON.stringify(featureFormatter);
 	}
 });
 
