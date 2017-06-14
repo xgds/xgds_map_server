@@ -709,22 +709,57 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
 		features = this.formatFeatures(features);
 
 		if (features == null){
-			$('#copy-success').hide();
+			this.hideClipboardMsgs();
 			$('#copy-warning').show();
 		}
 
 		else{
-			$('#copy-warning').hide();
-			var clipboard = new Clipboard('#btn-copy', {
-				text: function(trigger){
-					return features;
-				}
+			this.hideClipboardMsgs();
+
+			$.ajax({
+				type: "POST",
+				dataType: 'json',
+				url: "/xgds_map_server/copyFeatures",
+				data: {features: features}
 			});
+
 			$('#copy-success').show();
 		}
 	},
 	pasteFeatures: function(){
+		if (copiedFeatures){
+			this.hideClipboardMsgs();
 
+			$.each(copiedFeatures.features, function(index, featureJson) {
+				try{
+					var featureObj = new app.models.Feature(featureJson);
+					featureObj.json = featureJson;
+					featureObj.set('mapLayer', app.mapLayer);  // set up the relationship.
+					featureObj.set('mapLayerName', app.mapLayer.get('name'));
+					//featureObj.set('uuid', featureJson.uuid);
+					featureObj.set('uuid', new UUID(4).format());
+					featureObj.set('name', app.util.generateFeatureName(featureJson.type))
+					app.vent.trigger('newFeatureLoaded', featureObj);
+					$('#paste-success').show();
+				}
+
+				catch(err){
+					$('#paste-exists').show();
+				}
+			});
+		}
+
+		else{
+			this.hideClipboardMsgs();
+			$('#paste-warning').show();
+		}
+	},
+	hideClipboardMsgs: function(){
+		$('#paste-success').hide();
+		$('#paste-warning').hide();
+		$('#copy-success').hide();
+		$('#copy-error').hide();
+		$('#copy-warning').hide();
 	},
 	sendSelectedFeatures:function(){
     	var features = this.getSelectedFeatures();
