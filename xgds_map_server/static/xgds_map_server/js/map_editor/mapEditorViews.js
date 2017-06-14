@@ -757,6 +757,7 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
 	hideClipboardMsgs: function(){
 		$('#paste-success').hide();
 		$('#paste-warning').hide();
+		$('#paste-exists').hide();
 		$('#copy-success').hide();
 		$('#copy-error').hide();
 		$('#copy-warning').hide();
