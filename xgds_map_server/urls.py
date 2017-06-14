@@ -35,6 +35,8 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,
     # for saving single map feature from map layer, or creating new one
     url(r'^feature$', views.saveOrDeleteFeature, {}, 'saveOrDeleteFeature'),
     url(r'^feature/(?P<uuid>[\w-]+)$', views.saveOrDeleteFeature, {}, 'saveOrDeleteFeature'),
+    # For copying feature data to the session variables
+    url(r'^copyFeatures$', views.copyFeatures, {}, 'copyFeatures'),
     # for saving map layer itself
     url(r'^saveMaplayer.json$', views.saveMaplayer, {}, 'saveMaplayer'),
     # HTML tree of maps

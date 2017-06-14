@@ -40,7 +40,7 @@ from django.db import transaction
 from django.forms.formsets import formset_factory
 from django.http import HttpResponse, Http404, JsonResponse
 from django.http import HttpResponseRedirect
-from django.http import HttpResponseServerError
+from django.http import HttpResponseServerError, HttpResponseNotAllowed
 from django.shortcuts import render
 from django.template import RequestContext
 from django.views.decorators.cache import never_cache
@@ -165,6 +165,7 @@ def getMapEditorPage(request, layerID=None):
     fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     fullTemplateList.append(os.path.join('xgds_map_server', 'templates', 'handlebars', 'edit'))
     templates = get_handlebars_templates(fullTemplateList, 'XGDS_MAP_SERVER_MAP_EDITOR')
+    copiedFeatures = json.dumps(request.session.get('copiedFeatures', False))
     if layerID:
         mapLayer = MapLayer.objects.get(pk=layerID)
         mapLayerDict = mapLayer.toDict()
@@ -173,6 +174,7 @@ def getMapEditorPage(request, layerID=None):
     return render(request,
                   "MapEditor.html",
                   {'templates': templates,
+                   'copiedFeatures': copiedFeatures,
                    'layerForm': MapLayerFromSelectedForm(),
                    'saveSearchForm': MapSearchForm(),
                    'searchForms': getSearchForms(),
@@ -1983,6 +1985,16 @@ def addLayerFromSelected(request):
 
     return HttpResponse(json.dumps({'failed': 'Must be a POST but got %s instead' % request.method}),
                         content_type='application/json', status=406)
+
+def copyFeatures(request):
+    if not request.is_ajax() or not request.method == 'POST':
+        return HttpResponseNotAllowed(['POST'])
+
+    features = json.loads(request.POST.get('features'))
+    request.session['copiedFeatures'] = features
+    return HttpResponse('ok')
+    # return HttpResponse(json.dumps(features),
+    #                        content_type='application/json')
 
 
 class MapOrderListJson(OrderListJson):

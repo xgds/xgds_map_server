@@ -102,6 +102,9 @@ $(function() {
 				this.constructFeatures();
 				this.render();
 			});
+			this.listenTo(app.vent, 'newFeatureLoaded', function(featureObj){
+				this.initializeFeatureObjViews(featureObj, featureObj.attributes.type);
+			});
 	        this.listenTo(app.vent, 'mapmode', this.setMode);
 	        app.vent.trigger('mapEditorLayerInitialized');
 		},

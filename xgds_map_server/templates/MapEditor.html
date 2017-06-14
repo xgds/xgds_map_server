@@ -109,6 +109,7 @@
 	{{ block.super }}
 	{% include "xgds_core/timeJS.html" %}
 	<script type="text/javascript">
+    var copiedFeatures = {{ copiedFeatures|safe }}
 	var appOptions = {
 	    	BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
 	 		DEFAULT_COORD_SYSTEM: '{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}',

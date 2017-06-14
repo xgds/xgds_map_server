@@ -2,7 +2,11 @@
 	width: 100%;
 }
 
-.copy-warning-info, .paste-warning-info{
+.hidden-input{
+	display: none;
+}
+
+.copy-warning-info, .paste-warning-info, .copy-error-info, .paste-exists-info{
 	color: #ff5238;
 	display: none;
 }
