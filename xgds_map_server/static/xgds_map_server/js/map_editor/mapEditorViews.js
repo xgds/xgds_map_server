@@ -200,6 +200,7 @@ app.views.EditingToolsView = Marionette.View.extend({
 			preferredFormat: "hex",
 			color: "blue",
 			showPalette: true,
+			//TODO: Move palette into a config file that is loaded in
 			palette: [
 				["#00f", "#f0f"],
 				["#000", "#f90"],
