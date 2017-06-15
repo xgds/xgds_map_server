@@ -270,41 +270,35 @@ $(function() {
 				}
 
 				//Sets style of feature depending on if it is a new feature or a saved one.
-				//TODO Clean this up or turn into a seperate method
 				if (skipAdd == true) {
                     var color = $('#color-picker').spectrum('get').toHexString();
-                    this.setFeatureStyle(color, newFeatureView);
                 }
 
 				else{
 					var color = featureObj.attributes.style;
-					var shape = featureObj.attributes.shape;
-					this.setFeatureStyle(color, newFeatureView, shape);
 				}
 
+				var shape = featureObj.attributes.shape;
+				this.setFeatureStyle(color, newFeatureView, shape);
 				this.features.push(newFeatureView);
 			}
 		},
-		setFeatureStyle: function(color, featureView, shape = ""){
+		setFeatureStyle: function(color, featureView, shape){
+			if (color == null || color == ""){
+				color = "#0000ff";
+			}
+
 			if (featureView.featureJson.type == "Point"){
 				var style = this.createPointStyle(color, shape);
 				featureView.updateStyle(style);
 			}
 
 			else{
-				if (color == null){
-					featureView.updateStyle(featureView.basicStyle);
-				}
-
-				else{
-					var style = this.createFeatureStyle(color);
-					featureView.updateStyle(style);
-				}
+				var style = this.createFeatureStyle(color);
+				featureView.updateStyle(style);
 			}
 		},
 		createFeatureStyle: function(color){
-			//Could predefine the color palette choices in olStyles, but then we lose the
-			// flexibility to change/add colors whenever and have it not matter
 			var style = new ol.style.Style({
 				stroke: new ol.style.Stroke({
 					color: color,
@@ -322,13 +316,12 @@ $(function() {
 			return style;
 		},
 		createPointStyle: function(color, shape){
-			if (shape != "")
+			if (shape != "" || shape != null)
 				var iconType = shape;
 
 			else
 				var iconType = $('#icon-type').val();
 
-			//TODO: Predefine these in olStyles instead of reinitializing them each time
 			switch(iconType){
 				case "Circle":
 					var style = this.createFeatureStyle(color);

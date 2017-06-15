@@ -1478,43 +1478,49 @@ $(function() {
         createFeature: function(featureJson){
             var newFeature;
             switch (featureJson['type']){
-            case 'GroundOverlay':
-                newFeature = new app.views.GroundOverlayView({
-                    layerGroup: this.layerGroup,
-                    featureJson: featureJson
-                });
-                this.drawBelow = false;
-                break;
-            case 'Polygon':
-                newFeature = new app.views.PolygonView({
-                    layerGroup: this.layerGroup,
-                    featureJson: featureJson
-                });
-                break;
-            case 'Point':
-                newFeature = new app.views.PointView({
-                    layerGroup: this.layerGroup,
-                    featureJson: featureJson
-                });
-                break;
-            case 'LineString':
-                newFeature = new app.views.LineStringView({
-                    layerGroup: this.layerGroup,
-                    featureJson: featureJson
-                });
-                break;
+                case 'GroundOverlay':
+                    newFeature = new app.views.GroundOverlayView({
+                        layerGroup: this.layerGroup,
+                        featureJson: featureJson
+                    });
+                    this.drawBelow = false;
+                    break;
+                case 'Polygon':
+                    newFeature = new app.views.PolygonView({
+                        layerGroup: this.layerGroup,
+                        featureJson: featureJson
+                    });
+                    break;
+                case 'Point':
+                    newFeature = new app.views.PointView({
+                        layerGroup: this.layerGroup,
+                        featureJson: featureJson
+                    });
+                    break;
+                case 'LineString':
+                    newFeature = new app.views.LineStringView({
+                        layerGroup: this.layerGroup,
+                        featureJson: featureJson
+                    });
+                    break;
             }
-            this.setFeatureStyle(featureJson.style, newFeature);
+
+            this.setFeatureStyle(featureJson.style, newFeature, featureJson.shape);
             if (!_.isUndefined(newFeature)){
                 this.features.push(newFeature);
             }
         },
-        setFeatureStyle: function(color, featureView){
-			if (color == null){
-				featureView.updateStyle(featureView.basicStyle);
+        setFeatureStyle: function(color, featureView, shape){
+            if (color == null){
+				color = "#0000ff";
 			}
 
-			else{
+            if (featureView.featureJson.type == 'Point'){
+                var style = this.createPointStyle(color, shape);
+				featureView.updateStyle(style);
+            }
+
+            else{
 				var style = this.createFeatureStyle(color);
 				featureView.updateStyle(style);
 			}
@@ -1533,6 +1539,42 @@ $(function() {
 					})
 				})
 			});
+
+			return style;
+		},
+        createPointStyle: function(color, shape){
+			switch(shape){
+				case "Circle":
+					var style = this.createFeatureStyle(color);
+					break;
+				case "Square":
+					var style = new ol.style.Style({
+						image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+							color: color,
+							src: '/static/xgds_map_server/icons/square-point.png',
+						}))
+					});
+					break;
+				case "Triangle":
+					var style = new ol.style.Style({
+						image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+							color: color,
+							src: '/static/xgds_map_server/icons/triangle-point.png',
+						}))
+					});
+					break;
+				case "Star":
+					var style = new ol.style.Style({
+						image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+							color: color,
+							src: '/static/xgds_map_server/icons/star-point.png',
+						}))
+					});
+					break;
+				default:
+					var style = this.createFeatureStyle(color);
+					break;
+			}
 
 			return style;
 		},
