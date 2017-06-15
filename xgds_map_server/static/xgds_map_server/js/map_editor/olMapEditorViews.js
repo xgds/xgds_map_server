@@ -78,6 +78,14 @@ $(function() {
 						_this.map.removeInteraction(_this.featureAdder);
 					}
 					_this.typeSelect = $(event.target).attr('data');
+
+					//TODO Move this to an event in mapEditorViews under EditingToolsView
+					if (_this.typeSelect == 'Point')
+						$('#icon-type').show();
+
+					else
+						$('#icon-type').hide();
+
 					_this.addDrawInteraction(_this.typeSelect);
 				});
 			});
@@ -197,12 +205,11 @@ $(function() {
 			featureObj.set('mapLayerName', mapLayer.get('name'));
 			featureObj.set('uuid', new UUID(4).format());
 			featureObj.set('style', $('#color-picker').spectrum('get').toHexString());
+
+			if (type == "Point")
+				featureObj.set('shape', $('#icon-type').val());
+
 			featureObj.olFeature =  olFeature;
-
-			console.log(featureObj);
-
-			// featureObj.save( {}, {wait: true,
-			//    	success: function () {this.initializeFeatureObjViews(featureObj, type)}});
 
 			this.initializeFeatureObjViews(featureObj, type, true);
 
@@ -214,39 +221,39 @@ $(function() {
 		initializeFeatureObjViews(featureObj, type, skipAdd=false){
 			var newFeatureView = undefined;
 			switch (type){
-			case 'GroundOverlay':
-				newFeatureView = new app.views.GroundOverlayEditView({
-					model: featureObj,
-					olFeature: featureObj.olFeature,
-					layerGroup: this.layerGroup,
-					featureJson: featureObj.attributes
-				});
-				this.drawBelow = true;
-				break;
-			case 'Polygon':
-				newFeatureView = new app.views.PolygonEditView({
-					model: featureObj,
-					olFeature: featureObj.olFeature,
-					layerGroup: this.layerGroup,
-					featureJson: featureObj.attributes
-				});
-				break;
-			case 'Point':
-				newFeatureView = new app.views.PointEditView({
-					model: featureObj,
-					olFeature: featureObj.olFeature,
-					layerGroup: this.layerGroup,
-					featureJson: featureObj.attributes
-				});
-				break;
-			case 'LineString':
-				newFeatureView = new app.views.LineStringEditView({
-					model: featureObj,
-					olFeature: featureObj.olFeature,
-					layerGroup: this.layerGroup,
-					featureJson: featureObj.attributes
-				});
-				break;
+				case 'GroundOverlay':
+					newFeatureView = new app.views.GroundOverlayEditView({
+						model: featureObj,
+						olFeature: featureObj.olFeature,
+						layerGroup: this.layerGroup,
+						featureJson: featureObj.attributes
+					});
+					this.drawBelow = true;
+					break;
+				case 'Polygon':
+					newFeatureView = new app.views.PolygonEditView({
+						model: featureObj,
+						olFeature: featureObj.olFeature,
+						layerGroup: this.layerGroup,
+						featureJson: featureObj.attributes
+					});
+					break;
+				case 'Point':
+					newFeatureView = new app.views.PointEditView({
+						model: featureObj,
+						olFeature: featureObj.olFeature,
+						layerGroup: this.layerGroup,
+						featureJson: featureObj.attributes
+					});
+					break;
+				case 'LineString':
+					newFeatureView = new app.views.LineStringEditView({
+						model: featureObj,
+						olFeature: featureObj.olFeature,
+						layerGroup: this.layerGroup,
+						featureJson: featureObj.attributes
+					});
+					break;
 			} 
 			if (!_.isUndefined(newFeatureView)){
 				featureObj.olFeature = newFeatureView.getFeature();
@@ -257,44 +264,47 @@ $(function() {
 					var view = event.target.get('view');
 					view.updateCoordsFromGeometry(geometry);
 				});
-				/*if (featureJson['type'] == 'Point'){
-					this.pointFeatures.push(featureObj.olFeature);
-				} else {
-					this.olFeatures.push(featureObj.olFeature);
-				}*/
-				// var last = this.olFeatures.item(this.olFeatures.getLength() - 1);
-				// if (last != featureObj.olFeature){
-				// 	this.olFeatures.push(featureObj.olFeature);
-				// }
 
 				if (!(featureObj.olFeature in this.olFeatures) && !skipAdd) {
 					this.olFeatures.push(featureObj.olFeature);
 				}
 
-				//Set color of feature
-				if (skipAdd == true)
-					var color = $('#color-picker').spectrum('get').toHexString();
+				//Sets style of feature depending on if it is a new feature or a saved one.
+				//TODO Clean this up or turn into a seperate method
+				if (skipAdd == true) {
+                    var color = $('#color-picker').spectrum('get').toHexString();
+                    this.setFeatureStyle(color, newFeatureView);
+                }
 
-				else
+				else{
 					var color = featureObj.attributes.style;
+					var shape = featureObj.attributes.shape;
+					this.setFeatureStyle(color, newFeatureView, shape);
+				}
 
-				//Sets the starting style for each feature
-				this.setFeatureStyle(color, newFeatureView);
 				this.features.push(newFeatureView);
-
 			}
 		},
-		setFeatureStyle: function(color, featureView){
-			if (color == null){
-				featureView.updateStyle(featureView.basicStyle);
+		setFeatureStyle: function(color, featureView, shape = ""){
+			if (featureView.featureJson.type == "Point"){
+				var style = this.createPointStyle(color, shape);
+				featureView.updateStyle(style);
 			}
 
 			else{
-				var style = this.createFeatureStyle(color);
-				featureView.updateStyle(style);
+				if (color == null){
+					featureView.updateStyle(featureView.basicStyle);
+				}
+
+				else{
+					var style = this.createFeatureStyle(color);
+					featureView.updateStyle(style);
+				}
 			}
 		},
 		createFeatureStyle: function(color){
+			//Could predefine the color palette choices in olStyles, but then we lose the
+			// flexibility to change/add colors whenever and have it not matter
 			var style = new ol.style.Style({
 				stroke: new ol.style.Stroke({
 					color: color,
@@ -308,6 +318,49 @@ $(function() {
 					})
 				})
 			});
+
+			return style;
+		},
+		createPointStyle: function(color, shape){
+			if (shape != "")
+				var iconType = shape;
+
+			else
+				var iconType = $('#icon-type').val();
+
+			//TODO: Predefine these in olStyles instead of reinitializing them each time
+			switch(iconType){
+				case "Circle":
+					var style = this.createFeatureStyle(color);
+					break;
+				case "Square":
+					var style = new ol.style.Style({
+						image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+							color: color,
+							src: '/static/xgds_map_server/icons/square-point.png',
+						}))
+					});
+					break;
+				case "Triangle":
+					var style = new ol.style.Style({
+						image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+							color: color,
+							src: '/static/xgds_map_server/icons/triangle-point.png',
+						}))
+					});
+					break;
+				case "Star":
+					var style = new ol.style.Style({
+						image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+							color: color,
+							src: '/static/xgds_map_server/icons/star-point.png',
+						}))
+					});
+					break;
+				default:
+					var style = this.createFeatureStyle(color);
+					break;
+			}
 
 			return style;
 		},
