@@ -32,6 +32,12 @@ form > p > label {
 	margin-bottom: 15px !important;
 }
 
+.icon-select{
+	height: 21px;
+	margin-right: 5px;
+	display: none;
+}
+
 .colorpicker{
 	margin-top: 3px;
 }

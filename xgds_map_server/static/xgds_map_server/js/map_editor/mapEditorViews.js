@@ -194,7 +194,6 @@ app.views.EditingToolsView = Marionette.View.extend({
 	initialize: function() {
 		this.listenTo(app.vent, 'initializeColorPicker', this.initializeColorPicker);
     },
-
 	initializeColorPicker: function(){
 		$("#color-picker").spectrum({
 			showPaletteOnly: true,
