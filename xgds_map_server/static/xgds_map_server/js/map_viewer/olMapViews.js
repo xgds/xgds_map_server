@@ -1533,7 +1533,7 @@ $(function() {
 				}),
 				image: new ol.style.Circle({
 					radius: 6,
-					stroke: new ol.style.Stroke({color: 'white', width: 2}),
+					stroke: new ol.style.Stroke({color: '#000', width: 2}),
 					fill: new ol.style.Fill({
 						color: color
 					})
