@@ -94,9 +94,11 @@ $(function() {
 				this.olFeatures.remove(killedFeature.olFeature);
 			});
 			this.listenTo(app.vent, 'selectFeature', function(feature){
+				console.log(feature.attributes);
 				if (feature.get('type') == "Point"){
-					if (feature.get('shape') == "" || feature.get('shape') == null)
-						feature.trigger('setBasicStyle', olStyles.styles['selected_' + feature.get('type').toLowerCase()]);
+					if (feature.attributes.shape == null){
+						feature.trigger('setBasicStyle', olStyles.styles['selected_circle']);
+					}
 
 					else
 						feature.trigger('setBasicStyle', olStyles.styles['selected_' + feature.get('shape').toLowerCase()]);
@@ -108,8 +110,9 @@ $(function() {
 			});
 			this.listenTo(app.vent, 'activeFeature', function(feature){
 				if (feature.get('type') == "Point"){
-					if (feature.get('shape') == "" || feature.get('shape') == null)
-						feature.trigger('setBasicStyle', olStyles.styles['active_' + feature.get('type').toLowerCase()]);
+					if (feature.attributes.shape == null){
+						feature.trigger('setBasicStyle', olStyles.styles['active_circle']);
+					}
 
 					else
 						feature.trigger('setBasicStyle', olStyles.styles['active_' + feature.get('shape').toLowerCase()]);
