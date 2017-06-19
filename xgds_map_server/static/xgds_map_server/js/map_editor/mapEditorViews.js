@@ -203,7 +203,7 @@ app.views.EditingToolsView = Marionette.View.extend({
 			//TODO: Move palette into a config file that is loaded in
 			palette: [
 				["#00f", "#f0f"],
-				["#000", "#f90"],
+				["#fff", "#f90"],
 				["#ff0", "#0f0"]
 			]
 		});
@@ -255,7 +255,7 @@ app.views.LayerInfoTabView = Marionette.View.extend({
 			showPalette: true,
 			palette: [
 				["#00f", "#f0f"],
-				["#000", "#f90"],
+				["#fff", "#f90"],
 				["#ff0", "#0f0"]
 			],
 			change: function(color){
@@ -520,7 +520,7 @@ app.views.FeaturePropertiesView = Marionette.View.extend({
 			showPalette: true,
 			palette: [
 				["#00f", "#f0f"],
-				["#000", "#f90"],
+				["#fff", "#f90"],
 				["#ff0", "#0f0"]
 			],
 			change: function(color){

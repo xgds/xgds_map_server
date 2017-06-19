@@ -14,6 +14,7 @@
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
 
+import string
 from geocamUtil import KmlUtil
 from django.contrib.staticfiles.templatetags.staticfiles import static
 
@@ -21,18 +22,49 @@ from django.contrib.staticfiles.templatetags.staticfiles import static
 Exports map layer as KML String
 """
 
-def getFeatureKml(feature):
+def getPolygonKml(feature):
     result = ('''
-<Placemark>
-<name>%(name)s</name>
-<description>%(description)s</description>
-<styleUrl>%(style)s</styleUrl>
-%(point)s
-</Placemark>''' % {'name': feature.name,
-               'description': feature.description,
-               'point': feature.geometry.kml,
-               'style': '#xgds'
-               })
+    <Placemark>
+    <name>%(name)s</name>
+    <description>%(description)s</description>
+    <styleUrl>%(style)s</styleUrl>
+    %(point)s
+    </Placemark>''' % {'name': feature.name,
+                       'description': feature.description,
+                       'point': toKml(feature.polygon, "Polygon"),
+                       'style': '#xgds'
+                       })
+
+    return result
+
+def getLineKml(feature):
+    result = ('''
+    <Placemark>
+    <name>%(name)s</name>
+    <description>%(description)s</description>
+    <styleUrl>%(style)s</styleUrl>
+    %(point)s
+    </Placemark>''' % {'name': feature.name,
+                       'description': feature.description,
+                       'point': toKml(feature.lineString, "LineString"),
+                       'style': '#xgds'
+                       })
+
+    return result
+
+def getPointKml(feature):
+    result = ('''
+    <Placemark>
+    <name>%(name)s</name>
+    <description>%(description)s</description>
+    <styleUrl>%(style)s</styleUrl>
+    %(point)s
+    </Placemark>''' % {'name': feature.name,
+                       'description': feature.description,
+                       'point': toKml(feature.point, "Point"),
+                       'style': '#xgds'
+                       })
+
     return result
 
 def makeStyles(request, mapLayer):
@@ -46,8 +78,78 @@ def makeStyles(request, mapLayer):
 
 def exportMapLayer(request, mapLayer):
     resultString = ''
-    features = mapLayer.getFeatures()
+    features = mapLayer.getFeatureJson().features
+
     for f in features:
-        resultString += '\n' + getFeatureKml(f)
-        
+        if (f.type == "Point"):
+            resultString += '\n' + getPointKml(f)
+
+        elif (f.type == "Polygon"):
+            resultString += '\n' + getPolygonKml(f)
+
+        else:
+            resultString += '\n' + getLineKml(f)
+
     return makeStyles(request, mapLayer) + '\n' + resultString
+
+def toKml(featureGeom, type):
+    result = ''
+
+    if (type == "Point"):
+        result = pointFormatter(featureGeom)
+
+    elif (type == "LineString"):
+        result = lineFormatter(featureGeom)
+
+    else:
+        result = polygonFormatter(featureGeom)
+
+    return result
+
+def pointFormatter(featureGeom):
+    result = '<Point><coordinates>'
+
+    for point in featureGeom:
+        result += str(point);
+        result += ','
+
+    result += "0</coordinates></Point>"
+
+    return result
+
+def lineFormatter(featureGeom):
+    result = '<LineString><coordinates>'
+    temp = ''
+
+    for point in featureGeom:
+        temp = str(point)
+        temp = temp.replace(" ", "")
+        result += temp + ",0 "
+
+    result = result.replace("[", "")
+    result = result.replace("]", "")
+    result += "</coordinates></LineString>"
+
+    return result
+
+def polygonFormatter(featureGeom):
+    result = '<Polygon><outerBoundaryIs><LinearRing><coordinates>'
+    temp = ''
+
+    for point in featureGeom:
+        temp = str(point)
+        temp = temp.replace(" ", "")
+        result += temp + ",0 "
+
+    result += "</coordinates></LinearRing></outerBoundaryIs><innerBoundaryIs><LinearRing><coordinates>"
+
+    for point in featureGeom:
+        temp = str(point)
+        temp = temp.replace(" ", "")
+        result += temp + ",0 "
+
+    result = result.replace("[", "")
+    result = result.replace("]", "")
+    result += "</coordinates></LinearRing></innerBoundaryIs></Polygon>"
+
+    return result
