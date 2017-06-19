@@ -94,15 +94,41 @@ $(function() {
 				this.olFeatures.remove(killedFeature.olFeature);
 			});
 			this.listenTo(app.vent, 'selectFeature', function(feature){
-				feature.trigger('setBasicStyle', olStyles.styles['selected_' + feature.get('type').toLowerCase()]);
+				console.log(feature.get('shape'));
+				if (feature.get('type') == "Point"){
+					if (feature.get('shape') == "" || feature.get('shape') == null)
+						feature.trigger('setBasicStyle', olStyles.styles['selected_' + feature.get('type').toLowerCase()]);
+
+					else
+						feature.trigger('setBasicStyle', olStyles.styles['selected_' + feature.get('shape').toLowerCase()]);
+				}
+
+				else{
+					feature.trigger('setBasicStyle', olStyles.styles['selected_' + feature.get('type').toLowerCase()]);
+				}
 			});
 			this.listenTo(app.vent, 'activeFeature', function(feature){
-				feature.trigger('setBasicStyle', olStyles.styles['active_' + feature.get('type').toLowerCase()]);
+				if (feature.get('type') == "Point"){
+					if (feature.get('shape') == "" || feature.get('shape') == null)
+						feature.trigger('setBasicStyle', olStyles.styles['active_' + feature.get('type').toLowerCase()]);
+
+					else
+						feature.trigger('setBasicStyle', olStyles.styles['active_' + feature.get('shape').toLowerCase()]);
+				}
+
+				else{
+					feature.trigger('setBasicStyle', olStyles.styles['active_' + feature.get('type').toLowerCase()]);
+				}
 			});
 			this.listenTo(app.vent, 'deselectFeature', function(feature){
 				//Create style from feature's style attribute.
 				var color = feature.get('style');
-				var style = this.createFeatureStyle(color);
+
+				if (feature.get('type') == "Point")
+					var style = this.createPointStyle(color, feature.get('shape'));
+
+				else
+					var style = this.createFeatureStyle(color);
 
 				feature.trigger('setBasicStyle', style);
 			});

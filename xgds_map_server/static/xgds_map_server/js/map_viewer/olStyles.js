@@ -46,6 +46,24 @@ olStyles.buildStyles = function() {
               })
           })
         });
+    olStyles.styles['selected_square'] =  new ol.style.Style({
+        image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+            color: "rgba(0, 255, 255, 1.0)",
+            src: '/static/xgds_map_server/icons/square-point.png',
+        }))
+    });
+    olStyles.styles['selected_star'] =  new ol.style.Style({
+        image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+            color: "rgba(0, 255, 255, 1.0)",
+            src: '/static/xgds_map_server/icons/star-point.png',
+        }))
+    });
+    olStyles.styles['selected_triangle'] =  new ol.style.Style({
+        image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+            color: "rgba(0, 255, 255, 1.0)",
+            src: '/static/xgds_map_server/icons/triangle-point.png',
+        }))
+    });
     olStyles.styles['active_point'] =  new ol.style.Style({
         image: new ol.style.Circle({
             radius: 6,
@@ -56,6 +74,24 @@ olStyles.buildStyles = function() {
           })
           
         });
+    olStyles.styles['active_square'] =  new ol.style.Style({
+        image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+            color: "rgba(255, 0, 0, 1.0)",
+            src: '/static/xgds_map_server/icons/square-point.png',
+        }))
+    });
+    olStyles.styles['active_star'] =  new ol.style.Style({
+        image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+            color: "rgba(255, 0, 0, 1.0)",
+            src: '/static/xgds_map_server/icons/star-point.png',
+        }))
+    });
+    olStyles.styles['active_triangle'] =  new ol.style.Style({
+        image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+            color: "rgba(255, 0, 0, 1.0)",
+            src: '/static/xgds_map_server/icons/triangle-point.png',
+        }))
+    });
     olStyles.styles['point'] =  new ol.style.Style({
         image: new ol.style.Circle({
             radius: 6,
