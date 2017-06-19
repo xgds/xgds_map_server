@@ -94,7 +94,6 @@ $(function() {
 				this.olFeatures.remove(killedFeature.olFeature);
 			});
 			this.listenTo(app.vent, 'selectFeature', function(feature){
-				console.log(feature.get('shape'));
 				if (feature.get('type') == "Point"){
 					if (feature.get('shape') == "" || feature.get('shape') == null)
 						feature.trigger('setBasicStyle', olStyles.styles['selected_' + feature.get('type').toLowerCase()]);
