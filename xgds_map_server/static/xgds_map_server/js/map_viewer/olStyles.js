@@ -37,7 +37,7 @@ olStyles.buildStyles = function() {
 		      })
 		    })
 		  });
-    olStyles.styles['selected_point'] =  new ol.style.Style({
+    olStyles.styles['selected_circle'] =  new ol.style.Style({
         image: new ol.style.Circle({
             radius: 6,
             stroke: new ol.style.Stroke({color: 'cyan', width: 3}),
@@ -64,7 +64,7 @@ olStyles.buildStyles = function() {
             src: '/static/xgds_map_server/icons/triangle-point.png',
         }))
     });
-    olStyles.styles['active_point'] =  new ol.style.Style({
+    olStyles.styles['active_circle'] =  new ol.style.Style({
         image: new ol.style.Circle({
             radius: 6,
             stroke: new ol.style.Stroke({color: '#000', width: 3}),

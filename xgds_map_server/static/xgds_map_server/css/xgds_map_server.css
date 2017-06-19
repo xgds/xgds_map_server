@@ -2,6 +2,35 @@
 	width: 100%;
 }
 
+.scrolling_column .sp-preview div {
+    margin-bottom: 0px !important;
+}
+
+.sp-dd {
+    padding: 0px 0 !important;
+    height: 10px !important;
+    line-height: 10px !important;
+    float:left !important;
+    font-size:10px !important;
+}
+.sp-preview {
+    position:relative !important;
+    width:45px !important;
+    height: 10px !important;
+    border: solid 1px #222 !important;
+    margin-right: 5px !important;
+    float:left !important;
+    z-index: 0 !important;
+}
+
+.sp-replacer{
+	border-radius: 3px !important;
+}
+
+.colorpicker .sp-replacer{
+	margin-top: 3px !important;
+}
+
 .hidden-input{
 	display: none;
 }
@@ -35,6 +64,7 @@ form > p > label {
 .icon-select{
 	height: 21px;
 	margin-right: 5px;
+	margin-top:2px;
 	display: none;
 }
 
