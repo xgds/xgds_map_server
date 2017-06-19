@@ -365,6 +365,9 @@ class MapLayer(AbstractMap):
     def getGoogleEarthUrl(self, request):
         return request.build_absolute_uri(reverse('mapLayerKML', kwargs={'layerID': self.uuid}))
 
+    def getFeatureJson(self):
+        return self.jsonFeatures
+
 
 class MapCollection(AbstractMap):
     """
