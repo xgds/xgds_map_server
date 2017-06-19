@@ -356,6 +356,7 @@ app.views.FeaturesTabView = Marionette.View.extend({
     	
     	var view = new app.views.FeaturePropertiesView({model: itemModel});
     	this.getRegion('col2').show(view);
+    	app.vent.trigger('initializeEditColorPicker');
     },
     
     showStyle: function(model){
