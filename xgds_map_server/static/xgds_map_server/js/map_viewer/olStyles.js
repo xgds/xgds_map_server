@@ -143,17 +143,6 @@ olStyles.buildStyles = function() {
     olStyles.styles['groundOverlay'] =  new ol.style.Style({
         zIndex: Infinity
     });
-    olStyles.styles['label'] = {
-            font: '14px Calibri,sans-serif',
-            fill: new ol.style.Fill({
-                color: 'yellow'
-            }),
-            stroke: new ol.style.Stroke({
-                color: 'black',
-                width: 2
-            }),
-            offsetY: -20
-    };
     olStyles.styles['vehicle'] = new ol.style.Style({
       image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
           src: '/static/xgds_map_server/icons/robot_red_16.png'

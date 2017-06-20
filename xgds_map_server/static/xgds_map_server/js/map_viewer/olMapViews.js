@@ -1655,11 +1655,23 @@ $(function() {
         },
         getTextStyle: function() {
             if (this.featureJson.showLabel) {
-                var theText = new ol.style.Text(olStyles.styles['label']);
+                var theText = new ol.style.Text(olStyles.styles = {
+                    font: '14px Calibri,sans-serif',
+                    fill: new ol.style.Fill({
+                        color: this.featureJson.style
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: 'black',
+                        width: 2
+                    }),
+                    offsetY: -20
+                });
+
                 theText.setText(this.featureJson.name);
                 this.textStyle = new ol.style.Style({
                     text: theText
                 });
+
                 return this.textStyle;
             }
             return null;
