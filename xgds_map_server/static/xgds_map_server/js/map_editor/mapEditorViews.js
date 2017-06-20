@@ -536,7 +536,6 @@ app.views.FeaturePropertiesView = Marionette.View.extend({
 	},
 	updateFeatureStyle: function(color){
 		this.model.set('style', color);
-		this.model.updateStyle(color);
 	}
 });
 
@@ -600,7 +599,6 @@ app.views.FeatureElementView = Marionette.View.extend({
         };
     },
     onExpand: function() {
-    	console.log('EXPAND');
     	if (app.State.featureSelected != undefined){
         	var checkbox = $('#id_' + app.State.featureSelected.get('uuid'));
         	if (checkbox.prop('checked')){

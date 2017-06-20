@@ -247,7 +247,7 @@ def saveMaplayer(request):
     if (request.method == "PUT") or (request.method == "POST"):  # map layer already exists so backbone sends a PUT request to update it.
         data = json.loads(request.body)
         uuid = data.get('uuid', None)
-        print(data)
+        #print(data)
         try:
             mapLayer = MapLayer.objects.get(uuid = uuid)
         except:

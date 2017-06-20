@@ -1,5 +1,8 @@
 #!/usr/bin/python
-import MySQLdb, json, requests
+import MySQLdb
+import json
+import requests
+import traceback
 
 db = MySQLdb.connect(host="localhost",
                      user="root",
@@ -17,25 +20,28 @@ for row in cur.fetchall():
     url += "/"
 
     response = requests.get(url=url, verify=False)
-    data = json.loads(response.text)
+    try:
+        data = json.loads(response.text)
+        features = "{\"features\": " + json.dumps(data['data']['layerData']['features']) + "}"
+        features = features.replace("'", "''")
 
-    features = "{\"features\": " + json.dumps(data['data']['layerData']['features']) + "}"
-    features = features.replace("'", "''")
+        cur.execute("update xgds_map_server_maplayer "
+                    "set jsonFeatures = '{0}' "
+                    "where uuid = '{1}'".format(features, row[0]))
 
-    #print features
+        # Resets all jsonFeatures attributes to empty.
+        # cur.execute("update xgds_map_server_maplayer "
+        #             "set jsonFeatures = '{}' ")
 
-    cur.execute("update xgds_map_server_maplayer "
-                "set jsonFeatures = '{0}' "
-                "where uuid = '{1}'".format(features, row[0]))
+        db.commit()
 
-    # Resets all jsonFeatures attributes to empty.
-    # cur.execute("update xgds_map_server_maplayer "
-    #             "set jsonFeatures = '{}' ")
+        print "updated jsonFeatures for: " + row[0] + "\n"
 
-    db.commit()
+    except Exception, e:
+        print 'problem for row %s' % row[0]
+        traceback.print_exc()
 
     count += 1
-    print "updated jsonFeatures for: " + row[0] + "\n"
 
 print "Updated " + str(count) + " rows."
 
