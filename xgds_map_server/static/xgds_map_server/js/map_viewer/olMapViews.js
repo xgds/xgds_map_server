@@ -1445,7 +1445,7 @@ $(function() {
         initializeFeaturesJson: function() {
             var thisMapLayerView = this;
             $.getJSON(this.options.mapLayerJsonURL, function(data){
-                thisMapLayerView.mapLayerJson = data.data.layerData;
+                thisMapLayerView.mapLayerJson = data.data.layerData.jsonFeatures;
                 thisMapLayerView.trigger('readyToDraw');
             });
         },
@@ -1478,36 +1478,106 @@ $(function() {
         createFeature: function(featureJson){
             var newFeature;
             switch (featureJson['type']){
-            case 'GroundOverlay':
-                newFeature = new app.views.GroundOverlayView({
-                    layerGroup: this.layerGroup,
-                    featureJson: featureJson
-                });
-                this.drawBelow = false;
-                break;
-            case 'Polygon':
-                newFeature = new app.views.PolygonView({
-                    layerGroup: this.layerGroup,
-                    featureJson: featureJson
-                });
-                break;
-            case 'Point':
-                newFeature = new app.views.PointView({
-                    layerGroup: this.layerGroup,
-                    featureJson: featureJson
-                });
-                break;
-            case 'LineString':
-                newFeature = new app.views.LineStringView({
-                    layerGroup: this.layerGroup,
-                    featureJson: featureJson
-                });
-                break;
-            } 
+                case 'GroundOverlay':
+                    newFeature = new app.views.GroundOverlayView({
+                        layerGroup: this.layerGroup,
+                        featureJson: featureJson
+                    });
+                    this.drawBelow = false;
+                    break;
+                case 'Polygon':
+                    newFeature = new app.views.PolygonView({
+                        layerGroup: this.layerGroup,
+                        featureJson: featureJson
+                    });
+                    break;
+                case 'Point':
+                    newFeature = new app.views.PointView({
+                        layerGroup: this.layerGroup,
+                        featureJson: featureJson
+                    });
+                    break;
+                case 'LineString':
+                    newFeature = new app.views.LineStringView({
+                        layerGroup: this.layerGroup,
+                        featureJson: featureJson
+                    });
+                    break;
+            }
+
+            this.setFeatureStyle(featureJson.style, newFeature, featureJson.shape);
             if (!_.isUndefined(newFeature)){
                 this.features.push(newFeature);
             }
         },
+        setFeatureStyle: function(color, featureView, shape){
+            if (color == null){
+				color = "#0000ff";
+			}
+
+            if (featureView.featureJson.type == 'Point'){
+                var style = this.createPointStyle(color, shape);
+				featureView.updateStyle(style);
+            }
+
+            else{
+				var style = this.createFeatureStyle(color);
+				featureView.updateStyle(style);
+			}
+		},
+		createFeatureStyle: function(color){
+			var style = new ol.style.Style({
+				stroke: new ol.style.Stroke({
+					color: color,
+					width: 3
+				}),
+				image: new ol.style.Circle({
+					radius: 6,
+					stroke: new ol.style.Stroke({color: '#000', width: 2}),
+					fill: new ol.style.Fill({
+						color: color
+					})
+				})
+			});
+
+			return style;
+		},
+        createPointStyle: function(color, shape){
+			switch(shape){
+				case "Circle":
+					var style = this.createFeatureStyle(color);
+					break;
+				case "Square":
+					var style = new ol.style.Style({
+						image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+							color: color,
+							src: '/static/xgds_map_server/icons/square-point.png',
+						}))
+					});
+					break;
+				case "Triangle":
+					var style = new ol.style.Style({
+						image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+							color: color,
+							src: '/static/xgds_map_server/icons/triangle-point.png',
+						}))
+					});
+					break;
+				case "Star":
+					var style = new ol.style.Style({
+						image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+							color: color,
+							src: '/static/xgds_map_server/icons/star-point.png',
+						}))
+					});
+					break;
+				default:
+					var style = this.createFeatureStyle(color);
+					break;
+			}
+
+			return style;
+		},
         onRender: function(selected) {
             if (_.isUndefined(selected)){
         	selected = true;
@@ -1658,7 +1728,7 @@ $(function() {
         },
         getStyle: function() {
             if (this.basicStyle == undefined){
-        	this.basicStyle = olStyles.styles[this.featureJson.type.toLowerCase()];
+        	    this.basicStyle = olStyles.styles[this.featureJson.type.toLowerCase()];
             }
             return this.basicStyle;
         },

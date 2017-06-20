@@ -1,4 +1,5 @@
-    <div id="map-buttons" data-toggle="buttons-radio" >
+<div class="row">
+    <div class="col-md-6" id="map-buttons" data-toggle="buttons-radio" >
         <div class="btn-group" role="group" data-toggle="buttons">
         	<label class="btn btn-primary active" name="addType" id="btn-polygon" data="Polygon">
         		<input type="radio"  autocomplete="off" checked/>Polygon
@@ -11,3 +12,16 @@
         	</label>
         </div>
     </div>
+
+    <div class="col-md-6" id="color-button" >
+        <div class="btn-group pull-right colorpicker" role="group">
+            <select class="btn btn-primary icon-select" id="icon-type">
+              <option value="Circle">Circle</option>
+              <option value="Triangle">Triangle</option>
+              <option value="Square">Square</option>
+              <option value="Star">Star</option>
+            </select>
+        	<input type='text' id="color-picker" />
+        </div>
+    </div>
+</div>
