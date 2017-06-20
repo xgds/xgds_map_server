@@ -22,7 +22,7 @@
 					<i class="fa fa-lock pinDiv gray-light"></i>
 				</ul>
 				<div id="overmap" class="mb-1 mt-negative-1rem" >
-        			{% if mapLayerDict.features|length == 0 %}
+        			{% if mapLayerDict.jsonFeatures|length == 0 %}
         			{% siteframe_form %}
         			{% endif %}
         		</div>
@@ -50,6 +50,29 @@
 		<tr></tr>
 		</table>
 	</div>
+
+    <div id="newLayerModal" class="modal hide fade">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Create new layer from selected features</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                  <form action="/xgds_map_server/addLayerFromSelected/" method="post">
+                    {% csrf_token %}
+                    {{ layerForm.as_p }}
+                    <input type="submit" class="btn btn-primary" id="btn-new-layer-selected">
+                  </form>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+              </div>
+            </div>
+        </div>
+    </div>
 </script>
 <style scoped>
   {# stylesheet 'planner_app' #}
@@ -68,6 +91,7 @@
   @import url("{% static 'xgds_planner2/css/forms_adjust.css' %}");
   @import url('{{ EXTERNAL_URL }}gridstack/dist/gridstack.min.css');
   @import url('{{ EXTERNAL_URL }}gridstack/dist/gridstack-extra.min.css');
+  @import url('{{ EXTERNAL_URL }}spectrum/spectrum.css');
   /*.grid-stack-item-content {
     	display: block;
     	margin: 20px 0 10px;
@@ -85,6 +109,7 @@
 	{{ block.super }}
 	{% include "xgds_core/timeJS.html" %}
 	<script type="text/javascript">
+    var copiedFeatures = {{ copiedFeatures|safe }}
 	var appOptions = {
 	    	BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
 	 		DEFAULT_COORD_SYSTEM: '{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}',
@@ -133,6 +158,8 @@
     <script type="text/javascript" src="{% static 'xgds_map_server/js/map_editor/mapEditorModels.js' %}"></script>
     <script type="text/javascript" src="{% static 'xgds_map_server/js/map_editor/mapEditorViews.js' %}"></script>
     <script type="text/javascript" src="{% static 'xgds_map_server/js/map_editor/olMapEditorViews.js' %}"></script>
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}spectrum/spectrum.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js"></script>
    	
     {% for template_name, template in templates.items %}
 		<script type="text/handlebars" id="template-{{template_name}}">
@@ -148,8 +175,7 @@
 
 {% block jsInit %}
 	var siteFrames = {% siteframes_dict %};
-    
-	
+
 	$(function(){
 	    app.vent.on('onMapSetup', function() {
 		    xgds_gridstack.initializeGridstack();
@@ -171,11 +197,12 @@
 	    
 	})
 	
-	$(window).bind('beforeunload', function() {
+	$(window).on('beforeunload', function() {
+        alert('test');
         if (app.dirty) {
             return 'Unsaved changes, are you sure you want to exit?';
         }
-    }); 
+    });
     
 {% endblock jsInit %}
   

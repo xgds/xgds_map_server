@@ -29,12 +29,15 @@
 			});
 			this.listenTo(app.vent, 'mapEditorLayerInitialized', function() {
 	        	app.vent.trigger('clearSaveStatus');
-	        	if (app.mapLayer.attributes.features.length == 0){
+	        	if (app.mapLayer.attributes.jsonFeatures.features == 0){
 	    		    app.vent.trigger('mapmode', 'addFeatures');
 	    		} else {
 	    		    app.vent.trigger('mapmode', 'navigate');;
 	    		}
         	});
+		},
+		events:{
+			'click #btn-submit-layer': function(){ app.vent.trigger('getSelectedFeatures'); }
 		},
 		regions: {
 			mapRegion: '#map',
@@ -80,22 +83,23 @@
             disableAddFeature: false,
             popupsEnabled: true
         },
-//        Actions: xGDS.Actions,
-//        getSerializableObject: function() {
-//			if (!_.isUndefined(this.mapLayer)) {
-//				return this.mapLayer;
-//			} else {
-//				return '';
-//			}
-//		},
-//		updateSerializableObject: function(sObject){
-//			this.updateMapLayer(sObject);
-//		},
+       /*Actions: xGDS.Actions,
+       getSerializableObject: function() {
+			if (!_.isUndefined(this.mapLayer)) {
+				return this.mapLayer;
+			} else {
+				return '';
+			}
+		},*/
+		updateSerializableObject: function(sObject){
+			this.updateMapLayer(sObject);
+		},
         parseJSON: function() {
         	// create the map layer from map layer obj passed in from server as json
             app.mapLayer = new app.models.MapLayer(app.options.mapLayerDict);
-         // create backbone feature objects already existing in mapLayer's attributes
-    		$.each(app.mapLayer.attributes.features, function(index, featureJson) {
+
+         	// create backbone feature objects already existing in mapLayer's attributes
+    		$.each(app.mapLayer.attributes.jsonFeatures.features, function(index, featureJson) {
     			var featureObj = new app.models.Feature(featureJson);
     			featureObj.json = featureJson;
     			featureObj.set('mapLayer', app.mapLayer);  // set up the relationship.
@@ -107,19 +111,10 @@
 
         util: {
 	        deleteFeature: function(feature){
-	            feature.destroy({
-				data: { 'uuid': feature.uuid },
-				wait: true,
-				success: function(model, response) {
-				    if(!_.isUndefined(feature.collection)) {
-		    			feature.collection.remove(feature);
-		    		    }
-				    app.vent.trigger('deleteFeatureSuccess', feature);
-				}, 
-				error: function() {
-					console.log("Error in deleting a feature");
+				if (!_.isUndefined(feature.collection)){
+					feature.collection.remove(feature);
 				}
-			});
+				app.vent.trigger('deleteFeatureSuccess', feature);
 	        },
 	        getFeatureWithName: function(name) {
 	          var features = app.mapLayer.get('feature').toArray();

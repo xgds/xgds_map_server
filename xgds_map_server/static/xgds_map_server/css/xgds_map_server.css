@@ -1,5 +1,83 @@
+#id_description, #id_name, #id_region, #id_region, #id_transparency, #id_parent{
+	width: 100%;
+}
+
+.scrolling_column .sp-preview div {
+    margin-bottom: 0px !important;
+}
+
+.sp-dd {
+    padding: 0px 0 !important;
+    height: 10px !important;
+    line-height: 10px !important;
+    float:left !important;
+    font-size:10px !important;
+}
+.sp-preview {
+    position:relative !important;
+    width:45px !important;
+    height: 10px !important;
+    border: solid 1px #222 !important;
+    margin-right: 5px !important;
+    float:left !important;
+    z-index: 0 !important;
+}
+
+.sp-replacer{
+	border-radius: 3px !important;
+}
+
+.colorpicker .sp-replacer{
+	margin-top: 3px !important;
+}
+
+.hidden-input{
+	display: none;
+}
+
+.copy-warning-info, .paste-warning-info, .copy-error-info, .paste-exists-info{
+	color: #ff5238;
+	display: none;
+}
+
+.copy-success-info, .paste-success-info{
+	display: none;
+}
+
+form > p > label {
+    justify-content: flex-start !important;
+}
+
+#btn-new-layer-selected{
+	margin-left: 15px;
+	margin-top: 20px;
+}
+
+#id_visible, #id_locked{
+	margin-top: 3px;
+}
+
+.newLayerInput{
+	margin-bottom: 15px !important;
+}
+
+.icon-select{
+	height: 21px;
+	margin-right: 5px;
+	margin-top:2px;
+	display: none;
+}
+
+.colorpicker{
+	margin-top: 3px;
+}
+
 .coords-error-msg {
 	color: red;
+}
+
+.layer-saved{
+	display: none;
 }
 
 .maplegend {

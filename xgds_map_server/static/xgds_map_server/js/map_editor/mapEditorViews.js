@@ -36,7 +36,11 @@ app.views.ToolbarView = Marionette.View.extend({
         'click #btn-undo': function() { app.Actions.undo(); },
         'click #btn-redo': function() { app.Actions.redo(); },
         'click #btn-save': function() { this.saveEntireLayer();},
-        'click #btn-delete': function() {window.location.href=app.options.deleteUrl}
+        'click #btn-delete': function() {window.location.href=app.options.deleteUrl},
+		'click #btn-newLayer': function() {
+			$('#newLayerModal').modal();
+			app.vent.trigger('getSelectedFeatures');
+        }
     },
 
     initialize: function() {
@@ -47,6 +51,7 @@ app.views.ToolbarView = Marionette.View.extend({
         this.listenTo(app.vent, 'redoNotEmpty', this.enableRedo);
         this.listenTo(app.mapLayer, 'sync', function(model) {this.updateSaveStatus('sync')});
         this.listenTo(app.mapLayer, 'error', function(model) {this.updateSaveStatus('error')});
+        this.listenTo(app.vent, 'sendSelectedFeatures', this.getJsonFeatures);
     },
 
 //    onRender: function() {
@@ -142,12 +147,13 @@ app.views.ToolbarView = Marionette.View.extend({
     },
 
     saveEntireLayer: function(){
-        //TODO when we are saving as one big json blob, can delete all this feature stuff.
-    	var theFeatures = app.mapLayer.get('feature');
-        for (i = 0; i < theFeatures.models.length; i++){
-            theFeatures.models[i].save();
-        }
-        app.mapLayer.save();
+		var jsonFeaturesFormatter = {};
+		jsonFeaturesFormatter['features'] = app.mapLayer.get('feature');
+
+		app.mapLayer.set('jsonFeatures', JSON.stringify(jsonFeaturesFormatter));
+		app.mapLayer.save();
+
+		$('#layer-saved').show();
     },
     
     showSaveAsDialog: function() {
@@ -176,12 +182,43 @@ app.views.ToolbarView = Marionette.View.extend({
             },
             dialogClass: 'saveAs'
     	});
-    }
+    },
+	getJsonFeatures: function(selectedFeatures){
+		$('#id_jsonFeatures').val(selectedFeatures);
+	}
 
 });
 
 app.views.EditingToolsView = Marionette.View.extend({
 	template: '#template-editing-tools',
+	initialize: function() {
+		this.listenTo(app.vent, 'initializeColorPicker', this.initializeColorPicker);
+    },
+	initializeColorPicker: function(){
+		$("#color-picker").spectrum({
+			showPaletteOnly: true,
+			preferredFormat: "hex",
+			color: "blue",
+			showPalette: true,
+			//TODO: Move palette into a config file that is loaded in
+			palette: [
+				["#00f", "#f0f"],
+				["#fff", "#f90"],
+				["#ff0", "#0f0"]
+			]
+		});
+
+		this.setColor();
+	},
+	setColor: function(){
+		if (app.mapLayer.attributes.defaultColor == null || app.mapLayer.attributes.defaultColor == ""){
+			$("#color-picker").spectrum("set", "#00f");
+		}
+
+		else{
+			$("#color-picker").spectrum("set", app.mapLayer.attributes.defaultColor);
+		}
+	},
 	close: function() {
         this.ensureEl();
         this.$el.hide();
@@ -195,16 +232,50 @@ app.views.NavigateView = Marionette.View.extend({
 app.views.LayerInfoTabView = Marionette.View.extend({
 	template: '#template-layer-info',
 	initialize: function() {
+		this.listenTo(app.vent, 'initializeInfoColorPicker', this.initializeInfoColorPicker);
+		this.listenTo(app.vent, 'infoPickerChanged', this.setDefaultStyle);
 	},
 	events: {
 		'change #mapLayerName': function(evt) {
 			this.model.set('name', evt.target.value);
-			this.model.save()
 		},
 		'change #mapLayerDescription': function(evt) {
 			this.model.set('description', evt.target.value);
-			this.model.save();
 		}    
+	},
+	//This function supports navigating away from the info tab and back to it, fires after the onShow
+	// event so we know the color picker is actually in the view (part of Marionette)
+	onDomRefresh: function(){
+		app.vent.trigger('initializeInfoColorPicker');
+	},
+	initializeInfoColorPicker: function(){
+		$("#info-color-picker").spectrum({
+			showPaletteOnly: true,
+			color: "blue",
+			showPalette: true,
+			palette: [
+				["#00f", "#f0f"],
+				["#fff", "#f90"],
+				["#ff0", "#0f0"]
+			],
+			change: function(color){
+				app.vent.trigger('infoPickerChanged', color.toHexString());
+			}
+		});
+
+		this.setColorPicker();
+	},
+	setColorPicker: function(){
+		if (this.model.attributes.defaultColor == null || this.model.attributes.defaultColor == ""){
+			$("#info-color-picker").spectrum("set", "#00f");
+		}
+
+		else{
+			$("#info-color-picker").spectrum("set", this.model.attributes.defaultColor);
+		}
+	},
+	setDefaultStyle: function(color){
+		this.model.set('defaultColor', color);
 	}
 });
 
@@ -285,6 +356,7 @@ app.views.FeaturesTabView = Marionette.View.extend({
     	
     	var view = new app.views.FeaturePropertiesView({model: itemModel});
     	this.getRegion('col2').show(view);
+    	app.vent.trigger('initializeEditColorPicker');
     },
     
     showStyle: function(model){
@@ -378,7 +450,6 @@ app.views.FeatureCoordinatesView = Marionette.View.extend({
 			return;
 		}
 		app.util.updateFeatureCoordinate(this.model.get('type'), this.model, newX, newY, coordIndex);
-		this.model.save();
 		this.model.trigger('change:coordinates');
 	},
 	templateContext: function() {
@@ -394,7 +465,7 @@ app.views.FeatureCoordinatesView = Marionette.View.extend({
 			coordinates = [this.model.get('point')];
 		}
 		return {coords: coordinates, polygon: markPolygon};
-	}, 
+	},
 });
 
 
@@ -425,23 +496,47 @@ app.views.FeaturePropertiesView = Marionette.View.extend({
 		}, 
 		'change #featureName': function(evt) {
 			this.model.set('name', evt.target.value);
-			this.model.save();
 		}, 
 		'change #featureDescription': function(evt) {
 			this.model.set('description', evt.target.value);
-			this.model.save();
 		},
 		'click #showLabel': function(evt) {
 			this.model.set('showLabel', evt.target.checked);
-			this.model.save();
 		},
 		'click #popup': function(evt) {
 			this.model.set('popup', evt.target.checked);
-			this.model.save();
-		}
+		},
+	},
+	initialize: function(){
+		this.listenTo(app.vent, 'initializeEditColorPicker', this.initializeEditColorPicker);
+		this.listenTo(app.vent, 'editPickerChanged', this.updateFeatureStyle);
 	},
 	onRender: function() {
 		app.vent.trigger('showCoordinates', this.model);
+	},
+	initializeEditColorPicker: function(){
+		$("#edit-color-picker").spectrum({
+			showPaletteOnly: true,
+			color: "blue",
+			showPalette: true,
+			palette: [
+				["#00f", "#f0f"],
+				["#fff", "#f90"],
+				["#ff0", "#0f0"]
+			],
+			change: function(color){
+				app.vent.trigger('editPickerChanged', color.toHexString());
+			}
+		});
+
+		this.setColorPicker();
+	},
+	setColorPicker: function(){
+		$("#edit-color-picker").spectrum("set", this.model.attributes.style);
+	},
+	updateFeatureStyle: function(color){
+		this.model.set('style', color);
+		//this.model.updateStyle(color);
 	}
 });
 
@@ -453,7 +548,9 @@ app.views.FeaturesHeaderView = Marionette.View.extend({
 	template: '#template-features-header',
 	events: {
 		'click #btn-delete': function() { app.vent.trigger('deleteSelectedFeatures', this.model)},
-	}
+		'click #btn-copy': function() { app.vent.trigger('copyFeatures'); },
+		'click #btn-paste': function() { app.vent.trigger('pasteFeatures') }
+	},
 });
 
 
@@ -483,7 +580,8 @@ app.views.FeatureElementView = Marionette.View.extend({
     //template: '<span><input class="select" type="checkbox" id="id_{{uuid}}"/>&nbsp;<label class="featureName" style="display:inline-block;" for="id_{{uuid}}">{{displayname}}</label></span>',
     template: '<div><div class="form-check form-check-inline"><label class="form-check-label featureRow" for="id_{{uuid}}"><input class="form-check-input select" type="checkbox" id="id_{{uuid}}"/>{{displayname}}<i/></label></div></div>',
     onRender: function() {
-    	var index = app.mapLayer.get('features').indexOf(this.model.json);
+    	var index = 0; //TODO fix app.mapLayer.get('jsonFeatures').features.indexOf(this.model.json);
+
     	var odd = index % 2;
     	var color = 'white';
     	if (odd) {
@@ -515,6 +613,7 @@ app.views.FeatureElementView = Marionette.View.extend({
         app.State.metaExpanded = true;
         app.State.featureSelected = this.model;
         app.vent.trigger('showFeature', this.model);
+		app.vent.trigger('initializeEditColorPicker');
     },
     events: {
     	'click .featureRow': function() {
@@ -570,6 +669,9 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
 		this.listenTo(app.vent, 'featuresSelected', this.enableFeatureActions);
 		this.listenTo(app.vent, 'featuresUnSelected', this.disableFeatureActions);
 		this.listenTo(app.vent, 'deleteSelectedFeatures', this.deleteSelectedFeatures);
+		this.listenTo(app.vent, 'getSelectedFeatures', this.sendSelectedFeatures);
+		this.listenTo(app.vent, 'copyFeatures', this.copyFeatures);
+		this.listenTo(app.vent, 'pasteFeatures', this.pasteFeatures);
 		this.on('childview:expand', function(childView) { this.onItemExpand(childView);}, this);
 	},
 	childViewOptions: {
@@ -584,13 +686,12 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
 		app.vent.trigger('itemSelected', childView.model);
 	},   
     deleteSelectedFeatures: function(){
-    	var features = this.getSelectedFeatures(); 
+    	var features = this.getSelectedFeatures();
     	var selectParent = null;
     	_.each(features, function(feature) {
     	    app.vent.trigger('deleteFeature', feature);
     	});
-    }, 
-    
+    },
     getSelectedFeatures: function() {
 		var features = [];
 		this.children.each(function(childView) {
@@ -603,7 +704,79 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
 		    }
 		});
 		return features;
-    }
+    },
+	copyFeatures: function(){
+		var features = this.getSelectedFeatures();
+		features = this.formatFeatures(features);
+
+		if (features == null){
+			this.hideClipboardMsgs();
+			$('#copy-warning').show();
+		}
+
+		else{
+			this.hideClipboardMsgs();
+
+			$.ajax({
+				type: "POST",
+				dataType: 'json',
+				url: "/xgds_map_server/copyFeatures",
+				data: {features: features}
+			});
+
+			$('#copy-success').show();
+		}
+	},
+	pasteFeatures: function(){
+		if (copiedFeatures){
+			this.hideClipboardMsgs();
+
+			$.each(copiedFeatures.features, function(index, featureJson) {
+				try{
+					var featureObj = new app.models.Feature(featureJson);
+					featureObj.json = featureJson;
+					featureObj.set('mapLayer', app.mapLayer);  // set up the relationship.
+					featureObj.set('mapLayerName', app.mapLayer.get('name'));
+					//featureObj.set('uuid', featureJson.uuid);
+					featureObj.set('uuid', new UUID(4).format());
+					featureObj.set('name', app.util.generateFeatureName(featureJson.type))
+					app.vent.trigger('newFeatureLoaded', featureObj);
+					$('#paste-success').show();
+				}
+
+				catch(err){
+					$('#paste-exists').show();
+				}
+			});
+		}
+
+		else{
+			this.hideClipboardMsgs();
+			$('#paste-warning').show();
+		}
+	},
+	hideClipboardMsgs: function(){
+		$('#paste-success').hide();
+		$('#paste-warning').hide();
+		$('#paste-exists').hide();
+		$('#copy-success').hide();
+		$('#copy-error').hide();
+		$('#copy-warning').hide();
+	},
+	sendSelectedFeatures:function(){
+    	var features = this.getSelectedFeatures();
+    	features = this.formatFeatures(features);
+    	app.vent.trigger('sendSelectedFeatures', features);
+	},
+	formatFeatures: function(features){
+		if (features.length <= 0)
+			return null;
+
+		var featureFormatter = {};
+		featureFormatter['features'] = features;
+
+		return JSON.stringify(featureFormatter);
+	}
 });
 
 
@@ -622,6 +795,7 @@ app.views.TabNavView = xGDS.TabNavView.extend({
         var context = this;
         this.listenTo(app.vent, 'onLayerLoaded', function() {
         	 this.setTab('info');
+        	 app.vent.trigger('initializeInfoColorPicker');
         }, this);
     },
     getModel: function() {

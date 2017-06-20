@@ -40,7 +40,7 @@ from django.db import transaction
 from django.forms.formsets import formset_factory
 from django.http import HttpResponse, Http404, JsonResponse
 from django.http import HttpResponseRedirect
-from django.http import HttpResponseServerError
+from django.http import HttpResponseServerError, HttpResponseNotAllowed
 from django.shortcuts import render
 from django.template import RequestContext
 from django.views.decorators.cache import never_cache
@@ -58,7 +58,7 @@ from xgds_data.dlogging import recordList, recordRequest
 from xgds_data.forms import SearchForm, SpecializedForm
 from xgds_data.models import RequestLog, ResponseLog
 from xgds_data.views import searchHandoff, resultsIdentity
-from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapTileForm, MapDataTileForm, MapSearchForm, MapCollectionForm, EditMapTileForm, EditMapDataTileForm
+from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapLayerFromSelectedForm, MapTileForm, MapDataTileForm, MapSearchForm, MapCollectionForm, EditMapTileForm, EditMapDataTileForm
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapDataTile, MapSearch, MapCollection, MapLink, MAP_NODE_MANAGER, MAP_MANAGER
 from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
 from xgds_map_server.kmlLayerExporter import exportMapLayer
@@ -165,6 +165,7 @@ def getMapEditorPage(request, layerID=None):
     fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     fullTemplateList.append(os.path.join('xgds_map_server', 'templates', 'handlebars', 'edit'))
     templates = get_handlebars_templates(fullTemplateList, 'XGDS_MAP_SERVER_MAP_EDITOR')
+    copiedFeatures = json.dumps(request.session.get('copiedFeatures', False))
     if layerID:
         mapLayer = MapLayer.objects.get(pk=layerID)
         mapLayerDict = mapLayer.toDict()
@@ -173,6 +174,8 @@ def getMapEditorPage(request, layerID=None):
     return render(request,
                   "MapEditor.html",
                   {'templates': templates,
+                   'copiedFeatures': copiedFeatures,
+                   'layerForm': MapLayerFromSelectedForm(),
                    'saveSearchForm': MapSearchForm(),
                    'searchForms': getSearchForms(),
                    'app': 'xgds_map_server/js/map_editor/mapEditorApp.js',
@@ -244,6 +247,7 @@ def saveMaplayer(request):
     if (request.method == "PUT") or (request.method == "POST"):  # map layer already exists so backbone sends a PUT request to update it.
         data = json.loads(request.body)
         uuid = data.get('uuid', None)
+        print(data)
         try:
             mapLayer = MapLayer.objects.get(uuid = uuid)
         except:
@@ -252,6 +256,8 @@ def saveMaplayer(request):
         mapLayer.description = data.get('description', "")
         mapLayer.modification_time = datetime.datetime.now(pytz.utc)
         mapLayer.modifier = request.user.first_name + " " + request.user.last_name
+        mapLayer.defaultColor = data.get('defaultColor', "")
+        mapLayer.jsonFeatures = data.get('jsonFeatures', '{}')
         mapLayer.save()
 
         #TODO have to return 
@@ -1680,7 +1686,7 @@ def processTiles(request, uuid, minZoom, maxZoom, resampleMethod, mapTile):
 def getMapLayerKML(request, layerID):
     if layerID:
         mapLayer = MapLayer.objects.get(pk=layerID)
-        result =  exportMapLayer(request,mapLayer)
+        result = exportMapLayer(request, mapLayer)
         return wrapKmlForDownload(result, mapLayer.name)
 
 @never_cache
@@ -1952,6 +1958,45 @@ def getPrevNextObject(request, currentPK, mapName, which='previous'):
                                         }),
                             content_type='application/json', status=406)
 
+def addLayerFromSelected(request):
+    if request.method == 'POST':
+        layer_form = MapLayerFromSelectedForm(request.POST)
+        if layer_form.is_valid():
+            map_layer = MapLayer()
+            map_layer.name = layer_form.cleaned_data['name']
+            map_layer.description = layer_form.cleaned_data['description']
+            map_layer.creator = request.user.first_name + " " +  request.user.last_name
+            map_layer.modifier = map_layer.creator
+            map_layer.creation_time = datetime.datetime.now(pytz.utc)
+            map_layer.modification_time = datetime.datetime.now(pytz.utc)
+            map_layer.deleted = False
+            map_layer.locked = layer_form.cleaned_data['locked']
+            map_layer.visible = layer_form.cleaned_data['visible']
+            map_layer.transparency = layer_form.cleaned_data['transparency']
+            map_layer.jsonFeatures = layer_form.cleaned_data['jsonFeatures']
+            mapGroup = layer_form.cleaned_data['parent']
+            map_layer.parent = MapGroup.objects.get(name=mapGroup)
+            map_layer.save()
+        else:
+            return HttpResponse(json.dumps({'failed': 'Form was not valid'}),
+                                content_type='application/json', status=500)
+
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapEditLayer', kwargs={'layerID': map_layer.uuid})))
+
+    return HttpResponse(json.dumps({'failed': 'Must be a POST but got %s instead' % request.method}),
+                        content_type='application/json', status=406)
+
+def copyFeatures(request):
+    if not request.is_ajax() or not request.method == 'POST':
+        return HttpResponseNotAllowed(['POST'])
+
+    features = json.loads(request.POST.get('features'))
+    request.session['copiedFeatures'] = features
+    return HttpResponse('ok')
+    # return HttpResponse(json.dumps(features),
+    #                        content_type='application/json')
+
+
 class MapOrderListJson(OrderListJson):
     
     def dispatch(self, request, *args, **kwargs):
@@ -1965,3 +2010,7 @@ class MapOrderListJson(OrderListJson):
                 self.columns = modelMap['columns']
                 self.order_columns = self.columns
         return super(MapOrderListJson, self).dispatch(request, *args, **kwargs)
+
+
+
+

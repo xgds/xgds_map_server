@@ -31,6 +31,7 @@ from django.conf import settings
 from geocamUtil.models.UuidField import UuidField
 from geocamUtil.models.managers import ModelCollectionManager
 from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
+from geocamUtil.models.ExtrasDotField import ExtrasDotField
 from xgds_data.models import Collection, RequestLog
 from xgds_core.couchDbStorage import CouchDbStorage
 
@@ -56,6 +57,11 @@ class AbstractMapNode(models.Model):
     creation_time = models.DateTimeField(null=True, blank=True, db_index=True)
     modification_time = models.DateTimeField(null=True, blank=True, db_index=True)
     deleted = models.BooleanField(blank=True, default=False)
+    minLat = models.FloatField(blank=True, null=True)
+    minLon = models.FloatField(blank=True, null=True)
+    maxLat = models.FloatField(blank=True, null=True)
+    maxLon = models.FloatField(blank=True, null=True)
+    region = models.ForeignKey('geocamUtil.SiteFrame', null=True)
 
     @property
     def parent(self):
@@ -331,6 +337,8 @@ class MapDataTile(AbstractMapTile):
 
 class MapLayer(AbstractMap):
     """ A map layer which will have a collection of features that have content in them. """
+    jsonFeatures = ExtrasDotField()
+    defaultColor = models.CharField(max_length=32, null=True, blank=True)
 
     def getEditHref(self):
         return reverse('mapEditLayer', kwargs={'layerID': self.uuid})
@@ -356,6 +364,9 @@ class MapLayer(AbstractMap):
     
     def getGoogleEarthUrl(self, request):
         return request.build_absolute_uri(reverse('mapLayerKML', kwargs={'layerID': self.uuid}))
+
+    def getFeatureJson(self):
+        return self.jsonFeatures
 
 
 class MapCollection(AbstractMap):
