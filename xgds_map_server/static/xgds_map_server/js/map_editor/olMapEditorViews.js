@@ -94,7 +94,6 @@ $(function() {
 				this.olFeatures.remove(killedFeature.olFeature);
 			});
 			this.listenTo(app.vent, 'selectFeature', function(feature){
-				console.log(feature.attributes);
 				if (feature.get('type') == "Point"){
 					if (feature.attributes.shape == null){
 						feature.trigger('setBasicStyle', olStyles.styles['selected_circle']);

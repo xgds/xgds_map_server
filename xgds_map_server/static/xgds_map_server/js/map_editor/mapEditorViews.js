@@ -536,7 +536,7 @@ app.views.FeaturePropertiesView = Marionette.View.extend({
 	},
 	updateFeatureStyle: function(color){
 		this.model.set('style', color);
-		this.model.updateStyle(color);
+		//this.model.updateStyle(color);
 	}
 });
 
