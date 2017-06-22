@@ -54,18 +54,18 @@ app.views.ToolbarView = Marionette.View.extend({
         this.listenTo(app.vent, 'sendSelectedFeatures', this.getJsonFeatures);
     },
 
-//    onRender: function() {
-//        if (app.Actions.undoEmpty()) {
-//            this.disableUndo();
-//        } else {
-//            this.enableUndo();
-//        }
-//        if (app.Actions.redoEmpty()) {
-//            this.disableRedo();
-//        } else {
-//            this.enableRedo();
-//        }
-//    },
+   onRender: function() {
+       if (app.Actions.undoEmpty()) {
+           this.disableUndo();
+       } else {
+           this.enableUndo();
+       }
+       if (app.Actions.redoEmpty()) {
+           this.disableRedo();
+       } else {
+           this.enableRedo();
+       }
+   },
 
     disableForReadOnly: function() {
         this.$('#btn-save').attr('disabled', 'true');
