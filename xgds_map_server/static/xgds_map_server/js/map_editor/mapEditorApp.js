@@ -35,6 +35,16 @@
 	    		    app.vent.trigger('mapmode', 'navigate');;
 	    		}
         	});
+			this.listenTo(this.vent, 'all', function(eventname, args) {
+				if (eventname == 'change:map') {
+					app.Actions.action();
+				} else if (eventname == 'map:reversing') {
+					app.Actions.disable();
+				} else if (eventname == 'map:reverse') {
+					app.Actions.enable();
+					app.Actions.action();
+				}
+			});
 		},
 		events:{
 			'click #btn-submit-layer': function(){ app.vent.trigger('getSelectedFeatures'); }
@@ -83,14 +93,14 @@
             disableAddFeature: false,
             popupsEnabled: true
         },
-       /*Actions: xGDS.Actions,
+       Actions: xGDS.Actions,
        getSerializableObject: function() {
 			if (!_.isUndefined(this.mapLayer)) {
 				return this.mapLayer;
 			} else {
 				return '';
 			}
-		},*/
+		},
 		updateSerializableObject: function(sObject){
 			this.updateMapLayer(sObject);
 		},
@@ -106,8 +116,24 @@
     			featureObj.set('mapLayerName', app.mapLayer.get('name'));
     			featureObj.set('uuid', featureJson.uuid);
     		});
+    		this.Actions.setInitial();
     		this.vent.trigger('onLayerLoaded');
         },
+		updateMapLayer: function(features){
+			console.log(features);
+			// Backbone.Relational.store.unregister(app.mapLayer);
+            //
+			// app.mapLayer = new app.models.MapLayer(features);
+            //
+			// $.each(app.mapLayer.attributes.jsonFeatures.features, function(index, featureJson) {
+    			// var featureObj = new app.models.Feature(featureJson);
+    			// featureObj.json = featureJson;
+    			// featureObj.set('mapLayer', app.mapLayer);  // set up the relationship.
+    			// featureObj.set('mapLayerName', app.mapLayer.get('name'));
+    			// featureObj.set('uuid', featureJson.uuid);
+            // });
+			// this.vent.trigger('onLayerLoaded');
+		},
 
         util: {
 	        deleteFeature: function(feature){
@@ -115,6 +141,8 @@
 					feature.collection.remove(feature);
 				}
 				app.vent.trigger('deleteFeatureSuccess', feature);
+				app.Actions.action();
+				console.log(app.Actions);
 	        },
 	        getFeatureWithName: function(name) {
 	          var features = app.mapLayer.get('feature').toArray();
