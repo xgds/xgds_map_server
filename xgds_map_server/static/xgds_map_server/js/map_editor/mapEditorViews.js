@@ -451,6 +451,7 @@ app.views.FeatureCoordinatesView = Marionette.View.extend({
 		}
 		app.util.updateFeatureCoordinate(this.model.get('type'), this.model, newX, newY, coordIndex);
 		this.model.trigger('change:coordinates');
+		// app.Actions.action();
 	},
 	templateContext: function() {
 		var coordinates = null;
@@ -689,6 +690,7 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
     	_.each(features, function(feature) {
     	    app.vent.trigger('deleteFeature', feature);
     	});
+    	app.Actions.action();
     },
     getSelectedFeatures: function() {
 		var features = [];

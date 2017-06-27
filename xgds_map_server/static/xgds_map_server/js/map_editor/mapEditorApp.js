@@ -124,6 +124,7 @@
 			var _this = this;
 
 			$.each(featureList.models, function(index, feature){
+				console.log(feature);
 				_this.util.deleteFeature(feature);
 			});
 
@@ -131,6 +132,7 @@
 			// app.mapLayer = new app.models.MapLayer(features);
 
 			$.each(features.jsonFeatures.features, function(index, featureJson) {
+				// console.log(featureJson);
 				featureJson.uuid = new UUID(4).format();
 
     			var featureObj = new app.models.Feature(featureJson);
@@ -149,7 +151,6 @@
 					feature.collection.remove(feature);
 				}
 				app.vent.trigger('deleteFeatureSuccess', feature);
-				app.Actions.action();
 	        },
 	        getFeatureWithName: function(name) {
 	          var features = app.mapLayer.get('feature').toArray();
