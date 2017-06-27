@@ -120,19 +120,27 @@
     		this.vent.trigger('onLayerLoaded');
         },
 		updateMapLayer: function(features){
-			console.log(features);
+			var featureList = app.mapLayer.get('feature');
+			var _this = this;
+
+			$.each(featureList.models, function(index, feature){
+				_this.util.deleteFeature(feature);
+			});
+
 			// Backbone.Relational.store.unregister(app.mapLayer);
-            //
 			// app.mapLayer = new app.models.MapLayer(features);
-            //
-			// $.each(app.mapLayer.attributes.jsonFeatures.features, function(index, featureJson) {
-    			// var featureObj = new app.models.Feature(featureJson);
-    			// featureObj.json = featureJson;
-    			// featureObj.set('mapLayer', app.mapLayer);  // set up the relationship.
-    			// featureObj.set('mapLayerName', app.mapLayer.get('name'));
-    			// featureObj.set('uuid', featureJson.uuid);
-            // });
-			// this.vent.trigger('onLayerLoaded');
+
+			$.each(features.jsonFeatures.features, function(index, featureJson) {
+				featureJson.uuid = new UUID(4).format();
+
+    			var featureObj = new app.models.Feature(featureJson);
+    			featureObj.json = featureJson;
+    			featureObj.set('mapLayer', app.mapLayer);  // set up the relationship.
+    			featureObj.set('mapLayerName', app.mapLayer.get('name'));
+    			featureObj.set('uuid', featureJson.uuid);
+    			//featureObj.set('uuid', new UUID(4).format());
+            });
+			this.vent.trigger('onLayerLoaded');
 		},
 
         util: {
@@ -142,7 +150,6 @@
 				}
 				app.vent.trigger('deleteFeatureSuccess', feature);
 				app.Actions.action();
-				console.log(app.Actions);
 	        },
 	        getFeatureWithName: function(name) {
 	          var features = app.mapLayer.get('feature').toArray();
