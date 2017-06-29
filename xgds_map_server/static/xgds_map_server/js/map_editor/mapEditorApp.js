@@ -123,35 +123,61 @@
 			var featureList = app.mapLayer.get('feature');
 			var _this = this;
 
-			$.each(featureList.models, function(index, feature){
-				console.log(feature);
-				_this.util.deleteFeature(feature);
-			});
-
-			// Backbone.Relational.store.unregister(app.mapLayer);
-			// app.mapLayer = new app.models.MapLayer(features);
+			app.vent.trigger('clearAllFeatures');
 
 			$.each(features.jsonFeatures.features, function(index, featureJson) {
-				// console.log(featureJson);
-				featureJson.uuid = new UUID(4).format();
+				if (!_this.util.featureExists(featureJson.uuid)){
+					featureJson.uuid = new UUID(4).format();
 
-    			var featureObj = new app.models.Feature(featureJson);
-    			featureObj.json = featureJson;
-    			featureObj.set('mapLayer', app.mapLayer);  // set up the relationship.
-    			featureObj.set('mapLayerName', app.mapLayer.get('name'));
-    			featureObj.set('uuid', featureJson.uuid);
-    			//featureObj.set('uuid', new UUID(4).format());
+					var featureObj = new app.models.Feature(featureJson);
+					featureObj.json = featureJson;
+					featureObj.set('mapLayer', app.mapLayer);  // set up the relationship.
+					featureObj.set('mapLayerName', app.mapLayer.get('name'));
+					featureObj.set('uuid', featureJson.uuid);
+				}
             });
 			this.vent.trigger('onLayerLoaded');
 		},
 
         util: {
 	        deleteFeature: function(feature){
+	        	var featureIndex = this.indexOfFeature(feature.get('uuid'));
+	        	var jsonFeatures = app.mapLayer.get('jsonFeatures').features;
+
 				if (!_.isUndefined(feature.collection)){
 					feature.collection.remove(feature);
 				}
+
+				if (featureIndex > -1) {
+					app.mapLayer.attributes.jsonFeatures.features.splice(featureIndex, 1);
+                }
+
 				app.vent.trigger('deleteFeatureSuccess', feature);
 	        },
+			featureExists: function(featureId){
+				var featureList = app.mapLayer.get('jsonFeatures').features;
+				var exists = false;
+
+				$.each(featureList, function(index, feature){
+					if (feature.uuid === featureId){
+						exists = true;
+					}
+				});
+
+				return exists;
+			},
+			indexOfFeature: function(featureId){
+				var featureList = app.mapLayer.get('jsonFeatures').features;
+				var location = -1;
+
+				$.each(featureList, function(index, feature){
+					if (feature.uuid == featureId){
+						location = index;
+					}
+				});
+
+				return location;
+			},
 	        getFeatureWithName: function(name) {
 	          var features = app.mapLayer.get('feature').toArray();
 	          var foundFeature = undefined;

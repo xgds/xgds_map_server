@@ -93,6 +93,9 @@ $(function() {
 			this.listenTo(app.vent, 'deleteFeatureSuccess', function(killedFeature) {
 				this.olFeatures.remove(killedFeature.olFeature);
 			});
+			this.listenTo(app.vent, 'clearAllFeatures', function(){
+				this.olFeatures.clear();
+			});
 			this.listenTo(app.vent, 'selectFeature', function(feature){
 				if (feature.get('type') == "Point"){
 					if (feature.attributes.shape == null){
