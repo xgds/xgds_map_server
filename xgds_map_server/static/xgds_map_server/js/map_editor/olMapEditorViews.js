@@ -24,6 +24,7 @@ $(function() {
 			app.State.tabsLeftMargin = parseFloat(app.State.tabsContainer.css('margin-left'));
 			this.listenTo(app.vent, 'onLayerLoaded', this.initializeMapEditor);
 			this.listenTo(app.vent, 'onLayerLoaded', this.createMapEditorView);
+			this.listenTo(app.vent, 'actionLayerLoaded', this.createMapEditorView);
 			this.listenTo(app.vent, 'recenterMap', this.updateBbox);
 		},
 		buildLayersForMap: function() {
@@ -138,6 +139,10 @@ $(function() {
 				feature.trigger('setBasicStyle', style);
 			});
 			this.listenTo(app.vent, 'onLayerLoaded', function() {
+				this.constructFeatures();
+				this.render();
+			});
+			this.listenTo(app.vent, 'actionLayerLoaded', function() {
 				this.constructFeatures();
 				this.render();
 			});

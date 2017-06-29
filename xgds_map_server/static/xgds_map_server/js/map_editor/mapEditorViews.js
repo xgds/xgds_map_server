@@ -796,6 +796,9 @@ app.views.TabNavView = xGDS.TabNavView.extend({
         	 this.setTab('info');
         	 app.vent.trigger('initializeInfoColorPicker');
         }, this);
+        this.listenTo(app.vent, 'actionLayerLoaded', function(){
+        	this.setTab('features');
+		});
     },
     getModel: function() {
     	return app.mapLayer;
