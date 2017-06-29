@@ -120,11 +120,11 @@
     		this.vent.trigger('onLayerLoaded');
         },
 		updateMapLayer: function(features){
-			var featureList = app.mapLayer.get('feature');
+			app.Actions.disable();
 			var _this = this;
 
 			// Remove all backbone and openlayers features before rebuilding map
-			this.util.deleteAllFeatures(featureList);
+			this.util.deleteAllFeatures();
 			app.vent.trigger('clearAllFeatures');
 
 			$.each(features.jsonFeatures.features, function(index, featureJson) {
@@ -140,11 +140,12 @@
 					app.mapLayer.get('jsonFeatures').features.push(featureObj);
 				}
             });
-			this.vent.trigger('onLayerLoaded');
+			this.vent.trigger('actionLayerLoaded');
+			app.Actions.enable();
 		},
 
         util: {
-	        deleteFeature: function(feature){
+	        deleteFeature: function(feature, undoRedoAction=false){
 	        	var featureIndex = this.indexOfFeature(feature.get('uuid'));
 	        	var jsonFeatures = app.mapLayer.get('jsonFeatures').features;
 
@@ -156,14 +157,23 @@
 					app.mapLayer.attributes.jsonFeatures.features.splice(featureIndex, 1);
                 }
 
-				app.vent.trigger('deleteFeatureSuccess', feature);
+                if (!undoRedoAction)
+					app.vent.trigger('deleteFeatureSuccess', feature);
 	        },
 			deleteAllFeatures: function(featureList){
+	        	var featureList = app.mapLayer.get('feature').models;
+	        	var featuresToDelete = [];
 				var _this = this;
 
-				_.each(featureList.models, function(feature) {
+				// Deleting in the first loop messes with the order of deletion and breaks it.
+				// Don't ask me how, but this is the solution.
+				_.each(featureList, function(feature) {
+					featuresToDelete.push(feature);
+				});
+
+				_.each(featuresToDelete, function(feature){
 					if (!_.isUndefined(feature)){
-						_this.deleteFeature(feature);
+						_this.deleteFeature(feature, true);
 					}
 				});
 			},
@@ -173,6 +183,7 @@
 
 				$.each(featureList, function(index, feature){
 					if (feature.uuid === featureId){
+						console.log(feature.name + " : " + feature.uuid + " : " + featureId);
 						exists = true;
 					}
 				});
