@@ -690,7 +690,6 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
     	_.each(features, function(feature) {
     	    app.vent.trigger('deleteFeature', feature);
     	});
-    	app.Actions.action();
     },
     getSelectedFeatures: function() {
 		var features = [];

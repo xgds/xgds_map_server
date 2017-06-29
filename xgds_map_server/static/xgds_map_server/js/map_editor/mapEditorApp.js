@@ -123,17 +123,21 @@
 			var featureList = app.mapLayer.get('feature');
 			var _this = this;
 
+			// Remove all backbone and openlayers features before rebuilding map
+			this.util.deleteAllFeatures(featureList);
 			app.vent.trigger('clearAllFeatures');
 
 			$.each(features.jsonFeatures.features, function(index, featureJson) {
 				if (!_this.util.featureExists(featureJson.uuid)){
-					featureJson.uuid = new UUID(4).format();
+					featureJson.uuid = new UUID(4).format(); // New ID so backbone relational doesn't complain
 
 					var featureObj = new app.models.Feature(featureJson);
 					featureObj.json = featureJson;
 					featureObj.set('mapLayer', app.mapLayer);  // set up the relationship.
 					featureObj.set('mapLayerName', app.mapLayer.get('name'));
 					featureObj.set('uuid', featureJson.uuid);
+
+					app.mapLayer.get('jsonFeatures').features.push(featureObj);
 				}
             });
 			this.vent.trigger('onLayerLoaded');
@@ -154,6 +158,15 @@
 
 				app.vent.trigger('deleteFeatureSuccess', feature);
 	        },
+			deleteAllFeatures: function(featureList){
+				var _this = this;
+
+				_.each(featureList.models, function(feature) {
+					if (!_.isUndefined(feature)){
+						_this.deleteFeature(feature);
+					}
+				});
+			},
 			featureExists: function(featureId){
 				var featureList = app.mapLayer.get('jsonFeatures').features;
 				var exists = false;

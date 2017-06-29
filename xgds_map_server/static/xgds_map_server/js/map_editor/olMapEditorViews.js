@@ -92,6 +92,7 @@ $(function() {
 			this.listenTo(app.vent, 'updateFeaturePosition', this.updateFeaturePosition);
 			this.listenTo(app.vent, 'deleteFeatureSuccess', function(killedFeature) {
 				this.olFeatures.remove(killedFeature.olFeature);
+				app.Actions.action();
 			});
 			this.listenTo(app.vent, 'clearAllFeatures', function(){
 				this.olFeatures.clear();
