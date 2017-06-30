@@ -137,9 +137,10 @@
 					featureObj.set('mapLayerName', app.mapLayer.get('name'));
 					featureObj.set('uuid', featureJson.uuid);
 
-					app.mapLayer.get('jsonFeatures').features.push(featureObj);
+					_this.util.updateJsonFeatures();
 				}
             });
+
 			this.vent.trigger('actionLayerLoaded');
 			app.Actions.enable();
 		},
@@ -177,13 +178,17 @@
 					}
 				});
 			},
+			updateJsonFeatures: function(){
+				var jsonFeaturesFormatter = {};
+				jsonFeaturesFormatter['features'] = app.mapLayer.get('feature');
+				app.mapLayer.set('jsonFeatures', JSON.parse(JSON.stringify(jsonFeaturesFormatter)));
+			},
 			featureExists: function(featureId){
 				var featureList = app.mapLayer.get('jsonFeatures').features;
 				var exists = false;
 
 				$.each(featureList, function(index, feature){
 					if (feature.uuid === featureId){
-						console.log(feature.name + " : " + feature.uuid + " : " + featureId);
 						exists = true;
 					}
 				});

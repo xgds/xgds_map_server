@@ -246,9 +246,13 @@ $(function() {
 				featureObj.set('shape', $('#icon-type').val());
 
 			featureObj.olFeature =  olFeature;
-
 			this.initializeFeatureObjViews(featureObj, type, true);
 
+			// Keep jsonFeatures field updated
+			// var featureFormatter = JSON.parse(JSON.stringify(featureObj.attributes)); // Unbox circular structure
+			// app.mapLayer.get('jsonFeatures').features.push(featureFormatter);
+            //
+			// app.Actions.action();
 			return featureObj;
 		},
 		createFeature: function(featureObj){
