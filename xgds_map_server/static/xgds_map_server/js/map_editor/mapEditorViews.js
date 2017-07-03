@@ -497,15 +497,23 @@ app.views.FeaturePropertiesView = Marionette.View.extend({
 		}, 
 		'change #featureName': function(evt) {
 			this.model.set('name', evt.target.value);
+			app.util.updateJsonFeatures();
+			app.Actions.action();
 		}, 
 		'change #featureDescription': function(evt) {
 			this.model.set('description', evt.target.value);
+			app.util.updateJsonFeatures();
+			app.Actions.action();
 		},
 		'click #showLabel': function(evt) {
 			this.model.set('showLabel', evt.target.checked);
+			app.util.updateJsonFeatures();
+			app.Actions.action();
 		},
 		'click #popup': function(evt) {
 			this.model.set('popup', evt.target.checked);
+			app.util.updateJsonFeatures();
+			app.Actions.action();
 		},
 	},
 	initialize: function(){
@@ -537,6 +545,8 @@ app.views.FeaturePropertiesView = Marionette.View.extend({
 	},
 	updateFeatureStyle: function(color){
 		this.model.set('style', color);
+		app.util.updateJsonFeatures();
+		app.Actions.action();
 	}
 });
 
