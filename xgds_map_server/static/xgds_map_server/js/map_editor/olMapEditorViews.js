@@ -408,8 +408,7 @@ $(function() {
 			} else if (type == 'LineString') {
 				var newLineString = new ol.geom.LineString(feature.get('lineString')).transform(LONG_LAT, DEFAULT_COORD_SYSTEM);
 				olFeature.setGeometry(newLineString);
-			} 
-
+			}
 		},
 		addDrawInteraction: function(typeSelect) {
 			var theFeaturesCollection = this.olFeatures;
@@ -463,57 +462,27 @@ $(function() {
 							ol.events.condition.singleClick(event);
 						}
 					});
-
-					/*
-		    this.pointDeleter = new ol.interaction.Select({
-			layers: [this.pointLayer], 
-			addCondition: function(event) {
-			    return ol.events.condition.shiftKeyOnly(event)
-			    && ol.events.condition.singleClick(event);
-			}
-		    });
-
-		    this.pointDeleter.getFeatures().on('add', function(e) {
-			var geometry = e.element.get('geometry');
-			var type = geometry.getType();
-			if (type == "Point") {
-			    var model = e.element.get('model');
-			    app.vent.trigger('deleteFeature', model);
-			}
-		    }, this);
-
-		    this.listenTo(app.vent, 'deleteFeatureSuccess', function(killedFeature) {
-                        if (!_.isUndefined(killedFeature)){
-                            var feature = killedFeature.olFeature;
-                            if (!_.isUndefined(feature)){
-//                        	this.pointDeleter.getFeatures().remove(feature);
-                                var killed = this.pointFeatures.remove(feature);
-                                if (killed != undefined){
-                                    this.pointDeleter.getFeatures().remove(feature);
-                                    this.pointVector.changed();
-                                } else {
-                                    this.olFeatures.remove(feature);
-                                } 
-                            }
-                        }
-                    }, this);
-					 */
+					this.repositioner.on('modifyend', function(evt){
+						app.util.updateJsonFeatures();
+						app.Actions.action();
+					});
 				} 
 				this.map.addInteraction(this.repositioner);
-//				this.map.addInteraction(this.pointDeleter);
-
-			}, //end enter
+			},
 			exit: function() {
 				this.map.removeInteraction(this.repositioner);
-//				this.map.removeInteraction(this.pointDeleter);
 			}
-		} // end repositionMode
+		}
 	});
 
 	app.views.PolygonEditView = app.views.PolygonView.extend({
 		initialize: function(options){
 			app.views.PolygonView.prototype.initialize.call(this, options);
-			this.listenTo(this.model, 'change:coordinates', function() {this.updateGeometryFromCoords()});
+			this.listenTo(this.model, 'change:coordinates', function() {
+				this.updateGeometryFromCoords();
+				app.util.updateJsonFeatures();
+				app.Actions.action();
+			});
 			this.model.on('setBasicStyle', function(basicStyle) {
 				this.updateStyle(basicStyle);
 			}, this);
@@ -550,7 +519,11 @@ $(function() {
 	app.views.PointEditView = app.views.PointView.extend({
 		initialize: function(options){
 			app.views.PointView.prototype.initialize.call(this, options);
-			this.listenTo(this.model, 'change:coordinates', function() {this.updateGeometryFromCoords()});
+			this.listenTo(this.model, 'change:coordinates', function() {
+				this.updateGeometryFromCoords();
+				app.util.updateJsonFeatures();
+				app.Actions.action();
+			});
 			this.model.on('setBasicStyle', function(basicStyle) {
 				this.updateStyle(basicStyle);
 			}, this);
@@ -591,7 +564,11 @@ $(function() {
 	app.views.LineStringEditView = app.views.LineStringView.extend({
 		initialize: function(options){
 			app.views.LineStringView.prototype.initialize.call(this, options);
-			this.listenTo(this.model, 'change:coordinates', function() {this.updateGeometryFromCoords()});
+			this.listenTo(this.model, 'change:coordinates', function() {
+				this.updateGeometryFromCoords();
+				app.util.updateJsonFeatures();
+				app.Actions.action();
+			});
 			this.model.on('setBasicStyle', function(basicStyle) {
 				this.updateStyle(basicStyle);
 			}, this);
@@ -609,8 +586,8 @@ $(function() {
 		},
 		updateCoordsFromGeometry: function(geometry) {
 			/*var coords = inverseList(geometry.getCoordinates().reduce(function(a, b) {
-		return a.concat(b);
-	    })); */
+				return a.concat(b);
+			})); */
 			var coords = inverseList(geometry.getCoordinates());
 			if (!$.arrayEquals(coords, this.model.get('lineString'))){
 				this.model.set('lineString',coords);
@@ -622,7 +599,11 @@ $(function() {
 	app.views.GroundOverlayEditView = app.views.GroundOverlayView.extend({
 		initialize: function(options){
 			app.views.GroundOverlayView.prototype.initialize.call(this, options);
-			this.listenTo(this.model, 'change:coordinates', function() {this.updateGeometryFromCoords()});
+			this.listenTo(this.model, 'change:coordinates', function() {
+				this.updateGeometryFromCoords();
+				app.util.updateJsonFeatures();
+				app.Actions.action();
+			});
 			this.model.on('setBasicStyle', function(basicStyle) {
 				this.updateStyle(basicStyle);
 			}, this);
