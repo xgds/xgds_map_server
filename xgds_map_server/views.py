@@ -257,6 +257,10 @@ def saveMaplayer(request):
         mapLayer.modification_time = datetime.datetime.now(pytz.utc)
         mapLayer.modifier = request.user.first_name + " " + request.user.last_name
         mapLayer.defaultColor = data.get('defaultColor', "")
+        mapLayer.minLon = data.get('minLon', "")
+        mapLayer.minLat = data.get('minLat', "")
+        mapLayer.maxLon = data.get('maxLon', "")
+        mapLayer.maxLat = data.get('maxLat', "")
         mapLayer.jsonFeatures = data.get('jsonFeatures', '{}')
         mapLayer.save()
 
