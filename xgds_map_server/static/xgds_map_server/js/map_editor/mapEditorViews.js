@@ -154,7 +154,8 @@ app.views.ToolbarView = Marionette.View.extend({
 		app.mapLayer.set('jsonFeatures', JSON.stringify(jsonFeaturesFormatter));
 		app.mapLayer.save();
 
-		$('#layer-saved').show();
+		// $('#layer-saved').show();
+		$('#saveModal').modal();
     },
     
     showSaveAsDialog: function() {
