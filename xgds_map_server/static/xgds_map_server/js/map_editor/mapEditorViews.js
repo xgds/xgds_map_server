@@ -746,7 +746,6 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
 					featureObj.json = featureJson;
 					featureObj.set('mapLayer', app.mapLayer);  // set up the relationship.
 					featureObj.set('mapLayerName', app.mapLayer.get('name'));
-					//featureObj.set('uuid', featureJson.uuid);
 					featureObj.set('uuid', new UUID(4).format());
 					featureObj.set('name', app.util.generateFeatureName(featureJson.type))
 					app.vent.trigger('newFeatureLoaded', featureObj);
@@ -757,6 +756,9 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
 					$('#paste-exists').show();
 				}
 			});
+
+			app.util.updateJsonFeatures();
+			app.Actions.action();
 		}
 
 		else{
