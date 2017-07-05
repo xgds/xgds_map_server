@@ -147,9 +147,10 @@ app.views.ToolbarView = Marionette.View.extend({
     },
 
     saveEntireLayer: function(){
-		var jsonFeaturesFormatter = {};
+    	var jsonFeaturesFormatter = {};
 		jsonFeaturesFormatter['features'] = app.mapLayer.get('feature');
 
+		app.vent.trigger('setMapBounds'); //Sets minLat, minLon, maxLat, maxLon
 		app.mapLayer.set('jsonFeatures', JSON.stringify(jsonFeaturesFormatter));
 		app.mapLayer.save();
 

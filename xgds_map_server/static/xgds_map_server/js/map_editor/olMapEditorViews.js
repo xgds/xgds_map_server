@@ -149,6 +149,7 @@ $(function() {
 			this.listenTo(app.vent, 'newFeatureLoaded', function(featureObj){
 				this.initializeFeatureObjViews(featureObj, featureObj.attributes.type);
 			});
+			this.listenTo(app.vent, 'setMapBounds', this.setMapBounds);
 	        this.listenTo(app.vent, 'mapmode', this.setMode);
 	        app.vent.trigger('mapEditorLayerInitialized');
 		},
@@ -180,22 +181,22 @@ $(function() {
 				map: this.options.map,
 				source: this.featuresVector
 			});
-			/*
-			this.pointFeatures = new ol.Collection();
-			this.pointVector = new ol.source.Vector({
-			features: this.pointFeatures,
-			useSpatialIndex: true,
-			});
-			this.pointLayer = new ol.layer.Vector({
-			map: this.options.map,
-			source: this.pointVector,
-			style: olStyles.getDefaultStyle()
-			}); */
-
 		},
 		fitExtent: function() {
 			var extent = this.featuresVector.getExtent();
 			this.map.getView().fit(extent, this.map.getSize());
+		},
+		setMapBounds: function(){
+			var bounds = this.map.getView().calculateExtent(this.map.getSize());
+			bounds = ol.proj.transformExtent(bounds, SPHERICAL_MERCATOR, LONG_LAT);
+
+			//Bottom Left Corner
+			app.mapLayer.set('minLon', bounds[0]);
+			app.mapLayer.set('minLat', bounds[1]);
+
+			//Top Right Corner
+			app.mapLayer.set('maxLon', bounds[2]);
+			app.mapLayer.set('maxLat', bounds[3]);
 		},
 		initializeFeaturesJson: function() {
 			this.trigger('readyToDraw');
