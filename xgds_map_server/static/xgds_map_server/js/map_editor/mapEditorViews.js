@@ -156,6 +156,7 @@ app.views.ToolbarView = Marionette.View.extend({
 
 		// $('#layer-saved').show();
 		$('#saveModal').modal();
+		setTimeout(function() {$('#saveModal').modal('hide');}, 1250);
     },
     
     showSaveAsDialog: function() {
