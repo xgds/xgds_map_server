@@ -1655,17 +1655,8 @@ $(function() {
         },
         getTextStyle: function() {
             if (this.featureJson.showLabel) {
-                var theText = new ol.style.Text(olStyles.styles = {
-                    font: '14px Calibri,sans-serif',
-                    fill: new ol.style.Fill({
-                        color: this.featureJson.style
-                    }),
-                    stroke: new ol.style.Stroke({
-                        color: 'black',
-                        width: 2
-                    }),
-                    offsetY: -20
-                });
+                var style = this.createTextStyle(this.featureJson.style);
+                var theText = style;
 
                 theText.setText(this.featureJson.name);
                 this.textStyle = new ol.style.Style({
@@ -1675,6 +1666,24 @@ $(function() {
                 return this.textStyle;
             }
             return null;
+        },
+        createTextStyle: function(color){
+    	    if (!color)
+    	        color = "#00f";
+
+    	    var style = new ol.style.Text({
+                font: '14px Calibri,sans-serif',
+                fill: new ol.style.Fill({
+                    color: color
+                }),
+                stroke: new ol.style.Stroke({
+                    color: 'black',
+                    width: 2
+                }),
+                offsetY: -20
+            });
+
+    	    return style;
         },
         onRender: function() {
             var childLayer = this.getLayer();
