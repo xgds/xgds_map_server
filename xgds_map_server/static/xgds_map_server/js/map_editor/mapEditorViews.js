@@ -541,7 +541,11 @@ app.views.FeaturePropertiesView = Marionette.View.extend({
 		this.setColorPicker();
 	},
 	setColorPicker: function(){
-		$("#edit-color-picker").spectrum("set", this.model.attributes.style);
+		if (this.model.get('style'))
+			$("#edit-color-picker").spectrum("set", this.model.attributes.style);
+
+		else
+			$("#edit-color-picker").spectrum("set", "#00f");
 	},
 	updateFeatureStyle: function(color){
 		this.model.set('style', color);
