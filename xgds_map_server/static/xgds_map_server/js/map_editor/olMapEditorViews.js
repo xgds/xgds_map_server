@@ -100,7 +100,7 @@ $(function() {
 			});
 			this.listenTo(app.vent, 'selectFeature', function(feature){
 				if (feature.get('type') === "Point" || feature.get('type') === "Station"){
-					if (feature.attributes.shape === null){
+					if (feature.attributes.shape === null || !feature.attributes.shape){
 						feature.trigger('setBasicStyle', olStyles.styles['selected_circle']);
 					}
 
@@ -114,7 +114,7 @@ $(function() {
 			});
 			this.listenTo(app.vent, 'activeFeature', function(feature){
 				if (feature.get('type') === "Point" || feature.get('type') === "Station"){
-					if (feature.attributes.shape === null){
+					if (feature.attributes.shape === null || !feature.attributes.shape){
 						feature.trigger('setBasicStyle', olStyles.styles['active_circle']);
 					}
 
@@ -219,19 +219,14 @@ $(function() {
 		createBackboneFeatureObj: function(olFeature, station=false) {
 			// Create a new backbone feature object from the user drawings on map.
 			var geom = olFeature.getGeometry();
-			var type = geom.getType();
 
 			if (station === true)
-				type = "Station";
-			
-			var coords;
-			if ((type === "Point") || (type === "LineString") || (type === "Station")){
-				coords = geom.getCoordinates();
-			} else {
-				coords = geom.getCoordinates().reduce(function(a, b) {
-					return a.concat(b);
-				});
-			}
+				var type = "Station";
+
+			else
+				var type = geom.getType();
+
+			var coords = this.getFeatureCoords(type, geom);
 			var featureObj = new app.models.Feature();
 			featureObj.set('type', type);
 			featureObj.set('description', " ");
@@ -263,6 +258,19 @@ $(function() {
 			app.Actions.action();
 
 			return featureObj;
+		},
+		getFeatureCoords: function(type, geom){
+			var coords;
+
+			if ((type === "Point") || (type === "LineString") || (type === "Station")){
+				coords = geom.getCoordinates();
+			} else {
+				coords = geom.getCoordinates().reduce(function(a, b) {
+					return a.concat(b);
+				});
+			}
+
+			return coords;
 		},
 		createFeature: function(featureObj){
 			this.initializeFeatureObjViews(featureObj, featureObj.json['type']);
@@ -351,7 +359,7 @@ $(function() {
 			}
 
 			else if (featureView.featureJson.type === "Station"){
-				var style = this.createPointStyle(color, shape);
+				var style = this.createStationStyles(color);
 				featureView.updateStyle(style);
 			}
 
@@ -373,6 +381,16 @@ $(function() {
 						color: color
 					})
 				})
+			});
+
+			return style;
+		},
+		createStationStyles: function(color){
+			var style = new ol.style.Style({
+				image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
+					color: color,
+					src: '/static/xgds_map_server/icons/placemark_circle.png',
+				}))
 			});
 
 			return style;

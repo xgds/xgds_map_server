@@ -247,6 +247,7 @@
 	            app.featureIndex['Point'] = 0;
 	            app.featureIndex['LineString'] = 0;
 	            app.featureIndex['GroundOverlay'] = 0;
+	            app.featureIndex['Station'] = 0;
 	            _.each(features, function(feature) {
 	        	if (feature != undefined){
 	                    var type = feature.type;
@@ -271,7 +272,7 @@
 	        },
 	        
 	        getFeatureCoordinates: function(type, feature) {
-	        	if (type == 'Point') {
+	        	if (type == 'Point' || type == 'Station') {
 	        		return feature.get('point');
 	        	} else if (type == 'Polygon') {
 	        		return feature.get('polygon');
@@ -285,7 +286,7 @@
 	        	 * newCoords: updated (x,y) in lon lat
 	        	 * index: index for vertices if is a linestring or a polygon
 	        	 */
-	        	if (type == 'Point') {
+	        	if (type == 'Point' || type == 'Station') {
 	        		feature.set('point', [newX, newY]);
 	        	} else if (type == 'Polygon') {
 	        		var polygon = feature.get('polygon');
@@ -306,7 +307,7 @@
 	        transformAndSetCoordinates: function(type, feature, coordinates) {
 	        	// transform user drawn coordinates from spherical mercator to lon lat
 	        	var tCoords = null;
-	        	if (type == "Point") {
+	        	if (type == "Point" || type == "Station") {
 	    			feature.set("point", inverseTransform(coordinates));
 	    		} else if (type == "Polygon") {
 	    			feature.set('polygon', inverseList(coordinates));
