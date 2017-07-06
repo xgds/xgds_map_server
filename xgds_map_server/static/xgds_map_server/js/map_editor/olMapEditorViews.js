@@ -81,7 +81,7 @@ $(function() {
 					_this.typeSelect = $(event.target).attr('data');
 
 					//TODO Move this to an event in mapEditorViews under EditingToolsView
-					if (_this.typeSelect == 'Point')
+					if (_this.typeSelect === 'Point')
 						$('#icon-type').show();
 
 					else
@@ -99,8 +99,8 @@ $(function() {
 				this.olFeatures.clear();
 			});
 			this.listenTo(app.vent, 'selectFeature', function(feature){
-				if (feature.get('type') == "Point"){
-					if (feature.attributes.shape == null){
+				if (feature.get('type') === "Point" || feature.get('type') === "Station"){
+					if (feature.attributes.shape === null){
 						feature.trigger('setBasicStyle', olStyles.styles['selected_circle']);
 					}
 
@@ -113,8 +113,8 @@ $(function() {
 				}
 			});
 			this.listenTo(app.vent, 'activeFeature', function(feature){
-				if (feature.get('type') == "Point"){
-					if (feature.attributes.shape == null){
+				if (feature.get('type') === "Point" || feature.get('type') === "Station"){
+					if (feature.attributes.shape === null){
 						feature.trigger('setBasicStyle', olStyles.styles['active_circle']);
 					}
 
@@ -130,7 +130,7 @@ $(function() {
 				//Create style from feature's style attribute.
 				var color = feature.get('style');
 
-				if (feature.get('type') == "Point")
+				if (feature.get('type') === "Point" || feature.get('type') === "Station")
 					var style = this.createPointStyle(color, feature.get('shape'));
 
 				else
@@ -216,12 +216,16 @@ $(function() {
 				});
 			}
 		},
-		createBackboneFeatureObj: function(olFeature) {
-			// create a new backbone feature object from the user drawings on map.
+		createBackboneFeatureObj: function(olFeature, station=false) {
+			// Create a new backbone feature object from the user drawings on map.
 			var geom = olFeature.getGeometry();
 			var type = geom.getType();
+
+			if (station === true)
+				type = "Station";
+			
 			var coords;
-			if ((type === "Point") || (type === "LineString")){
+			if ((type === "Point") || (type === "LineString") || (type === "Station")){
 				coords = geom.getCoordinates();
 			} else {
 				coords = geom.getCoordinates().reduce(function(a, b) {
@@ -243,8 +247,13 @@ $(function() {
 			featureObj.set('uuid', new UUID(4).format());
 			featureObj.set('style', $('#color-picker').spectrum('get').toHexString());
 
-			if (type == "Point")
+			if (type === "Point")
 				featureObj.set('shape', $('#icon-type').val());
+
+			else if (type === "Station"){
+				featureObj.set('boundary', 1);
+				featureObj.set('tolerance', 1);
+			}
 
 			featureObj.olFeature =  olFeature;
 			this.initializeFeatureObjViews(featureObj, type, true);
@@ -279,6 +288,14 @@ $(function() {
 					});
 					break;
 				case 'Point':
+					newFeatureView = new app.views.PointEditView({
+						model: featureObj,
+						olFeature: featureObj.olFeature,
+						layerGroup: this.layerGroup,
+						featureJson: featureObj.attributes
+					});
+					break;
+				case 'Station':
 					newFeatureView = new app.views.PointEditView({
 						model: featureObj,
 						olFeature: featureObj.olFeature,
@@ -324,11 +341,16 @@ $(function() {
 			}
 		},
 		setFeatureStyle: function(color, featureView, shape){
-			if (color == null || color == ""){
+			if (color === null || color === ""){
 				color = "#0000ff";
 			}
 
-			if (featureView.featureJson.type == "Point"){
+			if (featureView.featureJson.type === "Point"){
+				var style = this.createPointStyle(color, shape);
+				featureView.updateStyle(style);
+			}
+
+			else if (featureView.featureJson.type === "Station"){
 				var style = this.createPointStyle(color, shape);
 				featureView.updateStyle(style);
 			}
@@ -399,19 +421,28 @@ $(function() {
 		},
 		updateFeaturePosition: function(feature) {
 			var olFeature = feature.olFeature;
-			if (type == 'Point') {
+			if (type === 'Point') {
 				var newPoint = new ol.geom.Point(transform(feature.get('point')));
 				olFeature.setGeometry(newPoint);
-			} else if (type == 'Polygon') {
+			} else if (type === 'Polygon') {
 				var coords = this.feature.get('polygon')
 				var newPolygon = new ol.geom.Polygon([coords]).transform(LONG_LAT, DEFAULT_COORD_SYSTEM);
 				olFeature.setGeometry(newPolygon);
-			} else if (type == 'LineString') {
+			} else if (type === 'LineString') {
 				var newLineString = new ol.geom.LineString(feature.get('lineString')).transform(LONG_LAT, DEFAULT_COORD_SYSTEM);
 				olFeature.setGeometry(newLineString);
+			} else if (type === 'Station'){
+				var newPoint = new ol.geom.Point(transform(feature.get('point')));
+				olFeature.setGeometry(newPoint);
 			}
 		},
 		addDrawInteraction: function(typeSelect) {
+			var station = false;
+			if (typeSelect === "Station"){
+				typeSelect = "Point";
+				station = true;
+            }
+
 			var theFeaturesCollection = this.olFeatures;
 			this.featureAdder = new ol.interaction.Draw({
 				features: theFeaturesCollection,
@@ -422,7 +453,7 @@ $(function() {
 				}
 			}, this);
 			this.featureAdder.on('drawend', function(event) { // finished drawing this feature
-				var featureObj = this.createBackboneFeatureObj(event.feature);
+				var featureObj = this.createBackboneFeatureObj(event.feature, station);
 				app.vent.trigger('showFeature', featureObj);
 			}, this);
 			this.map.addInteraction(this.featureAdder);
