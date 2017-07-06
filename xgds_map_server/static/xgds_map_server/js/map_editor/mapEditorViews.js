@@ -465,7 +465,7 @@ app.views.FeatureCoordinatesView = Marionette.View.extend({
 			markPolygon = true;
 		} else if (type == 'LineString') {
 			coordinates = this.model.get('lineString');
-		} else if (type == 'Point') {
+		} else if (type == 'Point' || type == 'Station') {
 			coordinates = [this.model.get('point')];
 		}
 		return {coords: coordinates, polygon: markPolygon};
