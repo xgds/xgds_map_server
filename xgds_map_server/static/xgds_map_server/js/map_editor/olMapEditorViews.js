@@ -68,6 +68,7 @@ $(function() {
 
 			/* Fires when the editingTools are rendered (ie. 'Add Features') is clicked.
 			Gets the active draw type (polygon/point/line) and runs addDrawInteraction to start the interaction with the map. */
+			//TODO: Change to be its own function
 			this.listenTo(app.vent, 'editingToolsRendered', function(){
 				app.vent.trigger('initializeColorPicker');
 
@@ -98,6 +99,7 @@ $(function() {
 			this.listenTo(app.vent, 'clearAllFeatures', function(){
 				this.olFeatures.clear();
 			});
+			//TODO: Change to be its own function name - Create selected styles dynamically?
 			this.listenTo(app.vent, 'selectFeature', function(feature){
 				if (feature.get('type') === "Point" || feature.get('type') === "Station"){
 					if (feature.attributes.shape === null || !feature.attributes.shape){
@@ -112,6 +114,7 @@ $(function() {
 					feature.trigger('setBasicStyle', olStyles.styles['selected_' + feature.get('type').toLowerCase()]);
 				}
 			});
+			//TODO: Change to be its own function name
 			this.listenTo(app.vent, 'activeFeature', function(feature){
 				if (feature.get('type') === "Point" || feature.get('type') === "Station"){
 					if (feature.attributes.shape === null || !feature.attributes.shape){
@@ -126,6 +129,7 @@ $(function() {
 					feature.trigger('setBasicStyle', olStyles.styles['active_' + feature.get('type').toLowerCase()]);
 				}
 			});
+			//TODO: Change to be its own function name
 			this.listenTo(app.vent, 'deselectFeature', function(feature){
 				//Create style from feature's style attribute.
 				var color = feature.get('style');
@@ -177,9 +181,18 @@ $(function() {
 				features: this.olFeatures,
 				useSpatialIndex: true,
 			});
+
 			this.featuresLayer = new ol.layer.Vector({
 				map: this.options.map,
-				source: this.featuresVector
+				source: this.featuresVector,
+				zIndex: 200
+			});
+
+			this.stationsDecorators = new ol.Collection();
+			this.stationsDecoratorsLayer = new ol.layer.Vector({name:'stationsDecorators',
+				map: this.options.map,
+				source:  new ol.source.Vector({features:this.stationsDecorators}),
+				zIndex: 195
 			});
 		},
 		fitExtent: function() {
@@ -304,10 +317,11 @@ $(function() {
 					});
 					break;
 				case 'Station':
-					newFeatureView = new app.views.PointEditView({
+					newFeatureView = new app.views.StationEditView({
 						model: featureObj,
 						olFeature: featureObj.olFeature,
 						layerGroup: this.layerGroup,
+						stationLayerGroup: this.stationsDecoratorsLayer.getSource(),
 						featureJson: featureObj.attributes
 					});
 					break;
@@ -355,18 +369,17 @@ $(function() {
 
 			if (featureView.featureJson.type === "Point"){
 				var style = this.createPointStyle(color, shape);
-				featureView.updateStyle(style);
 			}
 
 			else if (featureView.featureJson.type === "Station"){
 				var style = this.createStationStyles(color);
-				featureView.updateStyle(style);
 			}
 
 			else{
 				var style = this.createFeatureStyle(color);
-				featureView.updateStyle(style);
 			}
+
+			featureView.updateStyle(style);
 		},
 		createFeatureStyle: function(color){
 			var style = new ol.style.Style({
@@ -386,11 +399,19 @@ $(function() {
 			return style;
 		},
 		createStationStyles: function(color){
+			var iconStyle = new ol.style.Icon({
+				src: '/static/xgds_map_server/icons/placemark_circle.png',
+				color: color,
+				rotateWithView: false,
+				opacity: 1.0
+			});
+
+			var tolerence = new ol.style.Fill({
+				color: [255, 255, 0, 0.3]
+			});
+
 			var style = new ol.style.Style({
-				image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
-					color: color,
-					src: '/static/xgds_map_server/icons/placemark_circle.png',
-				}))
+				image: iconStyle
 			});
 
 			return style;
@@ -643,6 +664,51 @@ $(function() {
 				this.model.set('lineString',coords);
 				this.model.trigger('coordsChanged');
 			}
+		}
+	});
+
+	app.views.StationEditView = app.views.StationView.extend({
+		initialize: function(options){
+			app.views.StationView.prototype.initialize.call(this, options);
+			this.listenTo(this.model, 'change:coordinates', function() {
+				this.updateGeometryFromCoords();
+				app.util.updateJsonFeatures();
+				app.Actions.action();
+			});
+			this.model.on('setBasicStyle', function(basicStyle) {
+				this.updateStyle(basicStyle);
+			}, this);
+
+		},
+		render: function() {
+			// no op
+		},
+		updateGeometryFromCoords: function(){
+			var coords = this.model.get('point');
+			var xcoords = transform(coords);
+			//TODO this ought to have changed the openlayers geometry but does not seem to.
+			this.olFeature.getGeometry().setCoordinates(xcoords);
+			this.olFeature.changed();
+		},
+		updateCoordsFromGeometry: function(geometry) {
+			var coords = inverseTransform(geometry.getCoordinates());
+			if (!$.arrayEquals(coords, this.model.get('point'))){
+				this.model.set('point',coords);
+				this.model.trigger('coordsChanged');
+			}
+		},
+		destroy: function() {
+			this.model.destroy({
+				data: { 'uuid': this.model.uuid },
+				success: function(model, response) {
+					if(!_.isUndefined(this.model.collection)) {
+						this.model.collection.remove(feature);
+					}
+				},
+				error: function() {
+					console.log("Error in deleting a feature");
+				}
+			});
 		}
 	});
 
