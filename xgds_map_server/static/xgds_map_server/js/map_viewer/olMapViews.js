@@ -1792,10 +1792,10 @@ $(function() {
     app.views.PointView = app.views.VectorView.extend({
         constructFeature: function() {
             if (this.olFeature == undefined){
-        	this.olFeature = new ol.Feature({
-        	    name: this.featureJson.name,
-        	    geometry: new ol.geom.Point(transform(this.featureJson.point))
-        	});
+                this.olFeature = new ol.Feature({
+                    name: this.featureJson.name,
+                    geometry: new ol.geom.Point(transform(this.featureJson.point))
+                });
             }
             return this.olFeature;
         }
@@ -1804,10 +1804,22 @@ $(function() {
     app.views.LineStringView = app.views.VectorView.extend({
         constructFeature: function() {
             if (this.olFeature == undefined){
-        	this.olFeature = new ol.Feature({
-        	    name: this.featureJson.name,
-        	    geometry: new ol.geom.LineString(this.featureJson.lineString).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
-        	});
+                this.olFeature = new ol.Feature({
+                    name: this.featureJson.name,
+                    geometry: new ol.geom.LineString(this.featureJson.lineString).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
+                });
+            }
+            return this.olFeature;
+        }
+    });
+
+    app.views.StationView = app.views.VectorView.extend({
+        constructFeature: function() {
+            if (this.olFeature == undefined){
+                this.olFeature = new ol.Feature({
+                    name: this.featureJson.name,
+                    geometry: new ol.geom.Point(transform(this.featureJson.point))
+                });
             }
             return this.olFeature;
         }
