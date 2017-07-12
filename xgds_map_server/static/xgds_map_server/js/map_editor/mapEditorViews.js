@@ -155,8 +155,10 @@ app.views.ToolbarView = Marionette.View.extend({
 		app.mapLayer.save();
 
 		// $('#layer-saved').show();
-		$('#saveModal').modal();
-		setTimeout(function() {$('#saveModal').modal('hide');}, 1250);
+		$("#saved-notification").show("slide", { direction: "right" }, 250);
+		setTimeout(function(){
+			$('#saved-notification').fadeOut('slow');
+		}, 1000);
     },
     
     showSaveAsDialog: function() {

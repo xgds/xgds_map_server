@@ -304,6 +304,7 @@ $(function() {
             buildLayersForMap: function() {
                 this.tileGroup = new ol.layer.Group();
                 this.mapLayerGroup = new ol.layer.Group();
+                this.mapDecoratorGroup = new ol.layer.Group();
                 this.kmlGroup = new ol.layer.Group();
                 this.dynamicGroup = new ol.layer.Group();
                 this.collectionGroup = new ol.layer.Group();
@@ -315,6 +316,7 @@ $(function() {
                 
                 this.layersForMap.push(this.tileGroup);
                 this.layersForMap.push(this.mapLayerGroup);
+                this.layersForMap.push(this.mapDecoratorGroup);
                 this.layersForMap.push(this.kmlGroup);
                 this.layersForMap.push(this.dynamicGroup);
                 this.layersForMap.push(this.mapLinkGroup);
@@ -506,7 +508,8 @@ $(function() {
                 var mapLayerView = new app.views.MapLayerView({
                     node: node,
                     mapLayerJsonURL: node.data.layerJSON,
-                    mapLayerGroup: this.mapLayerGroup
+                    mapLayerGroup: this.mapLayerGroup,
+                    mapDecoratorGroup: this.mapDecoratorGroup
                 });
                 node.mapLayerView = mapLayerView;
                 node.mapView = node.mapLayerView;
@@ -1409,6 +1412,7 @@ $(function() {
             this.drawBelow = false;
             this.features = [];
             this.mapLayerGroup = this.options.mapLayerGroup;
+            this.decoratorLayerGroup = this.options.decoratorLayerGroup;
             this.on( "readyToDraw", this.finishInitialization, this);
             this.setupOpacity();
             this.initializeFeaturesJson();
@@ -1466,10 +1470,16 @@ $(function() {
                 this.layerGroup = new ol.layer.Group({name:this.mapLayerJson.name,
                 								      opacity: this.opacity});
             };
+
+            if (_isUndefined(this.decoratorLayerGroup)){
+                this.decoratorLayerGroup = new ol.layer.Group({name:this.mapLayerJson.name + "_decorator",
+                                                             opacity: this.opacity});
+            }
+
             var _this = this;
             $.each(this.mapLayerJson.features, function( index, value ) {
                     _this.createFeature(value);
-              });
+            });
         },
         setTransparency: function(transparency) {
         	this.opacity = calculateOpacity(transparency);
@@ -1503,6 +1513,13 @@ $(function() {
                         featureJson: featureJson
                     });
                     break;
+                case 'Station':
+                    newFeature = new app.views.StationView({
+                        layerGroup: this.layerGroup,
+                        decoratorLayerGroup: this.decoratorLayerGroup,
+                        featureJson: featureJson,
+                    });
+                    break;
             }
 
             this.setFeatureStyle(featureJson.style, newFeature, featureJson.shape);
@@ -1511,19 +1528,23 @@ $(function() {
             }
         },
         setFeatureStyle: function(color, featureView, shape){
-            if (color == null){
+			if (color === null || color === ""){
 				color = "#0000ff";
 			}
 
-            if (featureView.featureJson.type == 'Point'){
-                var style = this.createPointStyle(color, shape);
-				featureView.updateStyle(style);
-            }
-
-            else{
-				var style = this.createFeatureStyle(color);
-				featureView.updateStyle(style);
+			if (featureView.featureJson.type === "Point"){
+				var style = this.createPointStyle(color, shape);
 			}
+
+			else if (featureView.featureJson.type === "Station"){
+				var style = this.createStationStyles(color);
+			}
+
+			else{
+				var style = this.createFeatureStyle(color);
+			}
+
+			featureView.updateStyle(style);
 		},
 		createFeatureStyle: function(color){
 			var style = new ol.style.Style({
@@ -1542,8 +1563,32 @@ $(function() {
 
 			return style;
 		},
-        createPointStyle: function(color, shape){
-			switch(shape){
+		createStationStyles: function(color){
+			var iconStyle = new ol.style.Icon({
+				src: '/static/xgds_map_server/icons/placemark_circle.png',
+				color: color,
+				rotateWithView: false,
+				opacity: 1.0
+			});
+
+			var tolerence = new ol.style.Fill({
+				color: [255, 255, 0, 0.3]
+			});
+
+			var style = new ol.style.Style({
+				image: iconStyle
+			});
+
+			return style;
+		},
+		createPointStyle: function(color, shape){
+			if (shape != "" || shape != null)
+				var iconType = shape;
+
+			else
+				var iconType = $('#icon-type').val();
+
+			switch(iconType){
 				case "Circle":
 					var style = this.createFeatureStyle(color);
 					break;
@@ -1622,7 +1667,10 @@ $(function() {
             this.opacity = calculateOpacity(options.transparency);
             this.olFeature = this.options.olFeature;
             this.layerGroup = this.options.layerGroup;
-            this.featureJson = this.options.featureJson; 
+            this.featureJson = this.options.featureJson;
+            if (this.options.decoratorLayerGroup)
+                this.decoratorLayerGroup = this.options.decoratorLayerGroup;
+
             this.constructContent();
             this.render();
         },
@@ -1818,7 +1866,7 @@ $(function() {
             if (this.olFeature == undefined){
                 this.olFeature = new ol.Feature({
                     name: this.featureJson.name,
-                    geometry: new ol.geom.Point(transform(this.featureJson.point))
+                    geometry: new ol.geom.Point(transform(this.featureJson.point)),
                 });
             }
             return this.olFeature;
