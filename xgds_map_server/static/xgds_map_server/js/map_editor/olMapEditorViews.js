@@ -189,11 +189,13 @@ $(function() {
 			});
 
 			this.stationsDecorators = new ol.Collection();
-			this.stationsDecoratorsLayer = new ol.layer.Vector({name:'stationsDecorators',
+			this.stationsDecoratorsLayer = new ol.layer.Vector({
+				name:'stationsDecorators',
 				map: this.options.map,
-				source:  new ol.source.Vector({features:this.stationsDecorators}),
+				source:  new ol.source.Vector({features: this.stationsDecorators}),
 				zIndex: 195
 			});
+			// this.options.map.addLayer(this.stationsDecoratorsLayer);
 		},
 		fitExtent: function() {
 			var extent = this.featuresVector.getExtent();
@@ -259,11 +261,11 @@ $(function() {
 				featureObj.set('shape', $('#icon-type').val());
 
 			else if (type === "Station"){
-				featureObj.set('boundary', 1);
-				featureObj.set('tolerance', 1);
+				featureObj.set('boundary', 5);
+				featureObj.set('tolerance', 20);
 			}
 
-			featureObj.olFeature =  olFeature;
+			featureObj.olFeature = olFeature;
 			this.initializeFeatureObjViews(featureObj, type, true);
 
 			// Keep jsonFeatures field updated
@@ -321,7 +323,7 @@ $(function() {
 						model: featureObj,
 						olFeature: featureObj.olFeature,
 						layerGroup: this.layerGroup,
-						stationLayerGroup: this.stationsDecoratorsLayer.getSource(),
+						decoratorLayerGroup: this.stationsDecoratorsLayer.getSource(),
 						featureJson: featureObj.attributes
 					});
 					break;
@@ -359,104 +361,9 @@ $(function() {
 
 				var shape = featureObj.attributes.shape;
 				this.setFeatureStyle(color, newFeatureView, shape);
+
 				this.features.push(newFeatureView);
 			}
-		},
-		setFeatureStyle: function(color, featureView, shape){
-			if (color === null || color === ""){
-				color = "#0000ff";
-			}
-
-			if (featureView.featureJson.type === "Point"){
-				var style = this.createPointStyle(color, shape);
-			}
-
-			else if (featureView.featureJson.type === "Station"){
-				var style = this.createStationStyles(color);
-			}
-
-			else{
-				var style = this.createFeatureStyle(color);
-			}
-
-			featureView.updateStyle(style);
-		},
-		createFeatureStyle: function(color){
-			var style = new ol.style.Style({
-				stroke: new ol.style.Stroke({
-					color: color,
-					width: 3
-				}),
-				image: new ol.style.Circle({
-					radius: 6,
-					stroke: new ol.style.Stroke({color: '#000', width: 2}),
-					fill: new ol.style.Fill({
-						color: color
-					})
-				})
-			});
-
-			return style;
-		},
-		createStationStyles: function(color){
-			var iconStyle = new ol.style.Icon({
-				src: '/static/xgds_map_server/icons/placemark_circle.png',
-				color: color,
-				rotateWithView: false,
-				opacity: 1.0
-			});
-
-			var tolerence = new ol.style.Fill({
-				color: [255, 255, 0, 0.3]
-			});
-
-			var style = new ol.style.Style({
-				image: iconStyle
-			});
-
-			return style;
-		},
-		createPointStyle: function(color, shape){
-			if (shape != "" || shape != null)
-				var iconType = shape;
-
-			else
-				var iconType = $('#icon-type').val();
-
-			switch(iconType){
-				case "Circle":
-					var style = this.createFeatureStyle(color);
-					break;
-				case "Square":
-					var style = new ol.style.Style({
-						image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
-							color: color,
-							src: '/static/xgds_map_server/icons/square-point.png',
-						}))
-					});
-					break;
-				case "Triangle":
-					var style = new ol.style.Style({
-						image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
-							color: color,
-							src: '/static/xgds_map_server/icons/triangle-point.png',
-						}))
-					});
-					break;
-				case "Star":
-					var style = new ol.style.Style({
-						image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
-							color: color,
-							src: '/static/xgds_map_server/icons/star-point.png',
-						}))
-					});
-					break;
-				default:
-					var style = this.createFeatureStyle(color);
-					break;
-			}
-
-			return style;
 		},
 		updateFeaturePosition: function(feature) {
 			var olFeature = feature.olFeature;
@@ -669,7 +576,9 @@ $(function() {
 
 	app.views.StationEditView = app.views.StationView.extend({
 		initialize: function(options){
+			this.on('render', this.afterRender);
 			app.views.StationView.prototype.initialize.call(this, options);
+			this.decoratorLayerGroup = this.options.decoratorLayerGroup;
 			this.listenTo(this.model, 'change:coordinates', function() {
 				this.updateGeometryFromCoords();
 				app.util.updateJsonFeatures();
@@ -680,9 +589,89 @@ $(function() {
 			}, this);
 
 		},
-		render: function() {
-			// no op
+		onRender: function() {
+			this.drawTolerance();
+			//this.drawBoundary();
 		},
+		getToleranceGeometry: function() {
+			if ('tolerance' in this.model.attributes) {
+				var circle4326 = ol.geom.Polygon.circular(this.getSphere(), inverseTransform(this.featureJson.point), this.model.get('tolerance'), 64);
+				return circle4326.transform(LONG_LAT, DEFAULT_COORD_SYSTEM);
+			}
+			return undefined;
+		},
+		drawTolerance: function() {
+			this.toleranceGeometry = this.getToleranceGeometry();
+			var style = this.createTolerenceStyle(this.model.get('style'));
+			if (this.toleranceGeometry != undefined){
+				if (this.toleranceFeature != undefined){
+					this.toleranceFeature.setGeometry(this.toleranceGeometry);
+				} else {
+					this.toleranceFeature = new ol.Feature({geometry: this.toleranceGeometry,
+						id: this.model.attributes['id'] + '_stn_tolerance',
+						name: this.model.attributes['id'] + '_stn_tolerance',
+						model: this.model,
+						style: style});
+					this.toleranceFeature.setStyle(style);
+					// this.decoratorLayerGroup.getLayers().push(this.toleranceFeature);
+					// this.features.push(this.toleranceFeature);
+					this.decoratorLayerGroup.addFeature(this.toleranceFeature);
+				}
+			}
+			console.log(this.toleranceFeature);
+			return this.toleranceFeature;
+		},
+		getSphere: function() {
+			if (_.isUndefined(app.wgs84Sphere)){
+				app.wgs84Sphere = new ol.Sphere(app.options.BODY_RADIUS_METERS);
+			}
+			return app.wgs84Sphere;
+		},
+		getBoundaryGeometry: function() {
+			if ('boundary' in this.model.attributes) {
+				var radius = this.model.get('boundary');
+				var circle4326 = ol.geom.Polygon.circular(this.getSphere(), inverseTransform(this.point), radius, 64);
+				return circle4326.transform(LONG_LAT, DEFAULT_COORD_SYSTEM);
+			}
+			return undefined;
+		},
+		drawBoundary: function() {
+			this.boundaryGeometry = this.getBoundaryGeometry();
+			var style = this.createBoundaryStyle(this.model.get('style'));
+			if (this.boundaryGeometry != undefined){
+				if (this.boundaryFeature != undefined){
+					this.boundaryFeature.setGeometry(this.boundaryGeometry);
+				} else {
+					this.boundaryFeature = new ol.Feature({geometry: this.boundaryGeometry,
+						id: this.model.attributes['id'] + '_stn_boundary',
+						name: this.model.attributes['id'] + '_stn_boundary',
+						model: this.model,
+						style: style});
+					this.boundaryFeature.setStyle(style);
+					this.features.push(this.boundaryFeature);
+					this.stationsDecoratorsVector.addFeature(this.boundaryFeature);
+				}
+			}
+		},
+        createTolerenceStyle: function(color){
+            var style = new ol.style.Style({
+                fill: new ol.style.Fill({
+                    color: [255, 255, 0, 0.3]
+                })
+            });
+
+            return style;
+        },
+        createBoundaryStyle: function(color){
+            var style = new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: [255, 255, 0, 0.8],
+                    width: 3
+                })
+            });
+
+            return style;
+        },
 		updateGeometryFromCoords: function(){
 			var coords = this.model.get('point');
 			var xcoords = transform(coords);
