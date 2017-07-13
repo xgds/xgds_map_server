@@ -194,7 +194,6 @@ $(function() {
 				features: this.olFeatures,
 				useSpatialIndex: true,
 			});
-
 			this.featuresLayer = new ol.layer.Vector({
 				map: this.options.map,
 				source: this.featuresVector,
@@ -356,19 +355,6 @@ $(function() {
 					this.olFeatures.push(featureObj.olFeature);
 				}
 
-				if (newFeatureView.featureJson.type === "Station"){
-					var toleranceFeature = newFeatureView.drawTolerance();
-					var boundaryFeature = newFeatureView.drawBoundary();
-					featureObj.olToleranceFeature = toleranceFeature;
-					featureObj.olBoundaryFeature = boundaryFeature;
-
-					if (!(featureObj.olToleranceFeature in this.stationsDecorators))
-						this.stationsDecorators.push(toleranceFeature);
-
-					if (!(featureObj.olBoundaryFeature in this.stationsDecorators))
-                        this.stationsDecorators.push(boundaryFeature);
-				}
-
 				//Sets style of feature depending on if it is a new feature or a saved one.
 				if (isNew === true) {
                     var color = $('#color-picker').spectrum('get').toHexString();
@@ -379,8 +365,23 @@ $(function() {
 				}
 
 				this.setFeatureStyle(color, newFeatureView, featureObj.attributes.shape);
+				this.drawStationDecorators(newFeatureView, featureObj);
 
 				this.features.push(newFeatureView);
+			}
+		},
+		drawStationDecorators: function(featureView, featureObj){
+			if (featureView.featureJson.type === "Station"){
+				var toleranceFeature = featureView.drawTolerance();
+				var boundaryFeature = featureView.drawBoundary();
+				featureObj.olToleranceFeature = toleranceFeature;
+				featureObj.olBoundaryFeature = boundaryFeature;
+
+				if (!(featureObj.olToleranceFeature in this.stationsDecorators))
+					this.stationsDecorators.push(toleranceFeature);
+
+				if (!(featureObj.olBoundaryFeature in this.stationsDecorators))
+					this.stationsDecorators.push(boundaryFeature);
 			}
 		},
 		updateFeaturePosition: function(feature) {
@@ -594,7 +595,6 @@ $(function() {
 
 	app.views.StationEditView = app.views.StationView.extend({
 		initialize: function(options){
-			this.on('render', this.afterRender);
 			app.views.StationView.prototype.initialize.call(this, options);
 			this.listenTo(this.model, 'change:coordinates', function() {
 				this.updateGeometryFromCoords();
