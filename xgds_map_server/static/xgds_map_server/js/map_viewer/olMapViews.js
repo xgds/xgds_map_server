@@ -304,7 +304,6 @@ $(function() {
             buildLayersForMap: function() {
                 this.tileGroup = new ol.layer.Group();
                 this.mapLayerGroup = new ol.layer.Group();
-                this.mapDecoratorGroup = new ol.layer.Group();
                 this.kmlGroup = new ol.layer.Group();
                 this.dynamicGroup = new ol.layer.Group();
                 this.collectionGroup = new ol.layer.Group();
@@ -316,7 +315,6 @@ $(function() {
                 
                 this.layersForMap.push(this.tileGroup);
                 this.layersForMap.push(this.mapLayerGroup);
-                this.layersForMap.push(this.mapDecoratorGroup);
                 this.layersForMap.push(this.kmlGroup);
                 this.layersForMap.push(this.dynamicGroup);
                 this.layersForMap.push(this.mapLinkGroup);
@@ -508,8 +506,7 @@ $(function() {
                 var mapLayerView = new app.views.MapLayerView({
                     node: node,
                     mapLayerJsonURL: node.data.layerJSON,
-                    mapLayerGroup: this.mapLayerGroup,
-                    mapDecoratorGroup: this.mapDecoratorGroup
+                    mapLayerGroup: this.mapLayerGroup
                 });
                 node.mapLayerView = mapLayerView;
                 node.mapView = node.mapLayerView;
@@ -1412,7 +1409,6 @@ $(function() {
             this.drawBelow = false;
             this.features = [];
             this.mapLayerGroup = this.options.mapLayerGroup;
-            this.decoratorLayerGroup = this.options.decoratorLayerGroup;
             this.on( "readyToDraw", this.finishInitialization, this);
             this.setupOpacity();
             this.initializeFeaturesJson();
@@ -1462,11 +1458,6 @@ $(function() {
                 								      opacity: this.opacity});
             };
 
-            if (_.isUndefined(this.decoratorLayerGroup)){
-                this.decoratorLayerGroup = new ol.layer.Group({name:this.mapLayerJson.name + "_decorator",
-                                                             opacity: this.opacity});
-            }
-
             var _this = this;
             $.each(this.mapLayerJson.features, function( index, value ) {
                     _this.createFeature(value);
@@ -1507,17 +1498,12 @@ $(function() {
                 case 'Station':
                     newFeature = new app.views.StationView({
                         layerGroup: this.layerGroup,
-                        decoratorLayerGroup: this.decoratorLayerGroup,
                         featureJson: featureJson,
                     });
                     break;
             }
             this.setFeatureStyle(featureJson.style, newFeature, featureJson.shape);
             if (!_.isUndefined(newFeature)){
-                // if (newFeature.featureJson.type === "Station"){
-                //     var tolerance = newFeature.drawTolerance();
-                //     this.features.push(tolerance);
-                // }
                 this.features.push(newFeature);
             }
         },
@@ -1658,15 +1644,6 @@ $(function() {
             this.olFeature = this.options.olFeature;
             this.layerGroup = this.options.layerGroup;
             this.featureJson = this.options.featureJson;
-            if (this.options.decoratorLayerGroup)
-                this.decoratorLayerGroup = this.options.decoratorLayerGroup;
-
-            if (this.options.olStationsDecorators)
-                this.olStationsDecorators = this.options.olStationsDecorators;
-
-            if (this.options.olFeatureList)
-                this.olFeatureList = this.options.olFeatureList;
-
             this.constructContent();
             this.render();
         },
@@ -1732,6 +1709,10 @@ $(function() {
         onRender: function() {
             var childLayer = this.getLayer();
             if (!_.isUndefined(childLayer)){
+                if (this.featureJson.type === "Station") {
+                    this.layerGroup.getLayers().push(this.getStationDecoratorLayer());
+                }
+
                 this.layerGroup.getLayers().push(childLayer);
             }
         }
@@ -1780,7 +1761,19 @@ $(function() {
                     }),
                     style: this.getStyles(),
                     opacity: this.opacity
-                });    
+                });
+
+                if (this.featureJson.type === "Station"){
+                    this.stationsDecorators = new ol.Collection();
+
+                    this.stationsDecorators.push(this.drawTolerance());
+                    this.stationsDecorators.push(this.drawBoundary());
+                    this.stationsDecoratorsLayer = new ol.layer.Vector({
+                        name: this.featureJson.name + "_stnDecorator",
+                        // map: this.options.map,
+                        source:  new ol.source.Vector({features: this.stationsDecorators})
+                    });
+                }
             }
             var popup = this.getPopupContent();
             if (!_.isNull(popup)){
@@ -1816,6 +1809,9 @@ $(function() {
         },
         getLayer: function() {
             return this.vectorLayer;
+        },
+        getStationDecoratorLayer: function(){
+          return this.stationsDecoratorsLayer;
         }
     });
     
@@ -1862,15 +1858,11 @@ $(function() {
             if (this.olFeature == undefined){
                 this.olFeature = new ol.Feature({
                     name: this.featureJson.name,
-                    geometry: new ol.geom.Point(transform(this.featureJson.point)),
+                    geometry: new ol.geom.Point(transform(this.featureJson.point))
                 });
             }
             return this.olFeature;
         },
-        onRender: function() {
-			this.drawTolerance();
-			this.drawBoundary();
-		},
 		getToleranceGeometry: function() {
 			if ('tolerance' in this.featureJson) {
 				var circle4326 = ol.geom.Polygon.circular(this.getSphere(), this.featureJson.point, this.featureJson.tolerance, 64);
