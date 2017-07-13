@@ -1668,6 +1668,9 @@ $(function() {
             if (this.options.olStationsDecorators)
                 this.olStationsDecorators = this.options.olStationsDecorators;
 
+            if (this.options.olFeatureList)
+                this.olFeatureList = this.options.olFeatureList;
+
             this.constructContent();
             this.render();
         },
@@ -1893,7 +1896,7 @@ $(function() {
 						model: this.model,
 						style: style});
 					this.toleranceFeature.setStyle(style);
-					this.olStationsDecorators.push(this.toleranceFeature);
+					// this.olStationsDecorators.push(this.toleranceFeature);
 					// this.decoratorLayerGroup.addFeature(this.toleranceFeature);
 				}
 			}
@@ -1927,7 +1930,7 @@ $(function() {
 						model: this.model,
 						style: style});
 					this.boundaryFeature.setStyle(style);
-                    this.olStationsDecorators.push(this.boundaryFeature);
+                    // this.olStationsDecorators.push(this.boundaryFeature);
                     // this.decoratorLayerGroup.addFeature(this.boundaryFeature);
 				}
 			}

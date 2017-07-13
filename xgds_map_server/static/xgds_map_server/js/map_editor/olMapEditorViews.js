@@ -94,6 +94,10 @@ $(function() {
 			this.listenTo(app.vent, 'updateFeaturePosition', this.updateFeaturePosition);
 			this.listenTo(app.vent, 'deleteFeatureSuccess', function(killedFeature) {
 				this.olFeatures.remove(killedFeature.olFeature);
+				if (killedFeature.get('type') === "Station"){
+					this.stationsDecorators.remove(killedFeature.olToleranceFeature);
+					this.stationsDecorators.remove(killedFeature.olBoundaryFeature);
+				}
 				app.Actions.action();
 			});
 			this.listenTo(app.vent, 'clearAllFeatures', function(){
@@ -265,6 +269,8 @@ $(function() {
 			}
 
 			featureObj.olFeature = olFeature;
+			featureObj.olToleranceFeature = null;
+			featureObj.olBoundaryFeature = null;
 			this.initializeFeatureObjViews(featureObj, type, true);
 
 			// Keep jsonFeatures field updated
@@ -322,9 +328,7 @@ $(function() {
 						model: featureObj,
 						olFeature: featureObj.olFeature,
 						layerGroup: this.layerGroup,
-						decoratorLayerGroup: this.stationsDecoratorsLayer.getSource(),
 						featureJson: featureObj.attributes,
-						olStationsDecorators: this.stationsDecorators
 					});
 					break;
 				case 'LineString':
@@ -348,6 +352,19 @@ $(function() {
 
 				if (!(featureObj.olFeature in this.olFeatures) && !isNew) {
 					this.olFeatures.push(featureObj.olFeature);
+				}
+
+				if (newFeatureView.featureJson.type === "Station"){
+					var toleranceFeature = newFeatureView.drawTolerance();
+					var boundaryFeature = newFeatureView.drawBoundary();
+					featureObj.olToleranceFeature = toleranceFeature;
+					featureObj.olBoundaryFeature = boundaryFeature;
+
+					if (!(featureObj.olToleranceFeature in this.stationsDecorators))
+						this.stationsDecorators.push(toleranceFeature);
+
+					if (!(featureObj.olBoundaryFeature in this.stationsDecorators))
+                        this.stationsDecorators.push(boundaryFeature);
 				}
 
 				//Sets style of feature depending on if it is a new feature or a saved one.
