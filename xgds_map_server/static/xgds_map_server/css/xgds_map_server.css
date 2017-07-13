@@ -5,13 +5,17 @@
 	display: none;
 	background-color: #e8e8dc;
 	border-radius: 5px;
-	padding: 20px;
+	padding: 18px;
 	color: rgba(0, 68, 137, 0.7);
-	width: 200px;
+	width: 250px;
+	height: auto;
+	box-shadow: 0 0 15px 0 #d3d3d3;
 }
 
 .saved-msg{
 	display: block;
+	font-size: 12pt;
+	/*font-variant: small-caps;*/
 }
 
 #id_description, #id_name, #id_region, #id_region, #id_transparency, #id_parent{

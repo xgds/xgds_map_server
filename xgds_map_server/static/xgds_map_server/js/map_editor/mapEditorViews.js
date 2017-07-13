@@ -35,7 +35,7 @@ app.views.ToolbarView = Marionette.View.extend({
         'click #btn-saveas': function() { this.showSaveAsDialog(); },
         'click #btn-undo': function() { app.Actions.undo(); },
         'click #btn-redo': function() { app.Actions.redo(); },
-        'click #btn-save': function() { this.saveEntireLayer();},
+        'click #btn-save': function() { app.util.saveLayer();},
         'click #btn-delete': function() {window.location.href=app.options.deleteUrl},
 		'click #btn-newLayer': function() {
 			$('#newLayerModal').modal();
@@ -144,21 +144,6 @@ app.views.ToolbarView = Marionette.View.extend({
         } else {
             app.vent.trigger('sync');
         }
-    },
-
-    saveEntireLayer: function(){
-    	var jsonFeaturesFormatter = {};
-		jsonFeaturesFormatter['features'] = app.mapLayer.get('feature');
-
-		app.vent.trigger('setMapBounds'); //Sets minLat, minLon, maxLat, maxLon
-		app.mapLayer.set('jsonFeatures', JSON.stringify(jsonFeaturesFormatter));
-		app.mapLayer.save();
-
-		// $('#layer-saved').show();
-		$("#saved-notification").show("slide", { direction: "right" }, 250);
-		setTimeout(function(){
-			$('#saved-notification').fadeOut('slow');
-		}, 1000);
     },
     
     showSaveAsDialog: function() {
@@ -507,6 +492,16 @@ app.views.FeaturePropertiesView = Marionette.View.extend({
 		}, 
 		'change #featureDescription': function(evt) {
 			this.model.set('description', evt.target.value);
+			app.util.updateJsonFeatures();
+			app.Actions.action();
+		},
+		'change #featureTolerance': function(evt){
+			this.model.set('tolerance', evt.target.value);
+			app.util.updateJsonFeatures();
+			app.Actions.action();
+		},
+		'change #featureBoundary': function(evt){
+			this.model.set('boundary', evt.target.value);
 			app.util.updateJsonFeatures();
 			app.Actions.action();
 		},
