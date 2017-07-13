@@ -1935,23 +1935,38 @@ $(function() {
 			return this.boundaryFeature;
 		},
         createTolerenceStyle: function(color){
+            var rgbaColor = this.hexToRGB(color, 0.3);
+
             var style = new ol.style.Style({
                 fill: new ol.style.Fill({
-                    color: [255, 255, 0, 0.3]
+                    color: rgbaColor
                 })
             });
 
             return style;
         },
         createBoundaryStyle: function(color){
+            var rgbaColor = this.hexToRGB(color, 0.8);
+
             var style = new ol.style.Style({
                 stroke: new ol.style.Stroke({
-                    color: [255, 255, 0, 0.8],
+                    color: rgbaColor,
                     width: 3
                 })
             });
 
             return style;
+        },
+        hexToRGB: function(hex, alpha) {
+            var r = parseInt(hex.slice(1, 3), 16),
+                g = parseInt(hex.slice(3, 5), 16),
+                b = parseInt(hex.slice(5, 7), 16);
+
+            if (alpha) {
+                return "rgba(" + r + ", " + g + ", " + b + ", " + alpha + ")";
+            } else {
+                return "rgb(" + r + ", " + g + ", " + b + ")";
+            }
         }
     });
     
