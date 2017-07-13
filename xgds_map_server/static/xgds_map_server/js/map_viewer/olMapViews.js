@@ -1458,20 +1458,11 @@ $(function() {
         },
         constructFeatures: function() {
             if (_.isUndefined(this.layerGroup)){
-//            	var transparency = this.mapLayerJson.transparency;
-//            	try {
-//            		var cookieJSON = Cookies.getJSON(this.node.key);
-//            		if (cookieJSON != undefined){
-//            			transparency = cookieJSON.transparency;
-//            		}
-//            	} catch (err){
-//            		//pass
-//            	}
                 this.layerGroup = new ol.layer.Group({name:this.mapLayerJson.name,
                 								      opacity: this.opacity});
             };
 
-            if (_isUndefined(this.decoratorLayerGroup)){
+            if (_.isUndefined(this.decoratorLayerGroup)){
                 this.decoratorLayerGroup = new ol.layer.Group({name:this.mapLayerJson.name + "_decorator",
                                                              opacity: this.opacity});
             }
@@ -1521,9 +1512,12 @@ $(function() {
                     });
                     break;
             }
-
             this.setFeatureStyle(featureJson.style, newFeature, featureJson.shape);
             if (!_.isUndefined(newFeature)){
+                // if (newFeature.featureJson.type === "Station"){
+                //     var tolerance = newFeature.drawTolerance();
+                //     this.features.push(tolerance);
+                // }
                 this.features.push(newFeature);
             }
         },
@@ -1670,6 +1664,9 @@ $(function() {
             this.featureJson = this.options.featureJson;
             if (this.options.decoratorLayerGroup)
                 this.decoratorLayerGroup = this.options.decoratorLayerGroup;
+
+            if (this.options.olStationsDecorators)
+                this.olStationsDecorators = this.options.olStationsDecorators;
 
             this.constructContent();
             this.render();
@@ -1870,6 +1867,91 @@ $(function() {
                 });
             }
             return this.olFeature;
+        },
+        onRender: function() {
+			this.drawTolerance();
+			this.drawBoundary();
+		},
+		getToleranceGeometry: function() {
+			if ('tolerance' in this.featureJson) {
+				var circle4326 = ol.geom.Polygon.circular(this.getSphere(), this.featureJson.point, this.featureJson.tolerance, 64);
+				return circle4326.transform(LONG_LAT, DEFAULT_COORD_SYSTEM);
+			}
+			return undefined;
+		},
+		drawTolerance: function() {
+			this.toleranceGeometry = this.getToleranceGeometry();
+			var style = this.createTolerenceStyle(this.featureJson.style);
+			if (this.toleranceGeometry != undefined){
+				if (this.toleranceFeature != undefined){
+					this.toleranceFeature.setGeometry(this.toleranceGeometry);
+				} else {
+					this.toleranceFeature = new ol.Feature({
+                        geometry: this.toleranceGeometry,
+						id: this.featureJson.uuid + '_stn_tolerance',
+						name: this.featureJson.name + '_stn_tolerance',
+						model: this.model,
+						style: style});
+					this.toleranceFeature.setStyle(style);
+					this.olStationsDecorators.push(this.toleranceFeature);
+					// this.decoratorLayerGroup.addFeature(this.toleranceFeature);
+				}
+			}
+			return this.toleranceFeature;
+		},
+		getSphere: function() {
+			if (_.isUndefined(app.wgs84Sphere)){
+				app.wgs84Sphere = new ol.Sphere(app.options.BODY_RADIUS_METERS);
+			}
+			return app.wgs84Sphere;
+		},
+		getBoundaryGeometry: function() {
+			if ('boundary' in this.featureJson) {
+				var radius = this.featureJson.boundary;
+				var circle4326 = ol.geom.Polygon.circular(this.getSphere(), this.featureJson.point, radius, 64);
+				return circle4326.transform(LONG_LAT, DEFAULT_COORD_SYSTEM);
+			}
+			return undefined;
+		},
+		drawBoundary: function() {
+			this.boundaryGeometry = this.getBoundaryGeometry();
+			var style = this.createBoundaryStyle(this.featureJson.style);
+			if (this.boundaryGeometry != undefined){
+				if (this.boundaryFeature != undefined){
+					this.boundaryFeature.setGeometry(this.boundaryGeometry);
+				} else {
+					this.boundaryFeature = new ol.Feature({
+                        geometry: this.boundaryGeometry,
+						id: this.featureJson.uuid + '_stn_boundary',
+						name: this.featureJson.name + '_stn_boundary',
+						model: this.model,
+						style: style});
+					this.boundaryFeature.setStyle(style);
+                    this.olStationsDecorators.push(this.boundaryFeature);
+                    // this.decoratorLayerGroup.addFeature(this.boundaryFeature);
+				}
+			}
+
+			return this.boundaryFeature;
+		},
+        createTolerenceStyle: function(color){
+            var style = new ol.style.Style({
+                fill: new ol.style.Fill({
+                    color: [255, 255, 0, 0.3]
+                })
+            });
+
+            return style;
+        },
+        createBoundaryStyle: function(color){
+            var style = new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: [255, 255, 0, 0.8],
+                    width: 3
+                })
+            });
+
+            return style;
         }
     });
     

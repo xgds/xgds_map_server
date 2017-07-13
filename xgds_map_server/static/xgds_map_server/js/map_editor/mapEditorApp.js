@@ -146,6 +146,19 @@
 		},
 
         util: {
+			saveLayer: function(){
+				var jsonFeaturesFormatter = {};
+				jsonFeaturesFormatter['features'] = app.mapLayer.get('feature');
+
+				app.vent.trigger('setMapBounds'); //Sets minLat, minLon, maxLat, maxLon
+				app.mapLayer.set('jsonFeatures', JSON.stringify(jsonFeaturesFormatter));
+				app.mapLayer.save();
+
+				$("#saved-notification").show("slide", { direction: "right" }, 300);
+				setTimeout(function(){
+					$('#saved-notification').fadeOut('slow');
+				}, 1500);
+			},
 	        deleteFeature: function(feature, undoRedoAction=false){
 	        	var featureIndex = this.indexOfFeature(feature.get('uuid'));
 	        	var jsonFeatures = app.mapLayer.get('jsonFeatures').features;
