@@ -105,7 +105,7 @@ $(function() {
 			});
 			//TODO: Change to be its own function name - Create selected styles dynamically?
 			this.listenTo(app.vent, 'selectFeature', function(feature){
-				if (feature.get('type') === "Point" || feature.get('type') === "Station"){
+				if (feature.get('type') === "Point"){
 					if (feature.attributes.shape === null || !feature.attributes.shape){
 						feature.trigger('setBasicStyle', olStyles.styles['selected_circle']);
 					}
@@ -120,7 +120,7 @@ $(function() {
 			});
 			//TODO: Change to be its own function name
 			this.listenTo(app.vent, 'activeFeature', function(feature){
-				if (feature.get('type') === "Point" || feature.get('type') === "Station"){
+				if (feature.get('type') === "Point"){
 					if (feature.attributes.shape === null || !feature.attributes.shape){
 						feature.trigger('setBasicStyle', olStyles.styles['active_circle']);
 					}
@@ -135,11 +135,13 @@ $(function() {
 			});
 			//TODO: Change to be its own function name
 			this.listenTo(app.vent, 'deselectFeature', function(feature){
-				//Create style from feature's style attribute.
 				var color = feature.get('style');
 
-				if (feature.get('type') === "Point" || feature.get('type') === "Station")
+				if (feature.get('type') === "Point")
 					var style = this.createPointStyle(color, feature.get('shape'));
+
+				else if (feature.get('type') === "Station")
+					var style = this.createStationStyle(color);
 
 				else
 					var style = this.createFeatureStyle(color);

@@ -140,6 +140,22 @@ olStyles.buildStyles = function() {
             width: 3
           })
         });
+    olStyles.styles['selected_station'] = new ol.style.Style({
+        image: new ol.style.Icon({
+            src: '/static/xgds_map_server/icons/placemark_circle.png',
+            color: 'cyan',
+            rotateWithView: false,
+            opacity: 1.0
+        })
+    });
+    olStyles.styles['active_station'] = new ol.style.Style({
+        image: new ol.style.Icon({
+            src: '/static/xgds_map_server/icons/placemark_circle.png',
+            color: 'red',
+            rotateWithView: false,
+            opacity: 1.0
+        })
+    });
     olStyles.styles['groundOverlay'] =  new ol.style.Style({
         zIndex: Infinity
     });

@@ -1531,7 +1531,7 @@ $(function() {
 			}
 
 			else if (featureView.featureJson.type === "Station"){
-				var style = this.createStationStyles(color);
+				var style = this.createStationStyle(color);
 			}
 
 			else{
@@ -1557,16 +1557,12 @@ $(function() {
 
 			return style;
 		},
-		createStationStyles: function(color){
+		createStationStyle: function(color){
 			var iconStyle = new ol.style.Icon({
 				src: '/static/xgds_map_server/icons/placemark_circle.png',
 				color: color,
 				rotateWithView: false,
 				opacity: 1.0
-			});
-
-			var tolerence = new ol.style.Fill({
-				color: [255, 255, 0, 0.3]
 			});
 
 			var style = new ol.style.Style({
