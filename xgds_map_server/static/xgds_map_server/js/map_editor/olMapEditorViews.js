@@ -141,25 +141,36 @@ $(function() {
 		setSelectStatusStyle: function(feature, op){
 			var type = feature.get('type');
 			var color = null, style = null;
+			var styleName = feature.get('type').toLowerCase() + "_" + op.toLowerCase();
 
-			if (op == "Selected")
-				color = "cyan";
+			//Don't create new styles if we have already done it before
+			if (!app.mapLayer.olStyles[styleName]){
+				// Get correct color for each operation
+				if (op == "Selected")
+					color = "cyan";
 
-			else if (op == "Active")
-				color = "red";
+				else if (op == "Active")
+					color = "red";
 
-			else
-				color = feature.get('style');
+				else
+					color = feature.get('style');
 
+				// Set feature style accordingly
+				if (feature.get('type') === "Point")
+					style = this.createPointStyle(color, feature.get('shape'));
 
-			if (feature.get('type') === "Point")
-				style = this.createPointStyle(color, feature.get('shape'));
+				else if (feature.get('type') === "Station")
+					style = this.createStationStyle(color);
 
-			else if (feature.get('type') === "Station")
-				style = this.createStationStyle(color);
+				else
+					style = this.createFeatureStyle(color);
 
-			else
-				style = this.createFeatureStyle(color);
+				app.mapLayer.olStyles[styleName] = style;
+			}
+
+			else {
+				style = app.mapLayer.olStyles[styleName];
+			}
 
 			feature.trigger('setBasicStyle', style);
 

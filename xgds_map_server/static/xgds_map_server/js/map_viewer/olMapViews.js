@@ -1409,6 +1409,7 @@ $(function() {
             this.drawBelow = false;
             this.features = [];
             this.mapLayerGroup = this.options.mapLayerGroup;
+            app.mapLayer.olStyles = [];
             this.on( "readyToDraw", this.finishInitialization, this);
             this.setupOpacity();
             this.initializeFeaturesJson();
