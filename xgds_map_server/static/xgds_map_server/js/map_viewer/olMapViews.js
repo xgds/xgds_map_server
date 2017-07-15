@@ -1499,6 +1499,7 @@ $(function() {
                     newFeature = new app.views.StationView({
                         layerGroup: this.layerGroup,
                         featureJson: featureJson,
+                        viewPage: true
                     });
                     break;
             }
@@ -1644,6 +1645,9 @@ $(function() {
             this.olFeature = this.options.olFeature;
             this.layerGroup = this.options.layerGroup;
             this.featureJson = this.options.featureJson;
+            if (this.options.viewPage)
+                this.viewPage = this.options.viewPage;
+
             this.constructContent();
             this.render();
         },
@@ -1709,7 +1713,7 @@ $(function() {
         onRender: function() {
             var childLayer = this.getLayer();
             if (!_.isUndefined(childLayer)){
-                if (this.featureJson.type === "Station") {
+                if (this.featureJson.type === "Station" && this.viewPage == true) {
                     this.layerGroup.getLayers().push(this.getStationDecoratorLayer());
                 }
 
@@ -1763,8 +1767,8 @@ $(function() {
                     opacity: this.opacity
                 });
 
-                if (this.featureJson.type === "Station"){
-                    // this.drawStationDecorator();
+                if (this.featureJson.type === "Station" && this.viewPage == true){
+                    this.drawStationDecorator();
                 }
             }
             var popup = this.getPopupContent();
@@ -1856,16 +1860,18 @@ $(function() {
             return this.olFeature;
         },
         drawStationDecorator: function(){
-            this.stationsDecorators = new ol.Collection();
-            var tolerance = this.getToleranceFeature();
-            var boundary = this.getBoundaryFeature();
+            if (this.viewPage == true) {
+                this.stationsDecorators = new ol.Collection();
+                var tolerance = this.getToleranceFeature();
+                var boundary = this.getBoundaryFeature();
 
-            this.stationsDecorators.push(tolerance);
-            this.stationsDecorators.push(boundary);
-            this.stationsDecoratorsLayer = new ol.layer.Vector({
-                name: this.featureJson.name + "_stnDecorator",
-                source:  new ol.source.Vector({features: this.stationsDecorators})
-            });
+                this.stationsDecorators.push(tolerance);
+                this.stationsDecorators.push(boundary);
+                this.stationsDecoratorsLayer = new ol.layer.Vector({
+                    name: this.featureJson.name + "_stnDecorator",
+                    source: new ol.source.Vector({features: this.stationsDecorators})
+                });
+            }
         },
 		getToleranceGeometry: function() {
 			if ('tolerance' in this.featureJson) {
