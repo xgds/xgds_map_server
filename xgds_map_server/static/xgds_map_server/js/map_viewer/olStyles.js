@@ -40,7 +40,7 @@ olStyles.buildStyles = function() {
     olStyles.styles['selected_circle'] =  new ol.style.Style({
         image: new ol.style.Circle({
             radius: 6,
-            stroke: new ol.style.Stroke({color: 'cyan', width: 3}),
+            stroke: new ol.style.Stroke({color: '#000', width: 3}),
             fill: new ol.style.Fill({
                 color: 'rgba(0, 255, 255, 1.0)'
               })
