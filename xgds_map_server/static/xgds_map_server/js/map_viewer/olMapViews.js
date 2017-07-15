@@ -1409,7 +1409,7 @@ $(function() {
             this.drawBelow = false;
             this.features = [];
             this.mapLayerGroup = this.options.mapLayerGroup;
-            app.mapLayer.olStyles = [];
+            this.olStyles = [];
             this.on( "readyToDraw", this.finishInitialization, this);
             this.setupOpacity();
             this.initializeFeaturesJson();
@@ -1510,20 +1510,34 @@ $(function() {
             }
         },
         setFeatureStyle: function(color, featureView, shape){
-			if (color === null || color === ""){
+			if (color === null || color === "")
 				color = "#0000ff";
-			}
 
-			if (featureView.featureJson.type === "Point"){
-				var style = this.createPointStyle(color, shape);
-			}
+			if (!shape)
+			    shape = "";
 
-			else if (featureView.featureJson.type === "Station"){
-				var style = this.createStationStyle(color);
-			}
+			var style = null;
+            var styleName = featureView.featureJson.type.toLowerCase() + "_" + color + shape;
 
-			else{
-				var style = this.createFeatureStyle(color);
+            //Don't create new styles if we have already done it before
+			if (!this.olStyles[styleName]) {
+                if (featureView.featureJson.type === "Point") {
+                    style = this.createPointStyle(color, shape);
+                }
+
+                else if (featureView.featureJson.type === "Station") {
+                    style = this.createStationStyle(color);
+                }
+
+                else {
+                    style = this.createFeatureStyle(color);
+                }
+
+                this.olStyles[styleName] = style;
+            }
+
+            else {
+				style = this.olStyles[styleName];
 			}
 
 			featureView.updateStyle(style);
