@@ -617,12 +617,12 @@ app.views.FeatureElementView = Marionette.View.extend({
     	if (app.State.featureSelected != undefined){
         	var checkbox = $('#id_' + app.State.featureSelected.get('uuid'));
         	if (checkbox.prop('checked')){
-    			app.vent.trigger('selectFeature', app.State.featureSelected);
+    			app.vent.trigger('selectStatusChanged', app.State.featureSelected, "Selected");
         	} else {
-        	    app.vent.trigger('deselectFeature', app.State.featureSelected);
+        	    app.vent.trigger('selectStatusChanged', app.State.featureSelected);
         	}
         }
-        app.vent.trigger('activeFeature', this.model);
+        app.vent.trigger('selectStatusChanged', this.model, "Active");
         app.State.metaExpanded = true;
         app.State.featureSelected = this.model;
         app.vent.trigger('showFeature', this.model);
@@ -652,9 +652,9 @@ app.views.FeatureElementView = Marionette.View.extend({
     	'click .select': function(evt) {
         	if (app.State.featureSelected != this.model){
         	    if (evt.target.checked){
-        	    	app.vent.trigger('selectFeature', this.model);
+					app.vent.trigger('selectStatusChanged', this.model, "Selected");
         	    } else {
-        	    	app.vent.trigger('deselectFeature', this.model);
+					app.vent.trigger('selectStatusChanged', this.model);
         	    }
         	}
     	}
