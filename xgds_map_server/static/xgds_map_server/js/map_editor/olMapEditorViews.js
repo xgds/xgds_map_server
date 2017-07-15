@@ -102,6 +102,7 @@ $(function() {
 			});
 			this.listenTo(app.vent, 'clearAllFeatures', function(){
 				this.olFeatures.clear();
+				this.stationsDecorators.clear();
 			});
 			//TODO: Change to be its own function name - Create selected styles dynamically?
 			this.listenTo(app.vent, 'selectFeature', function(feature){
@@ -329,6 +330,8 @@ $(function() {
 						model: featureObj,
 						olFeature: featureObj.olFeature,
 						layerGroup: this.layerGroup,
+						stationsDecorators: this.stationsDecorators,
+						stationsDecoratorsLayer: this.stationsDecoratorsLayer.getSource(),
 						featureJson: featureObj.attributes,
 					});
 					break;
@@ -372,8 +375,8 @@ $(function() {
 		},
 		drawStationDecorators: function(featureView, featureObj){
 			if (featureView.featureJson.type === "Station"){
-				var toleranceFeature = featureView.drawTolerance();
-				var boundaryFeature = featureView.drawBoundary();
+				var toleranceFeature = featureView.getToleranceFeature();
+				var boundaryFeature = featureView.getBoundaryFeature();
 				featureObj.olToleranceFeature = toleranceFeature;
 				featureObj.olBoundaryFeature = boundaryFeature;
 
@@ -595,6 +598,8 @@ $(function() {
 
 	app.views.StationEditView = app.views.StationView.extend({
 		initialize: function(options){
+			this.stationsDecoratorsLayer = this.options.stationsDecoratorsLayer;
+			this.stationsDecorators = this.options.stationsDecorators;
 			app.views.StationView.prototype.initialize.call(this, options);
 			this.listenTo(this.model, 'change:coordinates', function() {
 				this.updateGeometryFromCoords();
@@ -606,6 +611,19 @@ $(function() {
 			}, this);
 
 		},
+		render: function(){
+			//no op
+		},
+		drawStationDecorator: function(){
+            this.stationsDecorators = new ol.Collection();
+            var tolerance = this.getToleranceFeature();
+            var boundary = this.getBoundaryFeature();
+
+            this.stationsDecorators.push(tolerance);
+            this.stationsDecorators.push(boundary);
+            this.stationsDecoratorsLayer.addFeature(tolerance);
+            this.stationsDecoratorsLayer.addFeature(boundary);
+        },
 		updateGeometryFromCoords: function(){
 			var coords = this.model.get('point');
 			var xcoords = transform(coords);

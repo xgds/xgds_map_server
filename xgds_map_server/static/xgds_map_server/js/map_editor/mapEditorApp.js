@@ -125,7 +125,6 @@
 
 			// Remove all backbone and openlayers features before rebuilding map
 			this.util.deleteAllFeatures();
-			app.vent.trigger('clearAllFeatures');
 
 			$.each(features.jsonFeatures.features, function(index, featureJson) {
 				if (!_this.util.featureExists(featureJson.uuid)){
@@ -180,7 +179,6 @@
 				var _this = this;
 
 				// Deleting in the first loop messes with the order of deletion and breaks it.
-				// Don't ask me how, but this is the solution.
 				_.each(featureList, function(feature) {
 					featuresToDelete.push(feature);
 				});
@@ -190,6 +188,8 @@
 						_this.deleteFeature(feature, true);
 					}
 				});
+
+				app.vent.trigger('clearAllFeatures');
 			},
 			updateJsonFeatures: function(){
 				var jsonFeaturesFormatter = {};
