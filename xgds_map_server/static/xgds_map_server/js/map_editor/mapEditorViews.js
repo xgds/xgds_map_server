@@ -498,11 +498,13 @@ app.views.FeaturePropertiesView = Marionette.View.extend({
 		'change #featureTolerance': function(evt){
 			this.model.set('tolerance', evt.target.value);
 			app.util.updateJsonFeatures();
+			app.vent.trigger('changeTolerance');
 			app.Actions.action();
 		},
 		'change #featureBoundary': function(evt){
 			this.model.set('boundary', evt.target.value);
 			app.util.updateJsonFeatures();
+			app.vent.trigger('changeBoundary');
 			app.Actions.action();
 		},
 		'click #showLabel': function(evt) {

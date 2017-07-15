@@ -604,6 +604,14 @@ $(function() {
 				app.util.updateJsonFeatures();
 				app.Actions.action();
 			});
+			this.listenTo(app.vent, 'changeTolerance', function(){
+				this.stationsDecorators.remove(this.getToleranceFeature());
+				this.stationsDecorators.push(this.getToleranceFeature());
+			});
+			this.listenTo(app.vent, 'changeBoundary', function(){
+				this.stationsDecorators.remove(this.getBoundaryFeature());
+				this.stationsDecorators.push(this.getBoundaryFeature());
+			});
 			this.model.on('setBasicStyle', function(basicStyle) {
 				this.updateStyle(basicStyle);
 			}, this);
@@ -619,8 +627,6 @@ $(function() {
 
             this.stationsDecorators.push(tolerance);
             this.stationsDecorators.push(boundary);
-            this.stationsDecoratorsLayer.addFeature(tolerance);
-            this.stationsDecoratorsLayer.addFeature(boundary);
         },
 		updateGeometryFromCoords: function(){
 			var coords = this.model.get('point');
@@ -628,6 +634,7 @@ $(function() {
 			//TODO this ought to have changed the openlayers geometry but does not seem to.
 			this.olFeature.getGeometry().setCoordinates(xcoords);
 			this.olFeature.changed();
+			this.drawStationDecorator();
 		},
 		updateCoordsFromGeometry: function(geometry) {
 			var coords = inverseTransform(geometry.getCoordinates());
@@ -635,6 +642,7 @@ $(function() {
 				this.model.set('point',coords);
 				this.model.trigger('coordsChanged');
 			}
+			this.drawStationDecorator();
 		},
 		destroy: function() {
 			this.model.destroy({
