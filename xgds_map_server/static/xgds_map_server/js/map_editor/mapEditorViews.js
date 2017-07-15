@@ -619,7 +619,7 @@ app.views.FeatureElementView = Marionette.View.extend({
         	if (checkbox.prop('checked')){
     			app.vent.trigger('selectStatusChanged', app.State.featureSelected, "Selected");
         	} else {
-        	    app.vent.trigger('selectStatusChanged', app.State.featureSelected);
+        	    app.vent.trigger('selectStatusChanged', app.State.featureSelected, "Deselected");
         	}
         }
         app.vent.trigger('selectStatusChanged', this.model, "Active");
@@ -654,7 +654,7 @@ app.views.FeatureElementView = Marionette.View.extend({
         	    if (evt.target.checked){
 					app.vent.trigger('selectStatusChanged', this.model, "Selected");
         	    } else {
-					app.vent.trigger('selectStatusChanged', this.model);
+					app.vent.trigger('selectStatusChanged', this.model, "Deselected");
         	    }
         	}
     	}
