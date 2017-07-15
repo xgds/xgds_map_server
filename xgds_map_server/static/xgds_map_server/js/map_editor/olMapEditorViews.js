@@ -148,10 +148,10 @@ $(function() {
 
 			// Get correct color for each operation
 			if (op == "Selected")
-				color = "cyan";
+				color = "#00ffff";
 
 			else if (op == "Active")
-				color = "red";
+				color = "#ff0000";
 
 			else
 				color = feature.get('style');
@@ -161,11 +161,12 @@ $(function() {
 			//Don't create new styles if we have already done it before
 			if (!this.olStyles[styleName]){
 				// Set feature style accordingly
-				if (feature.get('type') === "Point")
+				if (type === "Point")
 					style = this.createPointStyle(color, shape);
 
-				else if (feature.get('type') === "Station")
-					style = this.createStationStyle(color);
+				else if (type === "Station") {
+                    style = this.createStationStyle(color);
+                }
 
 				else
 					style = this.createFeatureStyle(color);
@@ -178,6 +179,7 @@ $(function() {
 			}
 
 			feature.trigger('setBasicStyle', style);
+			app.vent.trigger('station' + op, color, feature);
 
 		},
 		createFeaturesLayer: function() {
@@ -611,6 +613,18 @@ $(function() {
 			this.listenTo(app.vent, 'changeBoundary', function(){
 				this.stationsDecorators.remove(this.getBoundaryFeature());
 				this.stationsDecorators.push(this.getBoundaryFeature());
+			});
+			this.listenTo(app.vent, 'stationSelected', function(color, feature){
+				feature.olToleranceFeature.setStyle(this.createTolerenceStyle(color));
+				feature.olBoundaryFeature.setStyle(this.createBoundaryStyle(color));
+			});
+			this.listenTo(app.vent, 'stationActive', function(color, feature){
+				feature.olToleranceFeature.setStyle(this.createTolerenceStyle(color));
+				feature.olBoundaryFeature.setStyle(this.createBoundaryStyle(color));
+			});
+			this.listenTo(app.vent, 'stationDeselected', function(color, feature){
+				feature.olToleranceFeature.setStyle(this.createTolerenceStyle(color));
+				feature.olBoundaryFeature.setStyle(this.createBoundaryStyle(color));
 			});
 			this.model.on('setBasicStyle', function(basicStyle) {
 				this.updateStyle(basicStyle);
