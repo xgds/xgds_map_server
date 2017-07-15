@@ -1764,15 +1764,7 @@ $(function() {
                 });
 
                 if (this.featureJson.type === "Station"){
-                    this.stationsDecorators = new ol.Collection();
-
-                    this.stationsDecorators.push(this.drawTolerance());
-                    this.stationsDecorators.push(this.drawBoundary());
-                    this.stationsDecoratorsLayer = new ol.layer.Vector({
-                        name: this.featureJson.name + "_stnDecorator",
-                        // map: this.options.map,
-                        source:  new ol.source.Vector({features: this.stationsDecorators})
-                    });
+                    // this.drawStationDecorator();
                 }
             }
             var popup = this.getPopupContent();
@@ -1863,6 +1855,18 @@ $(function() {
             }
             return this.olFeature;
         },
+        drawStationDecorator: function(){
+            this.stationsDecorators = new ol.Collection();
+            var tolerance = this.getToleranceFeature();
+            var boundary = this.getBoundaryFeature();
+
+            this.stationsDecorators.push(tolerance);
+            this.stationsDecorators.push(boundary);
+            this.stationsDecoratorsLayer = new ol.layer.Vector({
+                name: this.featureJson.name + "_stnDecorator",
+                source:  new ol.source.Vector({features: this.stationsDecorators})
+            });
+        },
 		getToleranceGeometry: function() {
 			if ('tolerance' in this.featureJson) {
 				var circle4326 = ol.geom.Polygon.circular(this.getSphere(), this.featureJson.point, this.featureJson.tolerance, 64);
@@ -1870,7 +1874,7 @@ $(function() {
 			}
 			return undefined;
 		},
-		drawTolerance: function() {
+		getToleranceFeature: function() {
 			this.toleranceGeometry = this.getToleranceGeometry();
 			var style = this.createTolerenceStyle(this.featureJson.style);
 			if (this.toleranceGeometry != undefined){
@@ -1904,7 +1908,7 @@ $(function() {
 			}
 			return undefined;
 		},
-		drawBoundary: function() {
+		getBoundaryFeature: function() {
 			this.boundaryGeometry = this.getBoundaryGeometry();
 			var style = this.createBoundaryStyle(this.featureJson.style);
 			if (this.boundaryGeometry != undefined){
