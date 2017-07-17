@@ -1,3 +1,16 @@
+.property-header-text{
+	float: left;
+}
+
+.property-header-btn{
+	float: right;
+	text-align: right;
+}
+
+.feature-action-btn{
+	margin-bottom: 0px !important;
+}
+
 #saved-notification{
 	position: fixed;
     bottom: 20px;
