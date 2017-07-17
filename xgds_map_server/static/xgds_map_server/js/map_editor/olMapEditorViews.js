@@ -179,7 +179,9 @@ $(function() {
 			}
 
 			feature.trigger('setBasicStyle', style);
-			app.vent.trigger('station' + op, color, feature);
+
+			if (type === 'Station')
+				app.vent.trigger('station' + op, color, feature);
 
 		},
 		createFeaturesLayer: function() {
