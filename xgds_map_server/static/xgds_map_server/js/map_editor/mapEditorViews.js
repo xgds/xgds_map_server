@@ -37,10 +37,6 @@ app.views.ToolbarView = Marionette.View.extend({
         'click #btn-redo': function() { app.Actions.redo(); },
         'click #btn-save': function() { app.util.saveLayer();},
         'click #btn-delete': function() {window.location.href=app.options.deleteUrl},
-		'click #btn-newLayer': function() {
-			$('#newLayerModal').modal();
-			app.vent.trigger('getSelectedFeatures');
-        }
     },
 
     initialize: function() {
@@ -51,7 +47,6 @@ app.views.ToolbarView = Marionette.View.extend({
         this.listenTo(app.vent, 'redoNotEmpty', this.enableRedo);
         this.listenTo(app.mapLayer, 'sync', function(model) {this.updateSaveStatus('sync')});
         this.listenTo(app.mapLayer, 'error', function(model) {this.updateSaveStatus('error')});
-        this.listenTo(app.vent, 'sendSelectedFeatures', this.getJsonFeatures);
     },
 
    onRender: function() {
@@ -173,9 +168,6 @@ app.views.ToolbarView = Marionette.View.extend({
             dialogClass: 'saveAs'
     	});
     },
-	getJsonFeatures: function(selectedFeatures){
-		$('#id_jsonFeatures').val(selectedFeatures);
-	}
 
 });
 
@@ -276,29 +268,47 @@ app.views.FeaturesTabView = Marionette.View.extend({
         //Column Headings
         colhead1: '#colhead1',
         colhead2: '#colhead2',
-        colhead3: '#colhead3',
+        // colhead3: '#colhead3',
         
         //Column content
         col1: '#col1',
         col2: {
             selector: '#col2'
         },
-		col3: {
-		    selector: '#col3'
-		}
+		// col3: {
+		//     selector: '#col3'
+		// }
     },
+	events: {
+		'click #btn-delete': function() { app.vent.trigger('deleteSelectedFeatures', this.model)},
+		'click #btn-copy': function() { app.vent.trigger('copyFeatures'); },
+		'click #btn-paste': function() { app.vent.trigger('pasteFeatures') },
+		'click #btn-toggle-coordinates': function(){
+			var expandedModel = app.views.FeatureCollectionView.prototype.getExpandedItem();
+			this.showCoordinates(expandedModel);
+		},
+		'click #btn-toggle-properties': function(){
+			var expandedModel = app.views.FeatureCollectionView.prototype.getExpandedItem();
+			this.showFeature(expandedModel);
+		},
+		'click #btn-newLayer': function() {
+			$('#newLayerModal').modal();
+			app.vent.trigger('getSelectedFeatures');
+        }
+	},
     initialize: function() {
     	this.listenTo(app.vent, 'showFeature', this.showFeature, this);
         this.listenTo(app.vent, 'showNothing', this.showNothing, this);
         this.listenTo(app.vent, 'showStyle', this.showStyle, this);
-        this.listenTo(app.vent, 'showCoordinates', this.showCoordinates, this);
+        // this.listenTo(app.vent, 'showCoordinates', this.showCoordinates, this);
+        this.listenTo(app.vent, 'sendSelectedFeatures', this.getJsonFeatures);
         this.listenTo(app.vent, 'deleteSelectedFeatures', this.clearColumns, this);
     },
     
     clearColumns: function() {
     	// Clears 2nd and 3rd columns
         this.getRegion('col2').reset();
-        this.getRegion('col3').reset();
+        // this.getRegion('col3').reset();
     },
     
     onClose: function() {
@@ -331,7 +341,7 @@ app.views.FeaturesTabView = Marionette.View.extend({
     showFeature: function(itemModel) {
     	// clear columns
     	try{
-    		this.getRegion('col3').reset();
+    		// this.getRegion('col3').reset();
     		this.getRegion('colhead2').reset();
     	} catch (ex) {
     	}
@@ -342,7 +352,7 @@ app.views.FeaturesTabView = Marionette.View.extend({
     	
     	this.getRegion('colhead2').show(headerView);
     	this.getRegion('col2').reset();
-    	this.getRegion('colhead3').reset();
+    	// this.getRegion('colhead3').reset();
     	
     	var view = new app.views.FeaturePropertiesView({model: itemModel});
     	this.getRegion('col2').show(view);
@@ -370,26 +380,31 @@ app.views.FeaturesTabView = Marionette.View.extend({
     
     showCoordinates: function(model){
     	try {
-    	    this.getRegion('colhead3').close();
+    		this.getRegion('col2').reset();
+    	    this.getRegion('colhead2').reset();
     	} catch (ex) {
     	}
     	var headerView = new app.views.FeatureCoordinatesHeader({model: model});
-    	this.getRegion('colhead3').show(headerView);
+    	this.getRegion('colhead2').show(headerView);
     	var view = new app.views.FeatureCoordinatesView({model: model});
-    	this.getRegion('col3').show(view);
+    	this.getRegion('col2').show(view);
+    	// this.getRegion('col2').reset();
     },
     
     showNothing: function() {
         // clear the columns
         try {
             this.getRegion('col2').close();
-            this.getRegion('col3').close();
+            // this.getRegion('col3').close();
             this.getRegion('colhead2').close();
-            this.getRegion('colhead3').close();
+            // this.getRegion('colhead3').close();
         } catch (ex) {
             
         }
-    }
+    },
+	getJsonFeatures: function(selectedFeatures){
+		$('#id_jsonFeatures').val(selectedFeatures);
+	}
 });
 
 
@@ -523,7 +538,7 @@ app.views.FeaturePropertiesView = Marionette.View.extend({
 		this.listenTo(app.vent, 'editPickerChanged', this.updateFeatureStyle);
 	},
 	onRender: function() {
-		app.vent.trigger('showCoordinates', this.model);
+		// app.vent.trigger('showCoordinates', this.model);
 	},
 	initializeEditColorPicker: function(){
 		$("#edit-color-picker").spectrum({
@@ -562,11 +577,21 @@ app.views.FeaturesHeaderView = Marionette.View.extend({
      * This view also contains the copy, cut, delete btns for features.
      */
 	template: '#template-features-header',
-	events: {
-		'click #btn-delete': function() { app.vent.trigger('deleteSelectedFeatures', this.model)},
-		'click #btn-copy': function() { app.vent.trigger('copyFeatures'); },
-		'click #btn-paste': function() { app.vent.trigger('pasteFeatures') }
-	},
+	// events: {
+	// 	'click #btn-delete': function() { app.vent.trigger('deleteSelectedFeatures', this.model)},
+	// 	'click #btn-copy': function() { app.vent.trigger('copyFeatures'); },
+	// 	'click #btn-paste': function() { app.vent.trigger('pasteFeatures') },
+	// 	'click #btn-newLayer': function() {
+	// 		$('#newLayerModal').modal();
+	// 		app.vent.trigger('getSelectedFeatures');
+     //    }
+	// },
+	// initialize: function(){
+	// 	this.listenTo(app.vent, 'sendSelectedFeatures', this.getJsonFeatures);
+	// },
+	// getJsonFeatures: function(selectedFeatures){
+	// 	$('#id_jsonFeatures').val(selectedFeatures);
+	// }
 });
 
 
@@ -699,7 +724,10 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
 		// if there is a previously selected feature, revert the style to default.
 		app.State.featureSelected = childView.model;
 		app.vent.trigger('itemSelected', childView.model);
-	},   
+	},
+	getExpandedItem: function(){
+		return app.State.featureSelected;
+	},
     deleteSelectedFeatures: function(){
     	var features = this.getSelectedFeatures();
     	var selectParent = null;
