@@ -209,14 +209,15 @@ $(function() {
 			this.map.getView().fit(extent, this.map.getSize());
 		},
 		setMapBounds: function(){
-			var bounds = this.map.getView().calculateExtent(this.map.getSize());
+			// var bounds = this.map.getView().calculateExtent(this.map.getSize());
+			var bounds = this.featuresVector.getExtent();
 			bounds = ol.proj.transformExtent(bounds, SPHERICAL_MERCATOR, LONG_LAT);
 
-			//Bottom Left Corner
+			//Bottom Left Corner of featuresVector
 			app.mapLayer.set('minLon', bounds[0]);
 			app.mapLayer.set('minLat', bounds[1]);
 
-			//Top Right Corner
+			//Top Right Corner of featuresVector
 			app.mapLayer.set('maxLon', bounds[2]);
 			app.mapLayer.set('maxLat', bounds[3]);
 		},
