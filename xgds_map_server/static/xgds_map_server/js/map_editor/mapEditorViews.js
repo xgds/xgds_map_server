@@ -36,7 +36,6 @@ app.views.ToolbarView = Marionette.View.extend({
         'click #btn-undo': function() { app.Actions.undo(); },
         'click #btn-redo': function() { app.Actions.redo(); },
         'click #btn-save': function() { app.util.saveLayer();},
-        'click #btn-delete': function() {window.location.href=app.options.deleteUrl},
     },
 
     initialize: function() {
@@ -223,7 +222,10 @@ app.views.LayerInfoTabView = Marionette.View.extend({
 		},
 		'change #mapLayerDescription': function(evt) {
 			this.model.set('description', evt.target.value);
-		}    
+		},
+		'click #btn-delete': function() {
+			window.location.href = app.options.deleteUrl;
+		}
 	},
 	//This function supports navigating away from the info tab and back to it, fires after the onShow
 	// event so we know the color picker is actually in the view (part of Marionette)
