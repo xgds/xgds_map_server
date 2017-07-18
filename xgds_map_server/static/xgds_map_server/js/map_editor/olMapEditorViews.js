@@ -633,7 +633,13 @@ $(function() {
 			//no op
 		},
         drawStationDecorator: function(){
-           //no op for editor view
+			//Used when editing feature position
+            this.stationsDecorators = new ol.Collection();
+            var tolerance = this.getToleranceFeature();
+            var boundary = this.getBoundaryFeature();
+
+            this.stationsDecorators.push(tolerance);
+            this.stationsDecorators.push(boundary);
         },
 		updateGeometryFromCoords: function(){
 			var coords = this.model.get('point');
