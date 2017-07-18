@@ -273,8 +273,6 @@ $(function() {
 			}
 
 			featureObj.olFeature = olFeature;
-			featureObj.olToleranceFeature = null;
-			featureObj.olBoundaryFeature = null;
 			this.initializeFeatureObjViews(featureObj, type, true);
 
 			// Keep jsonFeatures field updated
@@ -609,23 +607,21 @@ $(function() {
 				app.Actions.action();
 			});
 			this.listenTo(app.vent, 'changeTolerance', function(){
-				this.stationsDecorators.remove(this.getToleranceFeature());
-				this.stationsDecorators.push(this.getToleranceFeature());
+				this.olToleranceFeature = this.getToleranceFeature();
 			});
 			this.listenTo(app.vent, 'changeBoundary', function(){
-				this.stationsDecorators.remove(this.getBoundaryFeature());
-				this.stationsDecorators.push(this.getBoundaryFeature());
+				this.olBoundaryFeature = this.getBoundaryFeature();
 			});
 			this.listenTo(app.vent, 'stationSelected', function(color, feature){
-				feature.olToleranceFeature.setStyle(this.createTolerenceStyle(color));
+				feature.olToleranceFeature.setStyle(this.createToleranceStyle(color));
 				feature.olBoundaryFeature.setStyle(this.createBoundaryStyle(color));
 			});
 			this.listenTo(app.vent, 'stationActive', function(color, feature){
-				feature.olToleranceFeature.setStyle(this.createTolerenceStyle(color));
+				feature.olToleranceFeature.setStyle(this.createToleranceStyle(color));
 				feature.olBoundaryFeature.setStyle(this.createBoundaryStyle(color));
 			});
 			this.listenTo(app.vent, 'stationDeselected', function(color, feature){
-				feature.olToleranceFeature.setStyle(this.createTolerenceStyle(color));
+				feature.olToleranceFeature.setStyle(this.createToleranceStyle(color));
 				feature.olBoundaryFeature.setStyle(this.createBoundaryStyle(color));
 			});
 			this.model.on('setBasicStyle', function(basicStyle) {
@@ -636,13 +632,8 @@ $(function() {
 		render: function(){
 			//no op
 		},
-		drawStationDecorator: function(){
-            this.stationsDecorators = new ol.Collection();
-            var tolerance = this.getToleranceFeature();
-            var boundary = this.getBoundaryFeature();
-
-            this.stationsDecorators.push(tolerance);
-            this.stationsDecorators.push(boundary);
+        drawStationDecorator: function(){
+           //no op for editor view
         },
 		updateGeometryFromCoords: function(){
 			var coords = this.model.get('point');
