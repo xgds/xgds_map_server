@@ -1897,23 +1897,21 @@ $(function() {
 		},
 		getToleranceFeature: function() {
 			this.toleranceGeometry = this.getToleranceGeometry();
-			var style = this.createTolerenceStyle(this.featureJson.style);
+			var style = this.createToleranceStyle(this.featureJson.style);
 			if (this.toleranceGeometry != undefined){
-				if (this.toleranceFeature != undefined){
-					this.toleranceFeature.setGeometry(this.toleranceGeometry);
+				if (this.olToleranceFeature != undefined){
+					this.olToleranceFeature.setGeometry(this.toleranceGeometry);
 				} else {
-					this.toleranceFeature = new ol.Feature({
+					this.olToleranceFeature = new ol.Feature({
                         geometry: this.toleranceGeometry,
 						id: this.featureJson.uuid + '_stn_tolerance',
 						name: this.featureJson.name + '_stn_tolerance',
 						model: this.model,
 						style: style});
-					this.toleranceFeature.setStyle(style);
-					// this.olStationsDecorators.push(this.toleranceFeature);
-					// this.decoratorLayerGroup.addFeature(this.toleranceFeature);
+					this.olToleranceFeature.setStyle(style);
 				}
 			}
-			return this.toleranceFeature;
+			return this.olToleranceFeature;
 		},
 		getSphere: function() {
 			if (_.isUndefined(app.wgs84Sphere)){
@@ -1933,24 +1931,22 @@ $(function() {
 			this.boundaryGeometry = this.getBoundaryGeometry();
 			var style = this.createBoundaryStyle(this.featureJson.style);
 			if (this.boundaryGeometry != undefined){
-				if (this.boundaryFeature != undefined){
-					this.boundaryFeature.setGeometry(this.boundaryGeometry);
+				if (this.olBoundaryFeature != undefined){
+					this.olBoundaryFeature.setGeometry(this.boundaryGeometry);
 				} else {
-					this.boundaryFeature = new ol.Feature({
+					this.olBoundaryFeature = new ol.Feature({
                         geometry: this.boundaryGeometry,
 						id: this.featureJson.uuid + '_stn_boundary',
 						name: this.featureJson.name + '_stn_boundary',
 						model: this.model,
 						style: style});
-					this.boundaryFeature.setStyle(style);
-                    // this.olStationsDecorators.push(this.boundaryFeature);
-                    // this.decoratorLayerGroup.addFeature(this.boundaryFeature);
+					this.olBoundaryFeature.setStyle(style);
 				}
 			}
 
-			return this.boundaryFeature;
+			return this.olBoundaryFeature;
 		},
-        createTolerenceStyle: function(color){
+        createToleranceStyle: function(color){
             var rgbaColor = this.hexToRGB(color, 0.3);
 
             var style = new ol.style.Style({

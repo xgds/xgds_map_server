@@ -268,16 +268,12 @@ app.views.FeaturesTabView = Marionette.View.extend({
         //Column Headings
         colhead1: '#colhead1',
         colhead2: '#colhead2',
-        // colhead3: '#colhead3',
         
         //Column content
         col1: '#col1',
         col2: {
             selector: '#col2'
         },
-		// col3: {
-		//     selector: '#col3'
-		// }
     },
 	events: {
 		'click #btn-delete': function() { app.vent.trigger('deleteSelectedFeatures', this.model)},
@@ -300,7 +296,6 @@ app.views.FeaturesTabView = Marionette.View.extend({
     	this.listenTo(app.vent, 'showFeature', this.showFeature, this);
         this.listenTo(app.vent, 'showNothing', this.showNothing, this);
         this.listenTo(app.vent, 'showStyle', this.showStyle, this);
-        // this.listenTo(app.vent, 'showCoordinates', this.showCoordinates, this);
         this.listenTo(app.vent, 'sendSelectedFeatures', this.getJsonFeatures);
         this.listenTo(app.vent, 'deleteSelectedFeatures', this.clearColumns, this);
     },
@@ -308,7 +303,6 @@ app.views.FeaturesTabView = Marionette.View.extend({
     clearColumns: function() {
     	// Clears 2nd and 3rd columns
         this.getRegion('col2').reset();
-        // this.getRegion('col3').reset();
     },
     
     onClose: function() {
@@ -341,7 +335,6 @@ app.views.FeaturesTabView = Marionette.View.extend({
     showFeature: function(itemModel) {
     	// clear columns
     	try{
-    		// this.getRegion('col3').reset();
     		this.getRegion('colhead2').reset();
     	} catch (ex) {
     	}
@@ -352,7 +345,6 @@ app.views.FeaturesTabView = Marionette.View.extend({
     	
     	this.getRegion('colhead2').show(headerView);
     	this.getRegion('col2').reset();
-    	// this.getRegion('colhead3').reset();
     	
     	var view = new app.views.FeaturePropertiesView({model: itemModel});
     	this.getRegion('col2').show(view);
@@ -388,16 +380,13 @@ app.views.FeaturesTabView = Marionette.View.extend({
     	this.getRegion('colhead2').show(headerView);
     	var view = new app.views.FeatureCoordinatesView({model: model});
     	this.getRegion('col2').show(view);
-    	// this.getRegion('col2').reset();
     },
     
     showNothing: function() {
         // clear the columns
         try {
             this.getRegion('col2').close();
-            // this.getRegion('col3').close();
             this.getRegion('colhead2').close();
-            // this.getRegion('colhead3').close();
         } catch (ex) {
             
         }
@@ -512,14 +501,14 @@ app.views.FeaturePropertiesView = Marionette.View.extend({
 		},
 		'change #featureTolerance': function(evt){
 			this.model.set('tolerance', evt.target.value);
-			app.util.updateJsonFeatures();
 			app.vent.trigger('changeTolerance');
+			app.util.updateJsonFeatures();
 			app.Actions.action();
 		},
 		'change #featureBoundary': function(evt){
 			this.model.set('boundary', evt.target.value);
-			app.util.updateJsonFeatures();
 			app.vent.trigger('changeBoundary');
+			app.util.updateJsonFeatures();
 			app.Actions.action();
 		},
 		'click #showLabel': function(evt) {
