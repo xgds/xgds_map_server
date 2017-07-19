@@ -9,6 +9,18 @@
 	    <th><label>Description</label></th>
 	    <td><textarea id="featureDescription">{{description}}</textarea></td>
 	  </tr>
+      {{#if tolerance}}
+          <tr>
+            <th><label>Tolerance</label></th>
+            <td><input id="featureTolerance" type="text" value="{{tolerance}}"/></td>
+          </tr>
+      {{/if}}
+      {{#if boundary}}
+          <tr>
+            <th><label>Boundary</label></th>
+            <td><input id="featureBoundary" type="text" value="{{boundary}}"/></td>
+          </tr>
+      {{/if}}
 	  <tr>
 	    <th><label> Show Name </label></th>
 	    <td> <input type="checkbox" id="showLabel"  {{#if showLabel}}checked="checked"{{/if}} >  </td>

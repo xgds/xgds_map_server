@@ -35,6 +35,16 @@
 	    		    app.vent.trigger('mapmode', 'navigate');;
 	    		}
         	});
+			this.listenTo(this.vent, 'all', function(eventname, args) {
+				if (eventname == 'change:map') {
+					app.Actions.action();
+				} else if (eventname == 'map:reversing') {
+					app.Actions.disable();
+				} else if (eventname == 'map:reverse') {
+					app.Actions.enable();
+					app.Actions.action();
+				}
+			});
 		},
 		events:{
 			'click #btn-submit-layer': function(){ app.vent.trigger('getSelectedFeatures'); }
@@ -83,14 +93,14 @@
             disableAddFeature: false,
             popupsEnabled: true
         },
-       /*Actions: xGDS.Actions,
+       Actions: xGDS.Actions,
        getSerializableObject: function() {
 			if (!_.isUndefined(this.mapLayer)) {
 				return this.mapLayer;
 			} else {
 				return '';
 			}
-		},*/
+		},
 		updateSerializableObject: function(sObject){
 			this.updateMapLayer(sObject);
 		},
@@ -106,16 +116,110 @@
     			featureObj.set('mapLayerName', app.mapLayer.get('name'));
     			featureObj.set('uuid', featureJson.uuid);
     		});
+    		this.Actions.setInitial();
     		this.vent.trigger('onLayerLoaded');
         },
+		updateMapLayer: function(features){
+			app.Actions.disable();
+			var _this = this;
+
+			// Remove all backbone and openlayers features before rebuilding map
+			this.util.deleteAllFeatures();
+
+			$.each(features.jsonFeatures.features, function(index, featureJson) {
+				if (!_this.util.featureExists(featureJson.uuid)){
+					featureJson.uuid = new UUID(4).format(); // New ID so backbone relational doesn't complain
+
+					var featureObj = new app.models.Feature(featureJson);
+					featureObj.json = featureJson;
+					featureObj.set('mapLayer', app.mapLayer);  // set up the relationship.
+					featureObj.set('mapLayerName', app.mapLayer.get('name'));
+					featureObj.set('uuid', featureJson.uuid);
+
+					_this.util.updateJsonFeatures();
+				}
+            });
+
+			this.vent.trigger('actionLayerLoaded');
+			app.Actions.enable();
+		},
 
         util: {
-	        deleteFeature: function(feature){
+			saveLayer: function(){
+				var jsonFeaturesFormatter = {};
+				jsonFeaturesFormatter['features'] = app.mapLayer.get('feature');
+
+				app.vent.trigger('setMapBounds'); //Sets minLat, minLon, maxLat, maxLon
+				app.mapLayer.set('jsonFeatures', JSON.stringify(jsonFeaturesFormatter));
+				app.mapLayer.save();
+
+				$("#saved-notification").show("slide", { direction: "right" }, 300);
+				setTimeout(function(){
+					$('#saved-notification').fadeOut('slow');
+				}, 1500);
+			},
+	        deleteFeature: function(feature, undoRedoAction=false){
+	        	var featureIndex = this.indexOfFeature(feature.get('uuid'));
+	        	var jsonFeatures = app.mapLayer.get('jsonFeatures').features;
+
 				if (!_.isUndefined(feature.collection)){
 					feature.collection.remove(feature);
 				}
-				app.vent.trigger('deleteFeatureSuccess', feature);
+
+				if (featureIndex > -1) {
+					app.mapLayer.attributes.jsonFeatures.features.splice(featureIndex, 1);
+                }
+
+                if (!undoRedoAction)
+					app.vent.trigger('deleteFeatureSuccess', feature);
 	        },
+			deleteAllFeatures: function(featureList){
+	        	var featureList = app.mapLayer.get('feature').models;
+	        	var featuresToDelete = [];
+				var _this = this;
+
+				// Deleting in the first loop messes with the order of deletion and breaks it.
+				_.each(featureList, function(feature) {
+					featuresToDelete.push(feature);
+				});
+
+				_.each(featuresToDelete, function(feature){
+					if (!_.isUndefined(feature)){
+						_this.deleteFeature(feature, true);
+					}
+				});
+
+				app.vent.trigger('clearAllFeatures');
+			},
+			updateJsonFeatures: function(){
+				var jsonFeaturesFormatter = {};
+				jsonFeaturesFormatter['features'] = app.mapLayer.get('feature');
+				app.mapLayer.set('jsonFeatures', JSON.parse(JSON.stringify(jsonFeaturesFormatter)));
+			},
+			featureExists: function(featureId){
+				var featureList = app.mapLayer.get('jsonFeatures').features;
+				var exists = false;
+
+				$.each(featureList, function(index, feature){
+					if (feature.uuid === featureId){
+						exists = true;
+					}
+				});
+
+				return exists;
+			},
+			indexOfFeature: function(featureId){
+				var featureList = app.mapLayer.get('jsonFeatures').features;
+				var location = -1;
+
+				$.each(featureList, function(index, feature){
+					if (feature.uuid == featureId){
+						location = index;
+					}
+				});
+
+				return location;
+			},
 	        getFeatureWithName: function(name) {
 	          var features = app.mapLayer.get('feature').toArray();
 	          var foundFeature = undefined;
@@ -156,6 +260,7 @@
 	            app.featureIndex['Point'] = 0;
 	            app.featureIndex['LineString'] = 0;
 	            app.featureIndex['GroundOverlay'] = 0;
+	            app.featureIndex['Station'] = 0;
 	            _.each(features, function(feature) {
 	        	if (feature != undefined){
 	                    var type = feature.type;
@@ -180,7 +285,7 @@
 	        },
 	        
 	        getFeatureCoordinates: function(type, feature) {
-	        	if (type == 'Point') {
+	        	if (type == 'Point' || type == 'Station') {
 	        		return feature.get('point');
 	        	} else if (type == 'Polygon') {
 	        		return feature.get('polygon');
@@ -194,7 +299,7 @@
 	        	 * newCoords: updated (x,y) in lon lat
 	        	 * index: index for vertices if is a linestring or a polygon
 	        	 */
-	        	if (type == 'Point') {
+	        	if (type == 'Point' || type == 'Station') {
 	        		feature.set('point', [newX, newY]);
 	        	} else if (type == 'Polygon') {
 	        		var polygon = feature.get('polygon');
@@ -215,7 +320,7 @@
 	        transformAndSetCoordinates: function(type, feature, coordinates) {
 	        	// transform user drawn coordinates from spherical mercator to lon lat
 	        	var tCoords = null;
-	        	if (type == "Point") {
+	        	if (type == "Point" || type == "Station") {
 	    			feature.set("point", inverseTransform(coordinates));
 	    		} else if (type == "Polygon") {
 	    			feature.set('polygon', inverseList(coordinates));

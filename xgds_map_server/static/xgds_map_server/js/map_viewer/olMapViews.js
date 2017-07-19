@@ -1409,6 +1409,7 @@ $(function() {
             this.drawBelow = false;
             this.features = [];
             this.mapLayerGroup = this.options.mapLayerGroup;
+            this.olStyles = [];
             this.on( "readyToDraw", this.finishInitialization, this);
             this.setupOpacity();
             this.initializeFeaturesJson();
@@ -1454,22 +1455,14 @@ $(function() {
         },
         constructFeatures: function() {
             if (_.isUndefined(this.layerGroup)){
-//            	var transparency = this.mapLayerJson.transparency;
-//            	try {
-//            		var cookieJSON = Cookies.getJSON(this.node.key);
-//            		if (cookieJSON != undefined){
-//            			transparency = cookieJSON.transparency;
-//            		}
-//            	} catch (err){
-//            		//pass
-//            	}
                 this.layerGroup = new ol.layer.Group({name:this.mapLayerJson.name,
                 								      opacity: this.opacity});
             };
+
             var _this = this;
             $.each(this.mapLayerJson.features, function( index, value ) {
                     _this.createFeature(value);
-              });
+            });
         },
         setTransparency: function(transparency) {
         	this.opacity = calculateOpacity(transparency);
@@ -1503,27 +1496,51 @@ $(function() {
                         featureJson: featureJson
                     });
                     break;
+                case 'Station':
+                    newFeature = new app.views.StationView({
+                        layerGroup: this.layerGroup,
+                        featureJson: featureJson,
+                        viewPage: true
+                    });
+                    break;
             }
-
             this.setFeatureStyle(featureJson.style, newFeature, featureJson.shape);
             if (!_.isUndefined(newFeature)){
                 this.features.push(newFeature);
             }
         },
         setFeatureStyle: function(color, featureView, shape){
-            if (color == null){
+			if (color === null || color === "")
 				color = "#0000ff";
-			}
 
-            if (featureView.featureJson.type == 'Point'){
-                var style = this.createPointStyle(color, shape);
-				featureView.updateStyle(style);
+			if (!shape)
+			    shape = "";
+
+			var style = null;
+            var styleName = featureView.featureJson.type.toLowerCase() + "_" + color + shape;
+
+            //Don't create new styles if we have already done it before
+			if (!this.olStyles[styleName]) {
+                if (featureView.featureJson.type === "Point") {
+                    style = this.createPointStyle(color, shape);
+                }
+
+                else if (featureView.featureJson.type === "Station") {
+                    style = this.createStationStyle(color);
+                }
+
+                else {
+                    style = this.createFeatureStyle(color);
+                }
+
+                this.olStyles[styleName] = style;
             }
 
-            else{
-				var style = this.createFeatureStyle(color);
-				featureView.updateStyle(style);
+            else {
+				style = this.olStyles[styleName];
 			}
+
+			featureView.updateStyle(style);
 		},
 		createFeatureStyle: function(color){
 			var style = new ol.style.Style({
@@ -1542,8 +1559,28 @@ $(function() {
 
 			return style;
 		},
-        createPointStyle: function(color, shape){
-			switch(shape){
+		createStationStyle: function(color){
+			var iconStyle = new ol.style.Icon({
+				src: '/static/xgds_map_server/icons/placemark_circle.png',
+				color: color,
+				rotateWithView: false,
+				opacity: 1.0
+			});
+
+			var style = new ol.style.Style({
+				image: iconStyle
+			});
+
+			return style;
+		},
+		createPointStyle: function(color, shape){
+			if (shape != "" || shape != null)
+				var iconType = shape;
+
+			else
+				var iconType = $('#icon-type').val();
+
+			switch(iconType){
 				case "Circle":
 					var style = this.createFeatureStyle(color);
 					break;
@@ -1622,7 +1659,10 @@ $(function() {
             this.opacity = calculateOpacity(options.transparency);
             this.olFeature = this.options.olFeature;
             this.layerGroup = this.options.layerGroup;
-            this.featureJson = this.options.featureJson; 
+            this.featureJson = this.options.featureJson;
+            if (this.options.viewPage)
+                this.viewPage = this.options.viewPage;
+
             this.constructContent();
             this.render();
         },
@@ -1655,18 +1695,43 @@ $(function() {
         },
         getTextStyle: function() {
             if (this.featureJson.showLabel) {
-                var theText = new ol.style.Text(olStyles.styles['label']);
+                var style = this.createTextStyle(this.featureJson.style);
+                var theText = style;
+
                 theText.setText(this.featureJson.name);
                 this.textStyle = new ol.style.Style({
                     text: theText
                 });
+
                 return this.textStyle;
             }
             return null;
         },
+        createTextStyle: function(color){
+    	    if (!color)
+    	        color = "#00f";
+
+    	    var style = new ol.style.Text({
+                font: '14px Calibri,sans-serif',
+                fill: new ol.style.Fill({
+                    color: color
+                }),
+                stroke: new ol.style.Stroke({
+                    color: 'black',
+                    width: 2
+                }),
+                offsetY: -20
+            });
+
+    	    return style;
+        },
         onRender: function() {
             var childLayer = this.getLayer();
             if (!_.isUndefined(childLayer)){
+                if (this.featureJson.type === "Station" && this.viewPage == true) {
+                    this.layerGroup.getLayers().push(this.getStationDecoratorLayer());
+                }
+
                 this.layerGroup.getLayers().push(childLayer);
             }
         }
@@ -1715,7 +1780,11 @@ $(function() {
                     }),
                     style: this.getStyles(),
                     opacity: this.opacity
-                });    
+                });
+
+                if (this.featureJson.type === "Station" && this.viewPage == true){
+                    this.drawStationDecorator();
+                }
             }
             var popup = this.getPopupContent();
             if (!_.isNull(popup)){
@@ -1751,6 +1820,9 @@ $(function() {
         },
         getLayer: function() {
             return this.vectorLayer;
+        },
+        getStationDecoratorLayer: function(){
+          return this.stationsDecoratorsLayer;
         }
     });
     
@@ -1771,10 +1843,10 @@ $(function() {
     app.views.PointView = app.views.VectorView.extend({
         constructFeature: function() {
             if (this.olFeature == undefined){
-        	this.olFeature = new ol.Feature({
-        	    name: this.featureJson.name,
-        	    geometry: new ol.geom.Point(transform(this.featureJson.point))
-        	});
+                this.olFeature = new ol.Feature({
+                    name: this.featureJson.name,
+                    geometry: new ol.geom.Point(transform(this.featureJson.point))
+                });
             }
             return this.olFeature;
         }
@@ -1783,12 +1855,130 @@ $(function() {
     app.views.LineStringView = app.views.VectorView.extend({
         constructFeature: function() {
             if (this.olFeature == undefined){
-        	this.olFeature = new ol.Feature({
-        	    name: this.featureJson.name,
-        	    geometry: new ol.geom.LineString(this.featureJson.lineString).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
-        	});
+                this.olFeature = new ol.Feature({
+                    name: this.featureJson.name,
+                    geometry: new ol.geom.LineString(this.featureJson.lineString).transform(LONG_LAT, DEFAULT_COORD_SYSTEM)
+                });
             }
             return this.olFeature;
+        }
+    });
+
+    app.views.StationView = app.views.VectorView.extend({
+        constructFeature: function() {
+            if (this.olFeature == undefined){
+                this.olFeature = new ol.Feature({
+                    name: this.featureJson.name,
+                    geometry: new ol.geom.Point(transform(this.featureJson.point))
+                });
+            }
+            return this.olFeature;
+        },
+        drawStationDecorator: function(){
+            if (this.viewPage == true) {
+                this.stationsDecorators = new ol.Collection();
+                var tolerance = this.getToleranceFeature();
+                var boundary = this.getBoundaryFeature();
+
+                this.stationsDecorators.push(tolerance);
+                this.stationsDecorators.push(boundary);
+                this.stationsDecoratorsLayer = new ol.layer.Vector({
+                    name: this.featureJson.name + "_stnDecorator",
+                    source: new ol.source.Vector({features: this.stationsDecorators})
+                });
+            }
+        },
+		getToleranceGeometry: function() {
+			if ('tolerance' in this.featureJson) {
+				var circle4326 = ol.geom.Polygon.circular(this.getSphere(), this.featureJson.point, this.featureJson.tolerance, 64);
+				return circle4326.transform(LONG_LAT, DEFAULT_COORD_SYSTEM);
+			}
+			return undefined;
+		},
+		getToleranceFeature: function() {
+			this.toleranceGeometry = this.getToleranceGeometry();
+			var style = this.createToleranceStyle(this.featureJson.style);
+			if (this.toleranceGeometry != undefined){
+				if (this.olToleranceFeature != undefined){
+					this.olToleranceFeature.setGeometry(this.toleranceGeometry);
+				} else {
+					this.olToleranceFeature = new ol.Feature({
+                        geometry: this.toleranceGeometry,
+						id: this.featureJson.uuid + '_stn_tolerance',
+						name: this.featureJson.name + '_stn_tolerance',
+						model: this.model,
+						style: style});
+					this.olToleranceFeature.setStyle(style);
+				}
+			}
+			return this.olToleranceFeature;
+		},
+		getSphere: function() {
+			if (_.isUndefined(app.wgs84Sphere)){
+				app.wgs84Sphere = new ol.Sphere(app.options.BODY_RADIUS_METERS);
+			}
+			return app.wgs84Sphere;
+		},
+		getBoundaryGeometry: function() {
+			if ('boundary' in this.featureJson) {
+				var radius = this.featureJson.boundary;
+				var circle4326 = ol.geom.Polygon.circular(this.getSphere(), this.featureJson.point, radius, 64);
+				return circle4326.transform(LONG_LAT, DEFAULT_COORD_SYSTEM);
+			}
+			return undefined;
+		},
+		getBoundaryFeature: function() {
+			this.boundaryGeometry = this.getBoundaryGeometry();
+			var style = this.createBoundaryStyle(this.featureJson.style);
+			if (this.boundaryGeometry != undefined){
+				if (this.olBoundaryFeature != undefined){
+					this.olBoundaryFeature.setGeometry(this.boundaryGeometry);
+				} else {
+					this.olBoundaryFeature = new ol.Feature({
+                        geometry: this.boundaryGeometry,
+						id: this.featureJson.uuid + '_stn_boundary',
+						name: this.featureJson.name + '_stn_boundary',
+						model: this.model,
+						style: style});
+					this.olBoundaryFeature.setStyle(style);
+				}
+			}
+
+			return this.olBoundaryFeature;
+		},
+        createToleranceStyle: function(color){
+            var rgbaColor = this.hexToRGB(color, 0.3);
+
+            var style = new ol.style.Style({
+                fill: new ol.style.Fill({
+                    color: rgbaColor
+                })
+            });
+
+            return style;
+        },
+        createBoundaryStyle: function(color){
+            var rgbaColor = this.hexToRGB(color, 0.8);
+
+            var style = new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: rgbaColor,
+                    width: 3
+                })
+            });
+
+            return style;
+        },
+        hexToRGB: function(hex, alpha) {
+            var r = parseInt(hex.slice(1, 3), 16),
+                g = parseInt(hex.slice(3, 5), 16),
+                b = parseInt(hex.slice(5, 7), 16);
+
+            if (alpha) {
+                return "rgba(" + r + ", " + g + ", " + b + ", " + alpha + ")";
+            } else {
+                return "rgb(" + r + ", " + g + ", " + b + ")";
+            }
         }
     });
     

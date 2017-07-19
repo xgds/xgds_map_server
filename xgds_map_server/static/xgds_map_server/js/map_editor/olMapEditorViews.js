@@ -24,6 +24,7 @@ $(function() {
 			app.State.tabsLeftMargin = parseFloat(app.State.tabsContainer.css('margin-left'));
 			this.listenTo(app.vent, 'onLayerLoaded', this.initializeMapEditor);
 			this.listenTo(app.vent, 'onLayerLoaded', this.createMapEditorView);
+			this.listenTo(app.vent, 'actionLayerLoaded', this.createMapEditorView);
 			this.listenTo(app.vent, 'recenterMap', this.updateBbox);
 		},
 		buildLayersForMap: function() {
@@ -67,6 +68,7 @@ $(function() {
 
 			/* Fires when the editingTools are rendered (ie. 'Add Features') is clicked.
 			Gets the active draw type (polygon/point/line) and runs addDrawInteraction to start the interaction with the map. */
+			//TODO: Change to be its own function
 			this.listenTo(app.vent, 'editingToolsRendered', function(){
 				app.vent.trigger('initializeColorPicker');
 
@@ -80,7 +82,7 @@ $(function() {
 					_this.typeSelect = $(event.target).attr('data');
 
 					//TODO Move this to an event in mapEditorViews under EditingToolsView
-					if (_this.typeSelect == 'Point')
+					if (_this.typeSelect === 'Point')
 						$('#icon-type').show();
 
 					else
@@ -92,54 +94,29 @@ $(function() {
 			this.listenTo(app.vent, 'updateFeaturePosition', this.updateFeaturePosition);
 			this.listenTo(app.vent, 'deleteFeatureSuccess', function(killedFeature) {
 				this.olFeatures.remove(killedFeature.olFeature);
-			});
-			this.listenTo(app.vent, 'selectFeature', function(feature){
-				if (feature.get('type') == "Point"){
-					if (feature.attributes.shape == null){
-						feature.trigger('setBasicStyle', olStyles.styles['selected_circle']);
-					}
-
-					else
-						feature.trigger('setBasicStyle', olStyles.styles['selected_' + feature.get('shape').toLowerCase()]);
+				if (killedFeature.get('type') === "Station"){
+					this.stationsDecorators.remove(killedFeature.olToleranceFeature);
+					this.stationsDecorators.remove(killedFeature.olBoundaryFeature);
 				}
-
-				else{
-					feature.trigger('setBasicStyle', olStyles.styles['selected_' + feature.get('type').toLowerCase()]);
-				}
+				app.Actions.action();
 			});
-			this.listenTo(app.vent, 'activeFeature', function(feature){
-				if (feature.get('type') == "Point"){
-					if (feature.attributes.shape == null){
-						feature.trigger('setBasicStyle', olStyles.styles['active_circle']);
-					}
-
-					else
-						feature.trigger('setBasicStyle', olStyles.styles['active_' + feature.get('shape').toLowerCase()]);
-				}
-
-				else{
-					feature.trigger('setBasicStyle', olStyles.styles['active_' + feature.get('type').toLowerCase()]);
-				}
+			this.listenTo(app.vent, 'clearAllFeatures', function(){
+				this.olFeatures.clear();
+				this.stationsDecorators.clear();
 			});
-			this.listenTo(app.vent, 'deselectFeature', function(feature){
-				//Create style from feature's style attribute.
-				var color = feature.get('style');
-
-				if (feature.get('type') == "Point")
-					var style = this.createPointStyle(color, feature.get('shape'));
-
-				else
-					var style = this.createFeatureStyle(color);
-
-				feature.trigger('setBasicStyle', style);
-			});
+			this.listenTo(app.vent, 'selectStatusChanged', this.setSelectStatusStyle);
 			this.listenTo(app.vent, 'onLayerLoaded', function() {
+				this.constructFeatures();
+				this.render();
+			});
+			this.listenTo(app.vent, 'actionLayerLoaded', function() {
 				this.constructFeatures();
 				this.render();
 			});
 			this.listenTo(app.vent, 'newFeatureLoaded', function(featureObj){
 				this.initializeFeatureObjViews(featureObj, featureObj.attributes.type);
 			});
+			this.listenTo(app.vent, 'setMapBounds', this.setMapBounds);
 	        this.listenTo(app.vent, 'mapmode', this.setMode);
 	        app.vent.trigger('mapEditorLayerInitialized');
 		},
@@ -161,7 +138,60 @@ $(function() {
 				app.vent.trigger('setTabRequested','features');
 			}
 		},
+		setSelectStatusStyle: function(feature, op){
+			var type = feature.get('type');
+			var shape = feature.get('shape');
+			var color = null, style = null;
+
+			if (!shape)
+				shape = "";
+
+			// Get correct color for each operation
+			if (op == "Selected")
+				color = "#00ffff";
+
+			else if (op == "Active")
+				color = "#ff0000";
+
+			else
+				color = feature.get('style');
+
+			var styleName = feature.get('type').toLowerCase() + "_" + color + shape;
+
+			//Don't create new styles if we have already done it before
+			if (!this.olStyles[styleName]){
+				// Set feature style accordingly
+				if (type === "Point")
+					style = this.createPointStyle(color, shape);
+
+				else if (type === "Station") {
+                    style = this.createStationStyle(color);
+                }
+
+				else
+					style = this.createFeatureStyle(color);
+
+				this.olStyles[styleName] = style;
+			}
+
+			else {
+				style = this.olStyles[styleName];
+			}
+
+			feature.trigger('setBasicStyle', style);
+
+			if (type === 'Station')
+				app.vent.trigger('station' + op, color, feature);
+
+		},
 		createFeaturesLayer: function() {
+			this.stationsDecorators = new ol.Collection();
+			this.stationsDecoratorsLayer = new ol.layer.Vector({
+				map: this.options.map,
+				source:  new ol.source.Vector({features: this.stationsDecorators}),
+				zIndex: 100
+			});
+
 			this.olFeatures = new ol.Collection();
 			this.featuresVector = new ol.source.Vector({
 				features: this.olFeatures,
@@ -169,24 +199,27 @@ $(function() {
 			});
 			this.featuresLayer = new ol.layer.Vector({
 				map: this.options.map,
-				source: this.featuresVector
+				source: this.featuresVector,
+				zIndex: 200
 			});
-			/*
-			this.pointFeatures = new ol.Collection();
-			this.pointVector = new ol.source.Vector({
-			features: this.pointFeatures,
-			useSpatialIndex: true,
-			});
-			this.pointLayer = new ol.layer.Vector({
-			map: this.options.map,
-			source: this.pointVector,
-			style: olStyles.getDefaultStyle()
-			}); */
-
+			this.featuresLayer.setZIndex(150);
 		},
 		fitExtent: function() {
 			var extent = this.featuresVector.getExtent();
 			this.map.getView().fit(extent, this.map.getSize());
+		},
+		setMapBounds: function(){
+			// var bounds = this.map.getView().calculateExtent(this.map.getSize());
+			var bounds = this.featuresVector.getExtent();
+			bounds = ol.proj.transformExtent(bounds, SPHERICAL_MERCATOR, LONG_LAT);
+
+			//Bottom Left Corner of featuresVector
+			app.mapLayer.set('minLon', bounds[0]);
+			app.mapLayer.set('minLat', bounds[1]);
+
+			//Top Right Corner of featuresVector
+			app.mapLayer.set('maxLon', bounds[2]);
+			app.mapLayer.set('maxLat', bounds[3]);
 		},
 		initializeFeaturesJson: function() {
 			this.trigger('readyToDraw');
@@ -206,18 +239,17 @@ $(function() {
 				});
 			}
 		},
-		createBackboneFeatureObj: function(olFeature) {
-			// create a new backbone feature object from the user drawings on map.
+		createBackboneFeatureObj: function(olFeature, station=false) {
+			// Create a new backbone feature object from the user drawings on map.
 			var geom = olFeature.getGeometry();
-			var type = geom.getType();
-			var coords;
-			if ((type === "Point") || (type === "LineString")){
-				coords = geom.getCoordinates();
-			} else {
-				coords = geom.getCoordinates().reduce(function(a, b) {
-					return a.concat(b);
-				});
-			}
+
+			if (station === true)
+				var type = "Station";
+
+			else
+				var type = geom.getType();
+
+			var coords = this.getFeatureCoords(type, geom);
 			var featureObj = new app.models.Feature();
 			featureObj.set('type', type);
 			featureObj.set('description', " ");
@@ -233,19 +265,40 @@ $(function() {
 			featureObj.set('uuid', new UUID(4).format());
 			featureObj.set('style', $('#color-picker').spectrum('get').toHexString());
 
-			if (type == "Point")
+			if (type === "Point")
 				featureObj.set('shape', $('#icon-type').val());
 
-			featureObj.olFeature =  olFeature;
+			else if (type === "Station"){
+				featureObj.set('boundary', 5);
+				featureObj.set('tolerance', 20);
+			}
 
+			featureObj.olFeature = olFeature;
 			this.initializeFeatureObjViews(featureObj, type, true);
 
+			// Keep jsonFeatures field updated
+			app.util.updateJsonFeatures();
+			app.Actions.action();
+
 			return featureObj;
+		},
+		getFeatureCoords: function(type, geom){
+			var coords;
+
+			if ((type === "Point") || (type === "LineString") || (type === "Station")){
+				coords = geom.getCoordinates();
+			} else {
+				coords = geom.getCoordinates().reduce(function(a, b) {
+					return a.concat(b);
+				});
+			}
+
+			return coords;
 		},
 		createFeature: function(featureObj){
 			this.initializeFeatureObjViews(featureObj, featureObj.json['type']);
 		},
-		initializeFeatureObjViews(featureObj, type, skipAdd=false){
+		initializeFeatureObjViews(featureObj, type, isNew=false){
 			var newFeatureView = undefined;
 			switch (type){
 				case 'GroundOverlay':
@@ -273,6 +326,16 @@ $(function() {
 						featureJson: featureObj.attributes
 					});
 					break;
+				case 'Station':
+					newFeatureView = new app.views.StationEditView({
+						model: featureObj,
+						olFeature: featureObj.olFeature,
+						layerGroup: this.layerGroup,
+						stationsDecorators: this.stationsDecorators,
+						stationsDecoratorsLayer: this.stationsDecoratorsLayer.getSource(),
+						featureJson: featureObj.attributes,
+					});
+					break;
 				case 'LineString':
 					newFeatureView = new app.views.LineStringEditView({
 						model: featureObj,
@@ -292,12 +355,12 @@ $(function() {
 					view.updateCoordsFromGeometry(geometry);
 				});
 
-				if (!(featureObj.olFeature in this.olFeatures) && !skipAdd) {
+				if (!(featureObj.olFeature in this.olFeatures) && !isNew) {
 					this.olFeatures.push(featureObj.olFeature);
 				}
 
 				//Sets style of feature depending on if it is a new feature or a saved one.
-				if (skipAdd == true) {
+				if (isNew === true) {
                     var color = $('#color-picker').spectrum('get').toHexString();
                 }
 
@@ -305,101 +368,50 @@ $(function() {
 					var color = featureObj.attributes.style;
 				}
 
-				var shape = featureObj.attributes.shape;
-				this.setFeatureStyle(color, newFeatureView, shape);
+				this.setFeatureStyle(color, newFeatureView, featureObj.attributes.shape);
+				this.drawStationDecorators(newFeatureView, featureObj);
+
 				this.features.push(newFeatureView);
 			}
 		},
-		setFeatureStyle: function(color, featureView, shape){
-			if (color == null || color == ""){
-				color = "#0000ff";
+		drawStationDecorators: function(featureView, featureObj){
+			if (featureView.featureJson.type === "Station"){
+				var toleranceFeature = featureView.getToleranceFeature();
+				var boundaryFeature = featureView.getBoundaryFeature();
+				featureObj.olToleranceFeature = toleranceFeature;
+				featureObj.olBoundaryFeature = boundaryFeature;
+
+				if (!(featureObj.olToleranceFeature in this.stationsDecorators))
+					this.stationsDecorators.push(toleranceFeature);
+
+				if (!(featureObj.olBoundaryFeature in this.stationsDecorators))
+					this.stationsDecorators.push(boundaryFeature);
 			}
-
-			if (featureView.featureJson.type == "Point"){
-				var style = this.createPointStyle(color, shape);
-				featureView.updateStyle(style);
-			}
-
-			else{
-				var style = this.createFeatureStyle(color);
-				featureView.updateStyle(style);
-			}
-		},
-		createFeatureStyle: function(color){
-			var style = new ol.style.Style({
-				stroke: new ol.style.Stroke({
-					color: color,
-					width: 3
-				}),
-				image: new ol.style.Circle({
-					radius: 6,
-					stroke: new ol.style.Stroke({color: '#000', width: 2}),
-					fill: new ol.style.Fill({
-						color: color
-					})
-				})
-			});
-
-			return style;
-		},
-		createPointStyle: function(color, shape){
-			if (shape != "" || shape != null)
-				var iconType = shape;
-
-			else
-				var iconType = $('#icon-type').val();
-
-			switch(iconType){
-				case "Circle":
-					var style = this.createFeatureStyle(color);
-					break;
-				case "Square":
-					var style = new ol.style.Style({
-						image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
-							color: color,
-							src: '/static/xgds_map_server/icons/square-point.png',
-						}))
-					});
-					break;
-				case "Triangle":
-					var style = new ol.style.Style({
-						image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
-							color: color,
-							src: '/static/xgds_map_server/icons/triangle-point.png',
-						}))
-					});
-					break;
-				case "Star":
-					var style = new ol.style.Style({
-						image: new ol.style.Icon(/** @type {olx.style.IconOptions} */ ({
-							color: color,
-							src: '/static/xgds_map_server/icons/star-point.png',
-						}))
-					});
-					break;
-				default:
-					var style = this.createFeatureStyle(color);
-					break;
-			}
-
-			return style;
 		},
 		updateFeaturePosition: function(feature) {
 			var olFeature = feature.olFeature;
-			if (type == 'Point') {
+			if (type === 'Point') {
 				var newPoint = new ol.geom.Point(transform(feature.get('point')));
 				olFeature.setGeometry(newPoint);
-			} else if (type == 'Polygon') {
+			} else if (type === 'Polygon') {
 				var coords = this.feature.get('polygon')
 				var newPolygon = new ol.geom.Polygon([coords]).transform(LONG_LAT, DEFAULT_COORD_SYSTEM);
 				olFeature.setGeometry(newPolygon);
-			} else if (type == 'LineString') {
+			} else if (type === 'LineString') {
 				var newLineString = new ol.geom.LineString(feature.get('lineString')).transform(LONG_LAT, DEFAULT_COORD_SYSTEM);
 				olFeature.setGeometry(newLineString);
-			} 
-
+			} else if (type === 'Station'){
+				var newPoint = new ol.geom.Point(transform(feature.get('point')));
+				olFeature.setGeometry(newPoint);
+			}
 		},
 		addDrawInteraction: function(typeSelect) {
+			var station = false;
+			if (typeSelect === "Station"){
+				typeSelect = "Point";
+				station = true;
+            }
+
 			var theFeaturesCollection = this.olFeatures;
 			this.featureAdder = new ol.interaction.Draw({
 				features: theFeaturesCollection,
@@ -410,7 +422,7 @@ $(function() {
 				}
 			}, this);
 			this.featureAdder.on('drawend', function(event) { // finished drawing this feature
-				var featureObj = this.createBackboneFeatureObj(event.feature);
+				var featureObj = this.createBackboneFeatureObj(event.feature, station);
 				app.vent.trigger('showFeature', featureObj);
 			}, this);
 			this.map.addInteraction(this.featureAdder);
@@ -451,57 +463,27 @@ $(function() {
 							ol.events.condition.singleClick(event);
 						}
 					});
-
-					/*
-		    this.pointDeleter = new ol.interaction.Select({
-			layers: [this.pointLayer], 
-			addCondition: function(event) {
-			    return ol.events.condition.shiftKeyOnly(event)
-			    && ol.events.condition.singleClick(event);
-			}
-		    });
-
-		    this.pointDeleter.getFeatures().on('add', function(e) {
-			var geometry = e.element.get('geometry');
-			var type = geometry.getType();
-			if (type == "Point") {
-			    var model = e.element.get('model');
-			    app.vent.trigger('deleteFeature', model);
-			}
-		    }, this);
-
-		    this.listenTo(app.vent, 'deleteFeatureSuccess', function(killedFeature) {
-                        if (!_.isUndefined(killedFeature)){
-                            var feature = killedFeature.olFeature;
-                            if (!_.isUndefined(feature)){
-//                        	this.pointDeleter.getFeatures().remove(feature);
-                                var killed = this.pointFeatures.remove(feature);
-                                if (killed != undefined){
-                                    this.pointDeleter.getFeatures().remove(feature);
-                                    this.pointVector.changed();
-                                } else {
-                                    this.olFeatures.remove(feature);
-                                } 
-                            }
-                        }
-                    }, this);
-					 */
+					this.repositioner.on('modifyend', function(evt){
+						app.util.updateJsonFeatures();
+						app.Actions.action();
+					});
 				} 
 				this.map.addInteraction(this.repositioner);
-//				this.map.addInteraction(this.pointDeleter);
-
-			}, //end enter
+			},
 			exit: function() {
 				this.map.removeInteraction(this.repositioner);
-//				this.map.removeInteraction(this.pointDeleter);
 			}
-		} // end repositionMode
+		}
 	});
 
 	app.views.PolygonEditView = app.views.PolygonView.extend({
 		initialize: function(options){
 			app.views.PolygonView.prototype.initialize.call(this, options);
-			this.listenTo(this.model, 'change:coordinates', function() {this.updateGeometryFromCoords()});
+			this.listenTo(this.model, 'change:coordinates', function() {
+				this.updateGeometryFromCoords();
+				app.util.updateJsonFeatures();
+				app.Actions.action();
+			});
 			this.model.on('setBasicStyle', function(basicStyle) {
 				this.updateStyle(basicStyle);
 			}, this);
@@ -538,7 +520,11 @@ $(function() {
 	app.views.PointEditView = app.views.PointView.extend({
 		initialize: function(options){
 			app.views.PointView.prototype.initialize.call(this, options);
-			this.listenTo(this.model, 'change:coordinates', function() {this.updateGeometryFromCoords()});
+			this.listenTo(this.model, 'change:coordinates', function() {
+				this.updateGeometryFromCoords();
+				app.util.updateJsonFeatures();
+				app.Actions.action();
+			});
 			this.model.on('setBasicStyle', function(basicStyle) {
 				this.updateStyle(basicStyle);
 			}, this);
@@ -579,7 +565,11 @@ $(function() {
 	app.views.LineStringEditView = app.views.LineStringView.extend({
 		initialize: function(options){
 			app.views.LineStringView.prototype.initialize.call(this, options);
-			this.listenTo(this.model, 'change:coordinates', function() {this.updateGeometryFromCoords()});
+			this.listenTo(this.model, 'change:coordinates', function() {
+				this.updateGeometryFromCoords();
+				app.util.updateJsonFeatures();
+				app.Actions.action();
+			});
 			this.model.on('setBasicStyle', function(basicStyle) {
 				this.updateStyle(basicStyle);
 			}, this);
@@ -597,8 +587,8 @@ $(function() {
 		},
 		updateCoordsFromGeometry: function(geometry) {
 			/*var coords = inverseList(geometry.getCoordinates().reduce(function(a, b) {
-		return a.concat(b);
-	    })); */
+				return a.concat(b);
+			})); */
 			var coords = inverseList(geometry.getCoordinates());
 			if (!$.arrayEquals(coords, this.model.get('lineString'))){
 				this.model.set('lineString',coords);
@@ -607,10 +597,90 @@ $(function() {
 		}
 	});
 
+	app.views.StationEditView = app.views.StationView.extend({
+		initialize: function(options){
+			this.stationsDecoratorsLayer = this.options.stationsDecoratorsLayer;
+			this.stationsDecorators = this.options.stationsDecorators;
+			app.views.StationView.prototype.initialize.call(this, options);
+			this.listenTo(this.model, 'change:coordinates', function() {
+				this.updateGeometryFromCoords();
+				app.util.updateJsonFeatures();
+				app.Actions.action();
+			});
+			this.listenTo(app.vent, 'changeTolerance', function(){
+				this.olToleranceFeature = this.getToleranceFeature();
+			});
+			this.listenTo(app.vent, 'changeBoundary', function(){
+				this.olBoundaryFeature = this.getBoundaryFeature();
+			});
+			this.listenTo(app.vent, 'stationSelected', function(color, feature){
+				feature.olToleranceFeature.setStyle(this.createToleranceStyle(color));
+				feature.olBoundaryFeature.setStyle(this.createBoundaryStyle(color));
+			});
+			this.listenTo(app.vent, 'stationActive', function(color, feature){
+				feature.olToleranceFeature.setStyle(this.createToleranceStyle(color));
+				feature.olBoundaryFeature.setStyle(this.createBoundaryStyle(color));
+			});
+			this.listenTo(app.vent, 'stationDeselected', function(color, feature){
+				feature.olToleranceFeature.setStyle(this.createToleranceStyle(color));
+				feature.olBoundaryFeature.setStyle(this.createBoundaryStyle(color));
+			});
+			this.model.on('setBasicStyle', function(basicStyle) {
+				this.updateStyle(basicStyle);
+			}, this);
+
+		},
+		render: function(){
+			//no op
+		},
+        drawStationDecorator: function(){
+			//Used when editing feature position
+            this.stationsDecorators = new ol.Collection();
+            var tolerance = this.getToleranceFeature();
+            var boundary = this.getBoundaryFeature();
+
+            this.stationsDecorators.push(tolerance);
+            this.stationsDecorators.push(boundary);
+        },
+		updateGeometryFromCoords: function(){
+			var coords = this.model.get('point');
+			var xcoords = transform(coords);
+			//TODO this ought to have changed the openlayers geometry but does not seem to.
+			this.olFeature.getGeometry().setCoordinates(xcoords);
+			this.olFeature.changed();
+			this.drawStationDecorator();
+		},
+		updateCoordsFromGeometry: function(geometry) {
+			var coords = inverseTransform(geometry.getCoordinates());
+			if (!$.arrayEquals(coords, this.model.get('point'))){
+				this.model.set('point',coords);
+				this.model.trigger('coordsChanged');
+			}
+			this.drawStationDecorator();
+		},
+		destroy: function() {
+			this.model.destroy({
+				data: { 'uuid': this.model.uuid },
+				success: function(model, response) {
+					if(!_.isUndefined(this.model.collection)) {
+						this.model.collection.remove(feature);
+					}
+				},
+				error: function() {
+					console.log("Error in deleting a feature");
+				}
+			});
+		}
+	});
+
 	app.views.GroundOverlayEditView = app.views.GroundOverlayView.extend({
 		initialize: function(options){
 			app.views.GroundOverlayView.prototype.initialize.call(this, options);
-			this.listenTo(this.model, 'change:coordinates', function() {this.updateGeometryFromCoords()});
+			this.listenTo(this.model, 'change:coordinates', function() {
+				this.updateGeometryFromCoords();
+				app.util.updateJsonFeatures();
+				app.Actions.action();
+			});
 			this.model.on('setBasicStyle', function(basicStyle) {
 				this.updateStyle(basicStyle);
 			}, this);
