@@ -194,7 +194,7 @@ def getStationKml(feature):
 
 def createStyle(request, feature):
     styleName = feature.style[1:] + feature.type
-    color = "FF" + feature.style[1:].upper()
+    color = getKmlColor(feature.style[1:], "ff")
     iconLink = ""
 
     if (feature.type == "Point"):
@@ -222,7 +222,7 @@ def createStyle(request, feature):
 
 
 def createToleranceStyle(feature):
-    color = "80" + feature.style[1:]
+    color = getKmlColor(feature.style[1:], "80")
     styleName = "tolerance" + feature.style[1:]
 
     style = KmlUtil.makeStyle(styleName, lineWidth=3, lineColor=color)
@@ -230,7 +230,7 @@ def createToleranceStyle(feature):
 
 
 def createBoundaryStyle(feature):
-    color = "FF" + feature.style[1:]
+    color = getKmlColor(feature.style[1:], "ff")
     styleName = "boundary" + feature.style[1:]
 
     style = KmlUtil.makeStyle(styleName, lineWidth=3, lineColor=color)
@@ -334,3 +334,15 @@ def polygonFormatter(featureGeom):
     result += "</coordinates></LinearRing></innerBoundaryIs></Polygon>"
 
     return result
+
+def getKmlColor(hexColor, opacity):
+    if (hexColor == "ffff00"):
+        hexColor = "14f0ff"
+    elif (hexColor == "ff9900"):
+        hexColor = "1478ff"
+    elif(hexColor == "0000ff"):
+        hexColor = "f04614"
+
+    kmlColor = opacity + hexColor
+
+    return kmlColor
