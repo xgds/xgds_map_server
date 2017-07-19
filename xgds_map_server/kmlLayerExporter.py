@@ -44,8 +44,8 @@ def exportMapLayer(request, mapLayer):
         elif (f.type == "Station"):
             resultString += '\n' + getStationKml(f)
             styles[f.style + "_" + f.type] = createStyle(request, f)
-            styles["tolerance"] = createToleranceStyle(f)
-            styles["boundary"] = createBoundaryStyle(f)
+            styles["tolerance" + f.style[1:]] = createToleranceStyle(f)
+            styles["boundary" + f.style[1:]] = createBoundaryStyle(f)
 
         else:
             resultString += '\n' + getLineKml(f)
@@ -152,24 +152,6 @@ def getStationKml(feature):
                        'style': styleName
                        })
 
-    if feature.boundary:
-        boundaryCircle = polycircles.Polycircle(latitude=feature.point[1],
-                                                longitude=feature.point[0],
-                                                radius=int(feature.boundary),
-                                                number_of_vertices=36)
-
-        result += ('''
-            <Placemark>
-                <name>%(name)s</name>
-                <styleUrl>#boundary</styleUrl>
-                <MultiGeometry>
-                    <LineString>
-                        <tessellate>1</tessellate>
-                        %(geom)s
-            </Placemark>''' % {'name': feature.name,
-                               'geom': boundaryKmlFormatter(boundaryCircle)
-                              })
-
     if feature.tolerance:
         toleranceCircle = polycircles.Polycircle(latitude=feature.point[1],
                                                  longitude=feature.point[0],
@@ -179,13 +161,33 @@ def getStationKml(feature):
         result += ('''
                     <Placemark>
                         <name>%(name)s</name>
-                        <styleUrl>#tolerance</styleUrl>
+                        <styleUrl>%(style)s</styleUrl>
                         <LineString>
                             <tessellate>1</tessellate>
                              %(geom)s
                     </Placemark>''' % {'name': feature.name,
+                                       'style': "tolerance" + feature.style[1:],
                                        'geom': toleranceKmlFormatter(toleranceCircle)
                                        })
+
+    if feature.boundary:
+        boundaryCircle = polycircles.Polycircle(latitude=feature.point[1],
+                                                longitude=feature.point[0],
+                                                radius=int(feature.boundary),
+                                                number_of_vertices=36)
+
+        result += ('''
+            <Placemark>
+                <name>%(name)s</name>
+                <styleUrl>%(style)s</styleUrl>
+                <MultiGeometry>
+                    <LineString>
+                        <tessellate>1</tessellate>
+                        %(geom)s
+            </Placemark>''' % {'name': feature.name,
+                               'style': "boundary" + feature.style[1:],
+                               'geom': boundaryKmlFormatter(boundaryCircle)
+                              })
 
     return result
 
@@ -220,12 +222,18 @@ def createStyle(request, feature):
 
 
 def createToleranceStyle(feature):
-    style = KmlUtil.makeStyle("tolerance", lineWidth=3, lineColor="FF00FFFF")
+    color = "80" + feature.style[1:]
+    styleName = "tolerance" + feature.style[1:]
+
+    style = KmlUtil.makeStyle(styleName, lineWidth=3, lineColor=color)
     return style
 
 
 def createBoundaryStyle(feature):
-    style = KmlUtil.makeStyle("boundary", lineWidth=3, lineColor="FF0099FF")
+    color = "FF" + feature.style[1:]
+    styleName = "boundary" + feature.style[1:]
+
+    style = KmlUtil.makeStyle(styleName, lineWidth=3, lineColor=color)
     return style
 
 
