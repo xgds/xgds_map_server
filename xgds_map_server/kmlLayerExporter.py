@@ -17,10 +17,45 @@
 import string
 from geocamUtil import KmlUtil
 from django.contrib.staticfiles.templatetags.staticfiles import static
+from polycircles import polycircles
 
 """
 Exports map layer as KML String
 """
+
+def exportMapLayer(request, mapLayer):
+    resultString = ''
+    styleString = ''
+    features = mapLayer.getFeatureJson().features
+    styles = {}
+
+    for f in features:
+        if (f.type == "Point"):
+            resultString += '\n' + getPointKml(f)
+            if (f.shape):
+                styles[f.style + "_" + f.type + "_" + f.shape] = createStyle(request, f)
+            else:
+                styles[f.style + "_" + f.type] = createStyle(request, f)
+
+        elif (f.type == "Polygon"):
+            resultString += '\n' + getPolygonKml(f)
+            styles[f.style + "_" + f.type] = createStyle(request, f)
+
+        elif (f.type == "Station"):
+            resultString += '\n' + getStationKml(f)
+            styles[f.style + "_" + f.type] = createStyle(request, f)
+            styles["tolerance"] = createToleranceStyle(f)
+            styles["boundary"] = createBoundaryStyle(f)
+
+        else:
+            resultString += '\n' + getLineKml(f)
+            styles[f.style + "_" + f.type] = createStyle(request, f)
+
+
+    for key, value in styles.iteritems():
+        styleString += value + '\n'
+
+    return styleString + resultString
 
 def getPolygonKml(feature):
     if (feature.style == None or feature.style == ""):
@@ -29,6 +64,7 @@ def getPolygonKml(feature):
     else:
         style = feature.style[1:]
 
+    styleName = style + feature.type
     result = ('''
     <Placemark>
     <name>%(name)s</name>
@@ -38,7 +74,7 @@ def getPolygonKml(feature):
     </Placemark>''' % {'name': feature.name,
                        'description': feature.description,
                        'point': toKml(feature.polygon, "Polygon"),
-                       'style': '#' + style
+                       'style': styleName
                        })
 
     return result
@@ -50,6 +86,7 @@ def getLineKml(feature):
     else:
         style = feature.style[1:]
 
+    styleName = style + feature.type
     result = ('''
     <Placemark>
     <name>%(name)s</name>
@@ -59,7 +96,7 @@ def getLineKml(feature):
     </Placemark>''' % {'name': feature.name,
                        'description': feature.description,
                        'point': toKml(feature.lineString, "LineString"),
-                       'style': '#' + style
+                       'style': styleName
                        })
 
     return result
@@ -71,9 +108,11 @@ def getPointKml(feature):
     else:
         style = feature.style[1:]
 
+    styleName = style + feature.type
 
     if ('shape' in feature):
         shape = "_" + feature.shape
+        styleName += shape
 
     else:
         shape = ""
@@ -87,153 +126,142 @@ def getPointKml(feature):
     </Placemark>''' % {'name': feature.name,
                        'description': feature.description,
                        'point': toKml(feature.point, "Point"),
-                       'style': '#' + style + shape
+                       'style': styleName
                        })
 
     return result
 
-def makeStyles(request, mapLayer):
-    blueStyle = KmlUtil.makeStyle("0000ff",
-                                  iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/point.png')),
-                                  iconColor='FFFF0000', iconScale=0.5, lineColor='FFFF0000', lineWidth=4, polyColor='FFFF0000')
-    pinkStyle = KmlUtil.makeStyle("ff00ff",
-                                  iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/point.png')),
-                                  iconColor='FFFF0000', iconScale=0.5, lineColor='FFFF00FF', lineWidth=4, polyColor='64FF00FF')
-    whiteStyle = KmlUtil.makeStyle("ffffff",
-                                   iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/point.png')),
-                                   iconColor='FFFF0000', iconScale=0.5, lineColor='FFFFFFFF', lineWidth=4, polyColor='64FFFFFF')
-    orangeStyle = KmlUtil.makeStyle("ff9900",
-                                    iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/point.png')),
-                                    iconColor='FFFF0000', iconScale=0.5, lineColor='FF1478FF', lineWidth=4, polyColor='FF1478FF')
-    yellowStyle = KmlUtil.makeStyle("ffff00",
-                                    iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/point.png')),
-                                    iconColor='FFFF0000', iconScale=0.5, lineColor='FF14F0FF', lineWidth=4, polyColor='FF14F0FF')
-    greenStyle = KmlUtil.makeStyle("00ff00",
-                                   iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/point.png')),
-                                   iconColor='FFFF0000', iconScale=0.5, lineColor='FF00FF00', lineWidth=4, polyColor='6400FF00')
+def getStationKml(feature):
+    if (feature.style == None or feature.style == ""):
+        style = "0000ff"
 
-    blueSquareStyle = KmlUtil.makeStyle("0000ff_Square",
-                                  iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/square-point.png')),
-                                  iconColor='FFFF0000', iconScale=0.5, lineColor='FFFF0000', lineWidth=4, polyColor='FFFF0000')
-    pinkSquareStyle = KmlUtil.makeStyle("ff00ff_Square",
-                                  iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/square-point.png')),
-                                  iconColor='FFFF0000', iconScale=0.5, lineColor='FFFF00FF', lineWidth=4, polyColor='64FF00FF')
-    whiteSquareStyle = KmlUtil.makeStyle("ffffff_Square",
-                                   iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/square-point.png')),
-                                   iconColor='FFFF0000', iconScale=0.5, lineColor='FFFFFFFF', lineWidth=4, polyColor='64FFFFFF')
-    orangeSquareStyle = KmlUtil.makeStyle("ff9900_Square",
-                                    iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/square-point.png')),
-                                    iconColor='FFFF0000', iconScale=0.5, lineColor='FF1478FF', lineWidth=4, polyColor='FF1478FF')
-    yellowSquareStyle = KmlUtil.makeStyle("ffff00_Square",
-                                    iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/square-point.png')),
-                                    iconColor='FFFF0000', iconScale=0.5, lineColor='FF14F0FF', lineWidth=4, polyColor='FF14F0FF')
-    greenSquareStyle = KmlUtil.makeStyle("00ff00_Square",
-                                   iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/square-point.png')),
-                                   iconColor='FFFF0000', iconScale=0.5, lineColor='FF00FF00', lineWidth=4, polyColor='6400FF00')
+    else:
+        style = feature.style[1:]
 
-    blueTriStyle = KmlUtil.makeStyle("0000ff_Triangle",
-                                     iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/triangle-point.png')),
-                                     iconColor='FFFF0000', iconScale=0.5, lineColor='FFFF0000', lineWidth=4, polyColor='FFFF0000')
-    pinkTriStyle = KmlUtil.makeStyle("ff00ff_Triangle",
-                                     iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/triangle-point.png')),
-                                     iconColor='FFFF0000', iconScale=0.5, lineColor='FFFF00FF', lineWidth=4, polyColor='64FF00FF')
-    whiteTriStyle = KmlUtil.makeStyle("ffffff_Triangle",
-                                      iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/triangle-point.png')),
-                                      iconColor='FFFF0000', iconScale=0.5, lineColor='FFFFFFFF', lineWidth=4, polyColor='64FFFFFF')
-    orangeTriStyle = KmlUtil.makeStyle("ff9900_Triangle",
-                                       iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/triangle-point.png')),
-                                       iconColor='FFFF0000', iconScale=0.5, lineColor='FF1478FF', lineWidth=4, polyColor='FF1478FF')
-    yellowTriStyle = KmlUtil.makeStyle("ffff00_Triangle",
-                                       iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/triangle-point.png')),
-                                       iconColor='FFFF0000', iconScale=0.5, lineColor='FF14F0FF', lineWidth=4, polyColor='FF14F0FF')
-    greenTriStyle = KmlUtil.makeStyle("00ff00_Triangle",
-                                      iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/triangle-point.png')),
-                                      iconColor='FFFF0000', iconScale=0.5, lineColor='FF00FF00', lineWidth=4, polyColor='6400FF00')
+    styleName = style + feature.type
 
-    blueStarStyle = KmlUtil.makeStyle("0000ff_Star",
-                                     iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/star-point.png')),
-                                     iconColor='FFFF0000', iconScale=0.5, lineColor='FFFF0000', lineWidth=4, polyColor='FFFF0000')
-    pinkStarStyle = KmlUtil.makeStyle("ff00ff_Star",
-                                     iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/star-point.png')),
-                                     iconColor='FFFF0000', iconScale=0.5, lineColor='FFFF00FF', lineWidth=4, polyColor='64FF00FF')
-    whiteStarStyle = KmlUtil.makeStyle("ffffff_Star",
-                                      iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/star-point.png')),
-                                      iconColor='FFFF0000', iconScale=0.5, lineColor='FFFFFFFF', lineWidth=4, polyColor='64FFFFFF')
-    orangeStarStyle = KmlUtil.makeStyle("ff9900_Star",
-                                       iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/star-point.png')),
-                                       iconColor='FFFF0000', iconScale=0.5, lineColor='FF1478FF', lineWidth=4, polyColor='FF1478FF')
-    yellowStarStyle = KmlUtil.makeStyle("ffff00_Star",
-                                       iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/star-point.png')),
-                                       iconColor='FFFF0000', iconScale=0.5, lineColor='FF14F0FF', lineWidth=4, polyColor='FF14F0FF')
-    greenStarStyle = KmlUtil.makeStyle("00ff00_Star",
-                                      iconUrl=request.build_absolute_uri(static('xgds_map_server/icons/star-point.png')),
-                                      iconColor='FFFF0000', iconScale=0.5, lineColor='FF00FF00', lineWidth=4, polyColor='6400FF00')
+    result = ('''
+    <Placemark>
+    <name>%(name)s</name>
+    <description>%(description)s</description>
+    <styleUrl>%(style)s</styleUrl>
+    %(point)s
+    </Placemark>''' % {'name': feature.name,
+                       'description': feature.description,
+                       'point': toKml(feature.point, "Point"),
+                       'style': styleName
+                       })
 
-    styles = {
-        'blue' : blueStyle,
-        'pink' : pinkStyle,
-        'white' : whiteStyle,
-        'orange' : orangeStyle,
-        'yellow' : yellowStyle,
-        'green' : greenStyle,
+    if feature.boundary:
+        boundaryCircle = polycircles.Polycircle(latitude=feature.point[1],
+                                                longitude=feature.point[0],
+                                                radius=int(feature.boundary),
+                                                number_of_vertices=36)
 
-        'blueSquare': blueSquareStyle,
-        'pinkSquare': pinkSquareStyle,
-        'whiteSquare': whiteSquareStyle,
-        'orangeSquare': orangeSquareStyle,
-        'yellowSquare': yellowSquareStyle,
-        'greenSquare': greenSquareStyle,
+        result += ('''
+            <Placemark>
+                <name>%(name)s</name>
+                <styleUrl>#boundary</styleUrl>
+                <MultiGeometry>
+                    <LineString>
+                        <tessellate>1</tessellate>
+                        %(geom)s
+            </Placemark>''' % {'name': feature.name,
+                               'geom': boundaryKmlFormatter(boundaryCircle)
+                              })
 
-        'blueTri': blueTriStyle,
-        'pinkTri': pinkTriStyle,
-        'whiteTri': whiteTriStyle,
-        'orangeTri': orangeTriStyle,
-        'yellowTri': yellowTriStyle,
-        'greenTri': greenTriStyle,
+    if feature.tolerance:
+        toleranceCircle = polycircles.Polycircle(latitude=feature.point[1],
+                                                 longitude=feature.point[0],
+                                                 radius=int(feature.tolerance),
+                                                 number_of_vertices=36)
 
-        'blueStar': blueStarStyle,
-        'pinkStar': pinkStarStyle,
-        'whiteStar': whiteStarStyle,
-        'orangeStar': orangeStarStyle,
-        'yellowStar': yellowStarStyle,
-        'greenStar': greenStarStyle
-    }
+        result += ('''
+                    <Placemark>
+                        <name>%(name)s</name>
+                        <styleUrl>#tolerance</styleUrl>
+                        <LineString>
+                            <tessellate>1</tessellate>
+                             %(geom)s
+                    </Placemark>''' % {'name': feature.name,
+                                       'geom': toleranceKmlFormatter(toleranceCircle)
+                                       })
+
+    return result
 
 
-    return styles
+def createStyle(request, feature):
+    styleName = feature.style[1:] + feature.type
+    color = "FF" + feature.style[1:].upper()
+    iconLink = ""
 
-def exportMapLayer(request, mapLayer):
-    resultString = ''
-    styleString = ''
-    features = mapLayer.getFeatureJson().features
-    styles = makeStyles(request, mapLayer)
-
-    for f in features:
-        if (f.type == "Point"):
-            resultString += '\n' + getPointKml(f)
-
-        elif (f.type == "Polygon"):
-            resultString += '\n' + getPolygonKml(f)
-
-        elif (f.type == "Station"):
-            resultString += ""
-
+    if (feature.type == "Point"):
+        if (feature.shape):
+            styleName = feature.style + feature.type + "_" + feature.shape
+            if (feature.shape == "Triangle"):
+                iconLink = request.build_absolute_uri(static('xgds_map_server/icons/triangle-point.png'))
+            elif (feature.shape == "Square"):
+                iconLink = request.build_absolute_uri(static('xgds_map_server/icons/square-point.png'))
+            elif(feature.shape == "Star"):
+                iconLink = request.build_absolute_uri(static('xgds_map_server/icons/star-point.png'))
+            else:
+               iconLink = request.build_absolute_uri(static('xgds_map_server/icons/point.png'))
         else:
-            resultString += '\n' + getLineKml(f)
+            iconLink = request.build_absolute_uri(static('xgds_map_server/icons/point.png'))
+    elif (feature.type == "Station"):
+        request.build_absolute_uri(static('xgds_map_server/icons/placemark_circle.png'))
+    else:
+        iconLink = request.build_absolute_uri(static('xgds_map_server/icons/point.png'))
+    
+    style = KmlUtil.makeStyle(styleName, iconUrl=iconLink, iconColor=color, iconScale=0.5,
+                              lineColor=color, lineWidth=4, polyColor=color)
 
-    for key, value in styles.iteritems():
-        styleString += value + '\n'
+    return style
 
-    return styleString + resultString
+
+def createToleranceStyle(feature):
+    style = KmlUtil.makeStyle("tolerance", lineWidth=3, lineColor="FF00FFFF")
+    return style
+
+
+def createBoundaryStyle(feature):
+    style = KmlUtil.makeStyle("boundary", lineWidth=3, lineColor="FF0099FF")
+    return style
+
+
+def boundaryKmlFormatter(boundaryCircle):
+    result = '<coordinates>'
+
+    for coord in boundaryCircle.vertices:
+        result = result + str(coord[1]) + ',' + str(coord[0]) + '\n'
+    result = result + str(boundaryCircle.vertices[0][1]) + ',' + str(boundaryCircle.vertices[0][0]) + '\n'
+
+    result += "</coordinates></LineString></MultiGeometry>"
+
+    return result
+
+
+def toleranceKmlFormatter(toleranceCircle):
+    result = '<coordinates>'
+
+    for coord in toleranceCircle.vertices:
+        result = result + str(coord[1]) + ',' + str(coord[0]) + '\n'
+    result = result + str(toleranceCircle.vertices[0][1]) + ',' + str(toleranceCircle.vertices[0][0]) + '\n'
+
+    result += "</coordinates></LineString>"
+
+    return result
+
 
 def toKml(featureGeom, type):
-    result = ''
-
     if (type == "Point"):
         result = pointFormatter(featureGeom)
 
     elif (type == "LineString"):
         result = lineFormatter(featureGeom)
+
+    elif (type == "Station"):
+        result = stationFormatter(featureGeom)
 
     else:
         result = polygonFormatter(featureGeom)
@@ -241,6 +269,17 @@ def toKml(featureGeom, type):
     return result
 
 def pointFormatter(featureGeom):
+    result = '<Point><coordinates>'
+
+    for point in featureGeom:
+        result += str(point);
+        result += ','
+
+    result += "0</coordinates></Point>"
+
+    return result
+
+def stationFormatter(featureGeom):
     result = '<Point><coordinates>'
 
     for point in featureGeom:
