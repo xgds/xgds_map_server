@@ -215,6 +215,9 @@ def exportMapLayer(request, mapLayer):
         elif (f.type == "Polygon"):
             resultString += '\n' + getPolygonKml(f)
 
+        elif (f.type == "Station"):
+            resultString += ""
+
         else:
             resultString += '\n' + getLineKml(f)
 
