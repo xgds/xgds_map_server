@@ -568,21 +568,6 @@ app.views.FeaturesHeaderView = Marionette.View.extend({
      * This view also contains the copy, cut, delete btns for features.
      */
 	template: '#template-features-header',
-	// events: {
-	// 	'click #btn-delete': function() { app.vent.trigger('deleteSelectedFeatures', this.model)},
-	// 	'click #btn-copy': function() { app.vent.trigger('copyFeatures'); },
-	// 	'click #btn-paste': function() { app.vent.trigger('pasteFeatures') },
-	// 	'click #btn-newLayer': function() {
-	// 		$('#newLayerModal').modal();
-	// 		app.vent.trigger('getSelectedFeatures');
-     //    }
-	// },
-	// initialize: function(){
-	// 	this.listenTo(app.vent, 'sendSelectedFeatures', this.getJsonFeatures);
-	// },
-	// getJsonFeatures: function(selectedFeatures){
-	// 	$('#id_jsonFeatures').val(selectedFeatures);
-	// }
 });
 
 

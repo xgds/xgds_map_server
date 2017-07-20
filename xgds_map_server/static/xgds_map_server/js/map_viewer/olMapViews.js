@@ -1510,7 +1510,7 @@ $(function() {
             }
         },
         setFeatureStyle: function(color, featureView, shape){
-			if (color === null || color === "")
+			if (color == null || color == "")
 				color = "#0000ff";
 
 			if (!shape)
