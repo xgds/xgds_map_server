@@ -346,11 +346,6 @@ class MapLayer(AbstractMap):
     def toDict(self):
         result = modelToDict(self)
         result['uuid'] = self.uuid
-        featuresList = []
-        features = FEATURE_MANAGER.filter(mapLayer__pk=self.uuid)
-        for feature in features:
-            featuresList.append(feature.toDict())
-        result['features'] = featuresList
         return result
 
     def getTreeJson(self):
@@ -358,9 +353,6 @@ class MapLayer(AbstractMap):
         result = super(MapLayer, self).getTreeJson()
         result["data"]["layerJSON"] = reverse('mapLayerJSON', kwargs={'layerID': self.uuid})
         return result
-    
-    def getFeatures(self):
-        return FEATURE_MANAGER.filter(mapLayer__pk=self.uuid)
     
     def getGoogleEarthUrl(self, request):
         return request.build_absolute_uri(reverse('mapLayerKML', kwargs={'layerID': self.uuid}))
@@ -451,197 +443,7 @@ class MapLink(AbstractMap):
         return result
 
 
-class AbstractStyle(models.Model):
-    """ An abstract style for rendering map features"""
-    uuid = UuidField(primary_key=True)
-    name = models.CharField(max_length=200, null=True, blank=True)
-    drawOrder = models.IntegerField('drawOrder', null=True, blank=True)
-
-    def toDict(self):
-        return modelToDict(self)
-
-    def __unicode__(self):
-        return self.uuid
-
-    class Meta:
-        abstract = True
-
-
-class LabelStyle(AbstractStyle):
-    fontFamily = models.CharField(max_length=32, null=True, blank=True, 
-                                  help_text='name of font to use')
-    bold = models.BooleanField(default=False)
-    italic = models.BooleanField(default=False)
-    underline = models.BooleanField(default=False)
-    textColor = models.CharField(max_length=32, null=True, blank=True, 
-                                 default='Black', 
-                                 help_text='hex value or CSS color name')
-    textOpacity = models.FloatField(null=True, blank=True, default=1,
-                                    help_text='between 0 and 1')
-    textOffsetY = models.IntegerField(null=True, blank=True, default=0)
-    text = models.CharField(max_length=100, null=True, blank=True)    
-
-
-class PolygonStyle(AbstractStyle):
-    strokeColor = models.CharField(max_length=32, null=True, blank=True, 
-                                 default='Black', 
-                                 help_text='hex value or CSS color name')
-    strokeWidth = models.IntegerField(null=True, blank=True, 
-                                      help_text='polygon border width')
-    strokeOpacity = models.FloatField(null=True, blank=True, default=1,
-                                    help_text='between 0 and 1')
-    fillColor = models.CharField(max_length=32, null=True, blank=True, 
-                                 help_text='hex value or CSS color name')
-    fillOpacity = models.FloatField(null=True, blank=True, default=1,
-                                    help_text='between 0 and 1')
-
-
-class LineStringStyle(AbstractStyle):
-    width = models.IntegerField(null=True, blank=True, 
-                                help_text='thickness of line')
-    color = models.CharField(max_length=32, null=True, blank=True, 
-                                 default='Black', 
-                                 help_text='hex value or CSS color name')
-    opacity = models.FloatField(null=True, blank=True, default=1,
-                                    help_text='between 0 and 1')
-    dashes = models.BooleanField(default=False)
-    dashLineSize = models.IntegerField(null=True, blank=True, 
-                                      help_text='stroke dash size')
-    dashSpaceSize = models.IntegerField(null=True, blank=True, 
-                                      help_text='stroke dash space size')
-    borderWidth = models.IntegerField(null=True, blank=True, 
-                                      help_text='line border width')
-    borderColor = models.CharField(max_length=32, null=True, blank=True, 
-                                 help_text='hex value or CSS color name')
-
-
-class PointStyle(AbstractStyle):
-    radius = models.IntegerField('radius', default=5)
-    strokeColor = models.CharField(max_length=32, null=True, blank=True, 
-                                 default='Black', 
-                                 help_text='hex value or CSS color name')
-    strokeOpacity = models.FloatField(null=True, blank=True, default=1,
-                                    help_text='between 0 and 1')
-    strokeWidth = models.IntegerField(null=True, blank=True, 
-                                      help_text='line border width')
-    fillColor = models.CharField(max_length=32, null=True, blank=True, 
-                                 help_text='hex value or CSS color name')
-    fillOpacity = models.FloatField(null=True, blank=True, default=1,
-                                    help_text='between 0 and 1')
-
-
-class Icon(models.Model):
-    iconImage = models.ImageField(upload_to='featureImages', height_field='height',
-                              width_field='width')
-    iconScale = models.CharField(max_length=5, null=True, blank=True, 
-                                 help_text='a scaling factor in %')
-    iconOpacity = models.FloatField(null=True, blank=True, default=1,
-                                    help_text='between 0 and 1')
-    offsetX = models.IntegerField(null=True, blank=True, 
-                                      help_text='pixel offset in x from center of icon')
-    offsetY = models.IntegerField(null=True, blank=True, 
-                                      help_text='pixel offset in y from center of icon')
-
-
-class DrawingStyle(AbstractStyle):
-    strokeColor = models.CharField(max_length=32, null=True, blank=True, 
-                                 help_text='hex value or CSS color name')
-
-
-class GroundOverlayStyle(AbstractStyle):
-    pass
-
-
-class AbstractFeature(models.Model):
-    """ An abstract feature, which is part of a Map Layer """
-    uuid = UuidField(primary_key=True)
-    mapLayer = models.ForeignKey(MapLayer)
-    name = models.CharField('name', max_length=200)
-    description = models.CharField('description', max_length=1024, blank=True)
-    visible = models.BooleanField(default=True)
-    popup = models.BooleanField(default=False)  # true if the feature will have a popup when the user clicks on it
-    showLabel = models.BooleanField(default=False)
-    labelStyle = models.ForeignKey(LabelStyle, null=True)
-    objects = models.GeoManager()
-
-    @property
-    def style(self):
-        """ You must define the specific style for the derived model """
-        pass
-
-    def __unicode__(self):
-        return self.uuid
-
-    def toDict(self):
-        result = modelToDict(self)
-        result['type'] = self.__class__.__name__
-        result['uuid'] = self.uuid
-        if self.style:
-            result['style'] = modelToDict(STYLE_MANAGER.get(uuid=self.style.uuid))
-        if self.labelStyle:
-            result['labelStyle'] = modelToDict(self.labelStyle)
-        return result
-
-    class Meta:
-        abstract = True
-
-
-class Polygon(AbstractFeature):
-    polygon = models.PolygonField()
-    style = models.ForeignKey(PolygonStyle, null=True)
-    
-    @property
-    def geometry(self):
-        return self.polygon
-
-
-class LineString(AbstractFeature):
-    lineString = models.LineStringField()
-    style = models.ForeignKey(LineStringStyle, null=True)
-
-    @property
-    def geometry(self):
-        return self.lineString
-
-
-class Point(AbstractFeature):
-    point = models.PointField()
-    style = models.ForeignKey(PointStyle, null=True)
-    icon = models.ForeignKey(Icon, null=True)
-
-    @property
-    def geometry(self):
-        return self.point
-
-
-class Drawing(AbstractFeature):
-    style = models.ForeignKey(DrawingStyle)
-
-
-class GroundOverlay(AbstractFeature):
-    style = models.ForeignKey(GroundOverlayStyle, null=True)
-    image = models.ImageField(upload_to=settings.XGDS_MAP_SERVER_OVERLAY_IMAGES_DIR, height_field='height',
-                              width_field='width')
-    height = models.IntegerField(null=True, blank=True)
-    width = models.IntegerField(null=True, blank=True)
-    polygon = models.PolygonField()
-
-
 """ IMPORTANT These have to be defined after the models they refer to are defined."""
-FEATURE_MANAGER = ModelCollectionManager(AbstractFeature,
-                                         [Polygon,
-                                          LineString,
-                                          Point,
-                                          Drawing,
-                                          GroundOverlay])
-
-STYLE_MANAGER = ModelCollectionManager(AbstractStyle,
-                                       [PolygonStyle,
-                                        LineStringStyle,
-                                        PointStyle,
-                                        DrawingStyle,
-                                        GroundOverlayStyle])
-
 MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile, MapDataTile, MapCollection, MapSearch, MapLink])
 
 # this manager does not include groups
