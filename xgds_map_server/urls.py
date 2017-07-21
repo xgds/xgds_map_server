@@ -32,9 +32,6 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,
     url(r'^feedPage/', views.getGoogleEarthFeedPage,
      {'readOnly': True, 'securityTags': ['readOnly']},
      'xgds_map_server_feed'),
-    # for saving single map feature from map layer, or creating new one
-    url(r'^feature$', views.saveOrDeleteFeature, {}, 'saveOrDeleteFeature'),
-    url(r'^feature/(?P<uuid>[\w-]+)$', views.saveOrDeleteFeature, {}, 'saveOrDeleteFeature'),
     # For copying feature data to the session variables
     url(r'^copyFeatures$', views.copyFeatures, {}, 'copyFeatures'),
     # for saving map layer itself

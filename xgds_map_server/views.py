@@ -60,7 +60,6 @@ from xgds_data.models import RequestLog, ResponseLog
 from xgds_data.views import searchHandoff, resultsIdentity
 from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapLayerFromSelectedForm, MapTileForm, MapDataTileForm, MapSearchForm, MapCollectionForm, EditMapTileForm, EditMapDataTileForm
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapDataTile, MapSearch, MapCollection, MapLink, MAP_NODE_MANAGER, MAP_MANAGER
-from xgds_map_server.models import Polygon, LineString, Point, Drawing, GroundOverlay, FEATURE_MANAGER
 from xgds_map_server.kmlLayerExporter import exportMapLayer
 from geocamUtil.KmlUtil import wrapKmlForDownload
 from xgds_data.introspection import modelName
@@ -266,73 +265,6 @@ def saveMaplayer(request):
 
         #TODO have to return 
         return HttpResponse(json.dumps(mapLayer.toDict(), cls=GeoDjangoEncoder), content_type='application/json')
-    return HttpResponse(json.dumps({'failed': 'Must be a POST but got %s instead' % request.method}), content_type='application/json', status=406)
-
-
-def saveOrDeleteFeature(request, uuid=None):
-    """
-    save backbone feature to the database.
-
-    Side note: to initialize a GeoDjango polygon object
-        Coordinate dimensions are separated by spaces
-        Coordinate pairs (or tuples) are separated by commas
-        Coordinate ordering is (y, x) -- that is (lon, lat)
-    """
-    if (request.method == "POST") or (request.method == "PUT"):
-        data = json.loads(request.body)
-        # use the data to create a feature object.
-        featureType = data.get('type', "")
-        featureName = data.get('name', "")
-        mapLayerUuid = data.get('mapLayer', None)
-        if mapLayerUuid:
-            try:
-                mapLayer = MapLayer.objects.get(pk=mapLayerUuid)
-            except:
-                mapLayerName = data.get('mapLayerName', "")
-                try:
-                    mapLayer = MapLayer.objects.get(name=mapLayerName)
-                except:
-                    return HttpResponse(json.dumps({'failed': 'MapLayerName of %s cannot be found' % mapLayerName}), content_type='application/json', status=406)
-        
-        feature = None
-        
-        if uuid:
-            try:
-                feature = FEATURE_MANAGER.get(pk=uuid)
-            except:
-                return HttpResponse(json.dumps({'failed': 'feature of uuid: %s cannot be found' % uuid}), content_type='application/json', status=406)
-        else:
-            feature = createFeatureObject(featureType)
-
-        # update the feature attributes
-        feature.name = featureName
-        feature.mapLayer = mapLayer
-        errorText = setFeatureCoordinates(feature, getFeatureCoordinates(data, featureType), featureType)
-        if errorText:
-            return HttpResponse(json.dumps({'failed': errorText}), content_type='application/json', status=406)
-
-        if data.get('popup', None) is not None:
-            feature.popup = data.get('popup', None)
-        if data.get('visible', None) is not None:
-            feature.visible = data.get('visible', None)
-        if data.get('showLabel', None) is not None:
-            feature.showLabel = data.get('showLabel', None)
-        if data.get('description', None) is not None:
-            feature.description = data.get('description', None)
-        feature.save()
-        return HttpResponse(json.dumps(feature.toDict(), cls=GeoDjangoEncoder), content_type='application/json')
-
-    elif request.method == "DELETE":
-        try:
-            features = FEATURE_MANAGER.filter(pk=uuid)
-        except:
-            print "cannot find features "
-        feature = features[0]
-#         print "about to delete a feature with uuid %s" % uuid
-        feature.delete()
-        return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
-#         return HttpResponse(json.dumps({'success': 'true', 'type': 'delete'}), content_type='application/json')
-
     return HttpResponse(json.dumps({'failed': 'Must be a POST but got %s instead' % request.method}), content_type='application/json', status=406)
 
 
