@@ -199,10 +199,9 @@
 		});
 		app.start();
 	    
-	})
-	
-	$(window).on('beforeunload', function() {
-        alert('test');
+	});
+
+	$(document).on('beforeunload', function() {
         if (app.dirty) {
             return 'Unsaved changes, are you sure you want to exit?';
         }

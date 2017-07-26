@@ -268,6 +268,7 @@ app.views.LayerInfoTabView = Marionette.View.extend({
 	},
 	setDefaultStyle: function(color){
 		this.model.set('defaultColor', color);
+		app.vent.trigger('appChanged');
 	}
 });
 
@@ -572,6 +573,7 @@ app.views.FeaturePropertiesView = Marionette.View.extend({
 	updateFeatureStyle: function(color){
 		this.model.set('style', color);
 		app.util.updateJsonFeatures();
+		app.vent.trigger('appChanged');
 		app.Actions.action();
 	}
 });
