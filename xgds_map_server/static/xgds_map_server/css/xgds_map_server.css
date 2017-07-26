@@ -1,3 +1,9 @@
+#unsaved-notification{
+	color: red;
+	font-size: 9pt;
+	display: none;
+}
+
 .property-header-text{
 	float: left;
 }
