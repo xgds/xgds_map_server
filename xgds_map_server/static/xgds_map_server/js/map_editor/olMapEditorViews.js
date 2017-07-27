@@ -360,8 +360,9 @@ $(function() {
 				}
 
 				//Sets style of feature depending on if it is a new feature or a saved one.
-				if (isNew === true) {
+				if (isNew == true) {
                     var color = $('#color-picker').spectrum('get').toHexString();
+                    app.vent.trigger('appChanged');
                 }
 
 				else{
@@ -513,6 +514,7 @@ $(function() {
 				}
 				this.model.set('polygon',coords);
 				this.model.trigger('coordsChanged');
+				app.vent.trigger('appChanged');
 			}
 		}
 	});
@@ -545,6 +547,7 @@ $(function() {
 			if (!$.arrayEquals(coords, this.model.get('point'))){
 				this.model.set('point',coords);
 				this.model.trigger('coordsChanged');
+				app.vent.trigger('appChanged');
 			}
 		}, 
 		destroy: function() {
@@ -593,6 +596,7 @@ $(function() {
 			if (!$.arrayEquals(coords, this.model.get('lineString'))){
 				this.model.set('lineString',coords);
 				this.model.trigger('coordsChanged');
+				app.vent.trigger('appChanged');
 			}
 		}
 	});
@@ -655,8 +659,9 @@ $(function() {
 			if (!$.arrayEquals(coords, this.model.get('point'))){
 				this.model.set('point',coords);
 				this.model.trigger('coordsChanged');
+				this.drawStationDecorator();
+				app.vent.trigger('appChanged');
 			}
-			this.drawStationDecorator();
 		},
 		destroy: function() {
 			this.model.destroy({
@@ -702,6 +707,7 @@ $(function() {
 			}));
 			this.model.set('polygon',coords);
 			this.model.trigger('coordsChanged');
+			app.vent.trigger('appChanged');
 		}
 	});
 

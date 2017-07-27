@@ -46,6 +46,7 @@ app.views.ToolbarView = Marionette.View.extend({
         this.listenTo(app.vent, 'redoNotEmpty', this.enableRedo);
         this.listenTo(app.mapLayer, 'sync', function(model) {this.updateSaveStatus('sync')});
         this.listenTo(app.mapLayer, 'error', function(model) {this.updateSaveStatus('error')});
+        this.listenTo(app.vent, 'appChanged', this.unsavedChanges);
     },
 
    onRender: function() {
@@ -80,6 +81,11 @@ app.views.ToolbarView = Marionette.View.extend({
     enableRedo: function() {
         this.$('#btn-redo').removeAttr('disabled');
     },
+
+	unsavedChanges: function(){
+    	if (!$("#unsaved-notification").is(":visible"))
+			$("#unsaved-notification").show();
+	},
 
     ensureToggle: function(modeName) {
         var btn = $('#btn-' + modeName);
@@ -219,9 +225,11 @@ app.views.LayerInfoTabView = Marionette.View.extend({
 	events: {
 		'change #mapLayerName': function(evt) {
 			this.model.set('name', evt.target.value);
+			app.vent.trigger('appChanged');
 		},
 		'change #mapLayerDescription': function(evt) {
 			this.model.set('description', evt.target.value);
+			app.vent.trigger('appChanged');
 		},
 		'click #btn-delete': function() {
 			window.location.href = app.options.deleteUrl;
@@ -260,6 +268,7 @@ app.views.LayerInfoTabView = Marionette.View.extend({
 	},
 	setDefaultStyle: function(color){
 		this.model.set('defaultColor', color);
+		app.vent.trigger('appChanged');
 	}
 });
 
@@ -447,7 +456,7 @@ app.views.FeatureCoordinatesView = Marionette.View.extend({
 		}
 		app.util.updateFeatureCoordinate(this.model.get('type'), this.model, newX, newY, coordIndex);
 		this.model.trigger('change:coordinates');
-		// app.Actions.action();
+		app.vent.trigger('appChanged');
 	},
 	templateContext: function() {
 		var coordinates = null;
@@ -494,33 +503,39 @@ app.views.FeaturePropertiesView = Marionette.View.extend({
 		'change #featureName': function(evt) {
 			this.model.set('name', evt.target.value);
 			app.util.updateJsonFeatures();
+			app.vent.trigger('appChanged');
 			app.Actions.action();
 		}, 
 		'change #featureDescription': function(evt) {
 			this.model.set('description', evt.target.value);
 			app.util.updateJsonFeatures();
+			app.vent.trigger('appChanged');
 			app.Actions.action();
 		},
 		'change #featureTolerance': function(evt){
 			this.model.set('tolerance', evt.target.value);
 			app.vent.trigger('changeTolerance');
 			app.util.updateJsonFeatures();
+			app.vent.trigger('appChanged');
 			app.Actions.action();
 		},
 		'change #featureBoundary': function(evt){
 			this.model.set('boundary', evt.target.value);
 			app.vent.trigger('changeBoundary');
 			app.util.updateJsonFeatures();
+			app.vent.trigger('appChanged');
 			app.Actions.action();
 		},
 		'click #showLabel': function(evt) {
 			this.model.set('showLabel', evt.target.checked);
 			app.util.updateJsonFeatures();
+			app.vent.trigger('appChanged');
 			app.Actions.action();
 		},
 		'click #popup': function(evt) {
 			this.model.set('popup', evt.target.checked);
 			app.util.updateJsonFeatures();
+			app.vent.trigger('appChanged');
 			app.Actions.action();
 		},
 	},
@@ -558,6 +573,7 @@ app.views.FeaturePropertiesView = Marionette.View.extend({
 	updateFeatureStyle: function(color){
 		this.model.set('style', color);
 		app.util.updateJsonFeatures();
+		app.vent.trigger('appChanged');
 		app.Actions.action();
 	}
 });
@@ -759,6 +775,7 @@ app.views.FeatureCollectionView = Marionette.CollectionView.extend({
 					featureObj.set('uuid', new UUID(4).format());
 					featureObj.set('name', app.util.generateFeatureName(featureJson.type))
 					app.vent.trigger('newFeatureLoaded', featureObj);
+					app.vent.trigger('appChanged');
 					$('#paste-success').show();
 				}
 

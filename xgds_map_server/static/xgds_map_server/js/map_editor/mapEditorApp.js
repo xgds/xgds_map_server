@@ -153,6 +153,9 @@
 				app.mapLayer.set('jsonFeatures', JSON.stringify(jsonFeaturesFormatter));
 				app.mapLayer.save();
 
+				if ($("#unsaved-notification").is(":visible"))
+					$("#unsaved-notification").hide();
+
 				$("#saved-notification").show("slide", { direction: "right" }, 300);
 				setTimeout(function(){
 					$('#saved-notification').fadeOut('slow');
@@ -172,6 +175,8 @@
 
                 if (!undoRedoAction)
 					app.vent.trigger('deleteFeatureSuccess', feature);
+
+				app.vent.trigger('appChanged');
 	        },
 			deleteAllFeatures: function(featureList){
 	        	var featureList = app.mapLayer.get('feature').models;
