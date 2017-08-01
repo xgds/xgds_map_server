@@ -83,8 +83,8 @@ app.views.ToolbarView = Marionette.View.extend({
     },
 
 	unsavedChanges: function(){
-    	if (!$("#unsaved-notification").is(":visible"))
-			$("#unsaved-notification").show();
+    	var notifier = document.getElementById("unsaved-notification");
+		notifier.style.visibility = "visible";
 	},
 
     ensureToggle: function(modeName) {

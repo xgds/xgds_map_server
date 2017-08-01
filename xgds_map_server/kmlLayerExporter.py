@@ -30,26 +30,34 @@ def exportMapLayer(request, mapLayer):
     styles = {}
 
     for f in features:
+        if f.style:
+            style = f.style
+
+        else:
+            style = "0000ff"
+
+        print f
+
         if (f.type == "Point"):
             resultString += '\n' + getPointKml(f)
-            if (f.shape):
-                styles[f.style + "_" + f.type + "_" + f.shape] = createStyle(request, f)
+            if hasattr(f, 'shape'):
+                styles[style + "_" + f.type + "_" + f.shape] = createStyle(request, f)
             else:
-                styles[f.style + "_" + f.type] = createStyle(request, f)
+                styles[style + "_" + f.type] = createStyle(request, f)
 
         elif (f.type == "Polygon"):
             resultString += '\n' + getPolygonKml(f)
-            styles[f.style + "_" + f.type] = createStyle(request, f)
+            styles[style + "_" + f.type] = createStyle(request, f)
 
         elif (f.type == "Station"):
             resultString += '\n' + getStationKml(f)
-            styles[f.style + "_" + f.type] = createStyle(request, f)
-            styles["tolerance" + f.style[1:]] = createToleranceStyle(f)
-            styles["boundary" + f.style[1:]] = createBoundaryStyle(f)
+            styles[style + "_" + f.type] = createStyle(request, f)
+            styles["tolerance" + style] = createToleranceStyle(f)
+            styles["boundary" + style] = createBoundaryStyle(f)
 
         else:
             resultString += '\n' + getLineKml(f)
-            styles[f.style + "_" + f.type] = createStyle(request, f)
+            styles[style + "_" + f.type] = createStyle(request, f)
 
 
     for key, value in styles.iteritems():
@@ -193,13 +201,19 @@ def getStationKml(feature):
 
 
 def createStyle(request, feature):
-    styleName = feature.style[1:] + feature.type
-    color = getKmlColor(feature.style[1:], "ff")
+    if feature.style:
+        style = feature.style[1:]
+
+    else:
+        style = "0000ff"
+
+    styleName = style + feature.type
+    color = getKmlColor(style, "ff")
     iconLink = ""
 
     if (feature.type == "Point"):
-        if (feature.shape):
-            styleName = feature.style + feature.type + "_" + feature.shape
+        if hasattr(feature, 'shape'):
+            styleName = style + feature.type + "_" + feature.shape
             if (feature.shape == "Triangle"):
                 iconLink = request.build_absolute_uri(static('xgds_map_server/icons/triangle-point.png'))
             elif (feature.shape == "Square"):
@@ -222,16 +236,28 @@ def createStyle(request, feature):
 
 
 def createToleranceStyle(feature):
-    color = getKmlColor(feature.style[1:], "80")
-    styleName = "tolerance" + feature.style[1:]
+    if feature.style:
+        style = feature.style[1:]
+
+    else:
+        style = "0000ff"
+
+    color = getKmlColor(style, "80")
+    styleName = "tolerance" + style
 
     style = KmlUtil.makeStyle(styleName, lineWidth=3, lineColor=color)
     return style
 
 
 def createBoundaryStyle(feature):
-    color = getKmlColor(feature.style[1:], "ff")
-    styleName = "boundary" + feature.style[1:]
+    if feature.style:
+        style = feature.style[1:]
+
+    else:
+        style = "0000ff"
+
+    color = getKmlColor(style, "ff")
+    styleName = "boundary" + style
 
     style = KmlUtil.makeStyle(styleName, lineWidth=3, lineColor=color)
     return style

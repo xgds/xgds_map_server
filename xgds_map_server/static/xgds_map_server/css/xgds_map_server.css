@@ -1,7 +1,7 @@
 #unsaved-notification{
 	color: red;
 	font-size: 9pt;
-	display: none;
+	visibility: hidden;
 }
 
 .property-header-text{

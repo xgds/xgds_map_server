@@ -153,8 +153,8 @@
 				app.mapLayer.set('jsonFeatures', JSON.stringify(jsonFeaturesFormatter));
 				app.mapLayer.save();
 
-				if ($("#unsaved-notification").is(":visible"))
-					$("#unsaved-notification").hide();
+				var notifier = document.getElementById("unsaved-notification");
+				notifier.style.visibility = "hidden";
 
 				$("#saved-notification").show("slide", { direction: "right" }, 300);
 				setTimeout(function(){
