@@ -1,0 +1,25 @@
+[{"pk":"defaultLineStyle1", "model":"xgds_map_server.LineStringStyle", "fields":
+	{"name":"Default Line Style 1",
+	 "width": 4,
+	 "color": "#64AD4C",
+	 "opacity": 1, 
+	 "dashes": 0
+	}
+}, 
+{"pk":"defaultPolygonStyle1", "model":"xgds_map_server.PolygonStyle", "fields":
+	{"name":"Default Polygon Style 1", 
+	"strokeColor": "#33CCFF", 
+	"fillColor": "#33CCFF", 
+	"fillOpacity": 0.3	
+	}
+}, 
+{"pk":"defaultPointStyle1", "model":"xgds_map_server.PointStyle", "fields":
+	{"name":"Default Point style 1",
+	"radius":5,
+	"strokeColor":"#FFCC00",
+	"strokeOpacity":1,
+	"strokeWidth": 2,
+	"fillColor": "#FFCC00",
+	"fillOpacity":0.8
+	}
+}]
