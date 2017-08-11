@@ -55,6 +55,7 @@ After the processing completes, you should get an email with the results.
     {{ block.super }}
     <script type="text/javascript" src='{{ EXTERNAL_URL }}resumable/resumable.js'></script>
     <script type="text/javascript" src="{% static 'resumable/js/django-resumable.js' %}"></script>
+    <!-- <script type="text/javascript" src="{% static 'resumable/js/init.js' %}"></script> -->
 {% endblock scripts %}
 
 {% block jsInit %}
@@ -62,13 +63,26 @@ document.addEventListener("DOMContentLoaded", function () {
     "use strict";
     var dj;
     if (new Resumable().support) {
-        dj = new DjangoResumable({'onFileSuccess':function (r, file, message, el, progress, filePath, fileName) {
+    		var sourceFileEl = $('input#id_sourceFile');
+		sourceFileEl.attr('data-upload-url', '/xgds_map_server/uploadResumable/');
+		
+        dj = new DjangoResumable({
+        'onFileSuccess':function (r, file, message, el, progress, filePath, fileName) {
     		"use strict";
     		filePath.setAttribute('value', file.size + '_' + file.fileName);
-    		fileName.innerHTML = file.fileName;
+    		if (fileName !== null){
+    			fileName.innerHTML = file.fileName;
+    		} else {
+    			var sib = sourceFileEl.siblings('.helptext');
+    			sib.html(file.fileName);
+    		}
     		progress.style.display = 'none';
     		$("#create_button").removeAttr("disabled");
 		}});
+		dj.initField(sourceFileEl[0]);
     }
 });
 {% endblock jsInit %}
+
+  {% block footer %}
+  {% endblock footer %}
