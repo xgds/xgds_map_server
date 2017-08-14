@@ -38,7 +38,7 @@ class AbstractMapForm(forms.ModelForm):
         return None
 
     def getExclude(self):
-        return ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted']
+        return ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'minLat', 'minLon', 'maxLat', 'maxLon']
 
     def getParentGroup(self):
         mapGroupName = self.cleaned_data['parent']
@@ -53,7 +53,7 @@ class AbstractMapForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'size': 50}),
             'description': forms.Textarea(attrs={'cols': 50, 'rows': 7})
         }
-        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted']
+        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'minLat', 'minLon', 'maxLat', 'maxLon']
 
 
 class MapForm(AbstractMapForm):
@@ -107,7 +107,7 @@ class MapTileForm(AbstractMapForm):
     
     class Meta(AbstractMapForm.Meta):
         model = MapTile
-        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed', 'minx', 'miny', 'maxx', 'maxy', 'resolutions']
+        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed', 'minx', 'miny', 'maxx', 'maxy', 'resolutions', 'minLat', 'minLon', 'maxLat', 'maxLon']
 
 
 class MapDataTileForm(MapTileForm):
