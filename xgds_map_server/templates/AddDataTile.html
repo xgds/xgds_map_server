@@ -1,0 +1,103 @@
+{% extends "MapBase.html" %}
+{% load static %}
+
+{% block cssExtras %}
+<style scoped>
+input[type='file'] {
+  color: transparent;
+}</style>
+{% endblock cssExtras %}
+
+{% block contents %}
+{{ block.super }}
+<div class="btn-toolbar" role="toolbar" >
+  <div class="btn-group mr-2" role="group" >
+	<a href="{% url 'folderAdd' %}" class="btn btn-primary"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Folder</a>
+	<a href="{% url 'addKml' %}" class="btn btn-primary"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Kml</a>
+	<a href="{% url 'mapAddLayer' %}" class="btn btn-primary "><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Map Layer</a>
+	<a href="{% url 'mapAddTile' %}" class="btn btn-primary {% if title == 'Add Map Tile' %} active {% endif %}"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Tile</a>
+	<a href="{% url 'mapAddDataTile' %}" class="btn btn-primary {% if title == 'Add Map Data Tile' %} active {% endif %}"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Data Tile</a>
+<!-- <a href="{% url 'mapAddMapCollection' %}" class="btn btn-primary"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Collection</a> -->
+  </div>
+ </div>
+{% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
+<div >
+<form action="#" enctype="multipart/form-data" method="post">
+ <p>
+<label></label>
+<span class="h6">{{ title }}</span>
+</p>
+ <p>
+ <label></label>
+<span>{{instructions|safe }}</span>
+</p>
+
+{{ form.as_p }}
+
+<p>
+<label for="alert_span"></label>
+<span class="alert alert-danger" role="alert" id="alert_span">
+<strong>You cannot click the Create button until your upload finishes.</strong><br/>
+After the processing completes, you should get an email with the results.
+</span>
+</p>
+<p class="form-group">
+<label for="create_button"></label>
+<input type="submit" value="Create" id="create_button" disabled="disabled"/>
+</p>
+{% csrf_token %}
+
+</form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+    {{ block.super }}
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}resumable/resumable.js'></script>
+    <script type="text/javascript" src="{% static 'resumable/js/django-resumable.js' %}"></script>
+    <!-- <script type="text/javascript" src="{% static 'resumable/js/init.js' %}"></script> -->
+{% endblock scripts %}
+
+{% block jsInit %}
+document.addEventListener("DOMContentLoaded", function () {
+    "use strict";
+    var dj;
+    var numFiles = 0;
+    if (new Resumable().support) {
+    		var sourceFileEl = $('input#id_sourceFile');
+		sourceFileEl.attr('data-upload-url', '/xgds_map_server/uploadResumable/');
+		
+		var dataFileEl = $('input#id_dataFile');
+		dataFileEl.attr('data-upload-url', '/xgds_map_server/uploadResumable/');
+		
+		var legendFileEl = $('input#id_legendFile');
+		legendFileEl.attr('data-upload-url', '/xgds_map_server/uploadResumable/');
+		
+        dj = new DjangoResumable({
+        'onFileSuccess':function (r, file, message, el, progress, filePath, fileName) {
+	    		"use strict";
+	    		filePath.setAttribute('value', file.size + '_' + file.fileName);
+	    		if (fileName !== null){
+	    			fileName.innerHTML = file.fileName;
+	    		} else {
+	    			var sib = $(el).siblings('.helptext'); //sourceFileEl.siblings('.helptext');
+	    			sib.html(file.fileName);
+	    		}
+	    		progress.style.display = 'none';
+	    		if (!el.id.includes('legend')){
+	    			numFiles++;
+	    		}
+	    		if (numFiles >= 2){
+		    		$("#create_button").removeAttr("disabled");
+		    	}
+			}
+		});
+		dj.initField(sourceFileEl[0]);
+		dj.initField(dataFileEl[0]);
+		dj.initField(legendFileEl[0]);
+    }
+});
+{% endblock jsInit %}
+
+  {% block footer %}
+  {% endblock footer %}

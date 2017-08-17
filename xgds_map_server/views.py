@@ -527,7 +527,7 @@ def getAddMapDataTilePage(request):
             processTiles(request, mapTile.uuid, minZoom, maxZoom, tile_form.cleaned_data['resampleMethod'], mapTile)
         else:
             return render(request,
-                          "AddTile.html",
+                          "AddDataTile.html",
                           {'form': tile_form,
                            'error': True,
                            'help_content_path' : 'xgds_map_server/help/addMapDataTile.rst',
@@ -538,7 +538,7 @@ def getAddMapDataTilePage(request):
     else:
         tile_form = MapDataTileForm(initial={'username': request.user.username})
         return render(request,
-                      "AddTile.html",
+                      "AddDataTile.html",
                       {'form': tile_form,
                        'error': False,
                        'help_content_path' : 'xgds_map_server/help/addMapDataTile.rst',
