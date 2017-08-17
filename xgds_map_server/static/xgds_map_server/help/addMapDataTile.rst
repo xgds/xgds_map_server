@@ -65,7 +65,7 @@ jsFunction
 Resampling Method
 	This is used when tiling the GeoTiff.  Typically you can leave it at the default.
  
-.. _Data Layers : /core/help/xgds_map_server/help/addDataLayer.rst
+.. _Data Layers : /xgds_map_server/help/addDataLayer.rst
 
 .. o __BEGIN_LICENSE__
 .. o  Copyright (c) 2015, United States Government, as represented by the
