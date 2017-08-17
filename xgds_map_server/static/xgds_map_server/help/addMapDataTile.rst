@@ -53,7 +53,7 @@ Units Label
 	The label for units, shown to ther right of the value under the map, i.e. m.
 
 jsFunction
-	Javascript function to modify the exact value retrieved from the png.  
+	Javascript function to modify the exact value retrieved from the png and printed below the map.  
 	For example, if the values in the png file vary between 1 and 100 but you need 
 	to divide it by 4, include some javascript, where value is the exact
 	incoming value from the png:
@@ -62,8 +62,21 @@ jsFunction
 
 	  return (value/4.0).toFixed(2);
 
+jsRawFunction
+	Javascript function to modify the exact value retrieved from the png and used as a raw value.  
+	For example, if the values in the png file vary between 1 and 100 but you need 
+	to divide it by 4, include some javascript, where value is the exact
+	incoming value from the png:
+	
+	.. code:: javascript
+
+	  return value/4.0;
+	  
+
 Resampling Method
 	This is used when tiling the GeoTiff.  Typically you can leave it at the default.
+	"Lanczos" will smooth the image tiles when they are resampled. "Nearest Neighbor" will not.
+
  
 .. _Data Layers : /xgds_core/help/xgds_map_server/help/addDataLayer.rst/Data%20Layers
 

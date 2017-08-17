@@ -8,11 +8,11 @@ Required data products and conditions
 
 - A properly registered GeoTIFF file with the "raw" data (e.g. each pixel is a 32 bit float value representing surface temperature)
 
-- The GeoTIFF file should be in the same projection as the base layer in the xGDS map (Polar Stereographic for RP, usually WGS84 for Earth)
+- The GeoTIFF file must be in the same projection as the base layer in the xGDS map (usually WGS84 for Earth)
 
 Data Preparation
 ----------------
-1. Run gdalinfo on the data file to get image statistics
+1. Run gdalinfo on the data file to get image statistics.  In this example we are using np_weh_adapt.map.npolar.tif as our sample file.
 
 .. code-block:: bash
 
@@ -26,7 +26,7 @@ Data Preparation
       STATISTICS_STDDEV=0.025128417723993
 
 2. Generate a false color image from the data file using the color-relief option of gdaldem:
-   Refer to the `gdaldem documentation <http://www.gdal.org/gdaldem.html#gdaldem_color_relief>`_, and examples of `standard colortables <http://trac.osgeo.org/grass/browser/grass/branches/releasebranch_6_4/lib/gis/colors?order=name>`_ from GRASS.
+   Refer to the `gdaldem documentation`_  and examples of `standard colortables`_ from GRASS.
 
 .. code-block:: bash
 
@@ -44,9 +44,7 @@ Data Preparation
   # Compute the scale factor for floating point to 8 bit conversion using the
   # image statistics from gdalinfo (see above)
   scaleFactor = 255.0/0.18
-  scaleFactor
-    1416.6666666666667
-
+  
   # Build a floating point scaled grayscale image with pixel values from 0-255
   # Note that ImageMath.eval does not accept symbols (like scaleFactor)
   # defined outside its 1st argument, so we recompute the scale factor there.
@@ -56,14 +54,36 @@ Data Preparation
   wehGray8Bit = ImageMath.eval("convert(a,'L')", a=wehGrayFloat)
   wehGray8Bit.save("np_weh_adapt.map.npolar.8bit.png")
 
-4. Create a data legend for the map layer.  The legend must be a 40x240 PNG image and needs to be generated manually.  Hopefully we can improve on that in the future.  An example file is `here <https://rp.xgds.org/data/xgds_map_server/mapData/weh_legend.png>`_.
+4. Create a data legend for the map layer.  The legend must be a 40x240 PNG image and needs to be generated manually.  An example file is `legend.png`_ and its photoshop build file is `legend.psd`_.
 
 5. Upload the finished products to xGDS:
 
-  - Go to the `xGDS Map Data Tile Upload page <https://rp.xgds.org/xgds_map_server/addMapDataTile>`_.  Upload the false color GeoTIFF, the 8 bit PNG scaled data image and the legend in the appropriate fields.
-  - Leave the *Resampling Method* set to "Lanczos" if you want the image tiles to be smoothed when they are resampled. Change to "Nearest Neighbor" if you don't.
-  - The JsFunction field is where you convert from the 8 bit scaled data values back to your original units.  You are provided one argument named *value* with the current pixel value and need to return a scaled value.  In this example, we just need to divide by the *scaleFactor* computed above, so JsFunction is:
+  - Follow the instructions here: `Add Map Data Tile`_.
+  - In this example, for the jsFunction and jsRawFunction we just need to divide by the *scaleFactor* computed above instead of the value/4.0 from the other example.
 
 .. code-block:: js
 
   return value/1416.67;
+  
+.. _gdaldem documentation : http://www.gdal.org/gdaldem.html#gdaldem_color_relief
+.. _standard colortables : http://trac.osgeo.org/grass/browser/grass/branches/releasebranch_6_4/lib/gis/colors?order=name
+.. _legend.png : https://xgds.org/downloads/legends/weh_legend.png
+.. _legend.psd : https://xgds.org/downloads/legends/weh_legend.psd
+.. _Add Map Data Tile : /xgds_core/help/xgds_map_server/help/addMapDataTile.rst
+
+
+.. o __BEGIN_LICENSE__
+.. o  Copyright (c) 2015, United States Government, as represented by the
+.. o  Administrator of the National Aeronautics and Space Administration.
+.. o  All rights reserved.
+.. o 
+.. o  The xGDS platform is licensed under the Apache License, Version 2.0
+.. o  (the "License"); you may not use this file except in compliance with the License.
+.. o  You may obtain a copy of the License at
+.. o  http://www.apache.org/licenses/LICENSE-2.0.
+.. o 
+.. o  Unless required by applicable law or agreed to in writing, software distributed
+.. o  under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+.. o  CONDITIONS OF ANY KIND, either express or implied. See the License for the
+.. o  specific language governing permissions and limitations under the License.
+.. o __END_LICENSE__
