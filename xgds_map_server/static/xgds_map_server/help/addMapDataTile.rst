@@ -17,6 +17,12 @@ Data File
 Legend File
 	An image for the map legend, suggest roughly 240 pixel tall x 40-50 pixel wide.
 
+	If you are starting from a floating point TIFF file with data
+	values, **you** need to generate a false color version of the
+	the TIFF image to display in the map in addition to the PNG with
+	the data values.
+
+	See `Data Layers`_ for more information.
 
 Other options:
 --------------
@@ -59,7 +65,7 @@ jsFunction
 Resampling Method
 	This is used when tiling the GeoTiff.  Typically you can leave it at the default.
  
-
+.. _Viewing Maps : /core/help/xgds_map_server/help/addDataLayer.rst/Data%20Layers
 
 .. o __BEGIN_LICENSE__
 .. o  Copyright (c) 2015, United States Government, as represented by the

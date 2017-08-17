@@ -9,6 +9,11 @@ GeoTiff Source File
 	in the map. Note that once this is imported and tiled, it cannot be modified.
  	Make sure it is in the correct map projection.
 
+	If you are starting from a floating point TIFF file with data
+	values, **you** need to generate a false color version of the
+	the TIFF image to display in the map.
+
+	See `Data Layers`_ for more information.
 
 Other options:
 --------------
@@ -32,7 +37,7 @@ Transparency
 Resampling Method
 	This is used when tiling the GeoTiff.  Typically you can leave it at the default.
  
-
+.. _Viewing Maps : /core/help/xgds_map_server/help/addDataLayer.rst/Data%20Layers
 
 .. o __BEGIN_LICENSE__
 .. o  Copyright (c) 2015, United States Government, as represented by the
