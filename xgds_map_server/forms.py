@@ -34,7 +34,7 @@ from geocamUtil.models import SiteFrame
 class AbstractMapForm(forms.ModelForm):
     parent = forms.ModelChoiceField(queryset=MapGroup.objects.filter(deleted=False), empty_label=None, label="Folder")
     username = forms.CharField(required=False, widget=forms.HiddenInput())
-    region = forms.ModelChoiceField(queryset=SiteFrame.objects.all(), initial=settings.XGDS_CURRENT_SITEFRAME_ID, label='howdy yo')
+    region = forms.ModelChoiceField(queryset=SiteFrame.objects.all(), initial=settings.XGDS_CURRENT_SITEFRAME_ID, label=settings.XGDS_MAP_SERVER_SITE_MONIKER)
     
     def getModel(self):
         return None
