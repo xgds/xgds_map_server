@@ -46,6 +46,10 @@ You can create ground overlays in Map Layers.
 <label for="id_parent">In Folder:</label> {{ mapForm.parent }}<br/>
 </p>
 <p>
+{% if mapForm.region.errors %}<span style="color:red">{{ mapForm.region.errors }}</span>{% endif %}
+<label for="id_region">Region:</label> {{ mapForm.region }}<br/>
+</p>
+<p>
 	<label >Type:</label>
 	<span class="btn-group" role="group" data-toggle="buttons">
 		<label class="btn btn-primary {% if not kmlChecked %} active {% endif %}"> 

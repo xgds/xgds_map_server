@@ -26,6 +26,7 @@ from resumable.fields import ResumableFileField
 
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapCollection, MapSearch, MapDataTile
 from xgds_data.models import Collection, RequestLog
+from geocamUtil.models import SiteFrame
 
 # pylint: disable=C1001
 
@@ -33,6 +34,7 @@ from xgds_data.models import Collection, RequestLog
 class AbstractMapForm(forms.ModelForm):
     parent = forms.ModelChoiceField(queryset=MapGroup.objects.filter(deleted=False), empty_label=None, label="Folder")
     username = forms.CharField(required=False, widget=forms.HiddenInput())
+    region = forms.ModelChoiceField(queryset=SiteFrame.objects.all(), initial=settings.XGDS_CURRENT_SITEFRAME_ID, label='howdy yo')
     
     def getModel(self):
         return None
