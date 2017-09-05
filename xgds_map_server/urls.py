@@ -24,35 +24,35 @@ from resumable.views import ResumableUploadView
 from xgds_map_server import views
 
 urlpatterns = [url(r'^$', views.getMapServerIndexPage,
-                   {'readOnly': True, 'securityTags': ['readOnly']},
+                   {},
                    'xgds_map_server_index'),
                url(r'^$', views.getMapServerIndexPage,
-                   {'readOnly': True, 'securityTags': ['readOnly']},
+                   {},
                    'map'),
     url(r'^feedPage/', views.getGoogleEarthFeedPage,
-     {'readOnly': True, 'securityTags': ['readOnly']},
+     {},
      'xgds_map_server_feed'),
     # For copying feature data to the session variables
     url(r'^copyFeatures$', views.copyFeatures, {}, 'copyFeatures'),
     # for saving map layer itself
     url(r'^saveMaplayer.json$', views.saveMaplayer, {}, 'saveMaplayer'),
     # HTML tree of maps
-    url(r'^maptree/', views.getMapTreePage, {'readOnly': True, 'securityTags': ['readOnly']},'mapTree'),
-    url(r'^treejson/', views.getFancyTreeJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapTreeJSON'),
-    url(r'^selectedjson/', views.getSelectedNodesJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapSelectedJSON'),
-    url(r'^uuidsjson/', views.getNodesByUuidJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapSelectedUUIDJSON'),
-    url(r'^mapLayerJSON/(?P<layerID>[\w-]+)/', views.getMapLayerJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapLayerJSON'),
+    url(r'^maptree/', views.getMapTreePage, {},'mapTree'),
+    url(r'^treejson/', views.getFancyTreeJSON, {}, 'mapTreeJSON'),
+    url(r'^selectedjson/', views.getSelectedNodesJSON, {}, 'mapSelectedJSON'),
+    url(r'^uuidsjson/', views.getNodesByUuidJSON, {}, 'mapSelectedUUIDJSON'),
+    url(r'^mapLayerJSON/(?P<layerID>[\w-]+)/', views.getMapLayerJSON, {}, 'mapLayerJSON'),
     url(r'^setTransparency/(?P<uuid>[\w-]+)/(?P<mapType>\w+)/(?P<value>[\d]+)', views.setTransparency, {}, 'mapSetTransparency'),
     
     # Open Map Editor on a map layer
     url(r'^mapeditor/(?P<layerID>[\w-]+)/', views.getMapEditorPage, {}, 'mapEditLayer'),
-    url(r'^maplayer/kml/(?P<layerID>[\w-]+).kml', views.getMapLayerKML,{'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']},'mapLayerKML'),
+    url(r'^maplayer/kml/(?P<layerID>[\w-]+).kml', views.getMapLayerKML,{},'mapLayerKML'),
     # HTML detail view of map
     url(r'^detail/(?P<mapID>[\w-]+)/', views.getMapDetailPage,
-     {'readOnly': True },
+     {},
      'mapDetail'),
     # HTML detail of a folder (group)
-    url(r'^folderDetail/(?P<groupID>[\w-]+)/', views.getFolderDetailPage, {'readOnly': True}, 'folderDetail'),
+    url(r'^folderDetail/(?P<groupID>[\w-]+)/', views.getFolderDetailPage, {}, 'folderDetail'),
     # HTML view to delete a folder (group)
     url(r'^folderDelete/(?P<groupID>[\w-]+)/', views.getDeleteFolderPage, {}, 'folderDelete'),
     # HTML view to add a folder (group)
@@ -69,15 +69,15 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,
     url(r'^editMapSearch/(?P<mapSearchID>[\w-]+)/', views.getEditMapSearchPage, {}, 'mapEditMapSearch'),
     url(r'^addMapCollection/', views.getAddMapCollectionPage, {}, 'mapAddMapCollection'),
     url(r'^editMapCollection/(?P<mapCollectionID>[\w-]+)/', views.getEditMapCollectionPage, {}, 'mapEditMapCollection'),
-    url(r'^mapCollectionJSON/(?P<mapCollectionID>[\w-]+)/', views.getMapCollectionJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapCollectionJSON'),
-    url(r'^mapSearchJSON/(?P<mapSearchID>[\w-]+)/', views.getMapSearchJSON, {'readOnly': True, 'loginRequired': False, 'securityTags': ['readOnly']}, 'mapSearchJSON'),
+    url(r'^mapCollectionJSON/(?P<mapCollectionID>[\w-]+)/', views.getMapCollectionJSON, {}, 'mapCollectionJSON'),
+    url(r'^mapSearchJSON/(?P<mapSearchID>[\w-]+)/', views.getMapSearchJSON, {}, 'mapSearchJSON'),
     url(r'^doMapSearch/', views.searchWithinMap, {}, 'doMapSearch'),
     url(r'^saveMapSearch/', views.saveSearchWithinMap, {}, 'saveMapSearch'),
 
     # HTML view to confirm deletion of view
     url(r'^delete/(?P<nodeID>[\w-]+)/', views.getDeleteNodePage, {}, 'nodeDelete'),
     # List of deleted maps that can be un-deleted
-    url(r'^deleted/', views.getDeletedNodesPage, {'readOnly': True}, 'deletedNodes'),
+    url(r'^deleted/', views.getDeletedNodesPage, {}, 'deletedNodes'),
     # JSON-accepting url that moves maps/folders around
     url(r'^moveNode', views.moveNode, {}, 'moveNode'),
     # JSON-accepting url that changes visibility for a node
@@ -88,14 +88,14 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,
     url(r'^data/(?P<path>.*)$', django.views.static.serve,
      {'document_root': settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR,
       'show_indexes': True,
-      'readOnly': True},
+      },
      'xgds_map_server_static'),
 
     # By default if you just load the app you should see the list
-    url(r'^feed/(?P<feedname>.*)', views.getMapFeed,{'readOnly': True, 'loginRequired': False, 'securityTags': ['kml', 'readOnly']},'xgds_map_server_feed'),
+    url(r'^feed/(?P<feedname>.*)', views.getMapFeed,{},'xgds_map_server_feed'),
     url(r'^uploadResumable/$', login_required(ResumableUploadView.as_view()), name='uploadResumable'),
     url(r'^fmapJson/(?P<object_name>[\w]+[\.]*[\w]*)/(?P<filter>[\w]+:[\w]+)$', views.getMappedObjectsJson, {'isLive':settings.GEOCAM_UTIL_LIVE_MODE, 'force':True}, 'xgds_map_server_objectsJson_force'),
-    url(r'^mapJson/(?P<object_name>[\w]+[\.]*[\w]*)/(?P<filter>[\w]+:[\w]+)$', views.getMappedObjectsJson, {'isLive':settings.GEOCAM_UTIL_LIVE_MODE, 'loginRequired': False}, 'xgds_map_server_objectsJson'),
+    url(r'^mapJson/(?P<object_name>[\w]+[\.]*[\w]*)/(?P<filter>[\w]+:[\w]+)$', views.getMappedObjectsJson, {'isLive':settings.GEOCAM_UTIL_LIVE_MODE}, 'xgds_map_server_objectsJson'),
     url(r'^mapJson/(?P<object_name>[\w]+[\.]*[\w]*)/(?P<range>[\d]+)$', views.getMappedObjectsJson, {'isLive':settings.GEOCAM_UTIL_LIVE_MODE}, 'xgds_map_server_objectsJson_range'),
     url(r'^mapJson/(?P<object_name>[\w]+[\.]*[\w]*)$', views.getMappedObjectsJson, {'range':0, 'force': True, 'isLive':settings.GEOCAM_UTIL_LIVE_MODE}, 'xgds_map_server_objectsJson_default'),
     url(r'^lastJson/(?P<object_name>[\w]+[\.]*[\w]*)/(?P<filter>[\w]+:[\w]+)$', views.getLastObjectJson, {},'xgds_map_server_lastJson_filter'),
