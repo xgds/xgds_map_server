@@ -107,17 +107,31 @@ app.views.FancyTreeView = Marionette.View.extend({
     	      delegate: "span.fancytree-title",
     	      menu: [
     	          {title: "Edit", cmd: "edit", uiIcon: "ui-icon-pencil", disabled: false },
+    	          {title: "Download KML", cmd: "download", uiIcon: "ui-icon-arrowthickstop-1-s", disabled: false }
     	          ],
     	      beforeOpen: function(event, ui) {
     	        var node = $.ui.fancytree.getNode(ui.target);
     	        if (node !== null){
-    	        	node.setActive();
+    	        		layertreeNode.contextmenu('enableEntry','download', _.contains(['MapLayer', 'KmlMap'], node.data.type))
+    	        		node.setActive();
     	        }
     	      },
     	      select: function(event, ui) {
     	        var node = $.ui.fancytree.getNode(ui.target);
     	        if (node !== null){
-    	        	window.open(node.data.href, '_edit');
+    	        		if (ui.cmd == 'edit'){
+    	        			window.open(node.data.href, '_edit');
+    	        		} else if (ui.cmd == 'download') {
+    	        			var url = '/xgds_map_server/maplayer/kml/';
+    	        			url += node.key + '.kml';
+    	        			$.fileDownload(url, {
+    	            		 	httpMethod: "GET",
+    	                     failCallback: function (htmlResponse, url) {
+    	                    	 	console.log(htmlResponse);
+    	                    	 	alert('Could not download kml.');
+    	                     }
+    	                 });
+    	        		}
     	        }
     	      }
     	    });
