@@ -122,8 +122,13 @@ app.views.FancyTreeView = Marionette.View.extend({
     	        		if (ui.cmd == 'edit'){
     	        			window.open(node.data.href, '_edit');
     	        		} else if (ui.cmd == 'download') {
-    	        			var url = '/xgds_map_server/maplayer/kml/';
-    	        			url += node.key + '.kml';
+    	        			var url = '';
+    	        			if (node.data.type == 'MapLayer'){
+	    	        			url = '/xgds_map_server/maplayer/kml/';
+	    	        			url += node.key + '.kml';
+    	        			} else if (node.data.type == 'KmlMap'){
+	    	        			url = node.data.kmlFile;
+    	        			}
     	        			$.fileDownload(url, {
     	            		 	httpMethod: "GET",
     	                     failCallback: function (htmlResponse, url) {
