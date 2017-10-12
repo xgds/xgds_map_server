@@ -82,9 +82,6 @@ class TestMaps(TestCase):
         response = self.client.get(reverse('jsonMove'))
         self.assertEqual(response.status_code, 200)
 
-    # The xgds_map_server_static function was a hack I think I (Jerome) created because
-    # I didn't know how to work the static file settings. Indeed it isn't used.
-
     def test_feed(self):
         # currently the only feed possible is the master feed
         feedName = ''
