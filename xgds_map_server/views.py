@@ -1483,7 +1483,7 @@ def getMapFeedTop(request):
 
     m.visibility = 1
     m.listItemType = 'check'
-    logging.debug('top level map kmlFile: %s', m.kmlFile)
+    #logging.debug('top level map kmlFile: %s', m.kmlFile)
     wrapDocument = int(request.GET.get('doc', '1'))
     resp = render(request,
                   'Maps.kml',
