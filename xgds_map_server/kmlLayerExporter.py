@@ -221,7 +221,7 @@ def createStyle(request, feature):
             elif(feature.shape == "Star"):
                 iconLink = request.build_absolute_uri(static('xgds_map_server/icons/star-point.png'))
             else:
-               iconLink = request.build_absolute_uri(static('xgds_map_server/icons/point.png'))
+                iconLink = request.build_absolute_uri(static('xgds_map_server/icons/point.png'))
         else:
             iconLink = request.build_absolute_uri(static('xgds_map_server/icons/point.png'))
     elif (feature.type == "Station"):
