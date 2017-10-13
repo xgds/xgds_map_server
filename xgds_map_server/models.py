@@ -34,6 +34,7 @@ from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJ
 from geocamUtil.models.ExtrasDotField import ExtrasDotField
 from xgds_data.models import Collection, RequestLog
 from xgds_core.couchDbStorage import CouchDbStorage
+from xgds_core.util import insertIntoPath
 
 
 # from Carbon.TextEdit import WIDTHHook
@@ -135,7 +136,8 @@ class AbstractMap(AbstractMapNode):
         pass
     
     def getGoogleEarthUrl(self):
-        return self.getUrl()
+        # make sure the subclass provides this, or overrides
+        return insertIntoPath(self.getUrl(), 'rest')
     
     class Meta:
         abstract = True
@@ -166,11 +168,16 @@ class KmlMap(AbstractMap):
 
     def getGoogleEarthUrl(self, request):
         if self.localFile:
-            return request.build_absolute_uri(self.localFile.url)
+            restString = insertIntoPath(self.localFile.url, 'rest')
+            return request.build_absolute_uri(restString)
         elif self.kmlFile:
             if (self.kmlFile.startswith('/')):
-                return request.build_absolute_uri(self.kmlFile)
+                # starts with a slash, is a feed from our server.
+                # inject the word rest after the first slash
+                restString = insertIntoPath(self.kmlFile, 'rest')
+                return request.build_absolute_uri(restString)
             else:
+                # not sure what these files are
                 return request.build_absolute_uri(self.kmlFile.url)
         return ''
         
@@ -355,7 +362,9 @@ class MapLayer(AbstractMap):
         return result
     
     def getGoogleEarthUrl(self, request):
-        return request.build_absolute_uri(reverse('mapLayerKML', kwargs={'layerID': self.uuid}))
+        theUrl = reverse('mapLayerKML', kwargs={'layerID': self.uuid})
+        theUrl = insertIntoPath(theUrl, 'rest')
+        return request.build_absolute_uri(theUrl)
 
     def getFeatureJson(self):
         return self.jsonFeatures

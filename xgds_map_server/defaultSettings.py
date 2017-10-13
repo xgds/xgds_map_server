@@ -35,7 +35,7 @@ XGDS_MAP_SERVER_HANDLEBARS_DIRS = [os.path.join('xgds_map_server', 'templates', 
 XGDS_MAP_SERVER_OVERLAY_IMAGES_DIR = XGDS_MAP_SERVER_DATA_SUBDIR + "MapOverlayImages"
 
 XGDS_MAP_SERVER_TOP_LEVEL = {
-    "name": "xGDS Maps",
+    "name": 'xGDS Maps',
     "description": "Top level KML feed for xGDS maps.",
     "filename": "xgds.kml"
 }

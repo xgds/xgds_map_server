@@ -40,4 +40,6 @@ urlpatterns = [url(r'^treejson/', views.getFancyTreeJSON, {}, 'mapTreeJSON'),
                url(r'^lastJson2/(?P<mapName>\w+)/$', views.getLastObject, {}, 'xgds_map_server_lastJson2'),
                url(r'^prevJson/(?P<mapName>\w+)/(?P<currentPK>[\d]+)$', views.getPrevNextObject, {'which':'previous'}, 'xgds_map_server_prevJson'),
                url(r'^nextJson/(?P<mapName>\w+)/(?P<currentPK>[\d]+)$', views.getPrevNextObject, {'which':'next'}, 'xgds_map_server_nextJson'),
+               url(r'^feed/(?P<feedname>.*)', views.getMapFeed,{},'xgds_map_server_feed'),
+               
                ]

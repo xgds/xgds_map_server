@@ -65,6 +65,7 @@ from geocamUtil.KmlUtil import wrapKmlForDownload
 from xgds_data.introspection import modelName
 
 from xgds_core.views import buildFilterDict
+from xgds_core.util import insertIntoPath
 
 #from django.http import StreamingHttpResponse
 # pylint: disable=E1101,R0911
@@ -976,96 +977,6 @@ def getMapDetailPage(request, mapID):
                   )
 
 
-# @never_cache
-# def getMapTreeJSON(request):
-#     """
-#     json tree of map groups
-#     note that this does json for jstree
-#     """
-#     global latestRequestG
-#     latestRequestG = request
-#     map_tree = getMapTree()
-#     map_tree_json = []
-#     addGroupToJSON(map_tree, map_tree_json, request)
-#     json_data = json.dumps(map_tree_json, indent=4)
-#     return HttpResponse(content=json_data,
-#                         content_type="application/json")
-# 
-# 
-# def addGroupToJSON(group, map_tree, request):
-#     """
-#     recursively adds group to json tree
-#     in the style of jstree
-#     """
-#     if group is None:
-#         return  # don't do anything if group is None
-#     group_json = {
-#         "data": {
-#             "text": group.name,
-#             "title": group.name,
-#             "attr": {
-#                 "href": request.build_absolute_uri(reverse('folderDetail', kwargs={'groupID': group.uuid}))
-#             }
-#         },
-#         "metadata": {
-#             "id": group.uuid,
-#             "description": group.description,
-#             "parentId": None,
-#             "type": "folder"
-#         },
-#         "state": "open",
-#     }
-#     sub_folders = []
-#     sub_maps = []
-#     if group.uuid == 1:
-#         # ensure that we don't have conflicts with the base map
-#         # for the detail page, and that nobody deletes every map
-#         del group_json['data']['attr']['href']
-#     if group.parent is not None:
-#         group_json['metadata']['parentId'] = group.parent.uuid
-#     for map_group in getattr(group, 'subGroups', []):
-#         if map_group.deleted:
-#             continue
-#         addGroupToJSON(map_group, sub_folders, request)
-#     for group_map in getattr(group, 'subMaps', []):
-#         if group_map.deleted:
-#             continue
-#         group_map_json = {
-#             "data": {
-#                 "text": group_map.name,
-#                 "title": group_map.name,
-#                 "attr": {
-#                     "href": request.build_absolute_uri(reverse('mapDetail', kwargs={'mapID': group_map.uuid}))
-#                 }
-#             },
-#             "metadata": {
-#                 "id": group_map.uuid,
-#                 "description": group_map.description,
-#                 "kmlFile": group_map.kmlFile,
-#                 "openable": group_map.openable,
-#                 "visible": group_map.visible,
-#                 "parentId": None,
-#                 "type": "map"
-#             },
-#             "state": "leaf",
-#             "icon": settings.STATIC_URL + settings.XGDS_MAP_SERVER_MEDIA_SUBDIR + "icons/globe.png"
-#         }
-#         if group_map.parent is not None:
-#             group_map_json['metadata']['parentId'] = group_map.parent.uuid
-#         try:  # as far as I know, there is no better way to do this
-#             group_map_json['metadata']['localFile'] = request.build_absolute_uri(group_map.localFile.url)
-#         except ValueError:  # this means there is no file associated with localFile
-#             pass
-#         sub_maps.append(group_map_json)
-#     if len(sub_folders) == 0 and len(sub_maps) == 0:
-#         group_json['state'] = 'leaf'
-#     else:
-#         sub_folders.sort(key=lambda x: x['data']['title'].lower())
-#         sub_maps.sort(key=lambda x: x['data']['title'].lower())
-#         group_json['children'] = sub_folders + sub_maps
-#     map_tree.append(group_json)
-
-
 def getMapLayerJSON(request, layerID):
     mapLayer = MapLayer.objects.get(pk=layerID)
     mapLayer_json = {"title": mapLayer.name,
@@ -1261,6 +1172,7 @@ def deleteGroup(map_group, state):
     for group in MapGroup.objects.filter(parent=map_group.uuid):
         deleteGroup(group, state)
 
+
 def setMapProperties(m, request):
     """
     This is for properties for nodes in map tree
@@ -1285,9 +1197,10 @@ def setMapProperties(m, request):
         m.listItemType = 'check'
 
 
-
-def getMapTree(request):
-    ''' This is left here to support older kml feed views '''
+def getMapTreeForKML(request):
+    ''' This is left here to support older kml feed views 
+    It builds up the tree to be exported to kml
+    '''
     groups = MapGroup.objects.filter(deleted=0)
     kmlMaps = KmlMap.objects.filter(deleted=0)
 #     links = MapLink.objects.filter(deleted=0)
@@ -1429,14 +1342,14 @@ def getMapFeed(request, feedname):
     if feedname == '':
         return getMapFeedTop(request)
     if 'all' in feedname:
-        return getMapFeedAll(request)
+        return getMapFeedAllForKML(request)
     return None
 
 
 def getMapFeedTop(request):
     """
     Returns a auto-refreshing KML NetworkLink to the top-level KML index.
-    (Basically a wrapper object that points to the result from getMapFeedAll().)
+    (Basically a wrapper object that points to the result from getMapFeedAllForKML().)
 
     Options you can control with URL parameters:
 
@@ -1470,9 +1383,7 @@ def getMapFeedTop(request):
     # qualified URL.  The target of that URL is full of relative URL's
     # from there on.  The good news is Django can reverse the view
     # name to get the URL that resolves to that view.
-    m.url = (request.build_absolute_uri
-             (reverse(getMapFeed,
-                      kwargs={'feedname': 'all.kml'})))
+    m.url = (request.build_absolute_uri(insertIntoPath(reverse(getMapFeed,kwargs={'feedname': 'all.kml'}),'rest')))
     
     if settings.GEOCAM_TRACK_URL_PORT:
         m.url = addPort(m.url, settings.GEOCAM_TRACK_URL_PORT)
@@ -1496,13 +1407,13 @@ def getMapFeedTop(request):
     return resp
 
 
-def getMapFeedAll(request):
+def getMapFeedAllForKML(request):
     """
     Returns the top-level KML index: a folder with network links to all
     active map layers.
 
     See getMapFeedTop() for a list of URL parameters that affect the output.
-    The same parameters are available for getMapFeedAll().
+    The same parameters are available for getMapFeedAllForKML().
     """
     global latestRequestG
     latestRequestG = request
@@ -1512,7 +1423,7 @@ def getMapFeedAll(request):
         'wrapDocument': int(request.GET.get('doc', '1'))
     }
 
-    root = getMapTree(request)
+    root = getMapTreeForKML(request)
     out = StringIO()
     printTreeToKml(out, opts, root)
     s = out.getvalue()

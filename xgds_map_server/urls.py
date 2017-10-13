@@ -23,7 +23,7 @@ from xgds_map_server import views
 
 urlpatterns = [url(r'^$', views.getMapServerIndexPage,{},'xgds_map_server_index'),
                url(r'^$', views.getMapServerIndexPage,{},'map'),
-               url(r'^feedPage/', views.getGoogleEarthFeedPage,{},'xgds_map_server_feed'),
+               url(r'^feedPage/', views.getGoogleEarthFeedPage,{},'xgds_map_server_feed_page'),
     
                # For copying feature data to the session variables
                url(r'^copyFeatures$', views.copyFeatures, {}, 'copyFeatures'),
@@ -79,8 +79,7 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,{},'xgds_map_server_index'
                url(r'^setNodeVisibility', views.setNodeVisibility, {}, 'setNodeVisibility'),
 
                # By default if you just load the app you should see the list
-               url(r'^feed/(?P<feedname>.*)', views.getMapFeed,{},'xgds_map_server_feed'),
-               url(r'^uploadResumable/$', login_required(ResumableUploadView.as_view()), name='uploadResumable'),
+               url(r'^uploadResumable/$', ResumableUploadView.as_view(), name='uploadResumable'),
                
                url(r'^search/$', views.getSearchPage, {}, 'search_map'),
                url(r'^search/(?P<modelName>[\w]+)$', views.getSearchPage, {}, 'search_map_object'),

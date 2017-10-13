@@ -14,7 +14,6 @@
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
 
-import string
 from geocamUtil import KmlUtil
 from django.contrib.staticfiles.templatetags.staticfiles import static
 from polycircles import polycircles
@@ -35,8 +34,6 @@ def exportMapLayer(request, mapLayer):
 
         else:
             style = "0000ff"
-
-        print f
 
         if (f.type == "Point"):
             resultString += '\n' + getPointKml(f)
@@ -215,19 +212,19 @@ def createStyle(request, feature):
         if hasattr(feature, 'shape'):
             styleName = style + feature.type + "_" + feature.shape
             if (feature.shape == "Triangle"):
-                iconLink = request.build_absolute_uri(static('xgds_map_server/icons/triangle-point.png'))
+                iconLink = request.build_absolute_uri(static('rest/xgds_map_server/icons/triangle-point.png'))
             elif (feature.shape == "Square"):
-                iconLink = request.build_absolute_uri(static('xgds_map_server/icons/square-point.png'))
+                iconLink = request.build_absolute_uri(static('rest/xgds_map_server/icons/square-point.png'))
             elif(feature.shape == "Star"):
-                iconLink = request.build_absolute_uri(static('xgds_map_server/icons/star-point.png'))
+                iconLink = request.build_absolute_uri(static('rest/xgds_map_server/icons/star-point.png'))
             else:
-                iconLink = request.build_absolute_uri(static('xgds_map_server/icons/point.png'))
+                iconLink = request.build_absolute_uri(static('rest/xgds_map_server/icons/point.png'))
         else:
-            iconLink = request.build_absolute_uri(static('xgds_map_server/icons/point.png'))
+            iconLink = request.build_absolute_uri(static('rest/xgds_map_server/icons/point.png'))
     elif (feature.type == "Station"):
-        request.build_absolute_uri(static('xgds_map_server/icons/placemark_circle.png'))
+        request.build_absolute_uri(static('rest/xgds_map_server/icons/placemark_circle.png'))
     else:
-        iconLink = request.build_absolute_uri(static('xgds_map_server/icons/point.png'))
+        iconLink = request.build_absolute_uri(static('rest/xgds_map_server/icons/point.png'))
     
     style = KmlUtil.makeStyle(styleName, iconUrl=iconLink, iconColor=color, iconScale=0.5,
                               lineColor=color, lineWidth=4, polyColor=color)
