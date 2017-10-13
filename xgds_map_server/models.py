@@ -183,7 +183,10 @@ class KmlMap(AbstractMap):
         
     def getUrl(self):
         if self.kmlFile and not self.localFile:
-            return settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + self.kmlFile
+            if (self.kmlFile.startswith('/')):
+                return self.kmlFile
+            else:
+                return settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + self.kmlFile
         elif self.localFile:
             return self.localFile.url
     
