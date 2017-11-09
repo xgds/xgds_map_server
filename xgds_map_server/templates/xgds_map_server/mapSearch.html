@@ -69,39 +69,24 @@
     {% include "xgds_map_server/SearchForms.html" with searchForms=searchForms %}
 {% endblock scripts %}
 
-{% block jsInit %}
 	
 	{% block jsInitPreApp %}
-	{% endblock jsInitPreApp %}
-	
-	$(function(){
-		app.vent.on("mapSearch:drewFeatures", function(e) {
-        	app.vent.trigger('mapSearch:fit');
-        });
-        
-        app.vent.on('onMapSetup', function() {
+	 app.vent.on('onMapSetup', function() {
         	xgds_gridstack.initializeGridstack();
     		xgds_search.hookAdvancedSearchButton();
         });
         
-        {% block preLayout %}
-		{% endblock preLayout %}
-		
-    	var searchDiv_initialized = false;
+        	var searchDiv_initialized = false;
 		 app.vent.on('searchDiv:visible', function(){
 		 	if (!searchDiv_initialized){
 		        addDateTimePickers();
 		        searchDiv_initialized = true;
 		 	} 
 		 });
-		 
-		 app.start(appOptions);
-    	{% block otherJSInit %}
-		{% endblock otherJSInit %}
-		
-	});
+	{% endblock jsInitPreApp %}
 	
-{% endblock jsInit %}
+	{% block initGridstack %}
+	{% endblock initGridstack %}
 
 {% block buttonrowRight %}
 	<button id="advanced_search_button" role="button" class="btn btn-primary mr-2 my-1" style="max-height:1.8rem;">Advanced Search</button>
