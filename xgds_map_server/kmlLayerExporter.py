@@ -227,7 +227,7 @@ def createStyle(request, feature):
         iconLink = request.build_absolute_uri(static('rest/xgds_map_server/icons/point.png'))
     
     style = KmlUtil.makeStyle(styleName, iconUrl=iconLink, iconColor=color, iconScale=0.5,
-                              lineColor=color, lineWidth=4, polyColor=color)
+                              lineColor=color, lineWidth=4, polyColor=color, polyFill=0)
 
     return style
 
@@ -345,18 +345,16 @@ def polygonFormatter(featureGeom):
         temp = temp.replace(" ", "")
         result += temp + ",0 "
 
-    result += "</coordinates></LinearRing></outerBoundaryIs><innerBoundaryIs><LinearRing><coordinates>"
-
-    for point in featureGeom:
-        temp = str(point)
-        temp = temp.replace(" ", "")
-        result += temp + ",0 "
-
+    result += "</coordinates></LinearRing></outerBoundaryIs>"
+    
+    result += "</Polygon>"
+    
     result = result.replace("[", "")
     result = result.replace("]", "")
-    result += "</coordinates></LinearRing></innerBoundaryIs></Polygon>"
 
     return result
+
+
 
 def getKmlColor(hexColor, opacity):
     if (hexColor == "ffff00"):
