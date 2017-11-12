@@ -747,9 +747,14 @@ $(function() {
         initializeFeaturesJson: function() {
             var _this = this;
             $.getJSON(this.getJSONURL(), function(data){
-            	if (data != null && data.length > 0 && data[0] != null){
-            		_this.cacheJSON(data);
-            		_this.trigger('readyToDraw');
+            	if (data != null) {
+            	    if (!_.isArray(data)){
+            	        data = [data];
+                    }
+                    if (data.length > 0 && data[0] != null) {
+                        _this.cacheJSON(data);
+                        _this.trigger('readyToDraw');
+                    }
             	}
             });
         },
