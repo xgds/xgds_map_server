@@ -433,8 +433,28 @@ $(function() {
 			                        this.selectNodes(data);
 		                    	}
 		                    }, this)
-		                  });
+                        });
 	                }
+
+                    $.ajax({
+                        url: '/xgds_planner2/plans/today/json',
+                        dataType: 'json',
+                        type: "GET",
+                        success: $.proxy(function(data) {
+                            if (data != null && app.options.settingsLive){
+                                app.latestPlan = data.A;
+                                app.latestPlan.latestPlan = true;
+
+                                app.nodeMap["latestPlan"] = new app.views.MapLinkView({
+                                    node: app.latestPlan,
+                                    group: this.mapLinkGroup,
+                                    url: app.latestPlan.url
+                                });
+                            }
+                        }, this)
+                    });
+
+
                 }
             },
             preloadNode: function(uuid){
@@ -703,6 +723,8 @@ $(function() {
                 this.show();
             } else if (this.node.selected){
                 this.show();    
+            } else if (this.node.latestPlan){
+                this.show();
             } else {
                 this.hide();
             }
@@ -735,7 +757,7 @@ $(function() {
             } else {
                 this.visible = this.options.visible;
             }
-            
+
             this.checkRequired();
             this.on( "readyToDraw", this.finishInitialization, this);
             this.initializeFeaturesJson();
@@ -746,17 +768,31 @@ $(function() {
         },
         initializeFeaturesJson: function() {
             var _this = this;
-            $.getJSON(this.getJSONURL(), function(data){
-            	if (data != null) {
-            	    if (!_.isArray(data)){
-            	        data = [data];
+            if (this.node.latestPlan){
+                var data = this.node;
+                if (!_.isArray(data)){
+                    data = [data];
+                }
+                if (data.length > 0 && data[0] != null) {
+                    _this.cacheJSON(data);
+                    _this.trigger('readyToDraw');
+                }
+            }
+
+            else{
+                $.getJSON(this.getJSONURL(), function(data){
+                    if (data != null) {
+                        if (!_.isArray(data)){
+                            data = [data];
+                        }
+                        if (data.length > 0 && data[0] != null) {
+                            _this.cacheJSON(data);
+                            _this.trigger('readyToDraw');
+                        }
                     }
-                    if (data.length > 0 && data[0] != null) {
-                        _this.cacheJSON(data);
-                        _this.trigger('readyToDraw');
-                    }
-            	}
-            });
+                });
+            }
+
         },
         getJSONURL: function() {
             // override this
@@ -789,7 +825,11 @@ $(function() {
             }
         },
         show: function() {
-            if (this.node.data.mapBounded){
+            var mapBounded;
+            if (this.node.latestPlan) mapBounded = this.node.mapBounded;
+            else mapBounded = this.node.data.mapBounded;
+
+            if (mapBounded){
                 if (!this.visible){
                     // start listening because we just changed state
                     var _this = this;
@@ -801,7 +841,11 @@ $(function() {
             
         },
         hide: function() {
-            if (this.node.data.mapBounded){
+            var mapBounded;
+            if (this.node.latestPlan) mapBounded = this.node.mapBounded;
+            else mapBounded = this.node.data.mapBounded;
+
+            if (mapBounded){
                 if (this.visible){
                     // stop listening because we are about to change state
                     var _this = this;
@@ -1190,6 +1234,7 @@ $(function() {
             }
             for (i = 0; i < this.objectsJson.length; i++){
                 var object = this.objectsJson[i];
+
                 var theClass = window[object.type];
                 if (!_.isUndefined(theClass) && !_.isUndefined(theClass.constructElements)) {
                     if (_.isUndefined(this.map[object.type])){
