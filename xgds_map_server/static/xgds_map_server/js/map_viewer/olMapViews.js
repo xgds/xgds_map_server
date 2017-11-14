@@ -441,7 +441,7 @@ $(function() {
                         dataType: 'json',
                         type: "GET",
                         success: $.proxy(function(data) {
-                            if (data != null && app.options.settingsLive){
+                            if (!_.isUndefined(data.A) && app.options.settingsLive){
                                 app.latestPlan = data.A;
                                 app.latestPlan.latestPlan = true;
 
