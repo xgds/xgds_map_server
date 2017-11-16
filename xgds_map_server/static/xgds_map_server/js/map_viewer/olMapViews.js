@@ -303,13 +303,23 @@ $(function() {
             
             buildLayersForMap: function() {
                 this.tileGroup = new ol.layer.Group();
+                this.tileGroup.set('name','Tile');
                 this.mapLayerGroup = new ol.layer.Group();
+                this.mapLayerGroup.set('name','MapLayer');
                 this.kmlGroup = new ol.layer.Group();
+                this.kmlGroup.set('name','Kml');
                 this.dynamicGroup = new ol.layer.Group();
+                this.dynamicGroup.set('name','Dynamic');
                 this.collectionGroup = new ol.layer.Group();
+                this.collectionGroup.set('name','Collection');
                 this.searchGroup = new ol.layer.Group();
+                this.searchGroup.set('name','Search');
                 this.mapLinkGroup = new ol.layer.Group();
+                this.mapLinkGroup.set('name','MapLink');
                 this.liveSearchGroup = new ol.layer.Group();
+                this.liveSearchGroup.set('name','LiveSearch');
+                this.mapNotesGroup = new ol.layer.Group();
+                this.mapNotesGroup.set('name','Notes');
                 
                 this.layersForMap = getInitialLayers();
                 
@@ -321,7 +331,8 @@ $(function() {
                 this.layersForMap.push(this.collectionGroup);
                 this.layersForMap.push(this.searchGroup);
                 this.layersForMap.push(this.liveSearchGroup);
-                
+                this.layersForMap.push(this.mapNotesGroup);
+
             },
             
             buildCompassControl: function() {
