@@ -18,6 +18,11 @@ app.views = app.views || {};
 
 app.views.LinksView = Marionette.View.extend({
     template: '#template-layer-links',
+	events: {
+		'click #btn-delete': function() {
+			window.location.href = app.options.deleteUrl;
+		}
+	},
     templateContext: function() {
     	if (app.mapLayer !== undefined){
     		return {layerUuid: app.mapLayer.get('uuid')};
@@ -230,9 +235,6 @@ app.views.LayerInfoTabView = Marionette.View.extend({
 		'change #mapLayerDescription': function(evt) {
 			this.model.set('description', evt.target.value);
 			app.vent.trigger('appChanged');
-		},
-		'click #btn-delete': function() {
-			window.location.href = app.options.deleteUrl;
 		}
 	},
 	//This function supports navigating away from the info tab and back to it, fires after the onShow
