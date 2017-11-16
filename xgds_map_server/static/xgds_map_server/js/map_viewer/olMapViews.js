@@ -161,6 +161,7 @@ $(function() {
                 this.listenTo(app.vent, 'tree:loaded', this.updateMapLayers);
                 this.listenTo(app.vent, 'preloadNode', function(uuid){ this.preloadNode(uuid);});
                 app.vent.trigger('layers:loaded');
+                this.drawLatestPlan();
                 
                 this.listenTo(app.vent, 'mapNode:create', function(node) {
                     this.createNode(node);
@@ -446,13 +447,16 @@ $(function() {
 		                    }, this)
                         });
 	                }
-
+                }
+            },
+            drawLatestPlan: function(){
+                if (app.options.settingsLive){
                     $.ajax({
                         url: '/xgds_planner2/plans/today/json',
                         dataType: 'json',
                         type: "GET",
                         success: $.proxy(function(data) {
-                            if (!_.isUndefined(data.A) && app.options.settingsLive){
+                            if (!_.isUndefined(data.A)){
                                 app.latestPlan = data.A;
                                 app.latestPlan.latestPlan = true;
 
@@ -464,8 +468,6 @@ $(function() {
                             }
                         }, this)
                     });
-
-
                 }
             },
             preloadNode: function(uuid){
