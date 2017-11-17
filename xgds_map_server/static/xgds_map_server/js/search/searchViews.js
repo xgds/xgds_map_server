@@ -508,7 +508,7 @@ app.views.SearchResultsView = Marionette.View.extend({
     		} else if (heading.toLowerCase().indexOf('thumbnail') > -1) {
     			columnDef['render'] = function(data, type, row){
     									if (!_.isUndefined(data) && !_.isNull(data) && data != ''){
-    										var result = '<img width="100" src="' + data + '"'; 
+    										var result = '<img width="100" src="' + data + '"';
     										result += '">';
     										return result;
     									} else {
@@ -670,7 +670,10 @@ app.views.SearchResultsView = Marionette.View.extend({
         	        var modelMap = context.lookupModelMap(context.selectedModel);
         	    	var data = _.object(modelMap.columns, dt.row(indexes[i]).data());
         	    	if (app.options.showDetailView){
-            	    	context.forceDetailView(data,modelMap);
+        	    		if (!_.isUndefined(useOWATracking) && useOWATracking) {
+                            owaTrackAction(data.type, 'searchDetail', data.pk + ':' + data.name);
+                        }
+						context.forceDetailView(data,modelMap);
         	    	} else {
         	    		if (_.isNumber(data.lat)){
         	        		highlightOnMap([data]);
