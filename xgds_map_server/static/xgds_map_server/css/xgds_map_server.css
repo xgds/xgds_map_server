@@ -186,3 +186,7 @@ i.pinDiv {
 .ol-popup-closer:after {
 	content: "✖";
 }
+
+#layers-gridstack-item-content {
+	overflow-x:scroll;
+}
