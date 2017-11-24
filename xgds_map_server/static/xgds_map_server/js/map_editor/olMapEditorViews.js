@@ -42,7 +42,7 @@ $(function() {
 				this.updateBbox();
 			}
 			return this.mapEditorView;
-		}, 
+		},
 		updateBbox: function() {
 			if (_.isUndefined(app.mapLayer)){
 				return;
@@ -59,17 +59,18 @@ $(function() {
 
 	/*
 	 * Views for MapEditor
-	 * 
+	 *
 	 */
 	app.views.MapEditorView = app.views.MapLayerView.extend({
 		initialize: function(options) {
 			app.views.MapLayerView.prototype.initialize.call(this, options); // call super
 			this.map = this.options.map;
+			this.selectedFeatures = new ol.Collection();
 
 			/* Fires when the editingTools are rendered (ie. 'Add Features') is clicked.
 			Gets the active draw type (polygon/point/line) and runs addDrawInteraction to start the interaction with the map. */
 			//TODO: Change to be its own function
-			this.listenTo(app.vent, 'editingToolsRendered', function(){
+			this.listenTo(app.vent, 'addFeatureToolsRendered', function(){
 				app.vent.trigger('initializeColorPicker');
 
 				var _this = this;
@@ -91,6 +92,20 @@ $(function() {
 					_this.addDrawInteraction(_this.typeSelect);
 				});
 			});
+			this.listenTo(app.vent, 'editFeatureToolsRendered', function(){
+				var _this = this;
+				var theEl = $('label[name=editType].active');
+				_this.editType = $(theEl[0]).attr('data');
+				$('label[name=editType]').click(function(event) {
+					if (_this.editType) {
+						_this.map.removeInteraction(_this.editType);
+					}
+					_this.editType = $(event.target).attr('data');
+
+					_this.addEditInteraction(_this.editType);
+				});
+
+			});
 			this.listenTo(app.vent, 'updateFeaturePosition', this.updateFeaturePosition);
 			this.listenTo(app.vent, 'deleteFeatureSuccess', function(killedFeature) {
 				this.olFeatures.remove(killedFeature.olFeature);
@@ -103,6 +118,12 @@ $(function() {
 			this.listenTo(app.vent, 'clearAllFeatures', function(){
 				this.olFeatures.clear();
 				this.stationsDecorators.clear();
+			});
+			this.listenTo(app.vent, 'selectFeature', function(feature){
+				this.selectedFeatures.push(feature);
+			});
+			this.listenTo(app.vent, 'unselectFeature', function(feature){
+				this.selectedFeatures.remove(feature);
 			});
 			this.listenTo(app.vent, 'selectStatusChanged', this.setSelectStatusStyle);
 			this.listenTo(app.vent, 'onLayerLoaded', function() {
@@ -344,7 +365,7 @@ $(function() {
 						featureJson: featureObj.attributes
 					});
 					break;
-			} 
+			}
 			if (!_.isUndefined(newFeatureView)){
 				featureObj.olFeature = newFeatureView.getFeature();
 				featureObj.olFeature.set('model', featureObj);
@@ -428,6 +449,37 @@ $(function() {
 			}, this);
 			this.map.addInteraction(this.featureAdder);
 		},
+		addEditInteraction: function(editType){
+			if (editType == "Vertices"){
+				this.repositioner = new ol.interaction.Modify({
+					features: this.olFeatures,
+					deleteCondition: function(event) {
+						return ol.events.condition.shiftKeyOnly(event) &&
+						ol.events.condition.singleClick(event);
+					}
+				});
+			}
+
+			else{
+				var selector = new ol.interaction.Select({
+					condition: ol.events.condition.click,
+				});
+				this.map.addInteraction(selector);
+				selector.getFeatures().on("add", function (e) {
+					this.selectedEditFeature = e.element; //the feature selected
+				});
+				this.repositioner = new ol.interaction.Translate({
+					features: this.selectedEditFeature,
+					hitTolerance: 5
+				});
+			}
+
+			this.repositioner.on('modifyend', function(evt){
+				app.util.updateJsonFeatures();
+				app.Actions.action();
+			});
+			this.map.addInteraction(this.repositioner);
+		},
 		addFeaturesMode: {
 			// in this mode, user can add features (all other features are locked)
 			enter: function() {
@@ -435,9 +487,9 @@ $(function() {
 				app.State.disableAddFeature = false;
 				if (this.featureAdder) {
 					this.map.removeInteraction(this.featureAdder);
-				} 
+				}
 				this.addDrawInteraction(this.typeSelect);
-			}, 
+			},
 			exit: function() {
 				this.map.removeInteraction(this.featureAdder);
 			}
@@ -446,7 +498,7 @@ $(function() {
 			// in this mode, user can only navigate around the map (all features are locked)
 			enter: function() {
 				app.State.popupsEnabled = true;
-			}, 
+			},
 			exit: function() {
 				app.State.popupsEnabled = false;
 			}
@@ -456,20 +508,10 @@ $(function() {
 			enter: function() {
 				//TODO when you enter a map layer editor with no features popups should be disabled by default.
 				app.State.popupsEnabled = false;
-				if (_.isUndefined(this.repositioner)) {
-					this.repositioner = new ol.interaction.Modify({
-						features: this.olFeatures,
-						deleteCondition: function(event) {
-							return ol.events.condition.shiftKeyOnly(event) &&
-							ol.events.condition.singleClick(event);
-						}
-					});
-					this.repositioner.on('modifyend', function(evt){
-						app.util.updateJsonFeatures();
-						app.Actions.action();
-					});
-				} 
-				this.map.addInteraction(this.repositioner);
+				if (this.repositioner) {
+					this.map.removeInteraction(this.repositioner);
+				}
+				this.addEditInteraction(this.editType);
 			},
 			exit: function() {
 				this.map.removeInteraction(this.repositioner);
@@ -549,7 +591,7 @@ $(function() {
 				this.model.trigger('coordsChanged');
 				app.vent.trigger('appChanged');
 			}
-		}, 
+		},
 		destroy: function() {
 			this.model.destroy({
 				data: { 'uuid': this.model.uuid },
@@ -557,7 +599,7 @@ $(function() {
 					if(!_.isUndefined(this.model.collection)) {
 						this.model.collection.remove(feature);
 					}
-				}, 
+				},
 				error: function() {
 					console.log("Error in deleting a feature");
 				}

@@ -181,8 +181,8 @@ app.views.ToolbarView = Marionette.View.extend({
 
 });
 
-app.views.EditingToolsView = Marionette.View.extend({
-	template: '#template-editing-tools',
+app.views.AddFeatureToolsView = Marionette.View.extend({
+	template: '#template-addfeature-tools',
 	initialize: function() {
 		this.listenTo(app.vent, 'initializeColorPicker', this.initializeColorPicker);
     },
@@ -211,6 +211,17 @@ app.views.EditingToolsView = Marionette.View.extend({
 			$("#color-picker").spectrum("set", app.mapLayer.attributes.defaultColor);
 		}
 	},
+	close: function() {
+        this.ensureEl();
+        this.$el.hide();
+    }
+});
+
+app.views.EditFeatureToolsView = Marionette.View.extend({
+	template: '#template-editfeature-tools',
+	initialize: function() {
+
+    },
 	close: function() {
         this.ensureEl();
         this.$el.hide();
@@ -639,15 +650,21 @@ app.views.FeatureElementView = Marionette.View.extend({
         	var checkbox = $('#id_' + app.State.featureSelected.get('uuid'));
         	if (checkbox.prop('checked')){
     			app.vent.trigger('selectStatusChanged', app.State.featureSelected, "Selected");
+    			app.vent.trigger('selectFeature', this.model.olFeature);
         	} else {
         	    app.vent.trigger('selectStatusChanged', app.State.featureSelected, "Deselected");
+        	    app.vent.trigger('unselectFeature', this.model.olFeature);
         	}
         }
+        else{
+    		app.vent.trigger('selectFeature', this.model.olFeature);
+		}
         app.vent.trigger('selectStatusChanged', this.model, "Active");
         app.State.metaExpanded = true;
         app.State.featureSelected = this.model;
         app.vent.trigger('showFeature', this.model);
 		app.vent.trigger('initializeEditColorPicker');
+
     },
     events: {
     	'click .featureRow': function() {

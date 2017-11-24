@@ -21,9 +21,12 @@
 		initialize: function() {
 			this.listenTo(app.vent, 'mapmode', function(mode) {
 				if (mode == 'addFeatures'){
-					this.showChildView('editingTools', new app.views.EditingToolsView());
-					app.vent.trigger('editingToolsRendered');
-				} else {
+					this.showChildView('editingTools', new app.views.AddFeatureToolsView());
+					app.vent.trigger('addFeatureToolsRendered');
+				} else if (mode == 'reposition') {
+					this.showChildView('editingTools', new app.views.EditFeatureToolsView());
+					app.vent.trigger('editFeatureToolsRendered');
+                } else {
 					this.showChildView('editingTools', new app.views.NavigateView());
 				}
 			});
