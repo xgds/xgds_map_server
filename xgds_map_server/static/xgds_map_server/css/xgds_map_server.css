@@ -1,3 +1,32 @@
+.ol-tooltip {
+	position: relative;
+	background: rgba(0, 0, 0, 0.5);
+	border: 1px solid white;
+	border-radius: 4px;
+	color: white;
+	padding: 4px 8px;
+	opacity: 0.7;
+	white-space: nowrap;
+}
+
+.ol-tooltip-measure {
+	opacity: 1;
+	font-weight: bold;
+}
+
+.ol-panelControl {
+    background-color: rgba(255, 255, 255, 0.4);
+    border-radius: 4px;
+    padding: 3px;
+    position: absolute;
+    top: 5px;
+    right:5px;
+}
+
+.ol-measurementSelect {
+    height: 30px !important;
+}
+
 #unsaved-notification{
 	color: red;
 	font-size: 9pt;
@@ -137,6 +166,13 @@ i.pinDiv {
 .custom-mouse-position {
 	font-size: 0.8em;
 	line-height: 0.9em;
+	float: left;
+}
+
+.custom-mouse-ruler {
+	font-size: 0.8em;
+	line-height: 0.9em;
+	float: right;
 }
 
 .ol-popup {

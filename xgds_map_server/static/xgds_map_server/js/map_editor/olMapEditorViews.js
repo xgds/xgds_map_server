@@ -97,11 +97,10 @@ $(function() {
 				var theEl = $('label[name=editType].active');
 				_this.editType = $(theEl[0]).attr('data');
 				$('label[name=editType]').click(function(event) {
-					if (_this.editType) {
-						_this.map.removeInteraction(_this.editType);
+					if (_this.repositioner) {
+						_this.map.removeInteraction(_this.repositioner);
 					}
 					_this.editType = $(event.target).attr('data');
-
 					_this.addEditInteraction(_this.editType);
 				});
 
@@ -450,7 +449,10 @@ $(function() {
 			this.map.addInteraction(this.featureAdder);
 		},
 		addEditInteraction: function(editType){
+			var _this = this;
 			if (editType == "Vertices"){
+				//TODO make an initialization block where we build a vertex repositioner and a feature repositioner.
+				//TODO When we switch modes, just add or remove them to the map interaction (if that works).
 				this.repositioner = new ol.interaction.Modify({
 					features: this.olFeatures,
 					deleteCondition: function(event) {
@@ -461,17 +463,26 @@ $(function() {
 			}
 
 			else{
-				var selector = new ol.interaction.Select({
+				//TODO make sure that the selectors get removed from the map when we exit reposition mode.
+				//TODO Ideally get rid of the point dot and see if we can highlight the selected feature (with a glow or different style)
+				this.featureSelector = new ol.interaction.Select({
 					condition: ol.events.condition.click,
 				});
-				this.map.addInteraction(selector);
-				selector.getFeatures().on("add", function (e) {
-					this.selectedEditFeature = e.element; //the feature selected
+				this.map.addInteraction(this.featureSelector);
+				//TODO build this just during init.  I'm pretty sure this selection should work on a a collection
+                this.featureSelector.getFeatures().on("add", function (e) {
+					_this.selectedEditFeature = e.element; //the feature selected
 				});
 				this.repositioner = new ol.interaction.Translate({
-					features: this.selectedEditFeature,
-					hitTolerance: 5
+					features: _this.selectedEditFeature,
+					hitTolerance: 15,
+					style: new ol.style.Style({
+						image: new ol.style.Circle({
+							opacity: 0
+						}),
+					})
 				});
+
 			}
 
 			this.repositioner.on('modifyend', function(evt){
@@ -506,7 +517,6 @@ $(function() {
 		repositionMode: {
 			// in this mode, user can edit any existing features but cannot add a new feature.
 			enter: function() {
-				//TODO when you enter a map layer editor with no features popups should be disabled by default.
 				app.State.popupsEnabled = false;
 				if (this.repositioner) {
 					this.map.removeInteraction(this.repositioner);
@@ -515,6 +525,9 @@ $(function() {
 			},
 			exit: function() {
 				this.map.removeInteraction(this.repositioner);
+				if (this.featureSelector !== undefined) {
+                    this.map.removeInteraction(this.featureSelector);
+                }
 			}
 		}
 	});

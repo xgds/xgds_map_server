@@ -37,7 +37,7 @@ initializeMousePositionControl = function() {
 }
 
 xgds_map.coordinator = {
-		
+
     printCoords: function(coord) {
         var result = transform(coord);
         return "lat: " + coord[1] + " lon: " + coord[0]; // + " x: " + result[1] + " y: " + result[0];
@@ -47,6 +47,6 @@ xgds_map.coordinator = {
     	initializeMousePositionControl();
         app.map.map.addControl(xgds_map.mousePositionControl);
     },
-    
+
 
 };

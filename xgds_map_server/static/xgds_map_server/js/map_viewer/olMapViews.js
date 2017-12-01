@@ -199,6 +199,7 @@ $(function() {
               this.updateBbox();
               this.buildStyles();
               this.setupPopups();
+              this.buildRulerControls();
               
            // bind location dropdown change to zoom
               $("select[id=id_siteFrame]").bind("change", {
@@ -241,7 +242,114 @@ $(function() {
             buildStyles: function() {
             	olStyles.buildStyles();
             },
-            
+
+            buildRulerControls: function(){
+                var _this = this;
+                var rulerSelect = document.createElement("select");
+                  rulerSelect.id = "select-ruler";
+                  rulerSelect.className = 'btn btn-primary ol-measurementSelect';
+                  rulerSelect.onchange = function(e){
+                      _this.measurementType = this.value;
+                      _this.handleMeasurement();
+                }
+                var array = ["Select Measurement Tool","Distance","Area"];
+                for (var i = 0; i < array.length; i++) {
+                    var option = document.createElement("option");
+                    option.value = array[i];
+                    option.text = array[i];
+                    rulerSelect.appendChild(option);
+                }
+
+                var panelElement = document.createElement('div');
+                panelElement.className = 'ol-unselectable ol-panelControl';
+                panelElement.appendChild(rulerSelect);
+
+                var measurementControl = new ol.control.Control({element: panelElement});
+                this.map.addControl(measurementControl);
+            },
+
+            handleMeasurement: function(){
+                var _this = this;
+                this.createRulerLayer();
+
+				if (this.measurementType === "Select Measurement Tool"){
+                    if (this.rulerTool){
+                        app.map.map.removeInteraction(this.rulerTool);
+                        app.map.map.removeOverlay(this.measureTooltip);
+                        this.rulerLayer.getSource().clear();
+                        app.State.popupsEnabled = true;
+                    }
+                }
+
+                else{
+                    if (this.rulerTool) app.map.map.removeInteraction(this.rulerTool);
+                    var drawType = (this.measurementType === 'Area' ? 'Polygon' : 'LineString');
+
+                    app.State.popupsEnabled = false;
+                    this.rulerTool = new ol.interaction.Draw({
+                        type: drawType,
+                        source: _this.rulerLayer.getSource(),
+                        style: new ol.style.Style({
+                            fill: new ol.style.Fill({
+                                color: 'rgba(255, 255, 255, 0.2)'
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: 'rgb(63, 185, 255)',
+                                lineDash: [10, 10],
+                                opacity: 1,
+                                width: 2
+                            }),
+                        })
+                    });
+
+                    this.rulerTool.on('drawstart', function(event){
+                        if (_this.rulerFeature) _this.rulerLayer.getSource().clear();
+                        _this.createMeasureTooltip();
+                        _this.rulerFeature = event.feature;
+                        _this.rulerFeature.on('change', function(event){
+                            var measurement = (drawType == "LineString" ? _this.rulerFeature.getGeometry().getLength()
+                                : _this.rulerFeature.getGeometry().getArea());
+                            var tooltipCoord = (drawType == "LineString" ? _this.rulerFeature.getGeometry().getLastCoordinate()
+                                : _this.rulerFeature.getGeometry().getInteriorPoint().getCoordinates());
+                            var measurementFormatted = measurement > 1000 ? (measurement / 1000).toFixed(2) + 'km' : measurement.toFixed(2) + 'm';
+                            var html = (drawType === 'Polygon' ? '<sup>2</sup>' : '');
+
+                            _this.measureTooltipElement.innerHTML = measurementFormatted + html;
+                            _this.measureTooltip.setPosition(tooltipCoord);
+                        });
+                    });
+
+                    this.rulerTool.on('drawend', function(event){
+                        var measurement = (drawType == "LineString" ? _this.rulerFeature.getGeometry().getLength()
+                                : _this.rulerFeature.getGeometry().getArea());
+                        var tooltipCoord = (drawType == "LineString" ? _this.rulerFeature.getGeometry().getLastCoordinate()
+                                : _this.rulerFeature.getGeometry().getInteriorPoint().getCoordinates());
+                        var measurementFormatted = measurement > 1000 ? (measurement / 1000).toFixed(2) + 'km' : measurement.toFixed(2) + 'm';
+                        var html = (drawType === 'Polygon' ? '<sup>2</sup>' : '');
+
+                        _this.measureTooltipElement.innerHTML = measurementFormatted + html;
+                        _this.measureTooltip.setPosition(tooltipCoord);
+                    });
+
+                    app.map.map.addInteraction(this.rulerTool);
+                }
+            },
+
+            createMeasureTooltip: function() {
+                var _this = this;
+                if (this.measureTooltipElement) {
+                    this.measureTooltipElement.parentNode.removeChild(this.measureTooltipElement);
+                }
+                this.measureTooltipElement = document.createElement('div');
+                this.measureTooltipElement.className = 'ol-tooltip ol-tooltip-measure';
+                this.measureTooltip = new ol.Overlay({
+                    element: _this.measureTooltipElement,
+                    offset: [0, -15],
+                    positioning: 'bottom-center'
+                });
+                app.map.map.addOverlay(this.measureTooltip);
+            },
+
             createNode: function(node){
             	if (_.isUndefined(node)){
             		return;
@@ -333,7 +441,26 @@ $(function() {
                 this.layersForMap.push(this.searchGroup);
                 this.layersForMap.push(this.liveSearchGroup);
                 this.layersForMap.push(this.mapNotesGroup);
+            },
 
+            createRulerLayer: function(){
+                if (!this.rulerLayer){
+                    this.rulerLayer = new ol.layer.Vector({
+                        source: new ol.source.Vector(),
+                        style: new ol.style.Style({
+                            fill: new ol.style.Fill({
+                                color: 'rgba(255, 255, 255, 0.2)'
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: 'rgb(63, 185, 255)',
+                                lineDash: [10, 10],
+                                opacity: 1,
+                                width: 2
+                            }),
+                        })
+                    });
+                    app.map.map.addLayer(this.rulerLayer);
+                }
             },
             
             buildCompassControl: function() {
