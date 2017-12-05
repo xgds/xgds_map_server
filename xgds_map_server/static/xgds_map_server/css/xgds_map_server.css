@@ -23,8 +23,19 @@
     right:5px;
 }
 
+.ol-infoText{
+	color: #ffff00;
+	position: absolute;
+	bottom: 5px;
+	width: 100%;
+	text-align: center;
+	font-size: 10pt;
+	display: none;
+}
+
 .ol-measurementSelect {
-    height: 30px !important;
+    height: 25px !important;
+	margin-right: 5px;
 }
 
 #unsaved-notification{
