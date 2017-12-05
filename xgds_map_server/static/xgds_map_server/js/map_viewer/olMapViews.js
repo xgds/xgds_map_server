@@ -327,24 +327,56 @@ $(function() {
                         _this.createMeasureTooltip();
                         _this.rulerFeature = event.feature;
                         _this.rulerFeature.on('change', function(event){
+                            var bearing = "";
                             var measurement = (drawType == "LineString" ? _this.rulerFeature.getGeometry().getLength()
                                 : _this.rulerFeature.getGeometry().getArea());
                             var tooltipCoord = (drawType == "LineString" ? _this.rulerFeature.getGeometry().getLastCoordinate()
                                 : _this.rulerFeature.getGeometry().getInteriorPoint().getCoordinates());
                             var measurementFormatted = measurement > 1000 ? (measurement / 1000).toFixed(2) + 'km' : measurement.toFixed(2) + 'm';
+                            if (drawType == "LineString") bearing = "<br/>" + _this.getMeasurementBearing() + "&deg";
                             var html = (drawType === 'Polygon' ? '<sup>2</sup>' : '');
 
-                            _this.measureTooltipElement.innerHTML = measurementFormatted + html;
-                            _this.measureTooltip.setPosition(tooltipCoord);
+                            _this.measureTooltipElement.innerHTML = measurementFormatted + html + bearing;
+                            if (drawType == "LineString") _this.measureTooltip.setPosition(tooltipCoord);
                         });
                     });
 
                     this.rulerTool.on('drawend', function(event){
                         $("#ol-measureInfo").hide();
+                        var bearing = "";
+                        var measurement = (drawType == "LineString" ? _this.rulerFeature.getGeometry().getLength()
+                            : _this.rulerFeature.getGeometry().getArea());
+                        var tooltipCoord = (drawType == "LineString" ? _this.rulerFeature.getGeometry().getLastCoordinate()
+                            : _this.rulerFeature.getGeometry().getInteriorPoint().getCoordinates());
+                        var measurementFormatted = measurement > 1000 ? (measurement / 1000).toFixed(2) + 'km' : measurement.toFixed(2) + 'm';
+                        if (drawType == "LineString") bearing = "<br/>" + _this.getMeasurementBearing() + "&deg";
+                        var html = (drawType === 'Polygon' ? '<sup>2</sup>' : '');
+
+                        _this.measureTooltipElement.innerHTML = measurementFormatted + html + bearing;
+                        _this.measureTooltip.setPosition(tooltipCoord);
                     });
 
                     app.map.map.addInteraction(this.rulerTool);
                 }
+            },
+
+            getMeasurementBearing: function(){
+                var bearing = "";
+                if (this.rulerFeature){
+                    var coords = this.rulerFeature.getGeometry().flatCoordinates;
+                    var start = [coords[0], coords[1]];
+                    var end = [coords[2], coords[3]];
+                    start = ol.proj.transform(start, DEFAULT_COORD_SYSTEM, LONG_LAT);
+                    end = ol.proj.transform(end, DEFAULT_COORD_SYSTEM, LONG_LAT);
+
+                    var dx = end[1] - start[1];
+                    var dy = end[0] - start[0];
+                    var bearing = Math.atan2(dy, dx);
+                    if (bearing < 0) bearing = bearing + 2 * Math.PI;
+                    bearing = (bearing * (180 / Math.PI)).toFixed(3);
+                }
+
+                return bearing;
             },
 
             createMeasureTooltip: function() {
