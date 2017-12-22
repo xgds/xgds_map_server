@@ -9,3 +9,4 @@
 /static/js/*.r*.js
 /static/css/*.r*.css
 /xgds_map_server/build
+node_modules
