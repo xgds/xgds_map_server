@@ -17,7 +17,7 @@
     "proj4": "^2.4.0",
     "resumable": "23/resumable.js",
     "pngtoy": "VWoeltjen/pngtoy",
-    "jquery-ui-contextmenu": "mar10/jquery-ui-contextmenu#v1.18.1",
+    "ui-contextmenu": "^1.18.1",
     "jquery-migrate": "^1.2.1",
     "datatables-sorting-datetime-moment" : "DataTables/Plugins",
     "spectrum": "bgrins/spectrum"
