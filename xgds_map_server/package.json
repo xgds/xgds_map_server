@@ -13,7 +13,7 @@
     "jquery-migrate": "^1.2.1",
     "jquery.fancytree": "2.25.0",
     "js-cookie": "^2.2.0",
-    "marionette": "marionettejs/backbone.marionette#v3.2.0",
+    "backbone.marionette": "^3.2.0",
     "ol3-popup": "walkermatt/ol3-popup#master",
     "openlayers": "^4.4.2",
     "pngtoy": "VWoeltjen/pngtoy",
