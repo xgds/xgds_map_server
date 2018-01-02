@@ -14,13 +14,13 @@
     "jquery.fancytree": "2.25.0",
     "js-cookie": "^2.2.0",
     "backbone.marionette": "^3.2.0",
-    "ol3-popup": "walkermatt/ol3-popup#master",
+    "ol3-popup": "walkermatt/ol3-popup#v1.0.3",
     "openlayers": "^4.4.2",
     "pngtoy": "VWoeltjen/pngtoy",
     "proj4": "^2.4.0",
-    "resumable": "23/resumable.js",
-    "spectrum": "bgrins/spectrum",
-    "sprintf.js": "alexei/sprintf.js",
+    "resumablejs": "^1.1.0",
+    "spectrum-colorpicker": "^1.8.0",
+    "sprintf-js": "^1.1.1",
     "ui-contextmenu": "^1.18.1"
   },
   "django": {
