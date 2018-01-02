@@ -23,6 +23,14 @@
     "sprintf.js": "alexei/sprintf.js",
     "ui-contextmenu": "^1.18.1"
   },
+  "django": {
+    "jquery.fancytree": {
+      "include": [
+        "dist/*.js",
+        "dist/skin-lion/*"
+      ]
+    }
+  },
   "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
