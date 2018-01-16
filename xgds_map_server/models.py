@@ -74,8 +74,24 @@ class AbstractMapNode(models.Model):
         """
         return None
 
-    def __unicode__(self):
-        return self.name
+    @property
+    def start(self):
+        """ If this is a map layer with time, return the start time """
+        return None
+
+    @property
+    def end(self):
+        """ If this is a map layer with time, return the end time """
+        return None
+
+    @property
+    def interval(self):
+        """ If this is a map layer with time, return the interval in decimal seconds """
+        return None
+
+    def getTimeUrl(self, theTime):
+        """ If this is a map layer with time, return the url to get the data for that time """
+        return None
 
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
@@ -88,7 +104,23 @@ class AbstractMapNode(models.Model):
                   }
         if self.parent:
             result['data']['parentId'] = self.parent.uuid
+        if self.start:
+            result['data']['start'] = self.start
+        if self.end:
+            result['data']['end'] = self.end
+        if self.interval:
+            result['data']['interval'] = self.interval
+        if self.getKmlUrl():
+            result['data']['kmlFile'] = self.getKmlUrl()
+
         return result
+
+    def getKmlUrl(self):
+        """ If this element has an url which returns kml, override this function to return that url. """
+        return None
+
+    def __unicode__(self):
+        return self.name
 
     class Meta:
         abstract = True
@@ -189,14 +221,17 @@ class KmlMap(AbstractMap):
                 return settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + self.kmlFile
         elif self.localFile:
             return self.localFile.url
-    
+
+    def getKmlUrl(self):
+            """ If this element has an url which returns kml, override this function to return that url. """
+            return self.getUrl()
+
     def getTreeJson(self):
         """ Get the json block that the fancy tree needs to render this node """
         if self.hasNetworkLink:
             return None
         result = super(KmlMap, self).getTreeJson()
         result["data"]["openable"] = self.openable
-        result["data"]["kmlFile"] = self.getUrl()
 #         result["data"]["transparency"] = self.transparency
         if self.localFile:
             result["data"]["localFile"] = self.localFile.url
@@ -371,6 +406,10 @@ class MapLayer(AbstractMap):
 
     def getFeatureJson(self):
         return self.jsonFeatures
+
+    def getKmlUrl(self):
+        """ If this element has an url which returns kml, override this function to return that url. """
+        return reverse('mapLayerKML', kwargs={'layerID': self.uuid})
 
 
 class MapCollection(AbstractMap):
