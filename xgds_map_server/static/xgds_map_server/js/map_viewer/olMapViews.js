@@ -243,16 +243,17 @@ $(function() {
             	olStyles.buildStyles();
             },
 
+            // Builds the measurement select box, clear button, and text that goes on top of the openlayers map.
             buildRulerControls: function(){
                 var _this = this;
                 var rulerSelect = document.createElement("select");
-                  rulerSelect.id = "select-ruler";
-                  rulerSelect.className = 'btn btn-primary ol-measurementSelect';
-                  rulerSelect.onchange = function(e){
-                      _this.measurementType = this.value;
-                      _this.handleMeasurement();
+                rulerSelect.id = "select-ruler";
+                rulerSelect.className = 'btn btn-primary ol-measurementSelect';
+                rulerSelect.onchange = function(e){
+                    _this.measurementType = this.value;
+                    _this.handleMeasurement();
                 }
-                var array = ["Select Measurement Tool","Distance","Area"];
+                var array = ["Measure","Distance","Area"];
                 for (var i = 0; i < array.length; i++) {
                     var option = document.createElement("option");
                     option.value = array[i];
@@ -260,19 +261,38 @@ $(function() {
                     rulerSelect.appendChild(option);
                 }
 
+                var clearButton = document.createElement("button");
+                clearButton.innerHTML = "Clear";
+                clearButton.id = "ol-clearBtn";
+                clearButton.className = "btn btn-primary";
+                clearButton.onclick = function(e){
+                    document.getElementById("select-ruler").selectedIndex = 0;
+                    _this.measurementType = document.getElementById("select-ruler").value;
+                    _this.handleMeasurement();
+                }
+
                 var panelElement = document.createElement('div');
                 panelElement.className = 'ol-unselectable ol-panelControl';
                 panelElement.appendChild(rulerSelect);
+                panelElement.appendChild(clearButton);
+
+                var measureInfoElement = document.createElement('div');
+                measureInfoElement.className = 'ol-unselectable ol-infoText';
+                measureInfoElement.innerHTML = "Double Click to Stop Measuring";
+                measureInfoElement.id = 'ol-measureInfo'
 
                 var measurementControl = new ol.control.Control({element: panelElement});
+                var measureInfoControl = new ol.control.Control({element: measureInfoElement});
                 this.map.addControl(measurementControl);
+                this.map.addControl(measureInfoControl);
             },
 
+            // Function to handle measurement actions by the user
             handleMeasurement: function(){
                 var _this = this;
                 this.createRulerLayer();
 
-				if (this.measurementType === "Select Measurement Tool"){
+				if (this.measurementType === "Measure"){
                     if (this.rulerTool){
                         app.map.map.removeInteraction(this.rulerTool);
                         app.map.map.removeOverlay(this.measureTooltip);
@@ -294,9 +314,8 @@ $(function() {
                                 color: 'rgba(255, 255, 255, 0.2)'
                             }),
                             stroke: new ol.style.Stroke({
-                                color: 'rgb(63, 185, 255)',
+                                color: 'rgba(63, 185, 255, 0.7)',
                                 lineDash: [10, 10],
-                                opacity: 1,
                                 width: 2
                             }),
                         })
@@ -304,35 +323,60 @@ $(function() {
 
                     this.rulerTool.on('drawstart', function(event){
                         if (_this.rulerFeature) _this.rulerLayer.getSource().clear();
+                        $("#ol-measureInfo").show();
                         _this.createMeasureTooltip();
                         _this.rulerFeature = event.feature;
                         _this.rulerFeature.on('change', function(event){
+                            var bearing = "";
                             var measurement = (drawType == "LineString" ? _this.rulerFeature.getGeometry().getLength()
                                 : _this.rulerFeature.getGeometry().getArea());
                             var tooltipCoord = (drawType == "LineString" ? _this.rulerFeature.getGeometry().getLastCoordinate()
                                 : _this.rulerFeature.getGeometry().getInteriorPoint().getCoordinates());
                             var measurementFormatted = measurement > 1000 ? (measurement / 1000).toFixed(2) + 'km' : measurement.toFixed(2) + 'm';
+                            if (drawType == "LineString") bearing = "<br/>" + _this.getMeasurementBearing() + "&deg";
                             var html = (drawType === 'Polygon' ? '<sup>2</sup>' : '');
 
-                            _this.measureTooltipElement.innerHTML = measurementFormatted + html;
-                            _this.measureTooltip.setPosition(tooltipCoord);
+                            _this.measureTooltipElement.innerHTML = measurementFormatted + html + bearing;
+                            if (drawType == "LineString") _this.measureTooltip.setPosition(tooltipCoord);
                         });
                     });
 
                     this.rulerTool.on('drawend', function(event){
+                        $("#ol-measureInfo").hide();
+                        var bearing = "";
                         var measurement = (drawType == "LineString" ? _this.rulerFeature.getGeometry().getLength()
-                                : _this.rulerFeature.getGeometry().getArea());
+                            : _this.rulerFeature.getGeometry().getArea());
                         var tooltipCoord = (drawType == "LineString" ? _this.rulerFeature.getGeometry().getLastCoordinate()
-                                : _this.rulerFeature.getGeometry().getInteriorPoint().getCoordinates());
+                            : _this.rulerFeature.getGeometry().getInteriorPoint().getCoordinates());
                         var measurementFormatted = measurement > 1000 ? (measurement / 1000).toFixed(2) + 'km' : measurement.toFixed(2) + 'm';
+                        if (drawType == "LineString") bearing = "<br/>" + _this.getMeasurementBearing() + "&deg";
                         var html = (drawType === 'Polygon' ? '<sup>2</sup>' : '');
 
-                        _this.measureTooltipElement.innerHTML = measurementFormatted + html;
+                        _this.measureTooltipElement.innerHTML = measurementFormatted + html + bearing;
                         _this.measureTooltip.setPosition(tooltipCoord);
                     });
 
                     app.map.map.addInteraction(this.rulerTool);
                 }
+            },
+
+            getMeasurementBearing: function(){
+                var bearing = "";
+                if (this.rulerFeature){
+                    var coords = this.rulerFeature.getGeometry().flatCoordinates;
+                    var start = [coords[0], coords[1]];
+                    var end = [coords[2], coords[3]];
+                    start = ol.proj.transform(start, DEFAULT_COORD_SYSTEM, LONG_LAT);
+                    end = ol.proj.transform(end, DEFAULT_COORD_SYSTEM, LONG_LAT);
+
+                    var dx = end[1] - start[1];
+                    var dy = end[0] - start[0];
+                    var bearing = Math.atan2(dy, dx);
+                    if (bearing < 0) bearing = bearing + 2 * Math.PI;
+                    bearing = (bearing * (180 / Math.PI)).toFixed(3);
+                }
+
+                return bearing;
             },
 
             createMeasureTooltip: function() {
@@ -452,9 +496,8 @@ $(function() {
                                 color: 'rgba(255, 255, 255, 0.2)'
                             }),
                             stroke: new ol.style.Stroke({
-                                color: 'rgb(63, 185, 255)',
+                                color: 'rgba(63, 185, 255, 0.7)',
                                 lineDash: [10, 10],
-                                opacity: 1,
                                 width: 2
                             }),
                         })

@@ -251,6 +251,8 @@ class AbstractMapTile(AbstractMap):
     maxx = models.FloatField(null=True)
     maxy = models.FloatField(null=True)
     resolutions = models.CharField(null=True, max_length=256)
+
+    projectionName = models.CharField(null=True, max_length=32)  # If this is not a normal WGS84 projection ... handle it in your front end with this name
     
     def initResolutions(self):
         if not self.resolutions:
@@ -323,6 +325,9 @@ class AbstractMapTile(AbstractMap):
             result["data"]["maxy"] = self.maxy
         if self.resolutions:
             result["data"]["resolutions"] = self.intResolutions
+
+        if self.projectionName:
+            result["projectionName"] = self.projectionName
         return result
     
     def rename(self, newName):
