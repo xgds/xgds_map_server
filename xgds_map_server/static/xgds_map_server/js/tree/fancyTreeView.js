@@ -67,6 +67,8 @@ app.views.FancyTreeView = Marionette.View.extend({
 	            return image + "tif.png";
 	        case "MapDataTile":
 	            return image + "dataTif.png";
+            case "PlanLink":
+                return image + "plan.png";
 	    }
     	return null
     },

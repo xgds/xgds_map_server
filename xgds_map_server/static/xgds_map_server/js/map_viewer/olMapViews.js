@@ -422,7 +422,7 @@ $(function() {
                         app.nodeMap[node.key] = this.createCollectionView(node);
                     } else if (node.data.type == "MapSearch"){
                         app.nodeMap[node.key] = this.createSearchView(node);
-                    } else if (node.data.type == "MapLink"){
+                    } else if (node.data.type == "MapLink" || node.data.type == "PlanLink"){
                         app.nodeMap[node.key] = this.createMapLinkView(node);
                     } else {
                     	this.createDynamicView(node);
