@@ -2144,8 +2144,10 @@ $(function() {
         onRender: function() {
             var childLayer = this.getLayer();
             if (!_.isUndefined(childLayer)){
-                if (this.featureJson.type === "Station" && this.viewPage == true) {
-                    this.layerGroup.getLayers().push(this.getStationDecoratorLayer());
+                if (this.featureJson !== undefined) {
+                    if (this.featureJson.type === "Station" && this.viewPage == true) {
+                        this.layerGroup.getLayers().push(this.getStationDecoratorLayer());
+                    }
                 }
 
                 this.layerGroup.getLayers().push(childLayer);
