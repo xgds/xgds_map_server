@@ -21,9 +21,14 @@ import shutil
 import gdal
 import untangle
 import traceback
+import copy
+
+from dateutil.parser import parse as dateparser
+
 
 from django.core.urlresolvers import reverse
 from django.core.validators import MaxValueValidator
+from django.shortcuts import redirect
 from django.db import models
 from django.contrib.gis.db import models
 from django.conf import settings
@@ -74,18 +79,15 @@ class AbstractMapNode(models.Model):
         """
         return None
 
-    @property
-    def start(self):
+    def getStart(self):
         """ If this is a map layer with time, return the start time """
         return None
 
-    @property
-    def end(self):
+    def getEnd(self):
         """ If this is a map layer with time, return the end time """
         return None
 
-    @property
-    def interval(self):
+    def getInterval(self):
         """ If this is a map layer with time, return the interval in decimal seconds """
         return None
 
@@ -104,12 +106,12 @@ class AbstractMapNode(models.Model):
                   }
         if self.parent:
             result['data']['parentId'] = self.parent.uuid
-        if self.start:
-            result['data']['start'] = self.start
-        if self.end:
-            result['data']['end'] = self.end
-        if self.interval:
-            result['data']['interval'] = self.interval
+        if self.getStart():
+            result['data']['start'] = self.getStart()
+        if self.getEnd():
+            result['data']['end'] = self.getEnd()
+        if self.getInterval():
+            result['data']['interval'] = self.getInterval()
         if self.getKmlUrl():
             result['data']['kmlFile'] = self.getKmlUrl()
 
@@ -344,6 +346,76 @@ class MapTile(AbstractMapTile):
     def getEditHref(self):
         return reverse('mapEditTile', kwargs={'tileID': self.uuid})
 
+
+class GroundOverlayTime(AbstractMap):
+    """
+        A reference to a ground overlay (image on a rectangle), with time data
+        """
+    sourcePath = models.CharField(max_length=256) # path to the root of the image files
+    urlPattern = models.CharField(max_length=256, null=True, blank=True) # file naming pattern that takes the time and converts it to the file we want
+
+    # minx = models.FloatField(null=True)
+    # miny = models.FloatField(null=True)
+    # maxx = models.FloatField(null=True)
+    # maxy = models.FloatField(null=True)
+
+    start = models.DateTimeField(null=True, blank=True, db_index=True)
+    end = models.DateTimeField(null=True, blank=True, db_index=True)
+    interval = models.FloatField(null=True, blank=True)
+
+    def getStart(self):
+        """ If this is a map layer with time, return the start time """
+        return self.start
+
+    def getEnd(self):
+        """ If this is a map layer with time, return the end time """
+        return self.end
+
+    def getInterval(self):
+        """ If this is a map layer with time, return the interval in decimal seconds """
+        return self.interval
+
+    def getTreeJson(self):
+        """ Get the json block that the fancy tree needs to render this node """
+        result = super(GroundOverlayTime, self).getTreeJson()
+        result['data']['minLat'] = self.minLat
+        result['data']['minLon'] = self.minLon
+        result['data']['maxLat'] = self.maxLat
+        result['data']['maxLon'] = self.maxLon
+        result['data']['interval'] = self.interval
+
+        return result
+
+    def updateTimeFromInterval(self, inputTime):
+        t = copy.copy(inputTime)
+        if self.interval > 3600: # more than one hour
+            hourInterval = self.interval / 3600
+            mod = int(t.hour % hourInterval)
+            t = t.replace(hour=t.hour - mod, minute=0, second=0, microsecond=0)
+        elif self.interval > 60: # more than one minute
+            minuteInterval = self.interval / 60
+            mod = int(t.minute % minuteInterval)
+            t = t.replace(minute=t.minute - mod)
+        elif self.interval > 1: # more than one second
+            mod = int(t.second % self.interval)
+            t = t.replace(second=t.second - mod)
+        return t
+
+    def getImagePath(self, theTime, rest=False):
+        """ Default to the start time if no time is given """
+        if not theTime:
+            cleanTime = self.start
+        else:
+            cleanTime = self.updateTimeFromInterval(theTime)
+        specificFile = cleanTime.strftime(self.urlPattern)
+        if not rest:
+            prefix = self.sourcePath
+        else:
+            prefix = insertIntoPath(self.sourcePath)
+        result = os.path.join(prefix, specificFile)
+        return redirect(result)
+
+
 class MapDataTile(AbstractMapTile):
     """
     A MapTile layer that has meaningful data, an optional legend, a file containing the data and javascript to render the data value below the map.
@@ -500,7 +572,7 @@ class MapLink(AbstractMap):
 
 
 """ IMPORTANT These have to be defined after the models they refer to are defined."""
-MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile, MapDataTile, MapCollection, MapSearch, MapLink])
+MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile, MapDataTile, MapCollection, MapSearch, MapLink, GroundOverlayTime])
 
 # this manager does not include groups
-MAP_MANAGER = ModelCollectionManager(AbstractMap, [MapLayer, KmlMap, MapTile, MapDataTile, MapCollection, MapSearch, MapLink])
+MAP_MANAGER = ModelCollectionManager(AbstractMap, [MapLayer, KmlMap, MapTile, MapDataTile, MapCollection, MapSearch, MapLink, GroundOverlayTime])

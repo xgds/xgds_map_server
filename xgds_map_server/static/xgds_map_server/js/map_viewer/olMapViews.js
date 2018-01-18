@@ -366,8 +366,8 @@ $(function() {
                     var coords = this.rulerFeature.getGeometry().flatCoordinates;
                     var start = [coords[0], coords[1]];
                     var end = [coords[2], coords[3]];
-                    start = ol.proj.transform(start, DEFAULT_COORD_SYSTEM, LONG_LAT);
-                    end = ol.proj.transform(end, DEFAULT_COORD_SYSTEM, LONG_LAT);
+                    start = inverseTransform(start);
+                    end = inverseTransform(end);
 
                     var dx = end[1] - start[1];
                     var dy = end[0] - start[0];
@@ -424,6 +424,8 @@ $(function() {
                         app.nodeMap[node.key] = this.createSearchView(node);
                     } else if (node.data.type == "MapLink" || node.data.type == "PlanLink"){
                         app.nodeMap[node.key] = this.createMapLinkView(node);
+                    } else if (node.data.type == "GroundOverlayTime"){
+                        app.nodeMap[node.key] = this.createOverlayTimeView(node);
                     } else {
                     	this.createDynamicView(node);
                     }
@@ -457,6 +459,8 @@ $(function() {
             buildLayersForMap: function() {
                 this.tileGroup = new ol.layer.Group();
                 this.tileGroup.set('name','Tile');
+                this.overlayTimeGroup = new ol.layer.Group();
+                this.overlayTimeGroup.set('name','OverlayTime');
                 this.mapLayerGroup = new ol.layer.Group();
                 this.mapLayerGroup.set('name','MapLayer');
                 this.kmlGroup = new ol.layer.Group();
@@ -473,10 +477,11 @@ $(function() {
                 this.liveSearchGroup.set('name','LiveSearch');
                 this.mapNotesGroup = new ol.layer.Group();
                 this.mapNotesGroup.set('name','Notes');
-                
+
                 this.layersForMap = getInitialLayers();
                 
                 this.layersForMap.push(this.tileGroup);
+                this.layersForMap.push(this.overlayTimeGroup);
                 this.layersForMap.push(this.mapLayerGroup);
                 this.layersForMap.push(this.kmlGroup);
                 this.layersForMap.push(this.dynamicGroup);
@@ -733,6 +738,14 @@ $(function() {
                 node.mapView = dataTileView;
                 return dataTileView;
               },
+            createOverlayTimeView: function(node) {
+              var otView = new app.views.OverlayTimeView({
+                  node: node,
+                  group: this.overlayTimeGroup
+              });
+              node.mapView = otView;
+              return otView;
+            },
             createCollectionView: function(node){
                 var collectionView = new app.views.MapCollectionView({
                     node: node,
@@ -1139,6 +1152,100 @@ $(function() {
             }
         }
     });
+
+    app.views.OverlayTimeView = app.views.TreeMapElement.extend({
+        initialize: function(options) {
+            if (options !== undefined) {
+                this.setupOpacity(options);
+                this.name = options.node.title;
+                this.start = options.node.data.start;
+                this.end = options.node.data.end;
+                this.minLat = options.node.data.minLat;
+                this.maxLat = options.node.data.maxLat;
+                this.minLon = options.node.data.minLon;
+                this.maxLon = options.node.data.maxLon;
+                this.interval = options.node.data.interval;
+                app.views.TreeMapElement.prototype.initialize.call(this, options);
+            }
+        },
+        constructMapElements: function() {
+             if (_.isUndefined(this.mapElement)) {
+                 var lowerLeft = [this.minLon, this.minLat];
+                 var upperRight = [this.maxLon, this.maxLat];
+                 //var transFxn = ol.proj.getTransform(LONG_LAT, DEFAULT_COORD_SYSTEM);
+                 var lowerLeftTrans = transform(lowerLeft);
+                 var upperRightTrans = transform(upperRight);
+                 this.extensTrans = [lowerLeftTrans[0], lowerLeftTrans[1], upperRightTrans[0], upperRightTrans[1]];
+                 console.log(this.extensTrans);
+                 console.log('sun one');
+                 console.log([22012.303126928364, -101829.45933490095, 65462.27013667717, -58379.53443470894]);
+                 this.imageSource = new ol.source.ImageStatic({
+                         url: '/xgds_map_server/overlayTime/' + this.node.key, //TODO handle time
+                         //size: [this.featureJson.width, this.featureJson.height],
+                         imageExtent: this.extensTrans
+                     });
+                 this.imageLayer = new ol.layer.Image({
+                     name: this.name,
+                     source: this.imageSource,
+                     style: this.getStyle(),
+                     opacity: this.opacity
+                 });
+                 this.imageLayer.setZIndex(50);  // Be sure we're sitting on top of any base layers. FIXME: this shoudl be in DB
+                 this.mapElement = this.imageLayer;
+                 playback.addListener(this);  // listen to the playback controller
+             }
+        },
+        updateImageSource: function(){
+            delete this.imageSource;
+            var theUrl = '/xgds_map_server/overlayTime/' + this.node.key + '/';
+            theUrl += this.lastUpdate.format('YYYY-MM-DDTHH:mm:ss');
+            this.imageSource = new ol.source.ImageStatic({
+                         url: theUrl,
+                         //size: [this.featureJson.width, this.featureJson.height],
+                         imageExtent: this.extensTrans
+                     });
+            this.imageLayer.setSource(this.imageSource);
+            this.imageLayer.getSource().changed();
+        },
+        getLayer: function() {
+            return this.imageLayer;
+        },
+        getStyle: function() {
+            return olStyles.styles['groundOverlay'];
+        },
+        doSetTime: function(currentTime){
+			this.lastUpdate = moment(currentTime);
+			//TODO somehow check the interval ...
+            this.updateImageSource();
+		},
+        update: function(currentTime){
+            // playback function to update the layer
+            this.doSetTime(currentTime);
+
+        },
+        start: function(currentTime){
+            // playback function to start playback
+            this.doSetTime(currentTime);
+        },
+        show: function() {
+            if (!this.visible){
+            	if (this.mapElement) {
+            		playback.addListener(this);
+            	}
+            }
+            app.views.TreeMapElement.prototype.show.call(this);
+        },
+        hide: function() {
+            if (this.visible){
+            	if (this.mapElement) {
+            		playback.removeListener(this);
+            	}
+            }
+            app.views.TreeMapElement.prototype.hide.call(this);
+        }
+
+
+    });
     
     app.views.DataTileView = app.views.TileView.extend({
     	/// A DataTile view has an optional legend and shows the value from the data file below the map (when turned on).
@@ -1417,7 +1524,6 @@ $(function() {
             }
             for (i = 0; i < this.objectsJson.length; i++){
                 var object = this.objectsJson[i];
-
                 var theClass = window[object.type];
                 if (!_.isUndefined(theClass) && !_.isUndefined(theClass.constructElements)) {
                     if (_.isUndefined(this.map[object.type])){
@@ -1691,7 +1797,6 @@ $(function() {
                 this.layerGroup = new ol.layer.Group({name:this.mapLayerJson.name,
                 								      opacity: this.opacity});
             };
-
             var _this = this;
             $.each(this.mapLayerJson.features, function( index, value ) {
                     _this.createFeature(value);
@@ -1935,7 +2040,6 @@ $(function() {
                 this.textStyle = new ol.style.Style({
                     text: theText
                 });
-
                 return this.textStyle;
             }
             return null;
@@ -2214,6 +2318,6 @@ $(function() {
             }
         }
     });
-    
+
     
 });

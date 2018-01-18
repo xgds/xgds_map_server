@@ -41,5 +41,8 @@ urlpatterns = [url(r'^treejson/', views.getFancyTreeJSON, {}, 'mapTreeJSON'),
                url(r'^prevJson/(?P<mapName>\w+)/(?P<currentPK>[\d]+)$', views.getPrevNextObject, {'which':'previous'}, 'xgds_map_server_prevJson'),
                url(r'^nextJson/(?P<mapName>\w+)/(?P<currentPK>[\d]+)$', views.getPrevNextObject, {'which':'next'}, 'xgds_map_server_nextJson'),
                url(r'^feed/(?P<feedname>.*)', views.getMapFeed,{},'xgds_map_server_feed'),
-               
+
+               url(r'^overlayTime/(?P<overlayId>[\w-]+)/(?P<timeString>([\d]+-*)+T([\d]+:*)+)$', views.getOverlayTime, {}, 'overlayTime'),
+               url(r'^overlayTime/(?P<overlayId>[\w-]+)$', views.getOverlayTime, {}, 'overlayNoTime'),
+
                ]

@@ -27,6 +27,7 @@ from subprocess import Popen, PIPE
 import threading
 import urllib
 import zipfile
+from dateutil.parser import parse as dateparser
 
 from django.conf import settings
 from django.contrib.gis.geos import LineString as geosLineString
@@ -59,7 +60,7 @@ from xgds_data.forms import SearchForm, SpecializedForm
 from xgds_data.models import RequestLog, ResponseLog
 from xgds_data.views import searchHandoff, resultsIdentity
 from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapLayerFromSelectedForm, MapTileForm, MapDataTileForm, MapSearchForm, MapCollectionForm, EditMapTileForm, EditMapDataTileForm
-from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapDataTile, MapSearch, MapCollection, MapLink, MAP_NODE_MANAGER, MAP_MANAGER
+from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapDataTile, MapSearch, MapCollection, MapLink, MAP_NODE_MANAGER, MAP_MANAGER, GroundOverlayTime
 from xgds_map_server.kmlLayerExporter import exportMapLayer
 from geocamUtil.KmlUtil import wrapKmlForDownload
 from xgds_data.introspection import modelName
@@ -1859,5 +1860,12 @@ class MapOrderListJson(OrderListJson):
         return super(MapOrderListJson, self).dispatch(request, *args, **kwargs)
 
 
-
+def getOverlayTime(request, overlayId, timeString=None):
+    got = GroundOverlayTime.objects.get(uuid=overlayId)
+    if timeString:
+        theTime = dateparser(timeString)
+    else:
+        theTime = None
+    isRest = '/rest/' in str(request.path)
+    return got.getImagePath(theTime, isRest)
 
