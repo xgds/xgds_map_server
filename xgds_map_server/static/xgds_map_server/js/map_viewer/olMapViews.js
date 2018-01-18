@@ -1157,14 +1157,16 @@ $(function() {
         initialize: function(options) {
             if (options !== undefined) {
                 this.setupOpacity(options);
+                this.playing = false;
                 this.name = options.node.title;
-                this.start = options.node.data.start;
-                this.end = options.node.data.end;
+                this.startTime = moment(options.node.data.start);
+                this.endTime = moment(options.node.data.end);
                 this.minLat = options.node.data.minLat;
                 this.maxLat = options.node.data.maxLat;
                 this.minLon = options.node.data.minLon;
                 this.maxLon = options.node.data.maxLon;
                 this.interval = options.node.data.interval;
+                this.lastImageTime = undefined;
                 app.views.TreeMapElement.prototype.initialize.call(this, options);
             }
         },
@@ -1172,16 +1174,38 @@ $(function() {
              if (_.isUndefined(this.mapElement)) {
                  var lowerLeft = [this.minLon, this.minLat];
                  var upperRight = [this.maxLon, this.maxLat];
-                 //var transFxn = ol.proj.getTransform(LONG_LAT, DEFAULT_COORD_SYSTEM);
                  var lowerLeftTrans = transform(lowerLeft);
                  var upperRightTrans = transform(upperRight);
                  this.extensTrans = [lowerLeftTrans[0], lowerLeftTrans[1], upperRightTrans[0], upperRightTrans[1]];
-                 console.log(this.extensTrans);
-                 console.log('sun one');
-                 console.log([22012.303126928364, -101829.45933490095, 65462.27013667717, -58379.53443470894]);
+
+                 // store the last good time
+                 var context = this;
+                 var theTimeUrl = '/xgds_map_server/overlayTime/' + this.node.key;
+                 var formattedTime = undefined;
+                 try {
+                     var playbackTime = playback.getCurrentTime();
+                     if (!_.isUndefined(playbackTime)) {
+                         formattedTime = '/' + playbackTime.format('YYYY-MM-DDTHH:mm:ss');
+                         theTimeUrl += formattedTime;
+                     }
+                 } catch (err) {
+                     // playback may not be defined
+                 }
+                 $.ajax({
+                     url: theTimeUrl,
+                    success: function(data)
+                    {
+                        context.lastImageTime = moment(data.time);
+                    },
+                    error: function(data)
+                    {
+                        context.lastImageTime = undefined;
+                    }
+                });
+
+                 // load the image
                  this.imageSource = new ol.source.ImageStatic({
-                         url: '/xgds_map_server/overlayTime/' + this.node.key, //TODO handle time
-                         //size: [this.featureJson.width, this.featureJson.height],
+                         url: '/xgds_map_server/overlayTimeImage/' + this.node.key + formattedTime,
                          imageExtent: this.extensTrans
                      });
                  this.imageLayer = new ol.layer.Image({
@@ -1192,20 +1216,48 @@ $(function() {
                  });
                  this.imageLayer.setZIndex(50);  // Be sure we're sitting on top of any base layers. FIXME: this shoudl be in DB
                  this.mapElement = this.imageLayer;
-                 playback.addListener(this);  // listen to the playback controller
+                 try {
+                     playback.addListener(context);  // listen to the playback controller
+                 } catch (err) {
+                     // playback may not be included.
+                 }
              }
         },
         updateImageSource: function(){
-            delete this.imageSource;
             var theUrl = '/xgds_map_server/overlayTime/' + this.node.key + '/';
-            theUrl += this.lastUpdate.format('YYYY-MM-DDTHH:mm:ss');
-            this.imageSource = new ol.source.ImageStatic({
-                         url: theUrl,
-                         //size: [this.featureJson.width, this.featureJson.height],
-                         imageExtent: this.extensTrans
-                     });
-            this.imageLayer.setSource(this.imageSource);
-            this.imageLayer.getSource().changed();
+            var timeFormatted =  this.nextUpdate.format('YYYY-MM-DDTHH:mm:ss');
+            var theUrl = theUrl + timeFormatted;
+            var context = this;
+            // compare the next good time with the last good time
+             $.ajax({
+                 url: theUrl,
+                success: function(data)
+                {
+                    var nextImageTime = moment(data.time);
+                    var isSame = false;
+                    if (context.lastImageTime !== undefined ){
+                        isSame = nextImageTime.isSame(context.lastImageTime);
+                    }
+                    if (!isSame){
+                        context.lastUpdate = context.nextUpdate;
+                        context.lastImageTime = nextImageTime;
+                        delete context.imageSource;
+                        var imageUrl = '/xgds_map_server/overlayTimeImage/' + context.node.key + '/' + timeFormatted;
+                        context.imageSource = new ol.source.ImageStatic({
+                                     url: imageUrl,
+                                     imageExtent: context.extensTrans
+                                 });
+                        context.imageLayer.setSource(context.imageSource);
+                        context.imageLayer.getSource().changed();
+                    }
+                },
+                error: function(data)
+                {
+                    context.lastImageTime = undefined;
+                    delete context.imageSource;
+                }
+            });
+
         },
         getLayer: function() {
             return this.imageLayer;
@@ -1214,32 +1266,59 @@ $(function() {
             return olStyles.styles['groundOverlay'];
         },
         doSetTime: function(currentTime){
-			this.lastUpdate = moment(currentTime);
-			//TODO somehow check the interval ...
-            this.updateImageSource();
+			this.nextUpdate = moment(currentTime);
+			var doUpdate = true;
+			if (this.nextUpdate.isBetween(this.startTime, this.endTime)) {
+                if (this.playing && this.lastImageTime !== undefined) {
+                    var theDiff = this.nextUpdate.diff(this.lastImageTime, 'seconds');
+                    if (theDiff < this.interval) {
+                        doUpdate = false;
+                    }
+                }
+                if (doUpdate) {
+                    this.updateImageSource();
+                }
+            }
 		},
         update: function(currentTime){
             // playback function to update the layer
             this.doSetTime(currentTime);
-
         },
         start: function(currentTime){
             // playback function to start playback
+            this.playing = true;
             this.doSetTime(currentTime);
         },
+        pause: function(currentTime){
+            // playback function to pause playback
+            this.playing = false;
+            if (!this.hiding) {
+                this.doSetTime(currentTime);
+            }
+        },
         show: function() {
-            if (!this.visible){
-            	if (this.mapElement) {
-            		playback.addListener(this);
-            	}
+            try {
+                if (!this.visible) {
+                    if (this.mapElement) {
+                        playback.addListener(this);
+                    }
+                }
+            } catch (err) {
+                // playback may not be included
             }
             app.views.TreeMapElement.prototype.show.call(this);
         },
         hide: function() {
-            if (this.visible){
-            	if (this.mapElement) {
-            		playback.removeListener(this);
-            	}
+            try {
+                if (this.visible){
+                    if (this.mapElement) {
+                        this.hiding = true;
+                        playback.removeListener(this);
+                        this.hiding = false;
+                    }
+                }
+            } catch (err) {
+                // playback may not be included
             }
             app.views.TreeMapElement.prototype.hide.call(this);
         }

@@ -42,7 +42,7 @@ from django.forms.formsets import formset_factory
 from django.http import HttpResponse, Http404, JsonResponse
 from django.http import HttpResponseRedirect
 from django.http import HttpResponseServerError, HttpResponseNotAllowed
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.template import RequestContext
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
@@ -1860,12 +1860,29 @@ class MapOrderListJson(OrderListJson):
         return super(MapOrderListJson, self).dispatch(request, *args, **kwargs)
 
 
-def getOverlayTime(request, overlayId, timeString=None):
+def prepOverlayTimeRequest(overlayId, timeString):
     got = GroundOverlayTime.objects.get(uuid=overlayId)
     if timeString:
-        theTime = dateparser(timeString)
+        theTime = dateparser(timeString).replace(tzinfo=pytz.UTC)
     else:
         theTime = None
-    isRest = '/rest/' in str(request.path)
-    return got.getImagePath(theTime, isRest)
+    return (got, theTime)
 
+
+def getOverlayTimeImage(request, overlayId, timeString=None):
+    got, theTime = prepOverlayTimeRequest(overlayId, timeString)
+    isRest = '/rest/' in str(request.path)
+    result = got.getImagePath(theTime, isRest)
+    if result:
+        return redirect(result)
+    else:
+        return JsonResponse({'time': None}, status=404);
+
+
+def getOverlayTime(request, overlayId, timeString=None):
+    got, theTime = prepOverlayTimeRequest(overlayId, timeString)
+    result = got.getTimeForImage(theTime)
+    if result:
+        return JsonResponse({'time': result}, encoder=DatetimeJsonEncoder, safe=False);
+    else:
+        return JsonResponse({'time': None}, status=404);

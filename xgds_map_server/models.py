@@ -28,7 +28,6 @@ from dateutil.parser import parse as dateparser
 
 from django.core.urlresolvers import reverse
 from django.core.validators import MaxValueValidator
-from django.shortcuts import redirect
 from django.db import models
 from django.contrib.gis.db import models
 from django.conf import settings
@@ -352,12 +351,7 @@ class GroundOverlayTime(AbstractMap):
         A reference to a ground overlay (image on a rectangle), with time data
         """
     sourcePath = models.CharField(max_length=256) # path to the root of the image files
-    urlPattern = models.CharField(max_length=256, null=True, blank=True) # file naming pattern that takes the time and converts it to the file we want
-
-    # minx = models.FloatField(null=True)
-    # miny = models.FloatField(null=True)
-    # maxx = models.FloatField(null=True)
-    # maxy = models.FloatField(null=True)
+    urlPattern = models.CharField(max_length=256, null=True, blank=True) # file naming pattern that takes the time and converts it to the file we want, use in strftime
 
     start = models.DateTimeField(null=True, blank=True, db_index=True)
     end = models.DateTimeField(null=True, blank=True, db_index=True)
@@ -382,11 +376,12 @@ class GroundOverlayTime(AbstractMap):
         result['data']['minLon'] = self.minLon
         result['data']['maxLat'] = self.maxLat
         result['data']['maxLon'] = self.maxLon
-        result['data']['interval'] = self.interval
-
         return result
 
     def updateTimeFromInterval(self, inputTime):
+        """ Right now we support even numbers of hours, minutes or seconds as intervals
+        We do not support fractional numbers, ie 1.5 hours or 2.5 minutes etc.
+        """
         t = copy.copy(inputTime)
         if self.interval > 3600: # more than one hour
             hourInterval = self.interval / 3600
@@ -401,19 +396,30 @@ class GroundOverlayTime(AbstractMap):
             t = t.replace(second=t.second - mod)
         return t
 
-    def getImagePath(self, theTime, rest=False):
+    def getTimeForImage(self, theTime):
         """ Default to the start time if no time is given """
         if not theTime:
             cleanTime = self.start
         else:
-            cleanTime = self.updateTimeFromInterval(theTime)
+            # check the bounds
+            valid = self.start <= theTime <= self.end  #heretamar
+            if not valid:
+                cleanTime = None
+            else:
+                cleanTime = self.updateTimeFromInterval(theTime)
+        return cleanTime
+
+    def getImagePath(self, theTime, rest=False):
+        cleanTime = self.getTimeForImage(theTime)
+        if not cleanTime:
+            return None
         specificFile = cleanTime.strftime(self.urlPattern)
         if not rest:
             prefix = self.sourcePath
         else:
             prefix = insertIntoPath(self.sourcePath)
         result = os.path.join(prefix, specificFile)
-        return redirect(result)
+        return result
 
 
 class MapDataTile(AbstractMapTile):
