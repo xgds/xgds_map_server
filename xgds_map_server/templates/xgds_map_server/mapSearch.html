@@ -74,6 +74,7 @@
 	 app.vent.on('onMapSetup', function() {
         	xgds_gridstack.initializeGridstack();
     		xgds_search.hookAdvancedSearchButton();
+{#            xgds_search.hookMasterCheckbox();#}
         });
         
         	var searchDiv_initialized = false;
@@ -103,17 +104,35 @@
 {% endblock preSearchDiv %}
 
 {% block searchDiv %}
-<div id="search-gridstack-item" class="grid-stack-item" 
-		data-gs-x="0" data-gs-y="0"
-        data-gs-width="3" data-gs-height="2" style="display: none;">
-        <div class="grid-stack-item-content" id="search-gridstack-item-content" >
-        	<ul class="nav justify-content-end ">
-	        	<i class="fa fa-lock pinDiv gray-light mr-1"></i>
-	    		<i class="fa fa-window-close gray-light fa-lg"></i>
-	    	</ul>
-			<div id="searchDiv" style="display:none;" class="mt-negative-1rem"></div>
-		</div>
-</div>
+    <div id="advancedSearchModal" class="modal hide fade">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Advanced Search</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <div id="searchDiv" style="display:none;" class="mt-negative-1rem"></div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+              </div>
+            </div>
+        </div>
+    </div>
+{#<div id="search-gridstack-item" class="grid-stack-item"#}
+{#		data-gs-x="0" data-gs-y="0"#}
+{#        data-gs-width="3" data-gs-height="2" style="display: none;">#}
+{#        <div class="grid-stack-item-content" id="search-gridstack-item-content" >#}
+{#        	<ul class="nav justify-content-end ">#}
+{#	        	<i class="fa fa-lock pinDiv gray-light mr-1"></i>#}
+{#	    		<i class="fa fa-window-close gray-light fa-lg"></i>#}
+{#	    	</ul>#}
+{#			<div id="searchDiv" style="display:none;" class="mt-negative-1rem"></div>#}
+{#		</div>#}
+{#</div>#}
 {% endblock searchDiv %}
 
 {% block searchResultsDiv %}

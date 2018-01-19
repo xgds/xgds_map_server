@@ -1,3 +1,30 @@
+#exportCSVForm{
+	display: inline;
+}
+
+#exportKMLForm{
+	display: inline;
+}
+
+.export-kml-btn{
+	float: right;
+	margin-right: 3px;
+	margin-bottom: 2px;
+}
+
+.export-csv-btn{
+	float: right;
+	margin-right: 50px;
+	margin-bottom: 2px;
+}
+
+.export-err{
+	color: red;
+	float: right;
+	margin-right: 50px;
+	display: none;
+}
+
 .ol-tooltip {
 	position: relative;
 	background: rgba(0, 0, 0, 0.5);

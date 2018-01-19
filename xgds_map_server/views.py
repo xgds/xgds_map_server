@@ -27,6 +27,7 @@ from subprocess import Popen, PIPE
 import threading
 import urllib
 import zipfile
+import csv
 from dateutil.parser import parse as dateparser
 
 from django.conf import settings
@@ -43,6 +44,8 @@ from django.http import HttpResponse, Http404, JsonResponse
 from django.http import HttpResponseRedirect
 from django.http import HttpResponseServerError, HttpResponseNotAllowed
 from django.shortcuts import render, redirect
+from django.http import StreamingHttpResponse
+from django.shortcuts import render
 from django.template import RequestContext
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
@@ -1549,7 +1552,6 @@ def getMappedObjectsJson(request, object_name, filter=None, range=0, isLive=Fals
         isLive = int(isLive)
         if filter:
             filterDict = buildFilterDict(filter)
-        
         range = int(range)
         if not force and (isLive or range):
             if range==0:
@@ -1841,9 +1843,6 @@ def copyFeatures(request):
     features = json.loads(request.POST.get('features'))
     request.session['copiedFeatures'] = features
     return HttpResponse('ok')
-    # return HttpResponse(json.dumps(features),
-    #                        content_type='application/json')
-
 
 class MapOrderListJson(OrderListJson):
     
@@ -1859,7 +1858,6 @@ class MapOrderListJson(OrderListJson):
                 self.order_columns = self.columns
         return super(MapOrderListJson, self).dispatch(request, *args, **kwargs)
 
-
 def prepOverlayTimeRequest(overlayId, timeString):
     got = GroundOverlayTime.objects.get(uuid=overlayId)
     if timeString:
@@ -1867,7 +1865,6 @@ def prepOverlayTimeRequest(overlayId, timeString):
     else:
         theTime = None
     return (got, theTime)
-
 
 def getOverlayTimeImage(request, overlayId, timeString=None):
     got, theTime = prepOverlayTimeRequest(overlayId, timeString)
@@ -1886,3 +1883,59 @@ def getOverlayTime(request, overlayId, timeString=None):
         return JsonResponse({'time': result}, encoder=DatetimeJsonEncoder, safe=False);
     else:
         return JsonResponse({'time': None}, status=404);
+
+# Used to export either an entire model's data or a subset of that data.
+# Must extend OrderListJson to use its filter functions.
+# Can timeout responses due to very large data exports.
+class ExportOrderListJson(OrderListJson):
+    def dispatch(self, request, *args, **kwargs):
+        if request.method == 'POST':
+            selectedModel = request.POST.get('selectedModel', None)
+            rowIds = json.loads(request.POST.get('rowIds', None))
+            simpleSearchData = json.loads(request.POST.get('simpleSearchData', None))
+            advancedSearchData = json.loads(request.POST.get('advancedSearchData', None))
+            filename = selectedModel + "Data_" + datetime.datetime.today().strftime('%Y%m%d') + ".csv"
+            modelDict = settings.XGDS_MAP_SERVER_JS_MAP[selectedModel]
+            self.lookupModel(modelDict["model"])
+
+            if rowIds:
+                if rowIds[-1] == "All":
+                    set = self.model.objects.all()
+                    if (len(advancedSearchData) > 0):
+                        set = self.filter_queryset_advanced_search(set, advancedSearchData)
+                    if (simpleSearchData['search']['value']):
+                        set = self.filter_queryset_simple_search(set, simpleSearchData['search']['value'])
+                else:
+                    set = self.model.objects.filter(pk__in=rowIds)
+
+                pseudo_buffer = PsuedoBuffer()
+                writer = csv.writer(pseudo_buffer)
+                rows = []
+                rows.append(modelDict['columns'][1:])
+                for obj in set:
+                    row = []
+                    for column in modelDict['columns'][1:]:
+                        if isinstance(getattr(obj, column), basestring):
+                            row.append(getattr(obj, column).encode('utf-8'))
+                        else:
+                            row.append(getattr(obj, column))
+                    rows.append(row)
+
+                # Needs to be streaming because of the large number of rows in some cases (notes + photos especially)
+                response = StreamingHttpResponse((writer.writerow(row) for row in rows), content_type='text/csv')
+                response['Content-Disposition'] = 'attachment; filename="' + filename + '"'
+
+            else:
+                return HttpResponse(json.dumps({'error': 'No keys given.'}), content_type='application/json', status=500)
+
+            return response
+
+# This is for the exportSearchResultsToCSV view. Speeds things up a bit and
+# allows the use of a StreamingHttpResponse for larger files
+class PsuedoBuffer:
+    """An object that implements just the write method of the file-like
+    interface.
+    """
+    def write(self, value):
+        """Write the value by returning it, instead of storing in a buffer."""
+        return value
