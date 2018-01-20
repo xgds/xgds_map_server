@@ -363,17 +363,19 @@ $(function() {
             getMeasurementBearing: function(){
                 var bearing = "";
                 if (this.rulerFeature){
-                    var coords = this.rulerFeature.getGeometry().flatCoordinates;
-                    var start = [coords[0], coords[1]];
-                    var end = [coords[2], coords[3]];
-                    start = inverseTransform(start);
-                    end = inverseTransform(end);
+                    var coords = this.rulerFeature.getGeometry().getCoordinates();
+                    if (coords){
+                        var start = [coords[0][0], coords[0][1]];
+                        var end = [coords[1][0], coords[1][1]];
+                        start = inverseTransform(start);
+                        end = inverseTransform(end);
 
-                    var dx = end[1] - start[1];
-                    var dy = end[0] - start[0];
-                    var bearing = Math.atan2(dy, dx);
-                    if (bearing < 0) bearing = bearing + 2 * Math.PI;
-                    bearing = (bearing * (180 / Math.PI)).toFixed(3);
+                        var dx = end[1] - start[1];
+                        var dy = end[0] - start[0];
+                        var bearing = Math.atan2(dy, dx);
+                        if (bearing < 0) bearing = bearing + 2 * Math.PI;
+                        bearing = (bearing * (180 / Math.PI)).toFixed(3);
+                    }
                 }
 
                 return bearing;
