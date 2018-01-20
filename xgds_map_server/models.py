@@ -376,6 +376,8 @@ class GroundOverlayTime(AbstractMap):
         result['data']['minLon'] = self.minLon
         result['data']['maxLat'] = self.maxLat
         result['data']['maxLon'] = self.maxLon
+        result['data']['timeUrl'] = '/xgds_map_server/overlayTime/' + self.uuid + '/'
+        result['data']['imageUrl'] = '/xgds_map_server/overlayTimeImage/' + self.uuid + '/'
         return result
 
     def updateTimeFromInterval(self, inputTime):
