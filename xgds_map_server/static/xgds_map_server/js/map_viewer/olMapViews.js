@@ -311,12 +311,12 @@ $(function() {
                         source: _this.rulerLayer.getSource(),
                         style: new ol.style.Style({
                             fill: new ol.style.Fill({
-                                color: 'rgba(255, 255, 255, 0.2)'
+                                color: 'rgba(255, 255, 255, 0.3)'
                             }),
                             stroke: new ol.style.Stroke({
-                                color: 'rgba(63, 185, 255, 0.7)',
+                                color: 'rgba(255, 255, 0, 0.9)',
                                 lineDash: [10, 10],
-                                width: 2
+                                width: 3
                             }),
                         })
                     });
@@ -365,8 +365,8 @@ $(function() {
                 if (this.rulerFeature){
                     var coords = this.rulerFeature.getGeometry().getCoordinates();
                     if (coords){
-                        var start = [coords[0][0], coords[0][1]];
-                        var end = [coords[1][0], coords[1][1]];
+                        var start = [coords[coords.length - 2][0], coords[coords.length - 2][1]];
+                        var end = [coords[coords.length - 1][0], coords[coords.length - 1][1]];
                         start = inverseTransform(start);
                         end = inverseTransform(end);
 
@@ -394,6 +394,25 @@ $(function() {
                     positioning: 'bottom-center'
                 });
                 app.map.map.addOverlay(this.measureTooltip);
+            },
+
+            createRulerLayer: function(){
+                if (!this.rulerLayer){
+                    this.rulerLayer = new ol.layer.Vector({
+                        source: new ol.source.Vector(),
+                        style: new ol.style.Style({
+                            fill: new ol.style.Fill({
+                                color: 'rgba(255, 255, 255, 0.3)'
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: 'rgba(255, 255, 0, 0.9)',
+                                lineDash: [10, 10],
+                                width: 3
+                            }),
+                        })
+                    });
+                    app.map.map.addLayer(this.rulerLayer);
+                }
             },
 
             createNode: function(node){
@@ -492,25 +511,6 @@ $(function() {
                 this.layersForMap.push(this.searchGroup);
                 this.layersForMap.push(this.liveSearchGroup);
                 this.layersForMap.push(this.mapNotesGroup);
-            },
-
-            createRulerLayer: function(){
-                if (!this.rulerLayer){
-                    this.rulerLayer = new ol.layer.Vector({
-                        source: new ol.source.Vector(),
-                        style: new ol.style.Style({
-                            fill: new ol.style.Fill({
-                                color: 'rgba(255, 255, 255, 0.2)'
-                            }),
-                            stroke: new ol.style.Stroke({
-                                color: 'rgba(63, 185, 255, 0.7)',
-                                lineDash: [10, 10],
-                                width: 2
-                            }),
-                        })
-                    });
-                    app.map.map.addLayer(this.rulerLayer);
-                }
             },
             
             buildCompassControl: function() {
