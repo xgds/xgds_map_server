@@ -105,12 +105,13 @@ class AbstractMapNode(models.Model):
                   }
         if self.parent:
             result['data']['parentId'] = self.parent.uuid
-        if self.getStart():
-            result['data']['start'] = self.getStart()
-        if self.getEnd():
-            result['data']['end'] = self.getEnd()
-        if self.getInterval():
-            result['data']['interval'] = self.getInterval()
+        # this slowed the tree down ... for now just put in overlaytime
+        # if self.getStart():
+        #     result['data']['start'] = self.getStart()
+        # if self.getEnd():
+        #     result['data']['end'] = self.getEnd()
+        # if self.getInterval():
+        #     result['data']['interval'] = self.getInterval()
         if self.getKmlUrl():
             result['data']['kmlFile'] = self.getKmlUrl()
 
@@ -376,6 +377,13 @@ class GroundOverlayTime(AbstractMap):
         result['data']['minLon'] = self.minLon
         result['data']['maxLat'] = self.maxLat
         result['data']['maxLon'] = self.maxLon
+        if self.getStart():
+            result['data']['start'] = self.getStart()
+        if self.getEnd():
+            result['data']['end'] = self.getEnd()
+        if self.getInterval():
+            result['data']['interval'] = self.getInterval()
+
         return result
 
     def updateTimeFromInterval(self, inputTime):
