@@ -329,7 +329,7 @@ class AbstractMapTile(AbstractMap):
             result["data"]["resolutions"] = self.intResolutions
 
         if self.projectionName:
-            result["projectionName"] = self.projectionName
+            result["data"]["projectionName"] = self.projectionName
         return result
     
     def rename(self, newName):
