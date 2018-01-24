@@ -20,7 +20,7 @@ app.views.SearchView = Marionette.View.extend({
     events: {
         'click #getSearchFormButton': 'setupSearchForm',
         'click #doSearch': 'doSearch',
-        'click #doSaveSearch': 'openSaveDialog'
+        'click #doSaveSearch': 'openSaveDialog',
     },
     regions: {
     	modelChoiceRegion: '#modelChoiceDiv'
@@ -198,6 +198,10 @@ app.views.SearchView = Marionette.View.extend({
     	}
     	this.searchResultsView.setupDatatable(this.selectedModel, undefined, this.getFilterData());
     	this.setupSaveSearchDialog();
+
+    	if ($('#advancedSearchModal').is(':visible')){
+    		$('#advancedSearchModal').modal('hide');
+		}
     	return;
     	
     },
@@ -235,7 +239,7 @@ app.views.SearchView = Marionette.View.extend({
     clearMessage: function(msg){
         this.$el.find('#message').empty();
         this.$el.find('#message').append("<br/>");
-    }
+    },
 });
 
 app.views.SearchFormView = Marionette.View.extend({
@@ -404,8 +408,12 @@ app.views.SearchNotesView = Marionette.View.extend({
 });
 
 app.views.SearchResultsView = Marionette.View.extend({
+	events: {
+		'submit #exportCSVForm': 'exportToCSV'
+	},
 	initialize: function() {
 		this.modelMap = {};
+		this.selectedIds = [];
 		this.firstLoad = true;
 		var context = this;
 		app.on('forceDetail', function(data){
@@ -468,25 +476,20 @@ app.views.SearchResultsView = Marionette.View.extend({
     toTitleCase: function(str) {
     	return str.substr(0,1).toUpperCase()+str.substr(1);
     },
-    getColumnDefs: function(columns, searchableColumns, editableColumns, unsortableColumns){
+    getColumnDefs: function(displayColumns, modelMap, searchableColumns, editableColumns, unsortableColumns){
+    	var context = this;
     	var result = [];
-    	if (_.isUndefined(searchableColumns)){
-    		searchableColumns = [];
-    	}
-    	if (_.isUndefined(unsortableColumns)){
-    		unsortableColumns = [];
-    	}
-    	for (var i=0; i<columns.length; i++){
-    		var context = this;
-    		var heading = columns[i];
+    	if (_.isUndefined(searchableColumns)) searchableColumns = [];
+    	if (_.isUndefined(unsortableColumns)) unsortableColumns = [];
+
+    	for (var i = 0; i < displayColumns.length; i++){
+    		var heading = displayColumns[i];
+    		var dataIndex = modelMap.columns.indexOf(heading);
     		var columnDef = {};
     		columnDef['targets'] = i;
-    		if ($.inArray(heading, searchableColumns) > -1){
-    			columnDef['searchable'] = true;
-    		}
-    		if ($.inArray(heading, unsortableColumns) > -1){
-    			columnDef['orderable'] = false;
-    		}
+    		if ($.inArray(heading, searchableColumns) > -1) columnDef['searchable'] = true;
+    		if ($.inArray(heading, unsortableColumns) > -1) columnDef['orderable'] = false;
+
     		if (!_.isUndefined(editableColumns)){
     			if ($.inArray(heading, Object.keys(editableColumns)) > -1){
     				columnDef['className'] = 'editable';
@@ -495,37 +498,37 @@ app.views.SearchResultsView = Marionette.View.extend({
     		if (this.columnTitles != undefined){
         		columnDef['title'] = this.columnTitles[i];
         	} else {
-        		columnDef['title'] = this.toTitleCase(columns[i]);
+        		columnDef['title'] = this.toTitleCase(displayColumns[i]);
         	}
     		if (heading.toLowerCase().indexOf('zone') > -1) {
     			columnDef['render'] = function ( data, type, row ) {
-                                               return getLocalTimeString(row[0], row[1], "z");
-                                           };
+					return getLocalTimeString(row[1], row[2], "z");
+				};
     		} else if  (heading.toLowerCase().indexOf('time') > -1){
     			columnDef['render'] = function ( data, type, row ) {
-                                               return getLocalTimeString(row[0], row[1], "MM/DD/YY HH:mm:ss");
-                                           }
+					return getLocalTimeString(row[1], row[2], "MM/DD/YY HH:mm:ss");
+				};
     		} else if (heading.toLowerCase().indexOf('thumbnail') > -1) {
     			columnDef['render'] = function(data, type, row){
-    									if (!_.isUndefined(data) && !_.isNull(data) && data != ''){
-    										var result = '<img width="100" src="' + data + '"';
-    										result += '">';
-    										return result;
-    									} else {
-    										return '';
-    									}
-    								};
+					if (!_.isUndefined(data) && !_.isNull(data) && data != ''){
+						var result = '<img width="100" src="' + data + '"';
+						result += '">';
+						return result;
+					} else {
+						return '';
+					}
+				};
     		} else if (heading.toLowerCase().indexOf('tag') > -1){
-			    			columnDef['render'] =  function(data, type, row) {
-			    				if (!_.isUndefined(data) && !_.isNull(data) && data != ''){
-									var result = "";
-									for (var i = 0; i < data.length; i++) {
-										result = result + '<span class="tag label label-info">' + data[i] + '</span>&nbsp;';
-									}
-									return result;
-								}
-								return null;
-							};
+				columnDef['render'] =  function(data, type, row) {
+					if (!_.isUndefined(data) && !_.isNull(data) && data != ''){
+						var result = "";
+						for (var i = 0; i < data.length; i++) {
+							result = result + '<span class="tag label label-info">' + data[i] + '</span>&nbsp;';
+						}
+						return result;
+					}
+					return null;
+				};
 			} else if (heading.toLowerCase().indexOf('content_url') > -1) {
     			columnDef['render'] = function(data, type, row){
 					if (!_.isUndefined(data) && !_.isNull(data) && data != ''){
@@ -549,13 +552,28 @@ app.views.SearchResultsView = Marionette.View.extend({
 					}
 					return '';
 				};
+			} else if (heading.toLowerCase().indexOf('checkbox') > -1) {
+				columnDef['orderable'] = false;
+				columnDef['render'] = function (data, type, row) {
+					var checkbox = document.createElement("input");
+					checkbox.setAttribute("id", "checkbox_" + row[row.length - 1]);
+					checkbox.setAttribute("type", "checkbox");
+					checkbox.setAttribute("class", "check");
+
+					if ((context.selectedIds.indexOf(data.toString()) > -1) || $('#pick_master').is(":checked")){
+						if ($('#pick_master').is(":checked")) context.selectedIds.push(data);
+						checkbox.setAttribute("checked", true);
+					}
+
+					return checkbox.outerHTML;
+				}
 			}
+
     		result.push(columnDef);
     	}
-    	
     	return result;
     },
-    buildAjaxUrl(selectedModel) {
+    buildAjaxUrl: function(selectedModel) {
     	var url = '/xgds_map_server/view/' + selectedModel + '/';
     	return url;
     },
@@ -570,7 +588,8 @@ app.views.SearchResultsView = Marionette.View.extend({
         }
         this.columns = _.difference(this.columns, modelMap.hiddenColumns);
         this.columnTitles = modelMap.columnTitles;
-        this.columnHeaders = this.getColumnDefs(this.columns, modelMap.searchableColumns, modelMap.editableColumns, modelMap.unsortableColumns);
+        this.columnTitles.unshift("<label for=\"pick_master\">All</label><input type=\"checkbox\" id=\"pick_master\"/>"); //Adds a checkbox for the title of the first column
+        this.columnHeaders = this.getColumnDefs(this.columns, modelMap, modelMap.searchableColumns, modelMap.editableColumns, modelMap.unsortableColumns);
         this.editableColumns = this.getEditableColumnDefs(this.columns, modelMap.columnTitles, modelMap.editableColumns);
         $.fn.dataTable.moment( DEFAULT_TIME_FORMAT);
         $.fn.dataTable.moment( "MM/DD/YY HH:mm:ss");
@@ -578,7 +597,7 @@ app.views.SearchResultsView = Marionette.View.extend({
         if (app.options.tableHeight != undefined){
         	tableheight = app.options.tableHeight;
         }
-        
+
         var dataTableObj = {
                 columns: this.columnHeaders,
                 autoWidth: true,
@@ -590,15 +609,16 @@ app.views.SearchResultsView = Marionette.View.extend({
                 lengthChange: true,
                 ordering: true,
                 select:true,
-                order: [[ 0, "desc" ]],
+                order: [[ 1, "desc" ]],
                 jQueryUI: false,
                 rowCallback: function (row, data, index){
                 	$(row).attr('id', data[data.length - 1]);
                 },
                 scrollY:  tableheight,
-                "lengthMenu": [[10, 20, 40, 80, -1], [10, 20, 40, 80, "All"]],
-                "language": {
-                    "lengthMenu": "Display _MENU_"
+				scrollX: true, // Mostly applies to the notes search page. The tags cause some scrolling issues
+                lengthMenu: [[10, 20, 40, 80, -1], [10, 20, 40, 80, "All"]],
+                language: {
+                    lengthMenu: "Display _MENU_"
                 }
         }
         
@@ -617,13 +637,43 @@ app.views.SearchResultsView = Marionette.View.extend({
         	}
         	dataTableObj['ajax']= this.ajaxConfig;
         }
-        this.theDataTable = $(this.theTable).DataTable( dataTableObj );
-        var context = this;
+
+        this.theDataTable = $(this.theTable).DataTable(dataTableObj);
+        this.connectSinglePickCallback();
+        this.connectMasterPickCallback();
         this.connectSelectCallback();
         this.connectDeselectCallback();
         this.listenToTableChanges();
         this.filterMapData(undefined);
         app.vent.trigger("repack");
+    },
+	exportToCSV: function(){
+    	$('.export-err').hide();
+    	if (this.selectedIds.length == 0){
+			$('.export-err').show();
+    		return false;
+		}
+		if ($('#pick_master').is(":checked")) this.selectedIds.push("All");
+
+    	$('#rowIds').val(JSON.stringify(this.selectedIds));
+    	$('#selectedModel').val(this.selectedModel);
+    	$('#simpleSearchData').val(JSON.stringify(this.postData));
+    	$('#advancedSearchData').val(JSON.stringify(this.getFilterData()));
+    	return true;
+	},
+	getFilterData: function() {
+    	var theForm = $("#form-"+this.selectedModel);
+    	if (theForm.length == 1){
+    		var result = theForm.serializeArray();
+    		var newresult = {};
+    		for (var i=1; i<result.length; i++){
+    			if (result[i].value != ""){
+    				newresult[result[i].name] = result[i].value;
+    			}
+    		}
+    		return newresult;
+    	}
+    	return {};
     },
     buildAjaxData: function(d) {
     	var todayCheckbox = $('#today');
@@ -652,7 +702,6 @@ app.views.SearchResultsView = Marionette.View.extend({
     			} else {
     				// if we have no data but we have a filter, clear and update the ajax
     				this.ajaxConfig.url = this.buildAjaxUrl(selectedModel);
-    				var context=this;
     				this.theDataTable.ajax.url(this.ajaxConfig.url).load();
     			}
     			return;
@@ -661,7 +710,7 @@ app.views.SearchResultsView = Marionette.View.extend({
     	this.constructDatatable(selectedModel, data, postData);
     	
     },
-    connectSelectCallback(table){
+    connectSelectCallback: function(table){
     	var context = this;
     	this.theDataTable.off('select.dt');
     	this.theDataTable.on( 'select.dt', function ( e, dt, type, indexes ) {
@@ -683,7 +732,7 @@ app.views.SearchResultsView = Marionette.View.extend({
     	    }
     	} );
     },
-    connectDeselectCallback(table){
+    connectDeselectCallback: function(table){
     	var context = this;
     	this.theDataTable.off('deselect.dt');
     	this.theDataTable.on( 'deselect.dt', function ( e, dt, type, indexes ) {
@@ -697,6 +746,33 @@ app.views.SearchResultsView = Marionette.View.extend({
     	    }
     	} );
     },
+	connectMasterPickCallback: function() {
+    	var _this = this;
+		$('#pick_master').on('change', function() {
+			var masterChecked = $(this).is(":checked");
+			$('.check').each(function(i, obj) {
+				var targetId = obj.id.substring(9);
+				if (masterChecked) _this.selectedIds.push(targetId);
+				else _this.selectedIds = [];
+
+				$(this).prop("checked", masterChecked);
+			});
+        });
+	},
+	connectSinglePickCallback: function() {
+    	var _this = this;
+		$(document).on('change', '.check', function(e) {
+			var targetId = e.target.id.substring(9);
+			if (e.target.checked) {
+                _this.selectedIds.push(targetId);
+            }
+			else {
+				var targetIndex = _this.selectedIds.indexOf(targetId);
+				if (targetIndex > -1) _this.selectedIds.splice(targetIndex, 1);
+				if ($('#pick_master').is(":checked")) $('#pick_master').prop("checked", false);
+			}
+		});
+	},
     updateContents: function(selectedModel, data) {
         if (!_.isUndefined(data) && data.length > 0){
             if (!_.isUndefined(this.theDataTable)) {
@@ -889,9 +965,6 @@ var xgds_search = xgds_search || {};
 $.extend(xgds_search,{
 	hookAdvancedSearchButton : function() {
 		// turn off by default
-//		var sgi = $("#search-gridstack-item");
-//		xgds_gridstack.THE_GRIDSTACK.removeWidget(sgi);
-		
 		var advancedSearchButton = $("#advanced_search_button");
 		advancedSearchButton.off('click');
 		advancedSearchButton.on('click',function(event) {
@@ -899,20 +972,22 @@ $.extend(xgds_search,{
 		    var searchDiv = $("#searchDiv");
 	    	var searchGridstack = $("#search-gridstack-item");
 		    var visible = searchDiv.is(":visible");
-		    if (!visible){
-		    	// show it and initialize
-		    	searchDiv.show();
-		    	searchGridstack.show();
-				xgds_gridstack.THE_GRIDSTACK.addWidget(searchGridstack);
-				
-		    	// TODO put advanced search at the top
-		    	//GridStackUI.Utils.sort($(".grid-stack-item"));
-		    	app.vent.trigger('searchDiv:visible');
-		    } else {
-		    	searchGridstack.hide();
-		    	searchDiv.hide();
-				xgds_gridstack.THE_GRIDSTACK.removeWidget(searchGridstack, false);
-		    }
+		    searchDiv.show();
+		    $('#advancedSearchModal').modal('show');
+		    // if (!visible){
+		    // 	// show it and initialize
+		    // 	searchDiv.show();
+		    // 	searchGridstack.show();
+				// xgds_gridstack.THE_GRIDSTACK.addWidget(searchGridstack);
+            //
+		    // 	// TODO put advanced search at the top
+		    // 	//GridStackUI.Utils.sort($(".grid-stack-item"));
+		    // 	app.vent.trigger('searchDiv:visible');
+		    // } else {
+		    // 	searchGridstack.hide();
+		    // 	searchDiv.hide();
+				// xgds_gridstack.THE_GRIDSTACK.removeWidget(searchGridstack, false);
+		    // }
 		});
 	}
 });
