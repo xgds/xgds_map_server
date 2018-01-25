@@ -383,8 +383,8 @@ class GroundOverlayTime(AbstractMap):
             result['data']['end'] = self.getEnd()
         if self.getInterval():
             result['data']['interval'] = self.getInterval()
-        result['data']['timeUrl'] = '/xgds_map_server/overlayTime/' + self.uuid + '/'
-        result['data']['imageUrl'] = '/xgds_map_server/overlayTimeImage/' + self.uuid + '/'
+        result['data']['timeUrl'] = '/xgds_map_server/overlayTime/' + self.uuid + '/{Time}'  # for Cesium
+        result['data']['imageUrl'] = '/xgds_map_server/overlayTimeImage/' + self.uuid + '/{Time}' # for Cesium
         return result
 
     def updateTimeFromInterval(self, inputTime):
