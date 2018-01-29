@@ -357,6 +357,8 @@ class GroundOverlayTime(AbstractMap):
     start = models.DateTimeField(null=True, blank=True, db_index=True)
     end = models.DateTimeField(null=True, blank=True, db_index=True)
     interval = models.FloatField(null=True, blank=True)
+    width = models.IntegerField(db_index=True, default=0)
+    height = models.IntegerField(db_index=True, default=0)
 
     def getStart(self):
         """ If this is a map layer with time, return the start time """
@@ -377,6 +379,8 @@ class GroundOverlayTime(AbstractMap):
         result['data']['minLon'] = self.minLon
         result['data']['maxLat'] = self.maxLat
         result['data']['maxLon'] = self.maxLon
+        result['data']['width'] = self.width
+        result['data']['height'] = self.height
         if self.getStart():
             result['data']['start'] = self.getStart()
         if self.getEnd():
