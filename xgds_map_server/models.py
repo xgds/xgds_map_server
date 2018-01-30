@@ -359,6 +359,7 @@ class GroundOverlayTime(AbstractMap):
     interval = models.FloatField(null=True, blank=True)
     width = models.IntegerField(db_index=True, default=0)
     height = models.IntegerField(db_index=True, default=0)
+    projectionName = models.CharField(null=True, max_length=32)  # If this is not a normal WGS84 projection ... handle it in your front end with this name
 
     def getStart(self):
         """ If this is a map layer with time, return the start time """
@@ -387,6 +388,7 @@ class GroundOverlayTime(AbstractMap):
             result['data']['end'] = self.getEnd()
         if self.getInterval():
             result['data']['interval'] = self.getInterval()
+        result['data']['projectionName'] = self.projectionName
         result['data']['timeUrl'] = '/xgds_map_server/overlayTime/' + self.uuid + '/{Time}'  # for Cesium
         result['data']['imageUrl'] = '/xgds_map_server/overlayTimeImage/' + self.uuid + '/{Time}' # for Cesium
         return result
