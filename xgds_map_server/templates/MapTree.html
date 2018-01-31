@@ -4,9 +4,9 @@
 {% block scripts %}
 {{ block.super }}
 	<script type="text/javascript" src='{{ EXTERNAL_URL }}js-cookie/src/js.cookie.js'></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-ui/jquery-ui.min.js'></script>
-    <script type="text/javascript" src='{{EXTERNAL_URL}}jquery-ui-contextmenu/jquery.ui-contextmenu.min.js'></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}fancytree/dist/jquery.fancytree-all.min.js'></script>
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-ui-dist/jquery-ui.min.js'></script>
+    <script type="text/javascript" src='{{EXTERNAL_URL}}ui-contextmenu/jquery.ui-contextmenu.min.js'></script>
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery.fancytree/dist/jquery.fancytree-all.min.js'></script>
     <script type="text/javascript" src="{% static 'xgds_map_server/js/tree/fancyTreeSlider.js' %}"></script>
 {% endblock %}
 
@@ -25,9 +25,9 @@
   </div>
  </div>
 <style scoped>
-  @import url('{{EXTERNAL_URL}}jquery-ui/themes/base/jquery-ui.css');
-  @import url('{{ EXTERNAL_URL }}fancytree/dist/skin-lion/ui.fancytree.min.css');
-  @import url("{% static 'xgds_map_server/css/fancytree_custom.css' %}"");
+  @import url('{{EXTERNAL_URL}}jquery-ui-dist/jquery-ui.min.css');
+  @import url('{{ EXTERNAL_URL }}jquery.fancytree/dist/skin-lion/ui.fancytree.min.css');
+  @import url("{% static 'xgds_map_server/css/fancytree_custom.css' %}");
   ul.fancytree-container {
  	 height: 400px;
   	 width: 95%;

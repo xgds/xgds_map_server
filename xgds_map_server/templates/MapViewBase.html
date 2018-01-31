@@ -53,10 +53,10 @@
 
 {% block cssExtras %}
 <style scoped>
-  @import url('{{EXTERNAL_URL}}jquery-ui/themes/base/jquery-ui.css');
-  @import url('{{ EXTERNAL_URL }}openlayers/ol.css');
+  @import url('{{EXTERNAL_URL}}jquery-ui-dist/jquery-ui.min.css');
+  @import url('{{ EXTERNAL_URL }}openlayers/dist/ol.css');
   @import url('{{EXTERNAL_URL}}ol3-popup/src/ol3-popup.css');
-  @import url('{{ EXTERNAL_URL }}fancytree/dist/skin-lion/ui.fancytree.min.css');
+  @import url('{{ EXTERNAL_URL }}jquery.fancytree/dist/skin-lion/ui.fancytree.min.css');
   @import url("{% static 'xgds_map_server/css/fancytree_custom.css' %}");
   @import url("{% static 'xgds_map_server/css/xgds_map_server.css' %}");
   @import url('{{ EXTERNAL_URL }}gridstack/dist/gridstack.min.css');

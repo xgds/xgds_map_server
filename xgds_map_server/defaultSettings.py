@@ -57,27 +57,6 @@ XGDS_MAP_SERVER_GDAL_RESAMPLE_OPTIONS = [("lanczos", "Lanczos"), ("cubic", "Cubi
 # have visibility turned off.)
 XGDS_MAP_SERVER_LOGO_PATTERNS = []
 
-BOWER_INSTALLED_APPS = getOrCreateArray('BOWER_INSTALLED_APPS')
-BOWER_INSTALLED_APPS += ['sprintf.js=sprintf.js',
-                         'handlebars=git://github.com/components/handlebars.js.git',
-                         'backbone#1.3.3',
-                         'marionette=marionette#3.2',
-                         'backbone-relational',
-                         'backbone-forms#master',
-                         'fancytree=fancytree#v2.25.0',
-                         'js-cookie',
-                         #'openlayers=https://github.com/openlayers/openlayers/releases/download/v4.3.3/v4.3.3-dist.zip',  
-                         'openlayers=https://github.com/openlayers/openlayers/releases/download/v4.4.2/v4.4.2-dist.zip',  
-                         'ol3-popup=git://github.com/walkermatt/ol3-popup.git#master',
-                         'proj4',
-                         'resumable=git://github.com/23/resumable.js.git',
-                         'pngtoy=git://github.com/neshume/pngtoy.git#master',
-                         'jquery-ui-contextmenu=ui-contextmenu',
-                         'jquery-migrate=http://code.jquery.com/jquery-migrate-1.2.1.js',
-                         'datatables-sorting-datetime-moment=https://cdn.datatables.net/plug-ins/1.10.11/sorting/datetime-moment.js',
-                         'spectrum'
-                         ]
-
 # if you want to have a custom javascript included in your maps, override this in siteSettings.
 # for example:
 #    XGDS_MAP_SERVER_PIPELINE_JS = {'custom_map': {'source_filenames': ('plrpExplorer/js/bathymetry.js'),

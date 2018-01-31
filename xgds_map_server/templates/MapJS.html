@@ -2,22 +2,22 @@
 	<script type='text/javascript'>
 		var map_api_key = '{{settings.XGDS_MAP_SERVER_MAP_API_KEY}}';
 	</script>
-	<script type='text/javascript' src='{{ EXTERNAL_URL }}sprintf.js/dist/sprintf.min.js'></script>
-	<script type='text/javascript' src='{{ EXTERNAL_URL }}jquery-ui/jquery-ui.min.js'></script>
+	<script type='text/javascript' src='{{ EXTERNAL_URL }}sprintf-js/dist/sprintf.min.js'></script>
+	<script type='text/javascript' src='{{ EXTERNAL_URL }}jquery-ui-dist/jquery-ui.min.js'></script>
 	<script type='text/javascript' src='{{ EXTERNAL_URL }}js-cookie/src/js.cookie.js'></script>
 	<script type='text/javascript' src='{{ EXTERNAL_URL }}datatables/media/js/jquery.dataTables.min.js'></script>
-	<script type='text/javascript' src='{{ EXTERNAL_URL }}datatables-select/js/dataTables.select.js'></script>
-	<script type='text/javascript' src='{{ EXTERNAL_URL }}fancytree/dist/jquery.fancytree-all.min.js'></script>
+	<script type='text/javascript' src='{{ EXTERNAL_URL }}datatables.net-select/js/dataTables.select.min.js'></script>
+	<script type='text/javascript' src='{{ EXTERNAL_URL }}jquery.fancytree/dist/jquery.fancytree-all.min.js'></script>
 <!-- 	<script type='text/javascript' src='{{ EXTERNAL_URL }}fancytree/dist/src/jquery.fancytree.filter.js'></script>
     <script type='text/javascript' src='{{ EXTERNAL_URL }}fancytree/dist/src/jquery.fancytree.persist.js'></script>
  -->    
-    <script type='text/javascript' src='{{ EXTERNAL_URL }}handlebars/handlebars.min.js'></script>
+    <script type='text/javascript' src='{{ EXTERNAL_URL }}handlebars/dist/handlebars.min.js'></script>
     <script type='text/javascript' src="{% static 'xgds_map_server/js/util/handlebars-helpers.js' %}"></script>
 	<script type='text/javascript' src='{{ EXTERNAL_URL }}backbone/backbone.js'></script>
 	<script type='text/javascript' src='{{ EXTERNAL_URL }}backbone.radio/build/backbone.radio.min.js'></script>
-    <script type='text/javascript' src='{{ EXTERNAL_URL }}marionette/lib/backbone.marionette.js'></script>
+    <script type='text/javascript' src='{{ EXTERNAL_URL }}backbone.marionette/lib/backbone.marionette.js'></script>
     <script type='text/javascript' src="{% static 'xgds_map_server/js/util/marionette-helpers.js' %}"></script>
-    <script type='text/javascript' src="{% static 'jquery-fileDownload/src/Scripts/jquery.fileDownload.js' %}"></script>
+    <script type='text/javascript' src="{% static 'jquery-file-download/src/Scripts/jquery.fileDownload.js' %}"></script>
     <script type='text/javascript' src="{% static 'xgds_map_server/js/map_viewer/mapViewerApp.js' %}"></script>
     {% if app %}
     <script type='text/javascript' src='{{STATIC_URL}}{{ app }}'></script>
@@ -25,11 +25,11 @@
     <script>
     	app = xGDS.Factory.construct(appOptions);
     </script>
-    <script type='text/javascript' src='{{EXTERNAL_URL}}jquery-ui-contextmenu/jquery.ui-contextmenu.min.js'></script>
+    <script type='text/javascript' src='{{EXTERNAL_URL}}ui-contextmenu/jquery.ui-contextmenu.min.js'></script>
     <script type='text/javascript' src="{% static 'xgds_map_server/js/tree/fancyTreeSlider.js' %}"></script>
     <script type='text/javascript' src="{% static 'xgds_map_server/js/tree/fancyTreeView.js' %}"></script>
     <script type='text/javascript' src='{{EXTERNAL_URL}}proj4/dist/proj4.js'></script>
-    <script type='text/javascript' src='{{EXTERNAL_URL}}openlayers/ol.js' ></script>
+    <script type='text/javascript' src='{{EXTERNAL_URL}}openlayers/dist/ol.js' ></script>
     <script type='text/javascript' src='{{ EXTERNAL_URL }}ol3-popup/src/ol3-popup.js'></script>
     <script type='text/javascript' src='{{EXTERNAL_URL}}pngtoy/pngtoy.min.js'></script>
     <script type='text/javascript' src="{% static 'xgds_map_server/js/search/searchViews.js' %}"></script>
