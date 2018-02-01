@@ -1,20 +1,7 @@
 <div class="row">
     <div class="col-12">
         <input type="checkbox" style="display:inline" class="mr-1" id="today" value="today" {{#if settingsLive}}checked{{/if}}>Today
-        <form id="exportCSVForm" action="/xgds_map_server/search/exportSearchResultsToCSV/" method="post" target="_blank">
-            <input type="hidden" id="rowIds" name="rowIds" />
-            <input type="hidden" id="selectedModel" name="selectedModel" />
-            <input type="hidden" id="simpleSearchData" name="simpleSearchData" />
-            <input type="hidden" id="advancedSearchData" name="advancedSearchData" />
-            <button type="submit" class="btn btn-primary btn-sm export-csv-btn" id="exportcsv_btn">Export CSV</button>
-        </form>
-        <form id="exportKMLForm" action="/xgds_map_server/search/exportSearchResultsToCSV/" method="post" target="_blank">
-            <input type="hidden" id="rowIdsKml" name="rowIdsKml" />
-            <input type="hidden" id="selectedModelKml" name="selectedModelKml" />
-            <input type="hidden" id="simpleSearchDataKml" name="simpleSearchDataKml" />
-            <input type="hidden" id="advancedSearchDataKml" name="advancedSearchDataKml" />
-            <button type="submit" class="btn btn-primary btn-sm export-kml-btn" id="exportkml_btn">Export KML</button>
-        </form>
+        <button id="export-modal-btn" class="btn btn-primary btn-sm">Export</button>
     </div>
     <div class="col-12">
         <span class="export-err">No rows selected.</span>

@@ -409,7 +409,7 @@ app.views.SearchNotesView = Marionette.View.extend({
 
 app.views.SearchResultsView = Marionette.View.extend({
 	events: {
-		'submit #exportCSVForm': 'exportToCSV',
+		'click #export-modal-btn': 'initializeExportData',
 		'keyup #search-keyword-id': 'filterDatatable',
 		'click #keyword-dropdown-btn': function(){
 			if ($('#keyword-dropdown-menu').is(':visible')) $('#keyword-dropdown-menu').hide();
@@ -667,18 +667,22 @@ app.views.SearchResultsView = Marionette.View.extend({
         this.filterMapData(undefined);
         app.vent.trigger("repack");
     },
-	exportToCSV: function(){
+	initializeExportData: function(){
     	$('.export-err').hide();
-    	if (this.selectedIds.length == 0){
-			$('.export-err').show();
-    		return false;
-		}
-		if ($('#pick_master').is(":checked")) this.selectedIds.push("All");
+    	if ($('#pick_master').is(":checked"))
+    		this.selectedIds.push("All");
+
     	$('#rowIds').val(JSON.stringify(this.selectedIds));
     	$('#selectedModel').val(this.selectedModel);
     	$('#simpleSearchData').val($('#search-keyword-id').val());
     	$('#advancedSearchData').val(JSON.stringify(this.getFilterData()));
-    	return true;
+    	$('#filetype').val($('label[name=fileType]').attr("data"));
+    	$('label[name=fileType]').click(function(event) {
+			$('#filetype').val($(event.target).attr('data'));
+        });
+
+    	if (this.selectedIds.length == 0) $('.export-err').show();
+		else $('#exportModal').modal('show');
 	},
 	filterDatatable: function(){
 		this.theDataTable.search($('#search-keyword-id').val()).draw();
@@ -786,7 +790,6 @@ app.views.SearchResultsView = Marionette.View.extend({
 				var targetId = obj.id.substring(9);
 				if (masterChecked) _this.selectedIds.push(targetId);
 				else _this.selectedIds = [];
-
 				$(this).prop("checked", masterChecked);
 			});
         });
@@ -1002,24 +1005,8 @@ $.extend(xgds_search,{
 		advancedSearchButton.on('click',function(event) {
 		    event.preventDefault();
 		    var searchDiv = $("#searchDiv");
-	    	var searchGridstack = $("#search-gridstack-item");
-		    var visible = searchDiv.is(":visible");
 		    searchDiv.show();
 		    $('#advancedSearchModal').modal('show');
-		    // if (!visible){
-		    // 	// show it and initialize
-		    // 	searchDiv.show();
-		    // 	searchGridstack.show();
-				// xgds_gridstack.THE_GRIDSTACK.addWidget(searchGridstack);
-            //
-		    // 	// TODO put advanced search at the top
-		    // 	//GridStackUI.Utils.sort($(".grid-stack-item"));
-		    // 	app.vent.trigger('searchDiv:visible');
-		    // } else {
-		    // 	searchGridstack.hide();
-		    // 	searchDiv.hide();
-				// xgds_gridstack.THE_GRIDSTACK.removeWidget(searchGridstack, false);
-		    // }
 		});
 	}
 });

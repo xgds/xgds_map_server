@@ -88,7 +88,7 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,{},'xgds_map_server_index'
                #url(r'^view/(?P<modelName>[\w]+)/(?P<modelPK>[\d]+)$', views.getViewMultiModelPage, {}, 'search_map_single_object'),
 
                # Export datatable rows from search pages to CSV file
-               url(r'^search/exportSearchResultsToCSV/', views.ExportOrderListJson.as_view(), {}, 'exportSearchResultsToCSV'),
+               url(r'^search/exportSearchResults/', views.ExportOrderListJson.as_view(), {}, 'exportSearchResults'),
 
                # Including these in this order ensures that reverse will return the non-rest urls for use in our server
                url(r'^rest/', include('xgds_map_server.restUrls')),

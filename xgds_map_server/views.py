@@ -1895,28 +1895,16 @@ class ExportOrderListJson(OrderListJson):
             rowIds = json.loads(request.POST.get('rowIds', None))
             simpleSearchData = request.POST.get('simpleSearchData', None)
             advancedSearchData = json.loads(request.POST.get('advancedSearchData', None))
-            filename = selectedModel + "Data_" + datetime.datetime.today().strftime('%Y%m%d') + ".csv"
+            filetype = request.POST.get('filetype', None)
+            filename = request.POST.get('filename', None) + ".csv"
 
             self.lookupModel(modelDict["model"])
             if rowIds:
                 data = self.filterData(rowIds, simpleSearchData, advancedSearchData)
-
-                pseudo_buffer = PsuedoBuffer()
-                writer = csv.writer(pseudo_buffer)
-                rows = []
-                rows.append(modelDict['columns'][1:])
-                for obj in data:
-                    row = []
-                    for column in modelDict['columns'][1:]:
-                        if isinstance(getattr(obj, column), basestring):
-                            row.append(getattr(obj, column).encode('utf-8'))
-                        else:
-                            row.append(getattr(obj, column))
-                    rows.append(row)
-
-                # Needs to be streaming response because of the large number of rows in some cases (notes + photos especially)
-                response = StreamingHttpResponse((writer.writerow(row) for row in rows), content_type='text/csv')
-                response['Content-Disposition'] = 'attachment; filename="' + filename + '"'
+                if (filetype == "CSV"):
+                    response = self.exportCSV(data, modelDict, filename)
+                elif (filetype == "KML"):
+                    response = self.exportKML(data, modelDict, filename)
 
             else:
                 return HttpResponse(json.dumps({'error': 'no rows given.'}), content_type='application/json', status=500)
@@ -1935,6 +1923,25 @@ class ExportOrderListJson(OrderListJson):
             data = self.model.objects.filter(pk__in=rowIds)
 
         return data
+
+    def exportCSV(self, data, modelDict, filename):
+        pseudo_buffer = PsuedoBuffer()
+        writer = csv.writer(pseudo_buffer)
+        rows = []
+        rows.append(modelDict['columns'][1:])
+        for obj in data:
+            row = []
+            for column in modelDict['columns'][1:]:
+                if isinstance(getattr(obj, column), basestring):
+                    row.append(getattr(obj, column).encode('utf-8'))
+                else:
+                    row.append(getattr(obj, column))
+            rows.append(row)
+
+        # Needs to be streaming response because of the large number of rows in some cases (notes + photos especially)
+        response = StreamingHttpResponse((writer.writerow(row) for row in rows), content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="' + filename + '"'
+        return response
 
 # This is for the exportSearchResultsToCSV view. Speeds things up a bit and
 # allows the use of a StreamingHttpResponse for larger files
