@@ -8,15 +8,49 @@
             <input type="hidden" id="advancedSearchData" name="advancedSearchData" />
             <button type="submit" class="btn btn-primary btn-sm export-csv-btn" id="exportcsv_btn">Export CSV</button>
         </form>
-        <!--<form id="exportKMLForm" action="/xgds_map_server/search/exportSearchResultsToCSV/" method="post" target="_blank">-->
-            <!--<input type="hidden" id="rowIdsKml" name="rowIdsKml" />-->
-            <!--<input type="hidden" id="selectedModelKml" name="selectedModelKml" />-->
-            <!--<input type="hidden" id="filterDataKml" name="filterDataKml" />-->
-            <!--<button type="submit" class="btn btn-primary btn-sm export-kml-btn" id="exportkml_btn">Export KML</button>-->
-        <!--</form>-->
+        <form id="exportKMLForm" action="/xgds_map_server/search/exportSearchResultsToCSV/" method="post" target="_blank">
+            <input type="hidden" id="rowIdsKml" name="rowIdsKml" />
+            <input type="hidden" id="selectedModelKml" name="selectedModelKml" />
+            <input type="hidden" id="simpleSearchDataKml" name="simpleSearchDataKml" />
+            <input type="hidden" id="advancedSearchDataKml" name="advancedSearchDataKml" />
+            <button type="submit" class="btn btn-primary btn-sm export-kml-btn" id="exportkml_btn">Export KML</button>
+        </form>
     </div>
     <div class="col-12">
-        <span class="export-err">Error Exporting</span>
+        <span class="export-err">No rows selected.</span>
+    </div>
+    <div class="col-12 simple-search-container">
+        <div class="row">
+            <!--<div class="col-6"><label for="search-keyword">Keyword</label></div>-->
+            <!--<div class="col-6"><label for="search-tags">Tags</label></div>-->
+        </div>
+        <div class="input-group">
+            <input type="text" class="form-control search-keyword" name="search-keyword" id="search-keyword-id" placeholder="Keyword">
+            <div class="input-group-btn">
+                <button type="button" class="btn btn-default dropdown-toggle" id="keyword-dropdown-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                <div class="dropdown-menu dropdown-menu-right" id="keyword-dropdown-menu">
+                    <a class="dropdown-item" href="#">Action</a>
+                    <a class="dropdown-item" href="#">Another action</a>
+                    <a class="dropdown-item" href="#">Something else here</a>
+                    <div role="separator" class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#">Separated link</a>
+                </div>
+            </div>
+            <input type="text" class="form-control search-tags" name="search-tags" id="search-tags-id" placeholder="Tags">
+            <div class="input-group-btn">
+                <button type="button" class="btn btn-default dropdown-toggle" id="tag-dropdown-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                <div class="dropdown-menu dropdown-menu-right" id="tag-dropdown-menu">
+                    <a class="dropdown-item" href="#">Action</a>
+                    <a class="dropdown-item" href="#">Another action</a>
+                    <a class="dropdown-item" href="#">Something else here</a>
+                    <div role="separator" class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#">Separated link</a>
+                </div>
+            </div>
+            <span class="input-group-btn simple-search-btn">
+                <button class="btn btn-primary" type="button"><i class="fa fa-search" aria-hidden="true"></i></button>
+            </span>
+        </div>
     </div>
 </div>
 <table id="searchResultsTable" class="display" cellspacing="0" width="100%">

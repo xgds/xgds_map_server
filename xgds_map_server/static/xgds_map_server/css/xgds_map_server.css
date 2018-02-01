@@ -6,6 +6,31 @@
 	display: inline;
 }
 
+.paginate{
+	float: right;
+}
+
+.simple-search-container{
+	margin-top: 15px;
+	margin-bottom: 10px;
+}
+
+.simple-search-container .btn-default {
+	border: 1px solid rgba(0, 0, 0, 0.15) !important;
+}
+
+.search-keyword{
+	height: 30px;
+}
+
+.search-tags{
+	height: 30px;
+}
+
+.simple-search-btn{
+	width: 50px;
+}
+
 .export-kml-btn{
 	float: right;
 	margin-right: 3px;
@@ -23,6 +48,14 @@
 	float: right;
 	margin-right: 50px;
 	display: none;
+}
+
+.left{
+	float: left;
+}
+
+.right{
+	float: right;
 }
 
 .ol-tooltip {

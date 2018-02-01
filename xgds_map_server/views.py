@@ -1886,33 +1886,26 @@ def getOverlayTime(request, overlayId, timeString=None):
 
 # Used to export either an entire model's data or a subset of that data.
 # Must extend OrderListJson to use its filter functions.
-# Can timeout responses due to very large data exports.
+# Responses can timeout due to very large data exports.
 class ExportOrderListJson(OrderListJson):
     def dispatch(self, request, *args, **kwargs):
         if request.method == 'POST':
             selectedModel = request.POST.get('selectedModel', None)
+            modelDict = settings.XGDS_MAP_SERVER_JS_MAP[selectedModel]
             rowIds = json.loads(request.POST.get('rowIds', None))
-            simpleSearchData = json.loads(request.POST.get('simpleSearchData', None))
+            simpleSearchData = request.POST.get('simpleSearchData', None)
             advancedSearchData = json.loads(request.POST.get('advancedSearchData', None))
             filename = selectedModel + "Data_" + datetime.datetime.today().strftime('%Y%m%d') + ".csv"
-            modelDict = settings.XGDS_MAP_SERVER_JS_MAP[selectedModel]
-            self.lookupModel(modelDict["model"])
 
+            self.lookupModel(modelDict["model"])
             if rowIds:
-                if rowIds[-1] == "All":
-                    set = self.model.objects.all()
-                    if (len(advancedSearchData) > 0):
-                        set = self.filter_queryset_advanced_search(set, advancedSearchData)
-                    if (simpleSearchData['search']['value']):
-                        set = self.filter_queryset_simple_search(set, simpleSearchData['search']['value'])
-                else:
-                    set = self.model.objects.filter(pk__in=rowIds)
+                data = self.filterData(rowIds, simpleSearchData, advancedSearchData)
 
                 pseudo_buffer = PsuedoBuffer()
                 writer = csv.writer(pseudo_buffer)
                 rows = []
                 rows.append(modelDict['columns'][1:])
-                for obj in set:
+                for obj in data:
                     row = []
                     for column in modelDict['columns'][1:]:
                         if isinstance(getattr(obj, column), basestring):
@@ -1921,14 +1914,27 @@ class ExportOrderListJson(OrderListJson):
                             row.append(getattr(obj, column))
                     rows.append(row)
 
-                # Needs to be streaming because of the large number of rows in some cases (notes + photos especially)
+                # Needs to be streaming response because of the large number of rows in some cases (notes + photos especially)
                 response = StreamingHttpResponse((writer.writerow(row) for row in rows), content_type='text/csv')
                 response['Content-Disposition'] = 'attachment; filename="' + filename + '"'
 
             else:
-                return HttpResponse(json.dumps({'error': 'No keys given.'}), content_type='application/json', status=500)
+                return HttpResponse(json.dumps({'error': 'no rows given.'}), content_type='application/json', status=500)
 
             return response
+
+    # Filter the model's data using the advanced search, simple search, or both
+    def filterData(self, rowIds, simpleSearchData, advancedSearchData):
+        if rowIds[-1] == "All":
+            data = self.model.objects.all()
+            if (len(advancedSearchData) > 0):
+                data = self.filter_queryset_advanced_search(data, advancedSearchData)
+            if (simpleSearchData):
+                data = self.filter_queryset_simple_search(data, simpleSearchData)
+        else:
+            data = self.model.objects.filter(pk__in=rowIds)
+
+        return data
 
 # This is for the exportSearchResultsToCSV view. Speeds things up a bit and
 # allows the use of a StreamingHttpResponse for larger files

@@ -409,7 +409,17 @@ app.views.SearchNotesView = Marionette.View.extend({
 
 app.views.SearchResultsView = Marionette.View.extend({
 	events: {
-		'submit #exportCSVForm': 'exportToCSV'
+		'submit #exportCSVForm': 'exportToCSV',
+		'keyup #search-keyword-id': 'filterDatatable',
+		'click #keyword-dropdown-btn': function(){
+			if ($('#keyword-dropdown-menu').is(':visible')) $('#keyword-dropdown-menu').hide();
+			else $('#keyword-dropdown-menu').show();
+		},
+		'click #tag-dropdown-btn': function(){
+			if ($('#tag-dropdown-menu').is(':visible')) $('#tag-dropdown-menu').hide();
+			else $('#tag-dropdown-menu').show();
+		},
+		'keydown [name="search-keyword"]': 'replaceKeywordSpace'
 	},
 	initialize: function() {
 		this.modelMap = {};
@@ -601,7 +611,17 @@ app.views.SearchResultsView = Marionette.View.extend({
         var dataTableObj = {
                 columns: this.columnHeaders,
                 autoWidth: true,
-                dom: '<"top"flp<"clear">>rt<"bottom"ip<"clear">>',
+                dom: '<"top"' +
+						'<"row"' +
+							'<"col-12"' +
+								'<"display-length"l><"paginate"p>' +
+							'>' +
+						'>' +
+					 	'<"clear">' +
+					 '>rt' +
+					 '<"bottom"ip' +
+						'<"clear">' +
+					 '>',
                 stateSave: false,
                 rowId: function(a) {return a[a.length-1]; },
                 paging: true,
@@ -654,12 +674,24 @@ app.views.SearchResultsView = Marionette.View.extend({
     		return false;
 		}
 		if ($('#pick_master').is(":checked")) this.selectedIds.push("All");
-
     	$('#rowIds').val(JSON.stringify(this.selectedIds));
     	$('#selectedModel').val(this.selectedModel);
-    	$('#simpleSearchData').val(JSON.stringify(this.postData));
+    	$('#simpleSearchData').val($('#search-keyword-id').val());
     	$('#advancedSearchData').val(JSON.stringify(this.getFilterData()));
     	return true;
+	},
+	filterDatatable: function(){
+		this.theDataTable.search($('#search-keyword-id').val()).draw();
+	},
+	replaceKeywordSpace: function(e){
+		if (e.which === 32) {
+			e.preventDefault();
+			$("#search-keyword-id").val($("#search-keyword-id").val() + ' or ');
+		}
+		// else if (e.which == 8){
+		// TODO: if the deleted character is a space, delete the or + spaces
+		// 	e.preventDefault();
+		// }
 	},
 	getFilterData: function() {
     	var theForm = $("#form-"+this.selectedModel);
