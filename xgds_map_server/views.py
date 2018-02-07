@@ -1905,6 +1905,8 @@ class ExportOrderListJson(OrderListJson):
                     response = self.exportCSV(data, modelDict, filename)
                 elif (filetype == "KML"):
                     response = self.exportKML(data, modelDict, filename)
+                else:
+                    response = HttpResponse(json.dumps({'error': 'unknown file type.'}), content_type='application/json', status=500)
 
             else:
                 return HttpResponse(json.dumps({'error': 'no rows given.'}), content_type='application/json', status=500)

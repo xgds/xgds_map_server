@@ -6,37 +6,33 @@
     <div class="col-12">
         <span class="export-err">No rows selected.</span>
     </div>
-    <div class="col-12 simple-search-container">
+    <div class="col-12 ss-container">
         <div class="row">
-            <!--<div class="col-6"><label for="search-keyword">Keyword</label></div>-->
-            <!--<div class="col-6"><label for="search-tags">Tags</label></div>-->
-        </div>
-        <div class="input-group">
-            <input type="text" class="form-control search-keyword" name="search-keyword" id="search-keyword-id" placeholder="Keyword">
-            <div class="input-group-btn">
-                <button type="button" class="btn btn-default dropdown-toggle" id="keyword-dropdown-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
-                <div class="dropdown-menu dropdown-menu-right" id="keyword-dropdown-menu">
-                    <a class="dropdown-item" href="#">Action</a>
-                    <a class="dropdown-item" href="#">Another action</a>
-                    <a class="dropdown-item" href="#">Something else here</a>
-                    <div role="separator" class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#">Separated link</a>
+            <div class="col-6 ss-keyword-container input-group">
+                <input type="text" class="form-control search-keyword" name="search-keyword" id="search-keyword-id" placeholder="Keyword">
+                <div class="input-group-btn">
+                    <button type="button" class="btn btn-default dropdown-toggle" id="keyword-dropdown-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                    <div class="dropdown-menu dropdown-menu-right" id="keyword-dropdown-menu">
+                        <div id="keyword-query-editor" class="dropdown-input-list col-12"></div>
+                    </div>
                 </div>
             </div>
-            <input type="text" class="form-control search-tags" name="search-tags" id="search-tags-id" placeholder="Tags">
-            <div class="input-group-btn">
-                <button type="button" class="btn btn-default dropdown-toggle" id="tag-dropdown-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
-                <div class="dropdown-menu dropdown-menu-right" id="tag-dropdown-menu">
-                    <a class="dropdown-item" href="#">Action</a>
-                    <a class="dropdown-item" href="#">Another action</a>
-                    <a class="dropdown-item" href="#">Something else here</a>
-                    <div role="separator" class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#">Separated link</a>
+            <div class="col-6 ss-tags-container input-group">
+                <input type="text" class="form-control search-tags" name="search-tags" id="search-tags-id" placeholder="Tags">
+                <div class="input-group-btn">
+                    <button type="button" class="btn btn-default dropdown-toggle" id="tag-dropdown-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                    <div class="dropdown-menu dropdown-menu-right" id="tag-dropdown-menu">
+                        <a class="dropdown-item" href="#">Action</a>
+                        <a class="dropdown-item" href="#">Another action</a>
+                        <a class="dropdown-item" href="#">Something else here</a>
+                        <div role="separator" class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#">Separated link</a>
+                    </div>
                 </div>
+                <span class="input-group-btn simple-search-btn">
+                    <button class="btn btn-primary" type="button"><i class="fa fa-search" aria-hidden="true"></i></button>
+                </span>
             </div>
-            <span class="input-group-btn simple-search-btn">
-                <button class="btn btn-primary" type="button"><i class="fa fa-search" aria-hidden="true"></i></button>
-            </span>
         </div>
     </div>
 </div>

@@ -411,10 +411,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 	events: {
 		'click #export-modal-btn': 'initializeExportData',
 		'keyup #search-keyword-id': 'filterDatatable',
-		'click #keyword-dropdown-btn': function(){
-			if ($('#keyword-dropdown-menu').is(':visible')) $('#keyword-dropdown-menu').hide();
-			else $('#keyword-dropdown-menu').show();
-		},
+		'click #keyword-dropdown-btn': 'generateQueryList',
 		'click #tag-dropdown-btn': function(){
 			if ($('#tag-dropdown-menu').is(':visible')) $('#tag-dropdown-menu').hide();
 			else $('#tag-dropdown-menu').show();
@@ -696,6 +693,78 @@ app.views.SearchResultsView = Marionette.View.extend({
 		// TODO: if the deleted character is a space, delete the or + spaces
 		// 	e.preventDefault();
 		// }
+	},
+	generateQueryList: function(){
+		var dropdown = $('#keyword-dropdown-menu');
+
+		if (dropdown.is(':visible')) {
+			$('#keyword-query-list-container').remove();
+			dropdown.hide();
+        }
+
+		else{
+			var search = $('#search-keyword-id').val();
+			search = search.trim().split(/\s+/);
+			var rowContainer = document.createElement('div');
+			rowContainer.id = 'keyword-query-list-container';
+			console.log(search);
+
+			for (var i = 0; i < search.length - 1; i++){
+				// Create the first input row that stretches across the entire dropdown
+				if (i == 0){
+					var row = document.createElement('div');
+					row.className = "row";
+					var col12 = document.createElement('div');
+					col12.className = "col-12";
+					var wordInput = document.createElement('input');
+					wordInput.type = "text";
+					wordInput.className = "form-control ss-word-input";
+					wordInput.value = search[i];
+					col12.appendChild(wordInput);
+					row.appendChild(col12);
+				}
+
+				// Create every input that has an or/and select box next to it.
+				else {
+					var row = document.createElement('div');
+					row.className = "row";
+
+					var col4 = document.createElement('div');
+					col4.className = "col-4 ss-word-select-container";
+					var wordSelect = document.createElement('select');
+					wordSelect.className = "form-control ss-word-select";
+					wordSelect.options[wordSelect.options.length] = new Option('or', 'or');
+					wordSelect.options[wordSelect.options.length] = new Option('and', 'and');
+					col4.appendChild(wordSelect);
+
+					var col8 = document.createElement('div');
+					col8.className = "col-8 ss-word-input-container";
+					var wordInput = document.createElement('input');
+					wordInput.type = "text";
+					wordInput.className = "form-control ss-word-input";
+					wordInput.value = search[i+1];
+					col8.appendChild(wordInput);
+
+					row.appendChild(col4);
+					row.appendChild(col8);
+					i++;
+				}
+				rowContainer.appendChild(row);
+			}
+
+			// Create the final + button which should add another row
+			var row = document.createElement('div');
+			row.className = "row";
+			var col12 = document.createElement('div');
+			col12.className = "col-12";
+			col12.innerHTML = "<button class='btn btn-default' id='ss-add-btn'><i class='fa fa-plus' aria-hidden='true'></i></button>";
+			row.appendChild(col12);
+			rowContainer.appendChild(row);
+
+
+			$('#keyword-query-editor')[0].appendChild(rowContainer);
+			dropdown.show();
+		}
 	},
 	getFilterData: function() {
     	var theForm = $("#form-"+this.selectedModel);
