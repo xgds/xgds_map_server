@@ -416,7 +416,9 @@ app.views.SearchResultsView = Marionette.View.extend({
 			if ($('#tag-dropdown-menu').is(':visible')) $('#tag-dropdown-menu').hide();
 			else $('#tag-dropdown-menu').show();
 		},
-		'keydown [name="search-keyword"]': 'replaceKeywordSpace'
+		'keydown [name="search-keyword"]': 'replaceSpace',
+		'click #ss-add-btn': 'addQueryInput',
+		'keyup .ss-word-input': 'updateKeywordSearch'
 	},
 	initialize: function() {
 		this.modelMap = {};
@@ -610,7 +612,7 @@ app.views.SearchResultsView = Marionette.View.extend({
                 autoWidth: true,
                 dom: '<"top"' +
 						'<"row"' +
-							'<"col-12"' +
+							'<"col-12 no-padding"' +
 								'<"display-length"l><"paginate"p>' +
 							'>' +
 						'>' +
@@ -684,7 +686,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 	filterDatatable: function(){
 		this.theDataTable.search($('#search-keyword-id').val()).draw();
 	},
-	replaceKeywordSpace: function(e){
+	replaceSpace: function(e){
 		if (e.which === 32) {
 			e.preventDefault();
 			$("#search-keyword-id").val($("#search-keyword-id").val() + ' or ');
@@ -694,22 +696,52 @@ app.views.SearchResultsView = Marionette.View.extend({
 		// 	e.preventDefault();
 		// }
 	},
+	updateKeywordSearch: function(){
+		var keywords = [];
+		var connectingWords = [];
+		$('#keyword-query-editor').find('input').each(function () {
+			keywords.push(this.value);
+		});
+		$('#keyword-query-editor').find('select').each(function () {
+			connectingWords.push(this.value);
+		});
+
+		if (connectingWords.length == 0) $('#search-keyword-id').val(keywords[0]);
+		else {
+			var query = "";
+			for (var i = 0; i < keywords.length; i++){
+				if (i == keywords.length - 1) query = query + keywords[i];
+				else if (keywords[i] == "") continue;
+				else query = query + keywords[i] + " " + connectingWords[i] + " ";
+			}
+			$('#search-keyword-id').val(query);
+		}
+		this.filterDatatable();
+    },
 	generateQueryList: function(){
 		var dropdown = $('#keyword-dropdown-menu');
 
 		if (dropdown.is(':visible')) {
+			this.updateKeywordSearch();
 			$('#keyword-query-list-container').remove();
+			$('.buttonRow').remove();
 			dropdown.hide();
         }
 
 		else{
 			var search = $('#search-keyword-id').val();
-			search = search.trim().split(/\s+/);
+			if (search.indexOf(' ') >= 0) {
+				search = search.trim().split(/\s+/);
+				var searchLength = search.length - 1;
+            } else {
+				search = [search];
+				var searchLength = search.length;
+			}
 			var rowContainer = document.createElement('div');
 			rowContainer.id = 'keyword-query-list-container';
 			console.log(search);
 
-			for (var i = 0; i < search.length - 1; i++){
+			for (var i = 0; i < searchLength; i++){
 				// Create the first input row that stretches across the entire dropdown
 				if (i == 0){
 					var row = document.createElement('div');
@@ -753,17 +785,50 @@ app.views.SearchResultsView = Marionette.View.extend({
 			}
 
 			// Create the final + button which should add another row
-			var row = document.createElement('div');
-			row.className = "row";
+			var buttonRow = document.createElement('div');
+			buttonRow.className = "row buttonRow";
 			var col12 = document.createElement('div');
 			col12.className = "col-12";
 			col12.innerHTML = "<button class='btn btn-default' id='ss-add-btn'><i class='fa fa-plus' aria-hidden='true'></i></button>";
-			row.appendChild(col12);
-			rowContainer.appendChild(row);
+			buttonRow.appendChild(col12);
 
 
 			$('#keyword-query-editor')[0].appendChild(rowContainer);
+			$('#keyword-query-editor')[0].appendChild(buttonRow);
 			dropdown.show();
+		}
+	},
+	addQueryInput: function(){
+		var search = $('#search-keyword-id').val();
+
+		if (search.length > 0){
+			var rowContainer = document.getElementById('keyword-query-list-container');
+			var row = document.createElement('div');
+			row.className = "row";
+
+			var col4 = document.createElement('div');
+			col4.className = "col-4 ss-word-select-container";
+			var wordSelect = document.createElement('select');
+			wordSelect.className = "form-control ss-word-select";
+			wordSelect.options[wordSelect.options.length] = new Option('or', 'or');
+			wordSelect.options[wordSelect.options.length] = new Option('and', 'and');
+			col4.appendChild(wordSelect);
+
+			var col8 = document.createElement('div');
+			col8.className = "col-8 ss-word-input-container";
+			var wordInput = document.createElement('input');
+			wordInput.type = "text";
+			wordInput.className = "form-control ss-word-input";
+			col8.appendChild(wordInput);
+
+			row.appendChild(col4);
+			row.appendChild(col8);
+
+			rowContainer.appendChild(row);
+		}
+
+		else{
+
 		}
 	},
 	getFilterData: function() {
