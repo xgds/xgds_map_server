@@ -216,13 +216,18 @@ class KmlMap(AbstractMap):
         return ''
         
     def getUrl(self):
-        if self.kmlFile and not self.localFile:
-            if (self.kmlFile.startswith('/')):
-                return self.kmlFile
-            else:
-                return settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + self.kmlFile
-        elif self.localFile:
-            return self.localFile.url
+        try:
+            if self.kmlFile and not self.localFile:
+                if (self.kmlFile.startswith('/')):
+                    return self.kmlFile
+                else:
+                    return settings.DATA_URL + settings.XGDS_MAP_SERVER_DATA_SUBDIR + self.kmlFile
+            elif self.localFile:
+                return self.localFile.url
+        except:
+            print 'problem getting url from local file'
+            traceback.print_exc()
+            return ''
 
     def getKmlUrl(self):
             """ If this element has an url which returns kml, override this function to return that url. """
@@ -236,7 +241,11 @@ class KmlMap(AbstractMap):
         result["data"]["openable"] = self.openable
 #         result["data"]["transparency"] = self.transparency
         if self.localFile:
-            result["data"]["localFile"] = self.localFile.url
+            try:
+                result["data"]["localFile"] = self.localFile.url
+            except:
+                print 'problem getting url from localfile'
+                traceback.print_exc()
         return result
 
 
