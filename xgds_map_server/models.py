@@ -249,6 +249,40 @@ class KmlMap(AbstractMap):
         return result
 
 
+class AbstractWMS(AbstractMap):
+    local = models.BooleanField(default=False) # locally hosted on geoserver
+    sourceFile = models.FileField(upload_to=settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR, max_length=256,
+                                  null=True, blank=True)
+    projectionName = models.CharField(null=True, max_length=32)
+    wmsUrl = models.CharField(null=True, max_length=512, db_index=True)
+    layers = models.CharField(null=True, max_length=64, db_index=True)
+    # geoserver specific stuff
+    workspaceName = models.CharField(null=True, max_length=32)
+    storeName = models.CharField(null=True, max_length=32)
+    format = models.CharField( max_length=16, default="image/png") # the format on geoserver
+
+    def getUrl(self):
+        return self.wmsUrl
+
+    def getTreeJson(self):
+        """ Get the json block that the fancy tree needs to render this node """
+        result = super(AbstractWMS, self).getTreeJson()
+        result["data"]["tileURL"] = self.getUrl()
+        result["data"]["format"] = self.format
+        result["data"]["layers"] = self.layers
+        if self.projectionName:
+            result["data"]["projectionName"] = self.projectionName
+        return result
+
+    class Meta:
+        abstract = True
+
+
+class WMSTile(AbstractWMS):
+
+    class Meta:
+        abstract = False
+
 class AbstractMapTile(AbstractMap):
     """
     A reference to a tiled geoTiff.
@@ -602,7 +636,7 @@ class MapLink(AbstractMap):
 
 
 """ IMPORTANT These have to be defined after the models they refer to are defined."""
-MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile, MapDataTile, MapCollection, MapSearch, MapLink, GroundOverlayTime])
+MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile, MapDataTile, MapCollection, MapSearch, MapLink, GroundOverlayTime, WMSTile])
 
 # this manager does not include groups
-MAP_MANAGER = ModelCollectionManager(AbstractMap, [MapLayer, KmlMap, MapTile, MapDataTile, MapCollection, MapSearch, MapLink, GroundOverlayTime])
+MAP_MANAGER = ModelCollectionManager(AbstractMap, [MapLayer, KmlMap, MapTile, MapDataTile, MapCollection, MapSearch, MapLink, GroundOverlayTime, WMSTile])
