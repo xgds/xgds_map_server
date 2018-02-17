@@ -67,6 +67,8 @@ from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapDataT
 from xgds_map_server.kmlLayerExporter import exportMapLayer
 from geocamUtil.KmlUtil import wrapKmlForDownload
 from xgds_data.introspection import modelName
+from fastkml import kml
+from shapely.geometry import Point, LineString, Polygon
 
 from xgds_core.views import buildFilterDict
 from xgds_core.util import insertIntoPath
@@ -1896,15 +1898,15 @@ class ExportOrderListJson(OrderListJson):
             simpleSearchData = request.POST.get('simpleSearchData', None)
             advancedSearchData = json.loads(request.POST.get('advancedSearchData', None))
             filetype = request.POST.get('filetype', None)
-            filename = request.POST.get('filename', None) + ".csv"
+            filename = request.POST.get('filename', None)
 
             self.lookupModel(modelDict["model"])
             if rowIds:
                 data = self.filterData(rowIds, simpleSearchData, advancedSearchData)
                 if (filetype == "CSV"):
-                    response = self.exportCSV(data, modelDict, filename)
+                    response = self.exportCSV(data, modelDict, filename + ".csv")
                 elif (filetype == "KML"):
-                    response = self.exportKML(data, modelDict, filename)
+                    response = self.exportKML(data, modelDict, filename + ".kml")
                 else:
                     response = HttpResponse(json.dumps({'error': 'unknown file type.'}), content_type='application/json', status=500)
 
@@ -1944,6 +1946,31 @@ class ExportOrderListJson(OrderListJson):
         response = StreamingHttpResponse((writer.writerow(row) for row in rows), content_type='text/csv')
         response['Content-Disposition'] = 'attachment; filename="' + filename + '"'
         return response
+
+    def exportKML(self, data, modelDict, filename):
+        # kml = self.model.to_kml()
+        k = kml.KML()
+        ns = '{http://www.opengis.net/kml/2.2}'
+
+        # Create a KML Document and add it to the KML root object
+        # d = kml.Document(ns, 'docid', filename, 'doc description')
+        # k.append(d)
+        #
+        # # Create a KML Folder and add it to the Document
+        # f = kml.Folder(ns, 'fid', modelDict['model'], 'f description')
+
+        # Create a Placemark with a simple polygon geometry and add it to the
+        # second folder of the Document
+        for obj in data:
+            placemark = obj.to_kml(str(obj.id), obj.name, obj.description, obj.lat, obj.lon)
+            k.append(placemark)
+
+        # d.append(f)
+
+        # Print out the KML Object as a string
+        # return k.to_string()
+        return wrapKmlForDownload(k.to_string(prettyprint=True), attachmentName=filename)
+
 
 # This is for the exportSearchResultsToCSV view. Speeds things up a bit and
 # allows the use of a StreamingHttpResponse for larger files

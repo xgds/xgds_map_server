@@ -418,7 +418,8 @@ app.views.SearchResultsView = Marionette.View.extend({
 		},
 		'keydown [name="search-keyword"]': 'replaceSpace',
 		'click #ss-add-btn': 'addQueryInput',
-		'keyup .ss-word-input': 'updateKeywordSearch'
+		'keyup .ss-word-input': 'updateKeywordSearch',
+		'change .ss-word-select': 'updateKeywordSearch'
 	},
 	initialize: function() {
 		this.modelMap = {};
@@ -767,6 +768,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 					wordSelect.className = "form-control ss-word-select";
 					wordSelect.options[wordSelect.options.length] = new Option('or', 'or');
 					wordSelect.options[wordSelect.options.length] = new Option('and', 'and');
+					wordSelect.value = search[i];
 					col4.appendChild(wordSelect);
 
 					var col8 = document.createElement('div');
