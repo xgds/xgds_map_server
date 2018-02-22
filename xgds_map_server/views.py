@@ -1906,7 +1906,7 @@ class ExportOrderListJson(OrderListJson):
                 if (filetype == "CSV"):
                     response = self.exportCSV(data, modelDict, filename + ".csv")
                 elif (filetype == "KML"):
-                    response = self.exportKML(data, modelDict, filename + ".kml")
+                    response = self.exportKML(data, modelDict, selectedModel, filename + ".kml")
                 else:
                     response = HttpResponse(json.dumps({'error': 'unknown file type.'}), content_type='application/json', status=500)
 
@@ -1947,29 +1947,32 @@ class ExportOrderListJson(OrderListJson):
         response['Content-Disposition'] = 'attachment; filename="' + filename + '"'
         return response
 
-    def exportKML(self, data, modelDict, filename):
+    def exportKML(self, data, modelDict, selectedModel, filename):
         # kml = self.model.to_kml()
         k = kml.KML()
         ns = '{http://www.opengis.net/kml/2.2}'
 
         # Create a KML Document and add it to the KML root object
-        # d = kml.Document(ns, 'docid', filename, 'doc description')
-        # k.append(d)
-        #
-        # # Create a KML Folder and add it to the Document
-        # f = kml.Folder(ns, 'fid', modelDict['model'], 'f description')
+        d = kml.Document(ns, selectedModel + "_id", filename, 'Placemarks for type ' + selectedModel)
+        k.append(d)
 
-        # Create a Placemark with a simple polygon geometry and add it to the
-        # second folder of the Document
+        # Create a Placemark with a simple polygon geometry and add it to the folder
         for obj in data:
-            placemark = obj.to_kml(str(obj.id), obj.name, obj.description, obj.lat, obj.lon)
-            k.append(placemark)
+            if ((obj.lat is not None) and (obj.lon is not None)):
+                if (selectedModel == "Sample"):
+                    placemark = obj.to_kml(str(obj.name), obj.name, obj.description, obj.lat, obj.lon)
+                elif (selectedModel == "Note"):
+                    try:
+                        placemark = obj.to_kml(str(obj.name), obj.name, obj.content, obj.lat, obj.lon)
+                    except:
+                        pass
+                else:
+                    placemark = obj.to_kml(str(obj.id), obj.name, obj.description, obj.lat, obj.lon)
+                d.append(placemark)
 
-        # d.append(f)
-
-        # Print out the KML Object as a string
-        # return k.to_string()
-        return wrapKmlForDownload(k.to_string(prettyprint=True), attachmentName=filename)
+        response = HttpResponse(k.to_string(prettyprint=True), content_type='application/vnd.google-earth.kml+xml')
+        response['Content-Disposition'] = 'attachment; filename="' + filename + '"'
+        return response
 
 
 # This is for the exportSearchResultsToCSV view. Speeds things up a bit and

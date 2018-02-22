@@ -425,6 +425,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 		this.modelMap = {};
 		this.selectedIds = [];
 		this.firstLoad = true;
+		this.fileType = 'CSV';
 		var context = this;
 		app.on('forceDetail', function(data){
 			var modelMap = context.lookupModelMap(data.type);
@@ -668,6 +669,7 @@ app.views.SearchResultsView = Marionette.View.extend({
         app.vent.trigger("repack");
     },
 	initializeExportData: function(){
+    	var _this = this;
     	$('.export-err').hide();
     	if ($('#pick_master').is(":checked"))
     		this.selectedIds.push("All");
@@ -676,9 +678,11 @@ app.views.SearchResultsView = Marionette.View.extend({
     	$('#selectedModel').val(this.selectedModel);
     	$('#simpleSearchData').val($('#search-keyword-id').val());
     	$('#advancedSearchData').val(JSON.stringify(this.getFilterData()));
-    	$('#filetype').val($('label[name=fileType]').attr("data"));
+    	$('#filetype').val(this.fileType);
+
     	$('label[name=fileType]').click(function(event) {
 			$('#filetype').val($(event.target).attr('data'));
+			_this.fileType = $(event.target).attr('data')
         });
 
     	if (this.selectedIds.length == 0) $('.export-err').show();
@@ -692,8 +696,9 @@ app.views.SearchResultsView = Marionette.View.extend({
 			e.preventDefault();
 			$("#search-keyword-id").val($("#search-keyword-id").val() + ' or ');
 		}
+
+		// TODO: if the deleted character is a space, delete the or w/ spaces
 		// else if (e.which == 8){
-		// TODO: if the deleted character is a space, delete the or + spaces
 		// 	e.preventDefault();
 		// }
 	},
