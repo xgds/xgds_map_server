@@ -56,8 +56,24 @@ class MapGroupAdmin(admin.ModelAdmin):
     search_fields = ('name',
                      'description')
 
+class MapLayerAdmin(admin.ModelAdmin):
+    list_display = ('uuid',
+                    'name',
+                    'parent',
+                    'visible',
+                    'description')
+    list_editable = list_display[1:]
+    ordering = ('parent', 'name')
+    search_fields = ('name',
+                     'description')
+
+
+
 admin.site.register(models.KmlMap, KmlMapAdmin)
 admin.site.register(models.MapGroup, MapGroupAdmin)
 admin.site.register(models.MapLayer, MapLayerAdmin)
 #TODO make admin classes for other map layer stuff below
 admin.site.register(models.MapTile)
+admin.site.register(models.WMSTile, MapLayerAdmin)
+admin.site.register(models.WMTSTile, MapLayerAdmin)
+admin.site.register(models.GroundOverlayTime, MapLayerAdmin)

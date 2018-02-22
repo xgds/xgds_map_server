@@ -128,9 +128,9 @@ def getMapTreePage(request):
     """
     HTML tree of maps using fancytree
     """
-    jsonMapTreeUrl = (request.build_absolute_uri(reverse('mapTreeJSON')))
-    moveNodeURL = (request.build_absolute_uri(reverse('moveNode')))
-    setVisibilityURL = (request.build_absolute_uri(reverse('setNodeVisibility')))
+    jsonMapTreeUrl = request.build_absolute_uri(reverse('mapTreeJSON'))
+    moveNodeURL = request.build_absolute_uri(reverse('moveNode'))
+    setVisibilityURL = request.build_absolute_uri(reverse('setNodeVisibility'))
     return render(request,
                   "MapTree.html",
                   {'JSONMapTreeURL': jsonMapTreeUrl,

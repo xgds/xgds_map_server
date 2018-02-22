@@ -57,7 +57,11 @@ app.views.FancyTreeView = Marionette.View.extend({
     getTreeIcon: function(key) {
     	var image = "/static/xgds_map_server/icons/";
     	switch (key) {
-	        case "MapLink":
+	        case "WMTSTile":
+	            return image + "wmts.png";
+	        case "WMSTile":
+	            return image + "wmstile.png";
+            case "MapLink":
 	            return image + "link-16.png";
 	        case "KmlMap":
 	            return image + "gearth.png";
