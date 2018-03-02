@@ -728,7 +728,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 		var dropdown = $('#keyword-dropdown-menu');
 
 		if (dropdown.is(':visible')) {
-			this.updateKeywordSearch();
+			// this.updateKeywordSearch();
 			$('#keyword-query-list-container').remove();
 			$('.buttonRow').remove();
 			dropdown.hide();
@@ -834,9 +834,6 @@ app.views.SearchResultsView = Marionette.View.extend({
 			rowContainer.appendChild(row);
 		}
 
-		else{
-
-		}
 	},
 	getFilterData: function() {
     	var theForm = $("#form-"+this.selectedModel);
