@@ -286,6 +286,13 @@ class AbstractWMS(AbstractMap):
             result["data"]["maxLevel"] = self.maxLevel
         if self.projectionName:
             result["data"]["projectionName"] = self.projectionName
+
+        if self.minLat:
+            result['data']['miny'] = self.minLat
+            result['data']['minx'] = self.minLon
+            result['data']['maxy'] = self.maxLat
+            result['data']['maxx'] = self.maxLon
+
         return result
 
     class Meta:
