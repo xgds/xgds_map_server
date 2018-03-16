@@ -266,6 +266,11 @@ class AbstractWMS(AbstractMap):
     maxLevel = models.IntegerField(null=True, blank=True)
     wmsVersion = models.CharField(default='1.1.1', max_length=16)  # wms version, 1.1.1, or could be 1.3.0
     srs = models.CharField(null=True, blank=True, max_length=32)  # srs or crs if we are wms version 1.3.0 or higher
+    hasTime = models.BooleanField(default=False) #whether or not this supports time ie lunaserv time wms
+    start = models.DateTimeField(null=True, blank=True, db_index=True)
+    end = models.DateTimeField(null=True, blank=True, db_index=True)
+    interval = models.FloatField(null=True, blank=True)
+
 
     def getUrl(self):
         return self.wmsUrl
@@ -280,12 +285,25 @@ class AbstractWMS(AbstractMap):
         result["data"]["tileWidth"] = self.tileHeight
         result["data"]["wmsVersion"] = self.wmsVersion
         result["data"]["srs"] = self.srs
+        result["data"]["hasTime"] = self.hasTime
+        if self.hasTime:
+            result["data"]["start"] = self.start
+            result["data"]["end"] = self.end
+            result["data"]["interval"] = self.interval
+
         if self.minLevel > 0:
             result["data"]["minLevel"] = self.minLevel
         if self.maxLevel:
             result["data"]["maxLevel"] = self.maxLevel
         if self.projectionName:
             result["data"]["projectionName"] = self.projectionName
+
+        if self.minLat:
+            result['data']['miny'] = self.minLat
+            result['data']['minx'] = self.minLon
+            result['data']['maxy'] = self.maxLat
+            result['data']['maxx'] = self.maxLon
+
         return result
 
     class Meta:
