@@ -266,6 +266,7 @@ class AbstractWMS(AbstractMap):
     maxLevel = models.IntegerField(null=True, blank=True)
     wmsVersion = models.CharField(default='1.1.1', max_length=16)  # wms version, 1.1.1, or could be 1.3.0
     srs = models.CharField(null=True, blank=True, max_length=32)  # srs or crs if we are wms version 1.3.0 or higher
+    hasTime = models.BooleanField(default=False) #whether or not this supports time ie lunaserv time wms
 
     def getUrl(self):
         return self.wmsUrl
@@ -280,6 +281,7 @@ class AbstractWMS(AbstractMap):
         result["data"]["tileWidth"] = self.tileHeight
         result["data"]["wmsVersion"] = self.wmsVersion
         result["data"]["srs"] = self.srs
+        result["data"]["hasTime"] = self.hasTime
         if self.minLevel > 0:
             result["data"]["minLevel"] = self.minLevel
         if self.maxLevel:
