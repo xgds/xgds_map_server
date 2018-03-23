@@ -443,8 +443,10 @@ $(function() {
                         app.nodeMap[node.key] = this.createCollectionView(node);
                     } else if (node.data.type == "MapSearch"){
                         app.nodeMap[node.key] = this.createSearchView(node);
-                    } else if (node.data.type == "MapLink" || node.data.type == "PlanLink"){
+                    } else if (node.data.type == "MapLink" || node.data.type == "PlanLink") {
                         app.nodeMap[node.key] = this.createMapLinkView(node);
+                    } else if (node.data.type == "WMSTile") {
+                        app.nodeMap[node.key] = this.createWMSTileView(node);
                     } else if (node.data.type == "GroundOverlayTime"){
                         app.nodeMap[node.key] = this.createOverlayTimeView(node);
                     } else {
@@ -512,7 +514,26 @@ $(function() {
                 this.layersForMap.push(this.liveSearchGroup);
                 this.layersForMap.push(this.mapNotesGroup);
             },
-            
+
+            createRulerLayer: function(){
+                if (!this.rulerLayer){
+                    this.rulerLayer = new ol.layer.Vector({
+                        source: new ol.source.Vector(),
+                        style: new ol.style.Style({
+                            fill: new ol.style.Fill({
+                                color: 'rgba(255, 255, 255, 0.2)'
+                            }),
+                            stroke: new ol.style.Stroke({
+                                color: 'rgba(63, 185, 255, 0.7)',
+                                lineDash: [10, 10],
+                                width: 2
+                            }),
+                        })
+                    });
+                    app.map.map.addLayer(this.rulerLayer);
+                }
+            },
+
             buildCompassControl: function() {
             		
             	/**
@@ -740,6 +761,15 @@ $(function() {
                 node.mapView = dataTileView;
                 return dataTileView;
               },
+            createWMSTileView: function(node) {
+              var tileView = new app.views.WMSTileView({
+                  node: node,
+                  group: this.tileGroup,
+                  tileURL: node.data.tileURL
+              });
+              node.mapView = tileView;
+              return tileView;
+            },
             createOverlayTimeView: function(node) {
               var otView = new app.views.OverlayTimeView({
                   node: node,
@@ -1148,6 +1178,30 @@ $(function() {
                 this.mapElement = new ol.layer.Tile({
                     source: new ol.source.XYZ({
                         url: this.tileURL
+                    }),
+                    opacity: this.opacity
+                });
+            }
+        }
+    });
+
+    app.views.WMSTileView = app.views.TileView.extend({
+        initialize: function(options) {
+            this.tileURL = options.tileURL;
+            this.setupOpacity(options);
+		    this.name = options.node.title;
+		    this.params = {LAYERS:options.node.data.layers,
+                           WIDTH:options.node.data.tileWidth,
+                           HEIGHT:options.node.data.tileHeight,
+                           VERSION:options.node.data.wmsVersion};
+            app.views.TreeMapElement.prototype.initialize.call(this, options);
+        },
+        constructMapElements: function() {
+            if (_.isUndefined(this.mapElement)){
+                this.mapElement = new ol.layer.Tile({
+                    source: new ol.source.TileWMS({
+                        url: this.tileURL,
+                        params: this.params
                     }),
                     opacity: this.opacity
                 });
