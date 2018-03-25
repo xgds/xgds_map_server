@@ -411,6 +411,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 	events: {
 		'click #export-modal-btn': 'initializeExportData',
 		'keyup #search-keyword-id': 'filterDatatable',
+		'keyup #search-tags-id': 'filterDatatable',
 		'click #keyword-dropdown-btn': 'generateQueryList',
 		'click #tag-dropdown-btn': function(){
 			if ($('#tag-dropdown-menu').is(':visible')) $('#tag-dropdown-menu').hide();
@@ -689,6 +690,9 @@ app.views.SearchResultsView = Marionette.View.extend({
 		else $('#exportModal').modal('show');
 	},
 	filterDatatable: function(){
+		var tags = $('#search-tags-id').val();
+		this.postData['tags'] = tags;
+		this.postData['modelName'] = this.selectedModel;
 		this.theDataTable.search($('#search-keyword-id').val()).draw();
 	},
 	replaceSpace: function(e){
@@ -722,7 +726,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 			}
 			$('#search-keyword-id').val(query);
 		}
-		this.filterDatatable();
+		this.filterKeywordDatatable();
     },
 	generateQueryList: function(){
 		var dropdown = $('#keyword-dropdown-menu');
@@ -745,7 +749,6 @@ app.views.SearchResultsView = Marionette.View.extend({
 			}
 			var rowContainer = document.createElement('div');
 			rowContainer.id = 'keyword-query-list-container';
-			console.log(search);
 
 			for (var i = 0; i < searchLength; i++){
 				// Create the first input row that stretches across the entire dropdown
