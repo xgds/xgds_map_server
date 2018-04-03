@@ -16,8 +16,23 @@
 
 // DESCRIPTION -- define & override the initial openlayers hardcoded base layers
 
+// If you have no map api key then you can do this:
+// getInitialLayers = function() {
+// 	return [new ol.layer.Tile({
+//                      source: new ol.source.MapQuest({layer: 'osm'})
+//                  })]
+// }
+
+
+// get a key here:
+// https://msdn.microsoft.com/en-us/library/ff428642.aspx
 getInitialLayers = function() {
-	return [new ol.layer.Tile({
-                     source: new ol.source.MapQuest({layer: 'osm'})
-                 })]
-}
+        return [
+        		new ol.layer.Tile({
+            source: new ol.source.BingMaps({
+                key: map_api_key,
+                imagerySet: 'AerialWithLabels',
+                maxZoom: 19})}),
+
+        ]
+    }

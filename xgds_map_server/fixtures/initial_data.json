@@ -21,5 +21,23 @@
 	 "hasNetworkLink":1,
 	 "parent": "mg1"
 	 }
-}
+},
+	{
+        "pk": 1,
+        "model": "geocamUtil.SiteFrame",
+        "fields": {
+            "name": "Ames",
+            "displayName": "Ames",
+	           "east0": 582753.18,
+	           "north0": 4141805.69,
+	           "zone": "10S",
+	           "zoneNumber": 10,
+	           "south": 0,
+	           "axes": "NED",
+	           "north": "grid",
+	           "timezone": "America/Los_Angeles",
+	           "projCode": "EPSG:2227",
+           	   "projString": "+proj=utm +zone=10 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
+        }
+    }
 ]
