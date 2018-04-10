@@ -61,6 +61,8 @@
 	<script type="text/javascript" src="/static/autocomplete_light/vendor/select2/dist/js/select2.full.js"></script>
 	<script type="text/javascript" src="/static/autocomplete_light/forward.js"></script>
 	<script type="text/javascript" src="/static/autocomplete_light/select2.js"></script>
+    <script type="text/javascript" src="{% static 'xgds_notes2/js/tags_tree.js' %}"></script>
+	<script type="text/javascript" src="{% static 'xgds_notes2/js/tags_input.js' %}"></script>
     {% for template_name, template in templates.items %}
 	<script type="text/handlebars" id="template-{{template_name}}">
 		{{template|safe}}

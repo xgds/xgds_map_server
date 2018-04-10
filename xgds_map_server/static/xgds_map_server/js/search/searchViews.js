@@ -410,17 +410,23 @@ app.views.SearchNotesView = Marionette.View.extend({
 app.views.SearchResultsView = Marionette.View.extend({
 	events: {
 		'click #export-modal-btn': 'initializeExportData',
-		'keyup #search-keyword-id': 'filterDatatable',
-		'keyup #search-tags-id': 'filterDatatable',
-		'click #keyword-dropdown-btn': 'generateQueryList',
-		'click #tag-dropdown-btn': function(){
-			if ($('#tag-dropdown-menu').is(':visible')) $('#tag-dropdown-menu').hide();
-			else $('#tag-dropdown-menu').show();
-		},
+		// 'keyup #search-keyword-id': function(){
+		// 	_.debounce(this.filterDatatable(), 15000)
+		// },
+		// 'keyup #search-tags-id': function(){
+		// 	_.debounce(this.filterDatatable(), 15000)
+		// },
+		'click #simple-search-btn': 'filterDatatable',
+		'click #keyword-dropdown-btn': function(){ this.generateQueryList("keyword") },
+		'click #tags-dropdown-btn': function(){ this.generateQueryList("tag") },
 		'keydown [name="search-keyword"]': 'replaceSpace',
-		'click #ss-add-btn': 'addQueryInput',
-		'keyup .ss-word-input': 'updateKeywordSearch',
-		'change .ss-word-select': 'updateKeywordSearch'
+		'keydown [name="search-tags"]': 'replaceSpace',
+		'click #ss-keyword-add-btn': function(){ this.addQueryInput("keyword") },
+		'click #ss-tags-add-btn': function(){ this.addQueryInput("tag") },
+		'keyup .ss-keyword-word-input': function(){ this.updateSearch("keyword") },
+		'change .ss-keyword-word-select': function(){ this.updateSearch("keyword") },
+		'keyup .ss-tags-word-input': function(){ this.updateSearch("tag") },
+		'change .ss-tags-word-select': function(){ this.updateSearch("tag") }
 	},
 	initialize: function() {
 		this.modelMap = {};
@@ -689,6 +695,9 @@ app.views.SearchResultsView = Marionette.View.extend({
     	if (this.selectedIds.length == 0) $('.export-err').show();
 		else $('#exportModal').modal('show');
 	},
+	// filterDatatable: function(){
+	// 	this.theDataTable.search($('#search-keyword-id').val()).draw();
+	// },
 	filterDatatable: function(){
 		var tags = $('#search-tags-id').val();
 		this.postData['tags'] = tags;
@@ -698,25 +707,30 @@ app.views.SearchResultsView = Marionette.View.extend({
 	replaceSpace: function(e){
 		if (e.which === 32) {
 			e.preventDefault();
-			$("#search-keyword-id").val($("#search-keyword-id").val() + ' or ');
+			if (e.target.id === "search-keyword-id") $("#search-keyword-id").val($("#search-keyword-id").val() + ' or ');
+			else if (e.target.id === "search-tags-id") $("#search-tags-id").val($("#search-tags-id").val() + ' or ');
 		}
-
-		// TODO: if the deleted character is a space, delete the or w/ spaces
-		// else if (e.which == 8){
-		// 	e.preventDefault();
-		// }
 	},
-	updateKeywordSearch: function(){
+	updateSearch: function(type){
 		var keywords = [];
 		var connectingWords = [];
-		$('#keyword-query-editor').find('input').each(function () {
+		if (type === "keyword") var queryEditor = $('#keyword-query-editor');
+		else var queryEditor = $('#tags-query-editor');
+
+		queryEditor.find('input').each(function () {
 			keywords.push(this.value);
 		});
-		$('#keyword-query-editor').find('select').each(function () {
+		queryEditor.find('select').each(function () {
 			connectingWords.push(this.value);
 		});
 
-		if (connectingWords.length == 0) $('#search-keyword-id').val(keywords[0]);
+		if (connectingWords.length == 0) {
+			if (type === "keyword") var searchId = $('#search-keyword-id');
+			else var searchId = $('#search-tags-id');
+
+			searchId.val(keywords[0]);
+        }
+
 		else {
 			var query = "";
 			for (var i = 0; i < keywords.length; i++){
@@ -724,22 +738,28 @@ app.views.SearchResultsView = Marionette.View.extend({
 				else if (keywords[i] == "") continue;
 				else query = query + keywords[i] + " " + connectingWords[i] + " ";
 			}
-			$('#search-keyword-id').val(query);
+
+			if (type === "keyword") var searchId = $('#search-keyword-id');
+			else var searchId = $('#search-tags-id');
+
+			searchId.val(query);
 		}
-		this.filterKeywordDatatable();
     },
-	generateQueryList: function(){
-		var dropdown = $('#keyword-dropdown-menu');
+	generateQueryList: function(type){
+		if (type === "keyword") var dropdown = $('#keyword-dropdown-menu');
+		else var dropdown = $('#tags-dropdown-menu');
 
 		if (dropdown.is(':visible')) {
 			// this.updateKeywordSearch();
-			$('#keyword-query-list-container').remove();
+			if (type === "keyword") $('#keyword-query-list-container').remove();
+			else $('#tags-query-list-container').remove();
 			$('.buttonRow').remove();
 			dropdown.hide();
         }
 
 		else{
-			var search = $('#search-keyword-id').val();
+			if (type === "keyword") var search = $('#search-keyword-id').val();
+			else var search = $('#search-tags-id').val();
 			if (search.indexOf(' ') >= 0) {
 				search = search.trim().split(/\s+/);
 				var searchLength = search.length - 1;
@@ -748,7 +768,8 @@ app.views.SearchResultsView = Marionette.View.extend({
 				var searchLength = search.length;
 			}
 			var rowContainer = document.createElement('div');
-			rowContainer.id = 'keyword-query-list-container';
+			if (type === "keyword") rowContainer.id = 'keyword-query-list-container';
+			else rowContainer.id = 'tags-query-list-container';
 
 			for (var i = 0; i < searchLength; i++){
 				// Create the first input row that stretches across the entire dropdown
@@ -759,7 +780,8 @@ app.views.SearchResultsView = Marionette.View.extend({
 					col12.className = "col-12";
 					var wordInput = document.createElement('input');
 					wordInput.type = "text";
-					wordInput.className = "form-control ss-word-input";
+					if (type === "keyword") wordInput.className = "form-control ss-word-input ss-keyword-word-input";
+					else wordInput.className = "form-control ss-word-input ss-tags-word-input";
 					wordInput.value = search[i];
 					col12.appendChild(wordInput);
 					row.appendChild(col12);
@@ -773,7 +795,8 @@ app.views.SearchResultsView = Marionette.View.extend({
 					var col4 = document.createElement('div');
 					col4.className = "col-4 ss-word-select-container";
 					var wordSelect = document.createElement('select');
-					wordSelect.className = "form-control ss-word-select";
+					if (type === "keyword") wordSelect.className = "form-control ss-word-select ss-keyword-word-select";
+					else wordSelect.className = "form-control ss-word-select ss-tags-word-select";
 					wordSelect.options[wordSelect.options.length] = new Option('or', 'or');
 					wordSelect.options[wordSelect.options.length] = new Option('and', 'and');
 					wordSelect.value = search[i];
@@ -783,7 +806,8 @@ app.views.SearchResultsView = Marionette.View.extend({
 					col8.className = "col-8 ss-word-input-container";
 					var wordInput = document.createElement('input');
 					wordInput.type = "text";
-					wordInput.className = "form-control ss-word-input";
+					if (type === "keyword") wordInput.className = "form-control ss-word-input ss-keyword-word-input";
+					else wordInput.className = "form-control ss-word-input ss-tags-word-input";
 					wordInput.value = search[i+1];
 					col8.appendChild(wordInput);
 
@@ -799,27 +823,38 @@ app.views.SearchResultsView = Marionette.View.extend({
 			buttonRow.className = "row buttonRow";
 			var col12 = document.createElement('div');
 			col12.className = "col-12";
-			col12.innerHTML = "<button class='btn btn-default' id='ss-add-btn'><i class='fa fa-plus' aria-hidden='true'></i></button>";
+			if (type === "keyword") col12.innerHTML = "<button class='btn btn-default' id='ss-keyword-add-btn'><i class='fa fa-plus' aria-hidden='true'></i></button>";
+			else col12.innerHTML = "<button class='btn btn-default' id='ss-tags-add-btn'><i class='fa fa-plus' aria-hidden='true'></i></button>"
 			buttonRow.appendChild(col12);
 
+			if (type === "keyword"){
+				$('#keyword-query-editor')[0].appendChild(rowContainer);
+				$('#keyword-query-editor')[0].appendChild(buttonRow);
+			}
 
-			$('#keyword-query-editor')[0].appendChild(rowContainer);
-			$('#keyword-query-editor')[0].appendChild(buttonRow);
+			else{
+				$('#tags-query-editor')[0].appendChild(rowContainer);
+				$('#tags-query-editor')[0].appendChild(buttonRow);
+			}
+
 			dropdown.show();
 		}
 	},
-	addQueryInput: function(){
-		var search = $('#search-keyword-id').val();
+	addQueryInput: function(type){
+		if (type === "keyword") var search = $('#search-keyword-id').val();
+		else var search = $('#search-tags-id').val();
 
 		if (search.length > 0){
-			var rowContainer = document.getElementById('keyword-query-list-container');
+			if (type === "keyword") var rowContainer = document.getElementById('keyword-query-list-container');
+			else var rowContainer = document.getElementById('tags-query-list-container');
 			var row = document.createElement('div');
 			row.className = "row";
 
 			var col4 = document.createElement('div');
 			col4.className = "col-4 ss-word-select-container";
 			var wordSelect = document.createElement('select');
-			wordSelect.className = "form-control ss-word-select";
+			if (type === "keyword") wordSelect.className = "form-control ss-word-select ss-keyword-word-select";
+			else wordSelect.className = "form-control ss-word-select ss-tags-word-select";
 			wordSelect.options[wordSelect.options.length] = new Option('or', 'or');
 			wordSelect.options[wordSelect.options.length] = new Option('and', 'and');
 			col4.appendChild(wordSelect);
@@ -828,7 +863,8 @@ app.views.SearchResultsView = Marionette.View.extend({
 			col8.className = "col-8 ss-word-input-container";
 			var wordInput = document.createElement('input');
 			wordInput.type = "text";
-			wordInput.className = "form-control ss-word-input";
+			if (type === "keyword") wordInput.className = "form-control ss-word-input ss-keyword-word-input";
+			else wordInput.className = "form-control ss-word-input ss-tags-word-input";
 			col8.appendChild(wordInput);
 
 			row.appendChild(col4);
