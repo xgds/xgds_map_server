@@ -92,7 +92,7 @@ XGDS_MAP_SERVER_JS_MAP = {}
 # If you are not, override the below values. 
 XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM = 'EPSG:3857'
 XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM_CENTER = 'null'
-XGDS_MAP_SERVER_DEFAULT_ZOOM = 9
+XGDS_MAP_SERVER_DEFAULT_ZOOM = 14
 XGDS_MAP_SERVER_DEFAULT_ROTATION = 0    # to set the default rotation for the map view if it is not 0.  In radians.
 XGDS_MAP_SERVER_SHOW_COMPASS = 'false' # to show compass control
 XGDS_MAP_SERVER_MAP_SETUP_COORD_SYSTEM = 'null'
@@ -103,7 +103,7 @@ XGDS_MAP_SERVER_SITE_MONIKER = 'Site'
 XGDS_DATA_IMPORTS = getOrCreateDict('XGDS_DATA_IMPORTS')
 XGDS_DATA_IMPORTS['GeoTiff Map Tile'] = '/xgds_map_server/addTile'
 
-XGDS_MAP_SERVER_DEFAULT_HOURS_RANGE = 12 # if you are in live mode how many hours back to search through for objects by default
+XGDS_MAP_SERVER_DEFAULT_HOURS_RANGE = 12  # if you are in live mode how many hours back to search through for objects by default
 
 PIPELINE = getOrCreateDict('PIPELINE')
 
