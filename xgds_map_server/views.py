@@ -58,15 +58,10 @@ from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJ
 from geocamUtil.models import SiteFrame
 from xgds_core.views import get_handlebars_templates, OrderListJson
 from xgds_core.util import addPort
-from xgds_data.dlogging import recordList, recordRequest
-from xgds_data.forms import SearchForm, SpecializedForm
-from xgds_data.models import RequestLog, ResponseLog
-from xgds_data.views import searchHandoff, resultsIdentity
-from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapLayerFromSelectedForm, MapTileForm, MapDataTileForm, MapSearchForm, MapCollectionForm, EditMapTileForm, EditMapDataTileForm
-from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapDataTile, MapSearch, MapCollection, MapLink, MAP_NODE_MANAGER, MAP_MANAGER, GroundOverlayTime
+from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapLayerFromSelectedForm, MapTileForm, MapDataTileForm, EditMapTileForm, EditMapDataTileForm
+from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapDataTile, MapLink, MAP_NODE_MANAGER, MAP_MANAGER, GroundOverlayTime
 from xgds_map_server.kmlLayerExporter import exportMapLayer
 from geocamUtil.KmlUtil import wrapKmlForDownload
-from xgds_data.introspection import modelName
 
 from xgds_core.views import buildFilterDict
 from xgds_core.util import insertIntoPath
@@ -180,7 +175,7 @@ def getMapEditorPage(request, layerID=None):
                   {'templates': templates,
                    'copiedFeatures': copiedFeatures,
                    'layerForm': MapLayerFromSelectedForm(),
-                   'saveSearchForm': MapSearchForm(),
+                   #'saveSearchForm': MapSearchForm(),
                    'searchForms': getSearchForms(),
                    'app': 'xgds_map_server/js/map_editor/mapEditorApp.js',
                    'saveMaplayerUrl': reverse('saveMaplayer'),
@@ -625,178 +620,178 @@ def getAddFolderPage(request):
                       )
 
 
-def getAddMapSearchPage(request):
-    """
-    HTML view to create new map search
-    """
-    if request.method == 'POST':
-        form = MapSearchForm(request.POST)
-        if form.is_valid():
-            msearch = MapSearch()
-            msearch.name = form.cleaned_data['name']
-            msearch.description = form.cleaned_data['description']
-            msearch.parent = form.cleaned_data['parent']
-            msearch.creator = request.user.username
-            msearch.creation_time = datetime.datetime.now(pytz.utc)
-            msearch.deleted = False
-            msearch.locked = form.cleaned_data['locked']
-            msearch.visible = form.cleaned_data['visible']
-            msearch.requestLog = form.cleaned_data['requestLog']
-            msearch.save()
-        else:
-            return render(request,
-                          "AddMapSearch.html",
-                          {'form': form,
-                           'error': True,
-                           'help_content_path' : 'xgds_map_server/help/editMapSearch.rst',
-                           'title': 'Edit Map Search',
-                           'errorText': "Invalid form entries"},
-                          )
-        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
-    else:
-        form = MapSearchForm()
-        return render(request,
-                      "AddMapSearch.html",
-                      {'form': form,
-                       'help_content_path' : 'xgds_map_server/help/editMapSearch.rst',
-                       'title': 'Edit Map Search',
-                       'error': False},
-                      )
-
-
-def getEditMapSearchPage(request, mapSearchID):
-    title = "Edit Map Search"
-    fromSave = False
-    try:
-        msearch = MapSearch.objects.get(pk=mapSearchID)
-    except MapSearch.DoesNotExist:
-        raise Http404
-    except MapSearch.MultipleObjectsReturned:
-        # this really shouldn't happen, ever
-        return HttpResponseServerError()
-
-    # handle post data before loading everything
-    if request.method == 'POST':
-        form = MapSearchForm(request.POST)
-        if form.is_valid():
-            msearch = MapSearch()
-            msearch.name = form.cleaned_data['name']
-            msearch.description = form.cleaned_data['description']
-            msearch.parent = form.cleaned_data['parent']
-            msearch.creator = request.user.username
-            msearch.creation_time = datetime.datetime.now(pytz.utc)
-            msearch.locked = form.cleaned_data['locked']
-            msearch.visible = form.cleaned_data['visible']
-            msearch.requestLog = form.cleaned_data['requestLog']
-            msearch.save()
-        else:
-            return render(request,
-                          "EditNode.html",
-                          {"form": form,
-                           "title": title,
-                           "fromSave": False,
-                           'help_content_path' : 'xgds_map_server/help/editMapSearch.rst',
-                           "error": True,
-                           "errorText": "Invalid form entries"},
-                          )
-        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
-
-    # return form page with current form data
-    form = MapSearchForm(instance=msearch)
-    return render(request,
-                  "EditNode.html",
-                  {"form": form,
-                   "title": title,
-                   'help_content_path' : 'xgds_map_server/help/editMapSearch.rst',
-                   "fromSave": fromSave,
-                   },
-                  )
-
-
-def getAddMapCollectionPage(request):
-    """
-    HTML view to create new map collection
-    """
-    instruction = "Create a new map collection -- that is a collection of objects that can be turned on and off on the map."
-    title = "Add Map Collection"
-    if request.method == 'POST':
-        form = MapCollectionForm(request.POST)
-        if form.is_valid():
-            mcollection = MapCollection()
-            mcollection.name = form.cleaned_data['name']
-            mcollection.description = form.cleaned_data['description']
-            mcollection.parent = form.cleaned_data['parent']
-            mcollection.creator = request.user.username
-            mcollection.creation_time = datetime.datetime.now(pytz.utc)
-            mcollection.deleted = False
-            mcollection.locked = form.cleaned_data['locked']
-            mcollection.visible = form.cleaned_data['visible']
-            mcollection.collection = form.cleaned_data['collection']
-            mcollection.save()
-        else:
-            return render(request,
-                          "AddNode.html",
-                          {'form': form,
-                           'error': True,
-                           'title': title,
-                           'instruction': instruction,
-                           'errorText': "Invalid form entries"},
-                          )
-        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
-    else:
-        form = MapCollectionForm()
-        return render(request,
-                      "AddNode.html",
-                      {'form': form,
-                       'error': False,
-                       'title': title,
-                       'instruction': instruction},
-                      )
-
-
-def getEditMapCollectionPage(request, mapCollectionID):
-    title = "Edit Map Collection"
-    fromSave = False
-    try:
-        mcollection = MapCollection.objects.get(pk=mapCollectionID)
-    except MapCollection.DoesNotExist:
-        raise Http404
-    except MapCollection.MultipleObjectsReturned:
-        # this really shouldn't happen, ever
-        return HttpResponseServerError()
-
-    # handle post data before loading everything
-    if request.method == 'POST':
-        form = MapCollectionForm(request.POST)
-        if form.is_valid():
-            mcollection.name = form.cleaned_data['name']
-            mcollection.description = form.cleaned_data['description']
-            mcollection.parent = form.cleaned_data['parent']
-            mcollection.creator = request.user.username
-            mcollection.creation_time = datetime.datetime.now(pytz.utc)
-            mcollection.locked = form.cleaned_data['locked']
-            mcollection.visible = form.cleaned_data['visible']
-            mcollection.save()
-        else:
-            return render(request,
-                          "EditNode.html",
-                          {"form": form,
-                           "title": title,
-                           "fromSave": False,
-                           "error": True,
-                           "errorText": "Invalid form entries"},
-                          )
-        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
-
-    # return form page with current form data
-    form = MapCollectionForm(instance=mcollection)
-    return render(request,
-                  "EditNode.html",
-                  {"form": form,
-                   "title": title,
-                   "fromSave": fromSave,
-                   },
-                  )
+# def getAddMapSearchPage(request):
+#     """
+#     HTML view to create new map search
+#     """
+#     if request.method == 'POST':
+#         form = MapSearchForm(request.POST)
+#         if form.is_valid():
+#             msearch = MapSearch()
+#             msearch.name = form.cleaned_data['name']
+#             msearch.description = form.cleaned_data['description']
+#             msearch.parent = form.cleaned_data['parent']
+#             msearch.creator = request.user.username
+#             msearch.creation_time = datetime.datetime.now(pytz.utc)
+#             msearch.deleted = False
+#             msearch.locked = form.cleaned_data['locked']
+#             msearch.visible = form.cleaned_data['visible']
+#             msearch.requestLog = form.cleaned_data['requestLog']
+#             msearch.save()
+#         else:
+#             return render(request,
+#                           "AddMapSearch.html",
+#                           {'form': form,
+#                            'error': True,
+#                            'help_content_path' : 'xgds_map_server/help/editMapSearch.rst',
+#                            'title': 'Edit Map Search',
+#                            'errorText': "Invalid form entries"},
+#                           )
+#         return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
+#     else:
+#         form = MapSearchForm()
+#         return render(request,
+#                       "AddMapSearch.html",
+#                       {'form': form,
+#                        'help_content_path' : 'xgds_map_server/help/editMapSearch.rst',
+#                        'title': 'Edit Map Search',
+#                        'error': False},
+#                       )
+#
+#
+# def getEditMapSearchPage(request, mapSearchID):
+#     title = "Edit Map Search"
+#     fromSave = False
+#     try:
+#         msearch = MapSearch.objects.get(pk=mapSearchID)
+#     except MapSearch.DoesNotExist:
+#         raise Http404
+#     except MapSearch.MultipleObjectsReturned:
+#         # this really shouldn't happen, ever
+#         return HttpResponseServerError()
+#
+#     # handle post data before loading everything
+#     if request.method == 'POST':
+#         form = MapSearchForm(request.POST)
+#         if form.is_valid():
+#             msearch = MapSearch()
+#             msearch.name = form.cleaned_data['name']
+#             msearch.description = form.cleaned_data['description']
+#             msearch.parent = form.cleaned_data['parent']
+#             msearch.creator = request.user.username
+#             msearch.creation_time = datetime.datetime.now(pytz.utc)
+#             msearch.locked = form.cleaned_data['locked']
+#             msearch.visible = form.cleaned_data['visible']
+#             msearch.requestLog = form.cleaned_data['requestLog']
+#             msearch.save()
+#         else:
+#             return render(request,
+#                           "EditNode.html",
+#                           {"form": form,
+#                            "title": title,
+#                            "fromSave": False,
+#                            'help_content_path' : 'xgds_map_server/help/editMapSearch.rst',
+#                            "error": True,
+#                            "errorText": "Invalid form entries"},
+#                           )
+#         return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
+#
+#     # return form page with current form data
+#     form = MapSearchForm(instance=msearch)
+#     return render(request,
+#                   "EditNode.html",
+#                   {"form": form,
+#                    "title": title,
+#                    'help_content_path' : 'xgds_map_server/help/editMapSearch.rst',
+#                    "fromSave": fromSave,
+#                    },
+#                   )
+#
+#
+# def getAddMapCollectionPage(request):
+#     """
+#     HTML view to create new map collection
+#     """
+#     instruction = "Create a new map collection -- that is a collection of objects that can be turned on and off on the map."
+#     title = "Add Map Collection"
+#     if request.method == 'POST':
+#         form = MapCollectionForm(request.POST)
+#         if form.is_valid():
+#             mcollection = MapCollection()
+#             mcollection.name = form.cleaned_data['name']
+#             mcollection.description = form.cleaned_data['description']
+#             mcollection.parent = form.cleaned_data['parent']
+#             mcollection.creator = request.user.username
+#             mcollection.creation_time = datetime.datetime.now(pytz.utc)
+#             mcollection.deleted = False
+#             mcollection.locked = form.cleaned_data['locked']
+#             mcollection.visible = form.cleaned_data['visible']
+#             mcollection.collection = form.cleaned_data['collection']
+#             mcollection.save()
+#         else:
+#             return render(request,
+#                           "AddNode.html",
+#                           {'form': form,
+#                            'error': True,
+#                            'title': title,
+#                            'instruction': instruction,
+#                            'errorText': "Invalid form entries"},
+#                           )
+#         return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
+#     else:
+#         form = MapCollectionForm()
+#         return render(request,
+#                       "AddNode.html",
+#                       {'form': form,
+#                        'error': False,
+#                        'title': title,
+#                        'instruction': instruction},
+#                       )
+#
+#
+# def getEditMapCollectionPage(request, mapCollectionID):
+#     title = "Edit Map Collection"
+#     fromSave = False
+#     try:
+#         mcollection = MapCollection.objects.get(pk=mapCollectionID)
+#     except MapCollection.DoesNotExist:
+#         raise Http404
+#     except MapCollection.MultipleObjectsReturned:
+#         # this really shouldn't happen, ever
+#         return HttpResponseServerError()
+#
+#     # handle post data before loading everything
+#     if request.method == 'POST':
+#         form = MapCollectionForm(request.POST)
+#         if form.is_valid():
+#             mcollection.name = form.cleaned_data['name']
+#             mcollection.description = form.cleaned_data['description']
+#             mcollection.parent = form.cleaned_data['parent']
+#             mcollection.creator = request.user.username
+#             mcollection.creation_time = datetime.datetime.now(pytz.utc)
+#             mcollection.locked = form.cleaned_data['locked']
+#             mcollection.visible = form.cleaned_data['visible']
+#             mcollection.save()
+#         else:
+#             return render(request,
+#                           "EditNode.html",
+#                           {"form": form,
+#                            "title": title,
+#                            "fromSave": False,
+#                            "error": True,
+#                            "errorText": "Invalid form entries"},
+#                           )
+#         return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
+#
+#     # return form page with current form data
+#     form = MapCollectionForm(instance=mcollection)
+#     return render(request,
+#                   "EditNode.html",
+#                   {"form": form,
+#                    "title": title,
+#                    "fromSave": fromSave,
+#                    },
+#                   )
 
 
 @csrf_protect
@@ -999,24 +994,24 @@ def getMapLayerJSON(request, layerID):
                         content_type="application/json")
 
 
-def getMapCollectionJSON(request, mapCollectionID):
-    mapCollection = MapCollection.objects.get(pk=mapCollectionID)
-    collection = mapCollection.collection
-    json_data = None
-    if collection:
-        contents = collection.resolvedContents()
-        dict_data = []
-        for content in contents:
-            if inspect.isroutine(content.toMapDict):
-                resultDict = content.toMapDict()
-            else:
-                resultDict = modelToDict(content)
-            if resultDict:
-                dict_data.append(resultDict)
-        json_data = json.dumps(dict_data, indent=4, cls=DatetimeJsonEncoder)
-
-    return HttpResponse(content=json_data,
-                        content_type="application/json")
+# def getMapCollectionJSON(request, mapCollectionID):
+#     mapCollection = MapCollection.objects.get(pk=mapCollectionID)
+#     collection = mapCollection.collection
+#     json_data = None
+#     if collection:
+#         contents = collection.resolvedContents()
+#         dict_data = []
+#         for content in contents:
+#             if inspect.isroutine(content.toMapDict):
+#                 resultDict = content.toMapDict()
+#             else:
+#                 resultDict = modelToDict(content)
+#             if resultDict:
+#                 dict_data.append(resultDict)
+#         json_data = json.dumps(dict_data, indent=4, cls=DatetimeJsonEncoder)
+#
+#     return HttpResponse(content=json_data,
+#                         content_type="application/json")
 
 
 def getMapJsonDict(contents):
@@ -1054,43 +1049,45 @@ def handoffIdentity(request, results):
     return request, results
 
 
-def saveSearchWithinMap(request):
-    """ Save the submitted search as a map layer.
-    This does not include any paging or filtering."""
-    postData = request.GET
-    modelClass = str(postData['modelClass'])
-    left, sep, right = modelClass.rpartition(".")
+# def saveSearchWithinMap(request):
+#     # TODO this needs to be overhauled because it used to depend on xgds_data
+#     """ Save the submitted search as a map layer.
+#     This does not include any paging or filtering."""
+#     postData = request.GET
+#     modelClass = str(postData['modelClass'])
+#     left, sep, right = modelClass.rpartition(".")
+#
+#     reqlog = recordRequest(request)
+#     req, results = searchHandoff(request, left, right, handoffIdentity, True)
+#     reslog = ResponseLog.create(request=reqlog)
+#     reslog.save()
+#     recordList(reslog, results)
+#
+#     # make the search node for the map
+#     msearch = MapSearch()
+#     msearch.name = postData['mapSearchName']
+#     msearch.description = postData['mapSearchDescription']
+#     msearch.parent = MapGroup.objects.get(pk=postData['mapSearchParent'])
+#     msearch.creator = request.user.username
+#     msearch.creation_time = datetime.datetime.now(pytz.utc)
+#     msearch.deleted = False
+#     msearch.requestLog = reqlog
+#     msearch.save()
+#
+#     return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
 
-    reqlog = recordRequest(request)
-    req, results = searchHandoff(request, left, right, handoffIdentity, True)
-    reslog = ResponseLog.create(request=reqlog)
-    reslog.save()
-    recordList(reslog, results)
 
-    # make the search node for the map
-    msearch = MapSearch()
-    msearch.name = postData['mapSearchName']
-    msearch.description = postData['mapSearchDescription']
-    msearch.parent = MapGroup.objects.get(pk=postData['mapSearchParent'])
-    msearch.creator = request.user.username
-    msearch.creation_time = datetime.datetime.now(pytz.utc)
-    msearch.deleted = False
-    msearch.requestLog = reqlog
-    msearch.save()
-
-    return HttpResponse(json.dumps({'success': 'true'}), content_type='application/json')
-
-
-def searchWithinMap(request):
-    """ do a dynamic search within the map, not from a saved search.
-    Note this uses formsets because xgds_data is based around formsets. """
-    postData = request.GET
-    modelClass = str(postData['modelClass'])
-    left, sep, right = modelClass.rpartition(".")
-    contents = searchHandoff(request, left, right, resultsIdentity, True)
-    json_data = getMapJsonDict(contents)
-    return HttpResponse(content=json_data,
-                        content_type="application/json")
+# def searchWithinMap(request):
+#     # TODO This needs to be rewritten to not depend on xgds_data
+#     """ do a dynamic search within the map, not from a saved search.
+#     Note this uses formsets because xgds_data is based around formsets. """
+#     postData = request.GET
+#     modelClass = str(postData['modelClass'])
+#     left, sep, right = modelClass.rpartition(".")
+#     contents = searchHandoff(request, left, right, resultsIdentity, True)
+#     json_data = getMapJsonDict(contents)
+#     return HttpResponse(content=json_data,
+#                         content_type="application/json")
 
 
 def getRootNode():
@@ -1672,7 +1669,7 @@ def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSear
                    'searchForms': searchForms,
                    'searchModelDict': searchModelDict, 
                    'forceUserSession': forceUserSession,
-                   'saveSearchForm': MapSearchForm(),
+                   #'saveSearchForm': MapSearchForm(),
                    'app': 'xgds_map_server/js/search/mapViewerSearchApp.js'},
                   )
     

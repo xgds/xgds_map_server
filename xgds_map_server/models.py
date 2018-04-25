@@ -36,15 +36,10 @@ from geocamUtil.models.UuidField import UuidField
 from geocamUtil.models.managers import ModelCollectionManager
 from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
 from geocamUtil.models.ExtrasDotField import ExtrasDotField
-from xgds_data.models import Collection, RequestLog
 from xgds_core.couchDbStorage import CouchDbStorage
 from xgds_core.util import insertIntoPath
 
 
-# from Carbon.TextEdit import WIDTHHook
-# from aetypes import Boolean
-# from Carbon.QuickDraw import underline
-from cookielib import offset_from_tz_string
 # pylint: disable=C1001
 
 LOGO_REGEXES = None
@@ -615,44 +610,46 @@ class MapLayer(AbstractMap):
         return reverse('mapLayerKML', kwargs={'layerID': self.uuid})
 
 
-class MapCollection(AbstractMap):
-    """
-    A layer that encapsulates a collection of found objects.
-    """
-    collection = models.ForeignKey(Collection)
-    
-    def getUrl(self):
-        return reverse('mapCollectionJSON', kwargs={'mapCollectionID': self.uuid})
+# class MapCollection(AbstractMap):
+# TODO overhaul because this depended on xgds_data
+#     """
+#     A layer that encapsulates a collection of found objects.
+#     """
+#     collection = models.ForeignKey(Collection)
+#
+#     def getUrl(self):
+#         return reverse('mapCollectionJSON', kwargs={'mapCollectionID': self.uuid})
+#
+#     def getEditHref(self):
+#         return reverse('mapEditMapCollection', kwargs={'mapCollectionID': self.uuid})
+#
+#     def getTreeJson(self):
+#         """ Get the json block that the fancy tree needs to render this node """
+#         result = super(MapCollection, self).getTreeJson()
+#         result["data"]["collectionJSON"] = self.getUrl()
+#         return result
 
-    def getEditHref(self):
-        return reverse('mapEditMapCollection', kwargs={'mapCollectionID': self.uuid})
 
-    def getTreeJson(self):
-        """ Get the json block that the fancy tree needs to render this node """
-        result = super(MapCollection, self).getTreeJson()
-        result["data"]["collectionJSON"] = self.getUrl()
-        return result
-
-
-class MapSearch(AbstractMap):
-    """
-    A layer that repsresents a search which can be refreshing
-    """
-    requestLog = models.ForeignKey(RequestLog)
-    mapBounded = models.BooleanField(blank=True, default=False)  # true if you want to pass the map extens to the query and redo search with the extens
-
-    def getUrl(self):
-        return reverse('mapSearchJSON', kwargs={'mapSearchID': self.uuid})
-
-    def getEditHref(self):
-        return reverse('mapEditMapSearch', kwargs={'mapSearchID': self.uuid})
-
-    def getTreeJson(self):
-        """ Get the json block that the fancy tree needs to render this node """
-        result = super(MapSearch, self).getTreeJson()
-        result["data"]["searchJSON"] = self.getUrl()
-#         result["data"]["searchResultsJSON"] = reverse('data_searchResultsJSON', kwargs={'collectionID': self.requestLog.pk})
-        return result
+# class MapSearch(AbstractMap):
+# TODO overhaul because this depended on xgds_data
+#     """
+#     A layer that repsresents a search which can be refreshing
+#     """
+#     requestLog = models.ForeignKey(RequestLog)
+#     mapBounded = models.BooleanField(blank=True, default=False)  # true if you want to pass the map extens to the query and redo search with the extens
+# 
+#     def getUrl(self):
+#         return reverse('mapSearchJSON', kwargs={'mapSearchID': self.uuid})
+# 
+#     def getEditHref(self):
+#         return reverse('mapEditMapSearch', kwargs={'mapSearchID': self.uuid})
+# 
+#     def getTreeJson(self):
+#         """ Get the json block that the fancy tree needs to render this node """
+#         result = super(MapSearch, self).getTreeJson()
+#         result["data"]["searchJSON"] = self.getUrl()
+# #         result["data"]["searchResultsJSON"] = reverse('data_searchResultsJSON', kwargs={'collectionID': self.requestLog.pk})
+#         return result
 
 
 class MapLink(AbstractMap):
@@ -698,7 +695,7 @@ class MapLink(AbstractMap):
 
 
 """ IMPORTANT These have to be defined after the models they refer to are defined."""
-MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile, MapDataTile, MapCollection, MapSearch, MapLink, GroundOverlayTime, WMSTile, WMTSTile])
+MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile, MapDataTile, MapLink, GroundOverlayTime, WMSTile, WMTSTile])
 
 # this manager does not include groups
-MAP_MANAGER = ModelCollectionManager(AbstractMap, [MapLayer, KmlMap, MapTile, MapDataTile, MapCollection, MapSearch, MapLink, GroundOverlayTime, WMSTile, WMTSTile])
+MAP_MANAGER = ModelCollectionManager(AbstractMap, [MapLayer, KmlMap, MapTile, MapDataTile, MapLink, GroundOverlayTime, WMSTile, WMTSTile])

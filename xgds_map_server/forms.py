@@ -24,8 +24,7 @@ from django.forms.fields import IntegerField, ChoiceField
 
 from resumable.fields import ResumableFileField
 
-from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapCollection, MapSearch, MapDataTile
-from xgds_data.models import Collection, RequestLog
+from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile,  MapDataTile
 from geocamUtil.models import SiteFrame
 
 # pylint: disable=C1001
@@ -73,12 +72,14 @@ class MapLayerForm(AbstractMapForm):
         model = MapLayer
         exclude = ['minLat', 'minLon', 'maxLat', 'maxLon', 'jsonFeatures', 'creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'defaultColor']
 
+
 class MapLayerFromSelectedForm(AbstractMapForm):
     jsonFeatures = forms.CharField(widget=forms.HiddenInput())
 
     class Meta(AbstractMapForm.Meta):
         model = MapLayer
         exclude = ['minLat', 'minLon', 'maxLat', 'maxLon', 'creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'defaultColor']
+
 
 class MapTileForm(AbstractMapForm):
     if settings.XGDS_MAP_SERVER_GDAL2TILES_ZOOM_LEVELS:
@@ -105,8 +106,7 @@ class MapTileForm(AbstractMapForm):
         instance.parent = self.getParentGroup()
         if commit:
             instance.save()
-        
-    
+
     class Meta(AbstractMapForm.Meta):
         model = MapTile
         exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed', 'minx', 'miny', 'maxx', 'maxy', 'resolutions', 'minLat', 'minLon', 'maxLat', 'maxLon']
@@ -129,32 +129,35 @@ class MapDataTileForm(MapTileForm):
         model = MapDataTile
         exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed', 'minx', 'miny', 'maxx', 'maxy', 'resolutions']
 
+
 class EditMapTileForm(AbstractMapForm):
     
     class Meta(AbstractMapForm.Meta):
         model = MapTile
         exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed', 'sourceFile', 'minx', 'miny', 'maxx', 'maxy', 'resolutions']
 
+
 class EditMapDataTileForm(EditMapTileForm):
     class Meta(AbstractMapForm.Meta):
         model = MapDataTile
         exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'processed', 'sourceFile', 'minx', 'miny', 'maxx', 'maxy', 'resolutions']
+
 
 class CollectionModelChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return obj.name
 
 
-class MapCollectionForm(AbstractMapForm):
-    collection = CollectionModelChoiceField(queryset=Collection.objects.all().order_by('name'), empty_label=None)
+# class MapCollectionForm(AbstractMapForm):
+#     collection = CollectionModelChoiceField(queryset=Collection.objects.all().order_by('name'), empty_label=None)
+#
+#     class Meta(AbstractMapForm.Meta):
+#         model = MapCollection
+#
+#
+# class MapSearchForm(AbstractMapForm):
+#
+#     class Meta(AbstractMapForm.Meta):
+#         model = MapSearch
+#         exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'requestLog', 'locked', 'visible', 'mapBounded']
 
-    class Meta(AbstractMapForm.Meta):
-        model = MapCollection
-
-
-class MapSearchForm(AbstractMapForm):
-
-    class Meta(AbstractMapForm.Meta):
-        model = MapSearch
-        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'requestLog', 'locked', 'visible', 'mapBounded']
-    
