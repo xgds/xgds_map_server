@@ -62,7 +62,6 @@ from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapLayerF
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapDataTile, MapLink, MAP_NODE_MANAGER, MAP_MANAGER, GroundOverlayTime
 from xgds_map_server.kmlLayerExporter import exportMapLayer
 from geocamUtil.KmlUtil import wrapKmlForDownload
-from xgds_data.introspection import modelName
 from fastkml import kml
 from shapely.geometry import Point, LineString, Polygon
 from xgds_core.views import buildFilterDict
