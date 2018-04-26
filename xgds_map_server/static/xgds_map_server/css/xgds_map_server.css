@@ -1,5 +1,23 @@
-.paginate{
-	float: right;
+.connector-tag{
+	background-color: #6cb9fc;
+    color: #fff;
+    border-radius: 2px;
+    line-height: 20px;
+    padding-top: 3px;
+    padding-bottom: 2px;
+    text-align: center;
+    box-shadow: 5px 0 0 #6cb9fc, -5px 0 0 #6cb9fc;
+}
+
+.bootstrap-tagsinput{
+	position: relative !important;
+	width: 100% !important;
+	margin-right: 0px !important;
+}
+
+#nest-tags-id{
+	display: inline-block;
+	margin-left: 10px;
 }
 
 .ss-word-input{
@@ -60,10 +78,16 @@
 
 .search-tags{
 	height: 30px;
+	/*position: relative !important;*/
+	/*width: 100% !important;*/
 }
 
 .simple-search-btn{
 	width: 50px;
+}
+
+.paginate{
+	float: right;
 }
 
 #exportForm{

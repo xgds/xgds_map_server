@@ -85,7 +85,6 @@ app.views.SearchView = Marionette.View.extend({
     	this.$("#form-"+this.selectedModel).on('submit', function(event){
             event.preventDefault();
         });
-    	
     },
     onRender: function() {
         app.vent.trigger("repack");
@@ -455,7 +454,24 @@ app.views.SearchResultsView = Marionette.View.extend({
 	},
     onAttach: function() {
     	this.setupRegions();
-    	
+    	var tagsInput = $("#search-tags-id");
+		xgds_notes.initializeInput(tagsInput);
+		tagsInput.on('itemAdded', function(event) {
+			if (event.item.name !== "or" && event.item.name !== "and"){
+				var index = tagsInput.tagsinput('items').length;
+				tagsInput.tagsinput('add', {
+					id: new UUID(4).format(),
+					name: 'or',
+					className: 'connector',
+					index: index
+				});
+			}
+		});
+		tagsInput.on('itemRemoved', function(event) {
+			if((event.item.name === "or" || event.item.name === "and") && event.item.index !== tagsInput.tagsinput('items').length){
+				tagsInput.tagsinput('remove', tagsInput.tagsinput('items')[event.item.index-1]);
+			}
+		});
     	// hook up ajax reloading
     	var reloadIconName = '#reloadSearchResults';
     	var context = this;
@@ -702,6 +718,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 		var tags = $('#search-tags-id').val();
 		this.postData['tags'] = tags;
 		this.postData['modelName'] = this.selectedModel;
+		this.postData['simpleSearch'] = true;
 		this.theDataTable.search($('#search-keyword-id').val()).draw();
 	},
 	replaceSpace: function(e){
@@ -759,7 +776,14 @@ app.views.SearchResultsView = Marionette.View.extend({
 
 		else{
 			if (type === "keyword") var search = $('#search-keyword-id').val();
-			else var search = $('#search-tags-id').val();
+			else {
+				var search = "";
+				var tags = $("#search-tags-id").tagsinput('items');
+				for (var i = 0; i < tags.length; i++) {
+                    if (i === 0) search += tags[i].name;
+                    else search = search + " " + tags[i].name;
+                }
+            }
 			if (search.indexOf(' ') >= 0) {
 				search = search.trim().split(/\s+/);
 				var searchLength = search.length - 1;
@@ -824,7 +848,8 @@ app.views.SearchResultsView = Marionette.View.extend({
 			var col12 = document.createElement('div');
 			col12.className = "col-12";
 			if (type === "keyword") col12.innerHTML = "<button class='btn btn-default' id='ss-keyword-add-btn'><i class='fa fa-plus' aria-hidden='true'></i></button>";
-			else col12.innerHTML = "<button class='btn btn-default' id='ss-tags-add-btn'><i class='fa fa-plus' aria-hidden='true'></i></button>"
+			else col12.innerHTML = "<button class='btn btn-default' id='ss-tags-add-btn'><i class='fa fa-plus' aria-hidden='true'></i></button>" +
+				"<input type=\"checkbox\" class=\"form-check-input\" id=\"nest-tags-id\"/>&nbsp;&nbsp;&nbsp;Nest Tags";
 			buttonRow.appendChild(col12);
 
 			if (type === "keyword"){
