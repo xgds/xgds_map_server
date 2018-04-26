@@ -58,13 +58,14 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,{},'xgds_map_server_index'
                url(r'^editTile/(?P<tileID>[\w-]+)/', views.getEditTilePage, {}, 'mapEditTile'),
                url(r'^addMapDataTile/', views.getAddMapDataTilePage, {}, 'mapAddDataTile'),
                url(r'^editMapDataTile/(?P<tileID>[\w-]+)/', views.getEditMapDataTilePage, {}, 'mapEditDataTile'),
-               url(r'^addMapSearch/', views.getAddMapSearchPage, {}, 'mapAddMapSearch'),
-               url(r'^editMapSearch/(?P<mapSearchID>[\w-]+)/', views.getEditMapSearchPage, {}, 'mapEditMapSearch'),
-               url(r'^addMapCollection/', views.getAddMapCollectionPage, {}, 'mapAddMapCollection'),
-               url(r'^editMapCollection/(?P<mapCollectionID>[\w-]+)/', views.getEditMapCollectionPage, {}, 'mapEditMapCollection'),
 
-               url(r'^doMapSearch/', views.searchWithinMap, {}, 'doMapSearch'),
-               url(r'^saveMapSearch/', views.saveSearchWithinMap, {}, 'saveMapSearch'),
+               # TODO all of the below urls depended on xgds_data and need to be reimplemented
+               # url(r'^addMapSearch/', views.getAddMapSearchPage, {}, 'mapAddMapSearch'),
+               # url(r'^editMapSearch/(?P<mapSearchID>[\w-]+)/', views.getEditMapSearchPage, {}, 'mapEditMapSearch'),
+               # url(r'^addMapCollection/', views.getAddMapCollectionPage, {}, 'mapAddMapCollection'),
+               # url(r'^editMapCollection/(?P<mapCollectionID>[\w-]+)/', views.getEditMapCollectionPage, {}, 'mapEditMapCollection'),
+               # url(r'^doMapSearch/', views.searchWithinMap, {}, 'doMapSearch'),
+               # url(r'^saveMapSearch/', views.saveSearchWithinMap, {}, 'saveMapSearch'),
 
                # HTML view to confirm deletion of view
                url(r'^delete/(?P<nodeID>[\w-]+)/', views.getDeleteNodePage, {}, 'nodeDelete'),
