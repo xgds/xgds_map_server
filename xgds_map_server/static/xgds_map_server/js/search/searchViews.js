@@ -974,20 +974,6 @@ $.extend(xgds_search,{
 		    var visible = searchDiv.is(":visible");
 		    searchDiv.show();
 		    $('#advancedSearchModal').modal('show');
-		    // if (!visible){
-		    // 	// show it and initialize
-		    // 	searchDiv.show();
-		    // 	searchGridstack.show();
-				// xgds_gridstack.THE_GRIDSTACK.addWidget(searchGridstack);
-            //
-		    // 	// TODO put advanced search at the top
-		    // 	//GridStackUI.Utils.sort($(".grid-stack-item"));
-		    // 	app.vent.trigger('searchDiv:visible');
-		    // } else {
-		    // 	searchGridstack.hide();
-		    // 	searchDiv.hide();
-				// xgds_gridstack.THE_GRIDSTACK.removeWidget(searchGridstack, false);
-		    // }
 		});
 	}
 });
