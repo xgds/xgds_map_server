@@ -1,12 +1,13 @@
 .connector-tag{
-	background-color: #6cb9fc;
+	background-color: #de755b;
     color: #fff;
     border-radius: 2px;
     line-height: 20px;
     padding-top: 3px;
     padding-bottom: 2px;
     text-align: center;
-    box-shadow: 5px 0 0 #6cb9fc, -5px 0 0 #6cb9fc;
+    box-shadow: 5px 0 0 #de755b, -5px 0 0 #de755b;
+	font-style: italic;
 }
 
 .bootstrap-tagsinput{
@@ -58,6 +59,7 @@
 
 .ss-container .dropdown-menu {
     min-width: 250px;
+	width: 90%;
 }
 
 .dropdown-offset {

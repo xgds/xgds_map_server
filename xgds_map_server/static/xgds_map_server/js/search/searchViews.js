@@ -409,17 +409,10 @@ app.views.SearchNotesView = Marionette.View.extend({
 app.views.SearchResultsView = Marionette.View.extend({
 	events: {
 		'click #export-modal-btn': 'initializeExportData',
-		// 'keyup #search-keyword-id': function(){
-		// 	_.debounce(this.filterDatatable(), 15000)
-		// },
-		// 'keyup #search-tags-id': function(){
-		// 	_.debounce(this.filterDatatable(), 15000)
-		// },
 		'click #simple-search-btn': 'filterDatatable',
+		'keydown [name="search-keyword"]': 'replaceSpace',
 		'click #keyword-dropdown-btn': function(){ this.generateQueryList("keyword") },
 		'click #tags-dropdown-btn': function(){ this.generateQueryList("tag") },
-		'keydown [name="search-keyword"]': 'replaceSpace',
-		'keydown [name="search-tags"]': 'replaceSpace',
 		'click #ss-keyword-add-btn': function(){ this.addQueryInput("keyword") },
 		'click #ss-tags-add-btn': function(){ this.addQueryInput("tag") },
 		'keyup .ss-keyword-word-input': function(){ this.updateSearch("keyword") },
@@ -460,7 +453,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 			if (event.item.name !== "or" && event.item.name !== "and"){
 				var index = tagsInput.tagsinput('items').length;
 				tagsInput.tagsinput('add', {
-					id: new UUID(4).format(),
+					id: "or-" + index,
 					name: 'or',
 					className: 'connector',
 					index: index
@@ -708,63 +701,76 @@ app.views.SearchResultsView = Marionette.View.extend({
 			_this.fileType = $(event.target).attr('data')
         });
 
-    	if (this.selectedIds.length == 0) $('.export-err').show();
+    	if (this.selectedIds.length === 0) $('.export-err').show();
 		else $('#exportModal').modal('show');
 	},
-	// filterDatatable: function(){
-	// 	this.theDataTable.search($('#search-keyword-id').val()).draw();
-	// },
 	filterDatatable: function(){
+		this.checkLastTag();
 		var tags = $('#search-tags-id').val();
 		this.postData['tags'] = tags;
 		this.postData['modelName'] = this.selectedModel;
 		this.postData['simpleSearch'] = true;
 		this.theDataTable.search($('#search-keyword-id').val()).draw();
 	},
+	checkLastTag: function(){
+		var tagsInput = $("#search-tags-id");
+		var tags = tagsInput.tagsinput('items');
+		if (tags[tags.length-1].name === "or" || tags[tags.length-1].name === "and") {
+			tagsInput.tagsinput('remove', tags[tags.length-1]);
+		}
+	},
 	replaceSpace: function(e){
 		if (e.which === 32) {
 			e.preventDefault();
-			if (e.target.id === "search-keyword-id") $("#search-keyword-id").val($("#search-keyword-id").val() + ' or ');
-			else if (e.target.id === "search-tags-id") $("#search-tags-id").val($("#search-tags-id").val() + ' or ');
+			if (e.target.id === "search-keyword-id") {
+				var keywordInput = $("#search-keyword-id");
+				keywordInput.val(keywordInput.val() + ' or ');
+            }
 		}
 	},
 	updateSearch: function(type){
+		var queryEditor, searchId;
 		var keywords = [];
-		var connectingWords = [];
-		if (type === "keyword") var queryEditor = $('#keyword-query-editor');
-		else var queryEditor = $('#tags-query-editor');
+		var connectors = [];
+		if (type === "keyword") queryEditor = $('#keyword-query-editor');
+		else queryEditor = $('#tags-query-editor');
 
-		queryEditor.find('input').each(function () {
-			keywords.push(this.value);
-		});
-		queryEditor.find('select').each(function () {
-			connectingWords.push(this.value);
-		});
+		// Get all the input/select boxes in the search dropdown
+		queryEditor.find('input').each(function () { keywords.push(this.value) });
+		queryEditor.find('select').each(function () { connectors.push(this.value) });
 
-		if (connectingWords.length == 0) {
-			if (type === "keyword") var searchId = $('#search-keyword-id');
-			else var searchId = $('#search-tags-id');
+		// If we have more than one word, iterate through and update the main input, otherwise just add the only word
+		if (connectors.length === 0) {
+			if (type === "keyword") searchId = $('#search-keyword-id');
+			else searchId = $('#search-tags-id');
 
 			searchId.val(keywords[0]);
         }
 
 		else {
-			var query = "";
-			for (var i = 0; i < keywords.length; i++){
-				if (i == keywords.length - 1) query = query + keywords[i];
-				else if (keywords[i] == "") continue;
-				else query = query + keywords[i] + " " + connectingWords[i] + " ";
+			if (type === "keyword"){
+				var query = "";
+				for (var i = 0; i < keywords.length; i++){
+					if (i === keywords.length - 1) query = query + keywords[i];
+					else if (keywords[i] === "") continue;
+					else query = query + keywords[i] + " " + connectors[i] + " ";
+				}
+
+				if (type === "keyword") searchId = $('#search-keyword-id');
+				else searchId = $('#search-tags-id');
+
+				searchId.val(query);
+			} else {
+
 			}
 
-			if (type === "keyword") var searchId = $('#search-keyword-id');
-			else var searchId = $('#search-tags-id');
-
-			searchId.val(query);
 		}
     },
 	generateQueryList: function(type){
-		if (type === "keyword") var dropdown = $('#keyword-dropdown-menu');
-		else var dropdown = $('#tags-dropdown-menu');
+		// TODO: split out into separate functions
+		var dropdown;
+		if (type === "keyword") dropdown = $('#keyword-dropdown-menu');
+		else dropdown = $('#tags-dropdown-menu');
 
 		if (dropdown.is(':visible')) {
 			// this.updateKeywordSearch();
@@ -777,27 +783,29 @@ app.views.SearchResultsView = Marionette.View.extend({
 		else{
 			if (type === "keyword") var search = $('#search-keyword-id').val();
 			else {
-				var search = "";
+				var search = [];
 				var tags = $("#search-tags-id").tagsinput('items');
 				for (var i = 0; i < tags.length; i++) {
-                    if (i === 0) search += tags[i].name;
-                    else search = search + " " + tags[i].name;
+                    search.push(tags[i].name);
                 }
+                if (tags[search.length-1].name === "or" || tags[search.length-1].name === "and") {
+					$("#search-tags-id").tagsinput('remove', tags[search.length-1]);
+					search.splice(search.length-1, 1);
+				}
             }
-			if (search.indexOf(' ') >= 0) {
+			if (search.indexOf(' ') >= 0 && type === "keyword") {
 				search = search.trim().split(/\s+/);
 				var searchLength = search.length - 1;
             } else {
-				search = [search];
+				if (type !== "tag") search = [search];
 				var searchLength = search.length;
 			}
 			var rowContainer = document.createElement('div');
 			if (type === "keyword") rowContainer.id = 'keyword-query-list-container';
 			else rowContainer.id = 'tags-query-list-container';
-
 			for (var i = 0; i < searchLength; i++){
 				// Create the first input row that stretches across the entire dropdown
-				if (i == 0){
+				if (i === 0){
 					var row = document.createElement('div');
 					row.className = "row";
 					var col12 = document.createElement('div');
@@ -852,15 +860,12 @@ app.views.SearchResultsView = Marionette.View.extend({
 				"<input type=\"checkbox\" class=\"form-check-input\" id=\"nest-tags-id\"/>&nbsp;&nbsp;&nbsp;Nest Tags";
 			buttonRow.appendChild(col12);
 
-			if (type === "keyword"){
-				$('#keyword-query-editor')[0].appendChild(rowContainer);
-				$('#keyword-query-editor')[0].appendChild(buttonRow);
-			}
+			var queryEditorBox;
+			if (type === "keyword") queryEditorBox = $('#keyword-query-editor');
+			else queryEditorBox = $('#tags-query-editor');
 
-			else{
-				$('#tags-query-editor')[0].appendChild(rowContainer);
-				$('#tags-query-editor')[0].appendChild(buttonRow);
-			}
+			queryEditorBox[0].appendChild(rowContainer);
+			queryEditorBox[0].appendChild(buttonRow);
 
 			dropdown.show();
 		}
