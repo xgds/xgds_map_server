@@ -724,6 +724,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 			e.preventDefault();
 			if (e.target.id === "search-keyword-id") {
 				var keywordInput = $("#search-keyword-id");
+				// TODO: Add an option to make this default to and/or based on a checkbox in the dropdown
 				keywordInput.val(keywordInput.val() + ' or ');
             }
 		}
@@ -739,11 +740,12 @@ app.views.SearchResultsView = Marionette.View.extend({
 		queryEditor.find('input').each(function () { keywords.push(this.value) });
 		queryEditor.find('select').each(function () { connectors.push(this.value) });
 
-		// If we have more than one word, iterate through and update the main input, otherwise just add the only word
+		// If we have only one word just add it, otherwise iterate through and update the main input
 		if (connectors.length === 0) {
 			if (type === "keyword") searchId = $('#search-keyword-id');
 			else searchId = $('#search-tags-id');
 
+			// TODO: Fix to add a bootstrap-tag-input when dealing with tags
 			searchId.val(keywords[0]);
         }
 
@@ -761,16 +763,44 @@ app.views.SearchResultsView = Marionette.View.extend({
 
 				searchId.val(query);
 			} else {
-
+				// TODO: Add update when changing the tag dropdown values
 			}
 
 		}
     },
+	getSearchValue: function(type){
+		var search = [];
+		if (type === "keyword") {
+			search = $('#search-keyword-id').val();
+        }
+
+        else {
+			var tags = $("#search-tags-id").tagsinput('items');
+			for (var i = 0; i < tags.length; i++) {
+				search.push(tags[i].name);
+			}
+
+			if (search.length > 0){
+				if (tags[search.length-1].name === "or" || tags[search.length-1].name === "and") {
+					$("#search-tags-id").tagsinput('remove', tags[search.length-1]);
+					search.splice(search.length-1, 1);
+				}
+			} else {
+				search = [""];
+            }
+		}
+
+		return search;
+	},
 	generateQueryList: function(type){
-		// TODO: split out into separate functions
-		var dropdown;
-		if (type === "keyword") dropdown = $('#keyword-dropdown-menu');
-		else dropdown = $('#tags-dropdown-menu');
+		var dropdown, queryEditorBox;
+		if (type === "keyword") {
+			dropdown = $('#keyword-dropdown-menu');
+			queryEditorBox = $('#keyword-query-editor');
+        } else {
+			dropdown = $('#tags-dropdown-menu');
+			queryEditorBox = $('#tags-query-editor');
+        }
 
 		if (dropdown.is(':visible')) {
 			// this.updateKeywordSearch();
@@ -781,98 +811,102 @@ app.views.SearchResultsView = Marionette.View.extend({
         }
 
 		else{
-			if (type === "keyword") var search = $('#search-keyword-id').val();
-			else {
-				var search = [];
-				var tags = $("#search-tags-id").tagsinput('items');
-				for (var i = 0; i < tags.length; i++) {
-                    search.push(tags[i].name);
-                }
-                if (tags[search.length-1].name === "or" || tags[search.length-1].name === "and") {
-					$("#search-tags-id").tagsinput('remove', tags[search.length-1]);
-					search.splice(search.length-1, 1);
-				}
-            }
+			var search = this.getSearchValue(type);
 			if (search.indexOf(' ') >= 0 && type === "keyword") {
 				search = search.trim().split(/\s+/);
-				var searchLength = search.length - 1;
             } else {
-				if (type !== "tag") search = [search];
-				var searchLength = search.length;
+				if (type === "keyword") search = [search];
 			}
+
 			var rowContainer = document.createElement('div');
 			if (type === "keyword") rowContainer.id = 'keyword-query-list-container';
 			else rowContainer.id = 'tags-query-list-container';
-			for (var i = 0; i < searchLength; i++){
-				// Create the first input row that stretches across the entire dropdown
-				if (i === 0){
-					var row = document.createElement('div');
-					row.className = "row";
-					var col12 = document.createElement('div');
-					col12.className = "col-12";
-					var wordInput = document.createElement('input');
-					wordInput.type = "text";
-					if (type === "keyword") wordInput.className = "form-control ss-word-input ss-keyword-word-input";
-					else wordInput.className = "form-control ss-word-input ss-tags-word-input";
-					wordInput.value = search[i];
-					col12.appendChild(wordInput);
-					row.appendChild(col12);
-				}
 
-				// Create every input that has an or/and select box next to it.
-				else {
-					var row = document.createElement('div');
-					row.className = "row";
+			for (var i = 0; i < search.length; i++){
+				var row = document.createElement('div');
+				row.className = "row";
+				var wordInput = this.createWordInput(search, type, i);
 
-					var col4 = document.createElement('div');
-					col4.className = "col-4 ss-word-select-container";
-					var wordSelect = document.createElement('select');
-					if (type === "keyword") wordSelect.className = "form-control ss-word-select ss-keyword-word-select";
-					else wordSelect.className = "form-control ss-word-select ss-tags-word-select";
-					wordSelect.options[wordSelect.options.length] = new Option('or', 'or');
-					wordSelect.options[wordSelect.options.length] = new Option('and', 'and');
-					wordSelect.value = search[i];
-					col4.appendChild(wordSelect);
-
-					var col8 = document.createElement('div');
-					col8.className = "col-8 ss-word-input-container";
-					var wordInput = document.createElement('input');
-					wordInput.type = "text";
-					if (type === "keyword") wordInput.className = "form-control ss-word-input ss-keyword-word-input";
-					else wordInput.className = "form-control ss-word-input ss-tags-word-input";
-					wordInput.value = search[i+1];
-					col8.appendChild(wordInput);
-
-					row.appendChild(col4);
-					row.appendChild(col8);
+				if (i !== 0){
+					var selectContainer = this.createConnectingWordSelect(search, type, i);
+					row.appendChild(selectContainer);
+					row.appendChild(wordInput);
 					i++;
+				} else {
+					row.appendChild(wordInput);
 				}
+
 				rowContainer.appendChild(row);
 			}
 
-			// Create the final + button which should add another row
-			var buttonRow = document.createElement('div');
-			buttonRow.className = "row buttonRow";
-			var col12 = document.createElement('div');
-			col12.className = "col-12";
-			if (type === "keyword") col12.innerHTML = "<button class='btn btn-default' id='ss-keyword-add-btn'><i class='fa fa-plus' aria-hidden='true'></i></button>";
-			else col12.innerHTML = "<button class='btn btn-default' id='ss-tags-add-btn'><i class='fa fa-plus' aria-hidden='true'></i></button>" +
-				"<input type=\"checkbox\" class=\"form-check-input\" id=\"nest-tags-id\"/>&nbsp;&nbsp;&nbsp;Nest Tags";
-			buttonRow.appendChild(col12);
-
-			var queryEditorBox;
-			if (type === "keyword") queryEditorBox = $('#keyword-query-editor');
-			else queryEditorBox = $('#tags-query-editor');
-
+			var optionsRow = this.createOptionsRow(type);
 			queryEditorBox[0].appendChild(rowContainer);
-			queryEditorBox[0].appendChild(buttonRow);
+			queryEditorBox[0].appendChild(optionsRow);
 
 			dropdown.show();
 		}
 	},
+	createWordInput: function(search, type, index){
+		var wordInputContainer = document.createElement('div');
+		if (index === 0) wordInputContainer.className = "col-12";
+		else  wordInputContainer.className = "col-8 ss-word-input-container";
+
+		var wordInput = document.createElement('input');
+		wordInput.type = "text";
+		if (type === "keyword") {
+			wordInput.className = "form-control ss-word-input ss-keyword-word-input";
+        } else {
+			wordInput.className = "form-control ss-word-input ss-tags-word-input";
+        }
+
+        if (index === 0) wordInput.value = search[index];
+		else if (index === -1) wordInput.value = "";
+ 		else wordInput.value = search[index+1];
+
+		wordInputContainer.appendChild(wordInput);
+
+		return wordInputContainer;
+	},
+	createConnectingWordSelect: function(search, type, index){
+		var selectContainer = document.createElement('div');
+		selectContainer.className = "col-4 ss-word-select-container";
+
+		var wordSelect = document.createElement('select');
+		if (type === "keyword") wordSelect.className = "form-control ss-word-select ss-keyword-word-select";
+		else wordSelect.className = "form-control ss-word-select ss-tags-word-select";
+
+		wordSelect.options[wordSelect.options.length] = new Option('or', 'or');
+		wordSelect.options[wordSelect.options.length] = new Option('and', 'and');
+		if (index !== -1) wordSelect.value = search[index];
+		else wordSelect.value = "or";
+
+		selectContainer.appendChild(wordSelect);
+		return selectContainer;
+	},
+	createOptionsRow: function(type){
+		// Create the final + button which should add another row
+		var buttonRow = document.createElement('div');
+		buttonRow.className = "row buttonRow";
+		var col12 = document.createElement('div');
+		col12.className = "col-12";
+
+		if (type === "keyword") {
+			col12.innerHTML = "<button class='btn btn-default' id='ss-keyword-add-btn'><i class='fa fa-plus' aria-hidden='true'></i></button>";
+        } else {
+			col12.innerHTML = "<button class='btn btn-default' id='ss-tags-add-btn'><i class='fa fa-plus' aria-hidden='true'></i></button>" +
+                "<input type=\"checkbox\" class=\"form-check-input\" id=\"nest-tags-id\"/>&nbsp;&nbsp;&nbsp;Nest Tags";
+        }
+		buttonRow.appendChild(col12);
+
+		return buttonRow;
+	},
 	addQueryInput: function(type){
-		if (type === "keyword") var search = $('#search-keyword-id').val();
-		else var search = $('#search-tags-id').val();
+		var search = this.getSearchValue(type);
+		if (search.indexOf(' ') >= 0 && type === "keyword") {
+			search = search.trim().split(/\s+/);
+		} else {
+			if (type === "keyword") search = [search];
+		}
 
 		if (search.length > 0){
 			if (type === "keyword") var rowContainer = document.getElementById('keyword-query-list-container');
@@ -880,26 +914,10 @@ app.views.SearchResultsView = Marionette.View.extend({
 			var row = document.createElement('div');
 			row.className = "row";
 
-			var col4 = document.createElement('div');
-			col4.className = "col-4 ss-word-select-container";
-			var wordSelect = document.createElement('select');
-			if (type === "keyword") wordSelect.className = "form-control ss-word-select ss-keyword-word-select";
-			else wordSelect.className = "form-control ss-word-select ss-tags-word-select";
-			wordSelect.options[wordSelect.options.length] = new Option('or', 'or');
-			wordSelect.options[wordSelect.options.length] = new Option('and', 'and');
-			col4.appendChild(wordSelect);
-
-			var col8 = document.createElement('div');
-			col8.className = "col-8 ss-word-input-container";
-			var wordInput = document.createElement('input');
-			wordInput.type = "text";
-			if (type === "keyword") wordInput.className = "form-control ss-word-input ss-keyword-word-input";
-			else wordInput.className = "form-control ss-word-input ss-tags-word-input";
-			col8.appendChild(wordInput);
-
-			row.appendChild(col4);
-			row.appendChild(col8);
-
+			var selectContainer = this.createConnectingWordSelect(search, type, -1);
+			var wordInput = this.createWordInput(search, type, -1);
+			row.appendChild(selectContainer);
+			row.appendChild(wordInput);
 			rowContainer.appendChild(row);
 		}
 
