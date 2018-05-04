@@ -10,6 +10,14 @@
 	font-style: italic;
 }
 
+.tags-top-input{
+	/*padding-left: 15px;*/
+}
+
+#tags-query-list-container > .row{
+	/*padding-left: 15px;*/
+}
+
 .bootstrap-tagsinput{
 	position: relative !important;
 	width: 100% !important;
@@ -19,6 +27,10 @@
 #nest-tags-id{
 	display: inline-block;
 	margin-left: 10px;
+}
+
+.ss-tags-word-input{
+	width: 90% !important;
 }
 
 .ss-word-input{
