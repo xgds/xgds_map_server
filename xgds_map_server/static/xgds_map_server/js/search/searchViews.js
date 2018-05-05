@@ -457,12 +457,14 @@ app.views.SearchResultsView = Marionette.View.extend({
 			if (event.item.name !== "or" && event.item.name !== "and"){
 				var index = tagsInput.tagsinput('items').length;
 				//TODO: Change to add and/or based on default selected in dropdown
-				tagsInput.tagsinput('add', {
-					id: "or-" + index,
-					name: 'or',
-					className: 'connector',
-					index: index
-				});
+				if (_.isUndefined(event.item.updated)){
+					tagsInput.tagsinput('add', {
+						id: "or-" + index,
+						name: 'or',
+						className: 'connector',
+						index: index
+					});
+				}
 			}
 		});
 		tagsInput.on('itemRemoved', function(event) {
@@ -827,12 +829,12 @@ app.views.SearchResultsView = Marionette.View.extend({
 					else idIndex = i - 1;
 					tagInput = $("#" + idIndex + "-tags-dropdown-input");
 					tag = tagInput.tagsinput('items');
+					tag[0].updated = true;
 					if (tag.length > 0) searchId.tagsinput('add', tag[0]);
 				} else {
 					if (i === 1) idIndex = i-1;
 					else idIndex = Math.floor(i/2);
-
-					if (connectors[i-1] === "or"){
+					if (connectors[idIndex] === "or"){
 						searchId.tagsinput('add', {
 							id: "or-" + i,
 							name: "or",
@@ -841,7 +843,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 						});
 					}
 
-					else if (connectors[i-1] === "and"){
+					else if (connectors[idIndex] === "and"){
 						searchId.tagsinput('add', {
 							id: "and-" + i,
 							name: "and",
@@ -851,8 +853,9 @@ app.views.SearchResultsView = Marionette.View.extend({
 					}
 				}
 			}
-			searchId.tagsinput('refresh');
 		}
+
+		searchId.tagsinput('refresh');
 	},
 	getSearchValue: function(type){
 		var search = [];
