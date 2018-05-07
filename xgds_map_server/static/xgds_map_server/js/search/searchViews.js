@@ -714,13 +714,18 @@ app.views.SearchResultsView = Marionette.View.extend({
 	filterDatatable: function(){
 		this.checkLastTag();
 		var tags = $('#search-tags-id').val();
+		if (this.selectedModel === "Note") {
+			var noteTags = this.getSearchValue('tag');
+			this.postData['noteTags'] = noteTags;
+        }
 		this.postData['tags'] = tags;
 		this.postData['modelName'] = this.selectedModel;
 		this.postData['simpleSearch'] = true;
+		this.postData['connector'] = $("#search-select-id").val();
 		this.theDataTable.search($('#search-keyword-id').val()).draw();
 	},
+	//Checks that the last tag is not an and/or that is automatically added (if found, removes it)
 	checkLastTag: function(){
-		//Checks that the last tag is not an and/or that is automatically added (if found, removes it)
 		var tagsInput = $("#search-tags-id");
 		var tags = tagsInput.tagsinput('items');
 		if (tags.length > 0){
@@ -766,6 +771,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 		// 	this.filterDatatable();
 		// }
 	},
+	// Decides how to handle updating the input from the dropdown by type
 	updateSearch: function(type){
 		var queryEditor, searchId;
 		if (type === "keyword") {
@@ -784,6 +790,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 			this.updateTagSearch(queryEditor, searchId);
 		}
     },
+	// Updates the keyword search input from the dropdown inputs
 	updateKeywordSearch: function(queryEditor, searchId){
 		var words = [], connectors = [];
 		queryEditor.find('input').each(function () { words.push(this.value) });
@@ -805,10 +812,12 @@ app.views.SearchResultsView = Marionette.View.extend({
 			searchId.val(query);
 		}
 	},
+	// Updates the tag search input from the dropdown inputs
 	updateTagSearch: function(queryEditor, searchId){
 		var tagInput, tag = [];
-		searchId.tagsinput('removeAll');
+		searchId.tagsinput('removeAll'); // Empty the main tag input
 
+		// If there is only a single tag widget, just use that value
 		if (this.dropdownTagWidgets === 1) {
 			tagInput = $("#0-tags-dropdown-input");
 			tag = tagInput.tagsinput('items');
@@ -820,10 +829,13 @@ app.views.SearchResultsView = Marionette.View.extend({
 			}
         }
 
+        // Otherwise we need to iterate through each input and select box and add the corresponding tag to the main input
 		else {
 			var connectors = [], idIndex;
 			queryEditor.find('select').each(function () { connectors.push(this.value) });
+			// (connectors.length * 2) + 1 is just getting the total number of selects and inputs
 			for (var i = 0; i < (connectors.length * 2) + 1; i++){
+				// Even index means its an input
 				if (i % 2 === 0){
 					if (i === 0) idIndex = i;
 					else idIndex = i - 1;
@@ -831,6 +843,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 					tag = tagInput.tagsinput('items');
 					tag[0].updated = true;
 					if (tag.length > 0) searchId.tagsinput('add', tag[0]);
+				// Odd index means its a select box for choosing and/or
 				} else {
 					if (i === 1) idIndex = i-1;
 					else idIndex = Math.floor(i/2);
@@ -855,8 +868,9 @@ app.views.SearchResultsView = Marionette.View.extend({
 			}
 		}
 
-		searchId.tagsinput('refresh');
+		searchId.tagsinput('refresh'); // Need to refresh the input after updating it via widget docs
 	},
+	// Retrieves the search value from either type as strings
 	getSearchValue: function(type){
 		var search = [];
 		if (type === "keyword") {
@@ -864,7 +878,7 @@ app.views.SearchResultsView = Marionette.View.extend({
         }
 
         else {
-			var tags = $("#search-tags-id").tagsinput('items');
+			var tags = $("#search-tags-id").tagsinput('items'); // Gets every tag object and then we only want the name from that
 			for (var i = 0; i < tags.length; i++) {
 				search.push(tags[i].name);
 			}
@@ -878,14 +892,15 @@ app.views.SearchResultsView = Marionette.View.extend({
 				search = [""];
             }
 		}
-
 		return search;
 	},
+	// Removes the inputs from the correct dropdown
 	deconstructSearchDropdown: function(type){
 		if (type === "keyword") $('#keyword-query-list-container').remove();
 		else $('#tags-query-list-container').remove();
 		$('.buttonRow').remove();
 	},
+	// Creates the list of inputs and select boxes to be inserted into the dropdown when opened
 	generateQueryList: function(type){
 		var dropdown, queryEditorBox, tagsInput;
 		if (type === "keyword") {
@@ -911,11 +926,12 @@ app.views.SearchResultsView = Marionette.View.extend({
 			var tags = [];
 			var search = this.getSearchValue(type);
 			if (search.indexOf(' ') >= 0 && type === "keyword") {
-				search = search.match(/\w+|"[^"]+"/g);
+				search = search.match(/\w+|"[^"]+"/g); // Match on whitespaces except words in quotes
             } else {
 				if (type === "keyword") search = [search];
 			}
 
+			// Container for the inputs, slightly different for each type (tags/keyword)
 			var rowContainer = document.createElement('div');
 			if (type === "keyword") {
 				rowContainer.id = 'keyword-query-list-container';
@@ -949,6 +965,8 @@ app.views.SearchResultsView = Marionette.View.extend({
 			if (type === "tag") this.initializeDropdownTagWidgets(tags);
 		}
 	},
+	// For the tag dropdown inputs we need to initialize each one as a bootstrap-tagsinput widget
+	// And insert the correct tag to be editable (this must be done AFTER displaying the dropdown)
 	initializeDropdownTagWidgets: function(tags){
 		var idIndex, tagInput;
 
@@ -976,6 +994,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 			}
 		}
 	},
+	// Updates the main input on each itemAdded and itemRemoved event for every dropdown input
 	addTagEventHandlers: function(tagWidget){
 		var _this = this;
 		tagWidget.on('itemAdded', function(event) {
@@ -985,6 +1004,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 			_this.updateSearch("tag");
 		});
 	},
+	// Creates the inputs for the dropdowns
 	createWordInput: function(search, type, index){
 		var wordInputContainer = document.createElement('div');
 		if (index === 0) wordInputContainer.className = "col-12";
@@ -1010,6 +1030,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 
 		return wordInputContainer;
 	},
+	// Creates the select boxes for the dropdowns
 	createConnectingWordSelect: function(search, type, index){
 		var selectContainer = document.createElement('div');
 		selectContainer.className = "col-4 ss-word-select-container";
@@ -1026,6 +1047,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 		selectContainer.appendChild(wordSelect);
 		return selectContainer;
 	},
+	// Creates the option row at the bottom of the dropdown (nest tags, default connector, add button)
 	createOptionsRow: function(type){
 		// Create the final + button which should add another row
 		var buttonRow = document.createElement('div');
@@ -1043,6 +1065,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 
 		return buttonRow;
 	},
+	// Adds a new row of inputs to the bottom of the dropdown input list (when clicking the + button)
 	addQueryInput: function(type){
 		var search = this.getSearchValue(type);
 		if (search.indexOf(' ') >= 0 && type === "keyword") {

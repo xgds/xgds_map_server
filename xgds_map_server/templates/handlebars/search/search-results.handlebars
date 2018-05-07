@@ -8,7 +8,7 @@
     </div>
     <div class="col-12 ss-container">
         <div class="row">
-            <div class="col-6 ss-keyword-container input-group">
+            <div class="col-5 ss-keyword-container input-group" id="ss-keyword-container-id">
                 <input type="text" class="form-control search-keyword" name="search-keyword" id="search-keyword-id" placeholder="Keyword">
                 <div class="input-group-btn">
                     <button type="button" class="btn btn-default dropdown-toggle" id="keyword-dropdown-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
@@ -16,6 +16,12 @@
                         <div id="keyword-query-editor" class="dropdown-input-list col-12" tabindex="0"></div>
                     </div>
                 </div>
+            </div>
+            <div class="col-1 ss-select-container">
+                <select class="form-control search-select" id="search-select-id">
+                  <option value="or">or</option>
+                  <option value="and">and</option>
+                </select>
             </div>
             <div class="col-6 ss-tags-container input-group">
                 <input type="text" class="form-control search-tags" data-role="tagsinput" name="search-tags" id="search-tags-id" placeholder="Type to check tag">
