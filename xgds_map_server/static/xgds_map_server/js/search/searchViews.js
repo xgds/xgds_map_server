@@ -415,8 +415,8 @@ app.views.SearchResultsView = Marionette.View.extend({
 		'keydown .ss-container': 'handleEnterSubmit',
 		'click #keyword-dropdown-btn': function(){ this.generateQueryList("keyword") },
 		'click #tags-dropdown-btn': function(){ this.generateQueryList("tag") },
-		'click #ss-keyword-add-btn': function(){ this.addQueryInput("keyword") },
-		'click #ss-tags-add-btn': function(){ this.addQueryInput("tag") },
+		'click #ss-keyword-add-btn': function(){ this.addDropdownRow("keyword") },
+		'click #ss-tags-add-btn': function(){ this.addDropdownRow("tag") },
 		'keyup .ss-keyword-word-input': function(){ this.updateSearch("keyword") },
 		'change .ss-keyword-word-select': function(){ this.updateSearch("keyword") },
 		'change .ss-tags-word-select': function(){ this.updateSearch("tag") },
@@ -837,16 +837,15 @@ app.views.SearchResultsView = Marionette.View.extend({
 			for (var i = 0; i < (connectors.length * 2) + 1; i++){
 				// Even index means its an input
 				if (i % 2 === 0){
-					if (i === 0) idIndex = i;
-					else idIndex = i - 1;
-					tagInput = $("#" + idIndex + "-tags-dropdown-input");
+					tagInput = $("#" + i + "-tags-dropdown-input");
 					tag = tagInput.tagsinput('items');
-					tag[0].updated = true;
-					if (tag.length > 0) searchId.tagsinput('add', tag[0]);
+					if (tag.length > 0) {
+						tag[0].updated = true;
+						searchId.tagsinput('add', tag[0]);
+                    }
 				// Odd index means its a select box for choosing and/or
 				} else {
-					if (i === 1) idIndex = i-1;
-					else idIndex = Math.floor(i/2);
+					idIndex = Math.floor(i/2);
 					if (connectors[idIndex] === "or"){
 						searchId.tagsinput('add', {
 							id: "or-" + i,
@@ -923,7 +922,6 @@ app.views.SearchResultsView = Marionette.View.extend({
 
         // Else, create the inputs, insert them into the dropdown, and display it.
 		else{
-			var tags = [];
 			var search = this.getSearchValue(type);
 			if (search.indexOf(' ') >= 0 && type === "keyword") {
 				search = search.match(/\w+|"[^"]+"/g); // Match on whitespaces except words in quotes
@@ -936,24 +934,20 @@ app.views.SearchResultsView = Marionette.View.extend({
 			if (type === "keyword") {
 				rowContainer.id = 'keyword-query-list-container';
             } else {
-				tags = tagsInput.tagsinput('items');
+				var tags = tagsInput.tagsinput('items');
 				rowContainer.id = 'tags-query-list-container';
 				this.dropdownTagWidgets = 0;
             }
 
-			for (var i = 0; i < search.length; i++){
+			for (var i = 0; i < search.length; i+=2){
 				var row = document.createElement('div');
 				row.className = "row";
-				var wordInput = this.createWordInput(search, type, i);
-				if (i !== 0){
-					var selectContainer = this.createConnectingWordSelect(search, type, i);
-					row.appendChild(selectContainer);
-					row.appendChild(wordInput);
-					i++;
-				} else {
-					row.appendChild(wordInput);
-				}
-
+				var wordInput = this.createWordInput(search[i], type, i);
+				if (i !== 0) {
+                    var selectContainer = this.createConnectingWordSelect(search[i - 1], type, i);
+                    row.appendChild(selectContainer);
+                }
+				row.appendChild(wordInput);
 				rowContainer.appendChild(row);
 			}
 
@@ -968,20 +962,11 @@ app.views.SearchResultsView = Marionette.View.extend({
 	// For the tag dropdown inputs we need to initialize each one as a bootstrap-tagsinput widget
 	// And insert the correct tag to be editable (this must be done AFTER displaying the dropdown)
 	initializeDropdownTagWidgets: function(tags){
-		var idIndex, tagInput;
+		var tagInput;
 
-		if (tags.length === 0){
-			tagInput = $("#0-tags-dropdown-input");
-			xgds_notes.initializeInput(tagInput, 1);
-			this.addTagEventHandlers(tagInput);
-		}
-
-		else {
-			for (var i = 0; i < tags.length; i+=2){
-				if (i === 0) idIndex = i;
-				else idIndex = i - 1;
-
-				tagInput = $("#" + idIndex + "-tags-dropdown-input");
+		for (var i = 0; i <= tags.length; i++){
+			if (i % 2 === 0){
+				tagInput = $("#" + i + "-tags-dropdown-input");
 				xgds_notes.initializeInput(tagInput, 1);
 				if (!_.isUndefined(tags[i])) {
 					tagInput.tagsinput('add', {
@@ -1004,20 +989,43 @@ app.views.SearchResultsView = Marionette.View.extend({
 			_this.updateSearch("tag");
 		});
 	},
+	// Adds a new row of inputs to the bottom of the dropdown input list (when clicking the + button)
+	addDropdownRow: function(type){
+		var rowContainer;
+		if (type === "keyword") document.getElementById('keyword-query-list-container');
+		else rowContainer = document.getElementById('tags-query-list-container');
+
+		var row = document.createElement('div');
+		row.className = "row";
+
+		var selectContainer = this.createConnectingWordSelect("or", type, -1);
+		var wordInput = this.createWordInput("", type, this.dropdownTagWidgets * 2);
+		row.appendChild(selectContainer);
+		row.appendChild(wordInput);
+		rowContainer.appendChild(row);
+
+		if (type === "tag"){
+			var tagDropdownInputId;
+			if (this.dropdownTagWidgets === 2) tagDropdownInputId = this.dropdownTagWidgets;
+			else tagDropdownInputId = (this.dropdownTagWidgets - 1) * 2;
+
+			var tagInput = $("#" + tagDropdownInputId + "-tags-dropdown-input");
+			xgds_notes.initializeInput(tagInput, 1);
+			this.addTagEventHandlers(tagInput);
+		}
+	},
 	// Creates the inputs for the dropdowns
 	createWordInput: function(search, type, index){
 		var wordInputContainer = document.createElement('div');
 		if (index === 0) wordInputContainer.className = "col-12";
 		else  wordInputContainer.className = "col-8 ss-word-input-container";
-
 		var wordInput = document.createElement('input');
 		wordInput.type = "text";
 		if (type === "keyword") {
 			wordInput.className = "form-control col-12 ss-word-input ss-keyword-word-input";
 			wordInput.id = index + "-keyword-dropdown-input";
-			if (index === 0) wordInput.value = search[index];
-			else if (index === -1) wordInput.value = "";
-			else wordInput.value = search[index+1];
+			if (index === -1) wordInput.value = "";
+			else wordInput.value = search;
         } else {
 			wordInput.className = "form-control col-12 ss-word-input ss-tags-word-input";
 			wordInput.id = index + "-tags-dropdown-input";
@@ -1041,7 +1049,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 
 		wordSelect.options[wordSelect.options.length] = new Option('or', 'or');
 		wordSelect.options[wordSelect.options.length] = new Option('and', 'and');
-		if (index !== -1) wordSelect.value = search[index];
+		if (index !== -1) wordSelect.value = search;
 		else wordSelect.value = "or";
 
 		selectContainer.appendChild(wordSelect);
@@ -1064,29 +1072,6 @@ app.views.SearchResultsView = Marionette.View.extend({
 		buttonRow.appendChild(col12);
 
 		return buttonRow;
-	},
-	// Adds a new row of inputs to the bottom of the dropdown input list (when clicking the + button)
-	addQueryInput: function(type){
-		var search = this.getSearchValue(type);
-		if (search.indexOf(' ') >= 0 && type === "keyword") {
-			search = search.trim().split(/\s+/);
-		} else {
-			if (type === "keyword") search = [search];
-		}
-
-		if (search.length > 0){
-			if (type === "keyword") var rowContainer = document.getElementById('keyword-query-list-container');
-			else var rowContainer = document.getElementById('tags-query-list-container');
-			var row = document.createElement('div');
-			row.className = "row";
-
-			var selectContainer = this.createConnectingWordSelect(search, type, -1);
-			var wordInput = this.createWordInput(search, type, -1);
-			row.appendChild(selectContainer);
-			row.appendChild(wordInput);
-			rowContainer.appendChild(row);
-		}
-
 	},
 	getFilterData: function() {
     	var theForm = $("#form-"+this.selectedModel);
