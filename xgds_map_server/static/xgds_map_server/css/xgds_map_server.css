@@ -1,3 +1,32 @@
+.default-connector-container {
+	margin-top: 5px;
+}
+
+.dropdown-checkbox{
+	margin-right: 15px;
+}
+
+.dropdown-radio{
+	margin-right: 15px;
+	top: 3px !important;
+}
+
+.dropdown-radio-label{
+	display: inline-flex;
+	white-space: nowrap;
+	top: 1px !important;
+	margin-right: 5px;
+}
+
+.dropdown-input-list:focus,.dropdown-input-list:active {
+   outline: none !important;
+   box-shadow: none;
+}
+
+.default-connector-inputs{
+	margin-left: 20px;
+}
+
 #ss-keyword-container-id{
 	height: 36px !important;
 }

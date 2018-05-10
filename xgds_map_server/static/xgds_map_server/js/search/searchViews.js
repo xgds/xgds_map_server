@@ -429,11 +429,22 @@ app.views.SearchResultsView = Marionette.View.extend({
 		this.keywordQuoteMode = false;
 		this.keywordShiftMode = false;
 		this.dropdownTagWidgets = 0;
+		this.setupDefaultConnectingWords();
 		var context = this;
 		app.on('forceDetail', function(data){
 			var modelMap = context.lookupModelMap(data.type);
 			context.forceDetailView(data, modelMap);
 		});
+	},
+	setupDefaultConnectingWords: function(){
+		var defaultKeywordConnector = Cookies.get('defaultKeywordConnector');
+		var defaultTagConnector = Cookies.get('defaultTagConnector');
+
+		if (!_.isUndefined(defaultKeywordConnector)) this.defaultKeywordConnector = defaultKeywordConnector;
+		else this.defaultKeywordConnector = "or";
+
+		if (!_.isUndefined(defaultTagConnector)) this.defaultTagConnector = defaultTagConnector;
+		else this.defaultTagConnector = "or";
 	},
 	setupRegions: function() {
 		var viewDiv = this.$el.find('#viewDiv');
@@ -450,6 +461,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 		
 	},
     onAttach: function() {
+		var _this = this;
     	this.setupRegions();
     	var tagsInput = $("#search-tags-id");
 		xgds_notes.initializeInput(tagsInput);
@@ -458,12 +470,21 @@ app.views.SearchResultsView = Marionette.View.extend({
 				var index = tagsInput.tagsinput('items').length;
 				//TODO: Change to add and/or based on default selected in dropdown
 				if (_.isUndefined(event.item.updated)){
-					tagsInput.tagsinput('add', {
-						id: "or-" + index,
-						name: 'or',
-						className: 'connector',
-						index: index
-					});
+					if (_this.defaultTagConnector === "or"){
+						tagsInput.tagsinput('add', {
+							id: "or-" + index,
+							name: 'or',
+							className: 'connector',
+							index: index
+						});
+					} else {
+						tagsInput.tagsinput('add', {
+							id: "and-" + index,
+							name: 'and',
+							className: 'connector',
+							index: index
+						});
+					}
 				}
 			}
 		});
@@ -740,8 +761,9 @@ app.views.SearchResultsView = Marionette.View.extend({
 			if (e.target.id === "search-keyword-id" && this.keywordQuoteMode === false) {
 				e.preventDefault();
 				var keywordInput = $("#search-keyword-id");
-				// TODO: Add an option to make this default to and/or based on a checkbox in the dropdown
-				keywordInput.val(keywordInput.val() + ' or ');
+
+				if (this.defaultKeywordConnector === "or") keywordInput.val(keywordInput.val() + ' or ');
+				else keywordInput.val(keywordInput.val() + ' and ');
             }
 		}
 
@@ -882,12 +904,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 				search.push(tags[i].name);
 			}
 
-			if (search.length > 0){
-				if (tags[search.length-1].name === "or" || tags[search.length-1].name === "and") {
-					$("#search-tags-id").tagsinput('remove', tags[search.length-1]);
-					search.splice(search.length-1, 1);
-				}
-			} else {
+            if (search.length === 0){
 				search = [""];
             }
 		}
@@ -895,9 +912,13 @@ app.views.SearchResultsView = Marionette.View.extend({
 	},
 	// Removes the inputs from the correct dropdown
 	deconstructSearchDropdown: function(type){
-		if (type === "keyword") $('#keyword-query-list-container').remove();
-		else $('#tags-query-list-container').remove();
-		$('.buttonRow').remove();
+		if (type === "keyword") {
+			$('#keyword-query-list-container').remove();
+			$('#keyword-button-row-id').remove();
+        } else {
+			$('#tags-query-list-container').remove();
+			$('#tag-button-row-id').remove();
+        }
 	},
 	// Creates the list of inputs and select boxes to be inserted into the dropdown when opened
 	generateQueryList: function(type){
@@ -954,6 +975,8 @@ app.views.SearchResultsView = Marionette.View.extend({
 			var optionsRow = this.createOptionsRow(type);
 			queryEditorBox[0].appendChild(rowContainer);
 			queryEditorBox[0].appendChild(optionsRow);
+			this.setDefaultConnectorRadio(type);
+			this.createDefaultConnectorEvents(type);
 
 			dropdown.show();
 			if (type === "tag") this.initializeDropdownTagWidgets(tags);
@@ -1059,19 +1082,61 @@ app.views.SearchResultsView = Marionette.View.extend({
 	createOptionsRow: function(type){
 		// Create the final + button which should add another row
 		var buttonRow = document.createElement('div');
-		buttonRow.className = "row buttonRow";
+		buttonRow.className = "row";
 		var col12 = document.createElement('div');
 		col12.className = "col-12";
 
 		if (type === "keyword") {
-			col12.innerHTML = "<button class='btn btn-default' id='ss-keyword-add-btn'><i class='fa fa-plus' aria-hidden='true'></i></button>";
+			buttonRow.id = "keyword-button-row-id";
+			col12.innerHTML = "<button class='btn btn-default' id='ss-keyword-add-btn'><i class='fa fa-plus' aria-hidden='true'></i></button>" +
+				"<div class='default-connector-container'>Default:&nbsp;&nbsp;" +
+				"<label class='dropdown-radio-label'><input type=\"radio\" name=\"default-connector-keywords\" class=\"dropdown-radio\" id=\"default-keyword-or-id\" value='or'/>or</label>" +
+				"<label class='dropdown-radio-label'><input type=\"radio\" name=\"default-connector-keywords\" class=\"dropdown-radio\" id=\"default-keyword-and-id\" value='and'/>and</label>" +
+				"</div>";
+
         } else {
+			buttonRow.id = "tag-button-row-id";
 			col12.innerHTML = "<button class='btn btn-default' id='ss-tags-add-btn'><i class='fa fa-plus' aria-hidden='true'></i></button>" +
-                "<input type=\"checkbox\" class=\"form-check-input\" id=\"nest-tags-id\"/>&nbsp;&nbsp;&nbsp;Nest Tags";
+                "<label class='dropdown-nest-tags'><input type=\"checkbox\" class=\"form-check-input dropdown-checkbox\" id=\"nest-tags-id\"/>Nest Tags</label><br/>" +
+				"<div class='default-connector-container'>Default:&nbsp;&nbsp;" +
+				"<label class='dropdown-radio-label'><input type=\"radio\" name=\"default-connector-tags\" class=\"dropdown-radio\" id=\"default-tag-or-id\" value='or'/>or</label>" +
+				"<label class='dropdown-radio-label'><input type=\"radio\" name=\"default-connector-tags\" class=\"dropdown-radio\" id=\"default-tag-and-id\" value='and'/>and</label>" +
+				"</div>";
         }
 		buttonRow.appendChild(col12);
 
 		return buttonRow;
+	},
+	setDefaultConnectorRadio: function(type){
+		if (type === "keyword"){
+			if (this.defaultKeywordConnector === "or")
+				$("input[name=default-connector-keywords][value='or']").prop("checked",true);
+			else
+				$("input[name=default-connector-keywords][value='and']").prop("checked",true);
+
+		} else{
+			if (this.defaultTagConnector === "or")
+				$("input[name=default-connector-tags][value='or']").prop("checked",true);
+			else
+				$("input[name=default-connector-tags][value='and']").prop("checked",true);
+		}
+	},
+	createDefaultConnectorEvents: function(type){
+		var _this = this;
+		var keywordRadio = $('input[type=radio][name=default-connector-keywords]');
+		var tagRadio = $('input[type=radio][name=default-connector-tags]');
+
+		if (type === "keyword"){
+			keywordRadio.change(function(event) {
+				_this.defaultKeywordConnector = this.value;
+				Cookies.set('defaultKeywordConnector', this.value);
+			});
+		} else{
+			tagRadio.change(function(event) {
+				_this.defaultTagConnector = this.value;
+				Cookies.set('defaultTagConnector', this.value);
+			});
+		}
 	},
 	getFilterData: function() {
     	var theForm = $("#form-"+this.selectedModel);
