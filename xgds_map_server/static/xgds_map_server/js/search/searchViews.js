@@ -731,15 +731,19 @@ app.views.SearchResultsView = Marionette.View.extend({
 	// Put the needed data for exporting into a hidden form
 	initializeExportData: function(){
     	var _this = this;
+    	var simpleSearchData = {};
     	$('.export-err').hide();
-    	if ($('#pick_master').is(":checked"))
-    		this.selectedIds.push("All");
+    	if ($('#pick_master').is(":checked")) this.selectedIds.push("All");
 
+    	simpleSearchData["search"] = $('#search-keyword-id').val();
+    	simpleSearchData["tags"] = $('#search-tags-id').val();
     	$('#rowIds').val(JSON.stringify(this.selectedIds));
-    	$('#selectedModel').val(this.selectedModel);
-    	$('#simpleSearchData').val($('#search-keyword-id').val());
+    	$('#modelName').val(this.selectedModel);
+    	$('#simpleSearchData').val(JSON.stringify(simpleSearchData));
     	$('#advancedSearchData').val(JSON.stringify(this.getFilterData()));
     	$('#filetype').val(this.fileType);
+    	$('#nestTags').val(this.nestTags);
+    	$('#connector').val($("#search-select-id").val());
 
     	$('label[name=fileType]').click(function(event) {
 			$('#filetype').val($(event.target).attr('data'));

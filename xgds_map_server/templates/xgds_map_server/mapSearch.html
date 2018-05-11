@@ -134,10 +134,12 @@
                 <form id="exportForm" action="/xgds_map_server/search/exportSearchResults/" method="post" target="_blank">
                     <div class="modal-body">
                         <input type="hidden" id="rowIds" name="rowIds" />
-                        <input type="hidden" id="selectedModel" name="selectedModel" />
+                        <input type="hidden" id="modelName" name="modelName" />
                         <input type="hidden" id="simpleSearchData" name="simpleSearchData" />
                         <input type="hidden" id="advancedSearchData" name="advancedSearchData" />
                         <input type="hidden" id="filetype" name="filetype" />
+                        <input type="hidden" id="nestTags" name="nestTags" />
+                        <input type="hidden" id="connector" name="connector" />
                         <div class="form-group">
                             <p class="export-form-label">File Name:</p>
                             <input type="text" class="form-control" id="filename" name="filename"/>

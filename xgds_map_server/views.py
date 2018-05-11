@@ -1888,10 +1888,10 @@ def getOverlayTime(request, overlayId, timeString=None):
 class ExportOrderListJson(OrderListJson):
     def dispatch(self, request, *args, **kwargs):
         if request.method == 'POST':
-            selectedModel = request.POST.get('selectedModel', None)
-            modelDict = settings.XGDS_MAP_SERVER_JS_MAP[selectedModel]
+            modelName = request.POST.get('modelName', None)
+            modelDict = settings.XGDS_MAP_SERVER_JS_MAP[modelName]
             rowIds = json.loads(request.POST.get('rowIds', None))
-            simpleSearchData = request.POST.get('simpleSearchData', None)
+            simpleSearchData = json.loads(request.POST.get('simpleSearchData', None))
             advancedSearchData = json.loads(request.POST.get('advancedSearchData', None))
             filetype = request.POST.get('filetype', None)
             filename = request.POST.get('filename', None)
@@ -1902,7 +1902,7 @@ class ExportOrderListJson(OrderListJson):
                 if (filetype == "CSV"):
                     response = self.exportCSV(data, modelDict, filename + ".csv")
                 elif (filetype == "KML"):
-                    response = self.exportKML(data, modelDict, selectedModel, filename + ".kml")
+                    response = self.exportKML(data, modelDict, modelName, filename + ".kml")
                 else:
                     response = HttpResponse(json.dumps({'error': 'unknown file type.'}), content_type='application/json', status=500)
 
@@ -1918,7 +1918,7 @@ class ExportOrderListJson(OrderListJson):
             if (len(advancedSearchData) > 0):
                 data = self.filter_queryset_advanced_search(data, advancedSearchData)
             if (simpleSearchData):
-                data = self.filter_queryset_simple_search(data, simpleSearchData)
+                data = self.filter_queryset_simple_search(data, simpleSearchData["search"], simpleSearchData["tags"])
         else:
             data = self.model.objects.filter(pk__in=rowIds)
 
