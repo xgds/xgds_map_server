@@ -1,5 +1,42 @@
+Search:
+----
+Lets you search for data and see it on the map. Clicking the blue magnifying icon button will execute the search.
 
-**Search** lets you search for data and see it on the map..
+Keyword Search
+   The input box which reads "Keyword" can be used to search for words within the displayed columns of the table.
+   Case does not matter.
+   It supports searching of multiple words in quotes and combinations of searches via "and"/"or".
+   Typing a space will automatically add either an "and"/"or" depending on your default connecting word preference.
+   
+   Examples:
+      "Alteration Gradient" or MD10
+      
+      MD10 and AA or PB1801
+
+Tag Search
+   Begin typing to see a list of possible tags.
+   Supports searching of multiple tags via "and"/"or".
+   Selecting a tag from the list will automatically add either an "and"/"or" depending on your default connecting word preference.
+   
+Keyword + Tag Search Dropdown Editing
+   Clicking the downward arrow button on the right hand side of either the keyword or tag input will open the dropdown editor.
+   Each individual word or tag will be seperated into their own inputs and displayed in the dropdown for clearer editing.
+   This can be used to either add new search words/tags or edit the existing query.
+   Clicking the "+" button will add a new input row for you to add a new query into.
+   The value of the "Default:" radio button will determine whether an "or"/"and" is automatically filled in for each input. This selection is saved as a cookie so it will not have to be changed each time.
+   The tag search dropdown has a "Nest Tags" checkbox option. When checked, the tag search will search down the entire Tag Hierarchy. This option is also saved as a cookie. 
+
+Clear Search
+   Clicking the "Clear Search" button will reset the keyword and tag search inputs to be blank and reload the table.
+   
+Export Data
+   After completing a search, use the checkboxes on the lefthand side of the table to select which rows of data you would like to export
+   Clicking on the "Export" button at the top right hand corner of the table box will open up a popup window which will allow you to enter a file name and select a file type (CSV/KML).
+   Click "Export" within in the popup window to download the file. Exporting many rows can take a few minutes.
+   
+Advanced Filtering
+   Click on the "Filter" button the left of the "Export" button at the top of the table will open up a popup window for advanced filtering.
+
 
 Map:
 ----
