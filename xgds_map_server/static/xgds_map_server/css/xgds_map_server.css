@@ -1,3 +1,12 @@
+#clear-search-btn-id{
+	margin-left: 15px;
+	margin-bottom: 5px;
+}
+
+.clear-btn-row{
+	display: inline-block;
+}
+
 .default-connector-container {
 	margin-top: 5px;
 }

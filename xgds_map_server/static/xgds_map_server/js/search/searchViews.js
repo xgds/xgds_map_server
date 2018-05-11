@@ -413,13 +413,14 @@ app.views.SearchResultsView = Marionette.View.extend({
 		'keydown [name="search-keyword"]': 'keywordKeydown',
 		'keyup [name="search-keyword"]': 'keywordKeyup',
 		'keydown .ss-container': 'handleEnterSubmit',
+		'click #clear-search-btn-id': 'clearSearch',
 		'click #keyword-dropdown-btn': function(){ this.generateQueryList("keyword") },
 		'click #tags-dropdown-btn': function(){ this.generateQueryList("tag") },
 		'click #ss-keyword-add-btn': function(){ this.addDropdownRow("keyword") },
 		'click #ss-tags-add-btn': function(){ this.addDropdownRow("tag") },
 		'keyup .ss-keyword-word-input': function(){ this.updateSearch("keyword") },
 		'change .ss-keyword-word-select': function(){ this.updateSearch("keyword") },
-		'change .ss-tags-word-select': function(){ this.updateSearch("tag") },
+		'change .ss-tags-word-select': function(){ this.updateSearch("tag") }
 	},
 	initialize: function() {
 		this.modelMap = {};
@@ -749,7 +750,18 @@ app.views.SearchResultsView = Marionette.View.extend({
 		this.postData['connector'] = $("#search-select-id").val();
 		this.theDataTable.search($('#search-keyword-id').val()).draw();
 	},
-	//Checks that the last tag is not an and/or that is automatically added (if found, removes it)
+	// Clears the search values and returns the table back to normal
+	clearSearch: function(){
+		var keywordSearchId = $('#search-keyword-id');
+		var tagSearchId = $('#search-tags-id');
+		var searchSelectId = $('#search-select-id');
+
+		keywordSearchId.val("");
+		searchSelectId.val("or");
+		tagSearchId.tagsinput('removeAll');
+		this.filterDatatable();
+	},
+	// Checks that the last tag is not an and/or that is automatically added (if found, removes it)
 	checkLastTag: function(){
 		var tagsInput = $("#search-tags-id");
 		var tags = tagsInput.tagsinput('items');
