@@ -429,22 +429,26 @@ app.views.SearchResultsView = Marionette.View.extend({
 		this.keywordQuoteMode = false;
 		this.keywordShiftMode = false;
 		this.dropdownTagWidgets = 0;
-		this.setupDefaultConnectingWords();
+		this.setupSearchValues();
 		var context = this;
 		app.on('forceDetail', function(data){
 			var modelMap = context.lookupModelMap(data.type);
 			context.forceDetailView(data, modelMap);
 		});
 	},
-	setupDefaultConnectingWords: function(){
+	setupSearchValues: function(){
 		var defaultKeywordConnector = Cookies.get('defaultKeywordConnector');
 		var defaultTagConnector = Cookies.get('defaultTagConnector');
+		var nestTags = Cookies.get('nestTags');
 
 		if (!_.isUndefined(defaultKeywordConnector)) this.defaultKeywordConnector = defaultKeywordConnector;
 		else this.defaultKeywordConnector = "or";
 
 		if (!_.isUndefined(defaultTagConnector)) this.defaultTagConnector = defaultTagConnector;
 		else this.defaultTagConnector = "or";
+
+		if (!_.isUndefined(nestTags)) this.nestTags = nestTags;
+		else this.nestTags = false;
 	},
 	setupRegions: function() {
 		var viewDiv = this.$el.find('#viewDiv');
@@ -468,7 +472,6 @@ app.views.SearchResultsView = Marionette.View.extend({
 		tagsInput.on('itemAdded', function(event) {
 			if (event.item.name !== "or" && event.item.name !== "and"){
 				var index = tagsInput.tagsinput('items').length;
-				//TODO: Change to add and/or based on default selected in dropdown
 				if (_.isUndefined(event.item.updated)){
 					if (_this.defaultTagConnector === "or"){
 						tagsInput.tagsinput('add', {
@@ -742,6 +745,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 		this.postData['tags'] = tags;
 		this.postData['modelName'] = this.selectedModel;
 		this.postData['simpleSearch'] = true;
+		this.postData['nestTags'] = this.nestTags;
 		this.postData['connector'] = $("#search-select-id").val();
 		this.theDataTable.search($('#search-keyword-id').val()).draw();
 	},
@@ -975,8 +979,8 @@ app.views.SearchResultsView = Marionette.View.extend({
 			var optionsRow = this.createOptionsRow(type);
 			queryEditorBox[0].appendChild(rowContainer);
 			queryEditorBox[0].appendChild(optionsRow);
-			this.setDefaultConnectorRadio(type);
-			this.createDefaultConnectorEvents(type);
+			this.setDropdownCheckedValues(type);
+			this.createDropdownEvents(type);
 
 			dropdown.show();
 			if (type === "tag") this.initializeDropdownTagWidgets(tags);
@@ -1014,15 +1018,16 @@ app.views.SearchResultsView = Marionette.View.extend({
 	},
 	// Adds a new row of inputs to the bottom of the dropdown input list (when clicking the + button)
 	addDropdownRow: function(type){
-		var rowContainer;
-		if (type === "keyword") document.getElementById('keyword-query-list-container');
+		var rowContainer, wordInput;
+		if (type === "keyword") rowContainer = document.getElementById('keyword-query-list-container');
 		else rowContainer = document.getElementById('tags-query-list-container');
 
 		var row = document.createElement('div');
 		row.className = "row";
 
 		var selectContainer = this.createConnectingWordSelect("or", type, -1);
-		var wordInput = this.createWordInput("", type, this.dropdownTagWidgets * 2);
+		if (type === "keyword") wordInput = this.createWordInput("", type, -1);
+		else wordInput = this.createWordInput("", type, this.dropdownTagWidgets * 2);
 		row.appendChild(selectContainer);
 		row.appendChild(wordInput);
 		rowContainer.appendChild(row);
@@ -1107,24 +1112,24 @@ app.views.SearchResultsView = Marionette.View.extend({
 
 		return buttonRow;
 	},
-	setDefaultConnectorRadio: function(type){
+	setDropdownCheckedValues: function(type){
 		if (type === "keyword"){
-			if (this.defaultKeywordConnector === "or")
-				$("input[name=default-connector-keywords][value='or']").prop("checked",true);
-			else
-				$("input[name=default-connector-keywords][value='and']").prop("checked",true);
+			if (this.defaultKeywordConnector === "or") $("input[name=default-connector-keywords][value='or']").prop("checked",true);
+			else $("input[name=default-connector-keywords][value='and']").prop("checked",true);
 
 		} else{
-			if (this.defaultTagConnector === "or")
-				$("input[name=default-connector-tags][value='or']").prop("checked",true);
-			else
-				$("input[name=default-connector-tags][value='and']").prop("checked",true);
+			if (this.nestTags === "false" || this.nestTags === false) $("#nest-tags-id").prop("checked", false);
+			else $("#nest-tags-id").prop("checked", true);
+
+			if (this.defaultTagConnector === "or") $("input[name=default-connector-tags][value='or']").prop("checked",true);
+			else $("input[name=default-connector-tags][value='and']").prop("checked",true);
 		}
 	},
-	createDefaultConnectorEvents: function(type){
+	createDropdownEvents: function(type){
 		var _this = this;
 		var keywordRadio = $('input[type=radio][name=default-connector-keywords]');
 		var tagRadio = $('input[type=radio][name=default-connector-tags]');
+		var nestTags = $("#nest-tags-id");
 
 		if (type === "keyword"){
 			keywordRadio.change(function(event) {
@@ -1136,6 +1141,10 @@ app.views.SearchResultsView = Marionette.View.extend({
 				_this.defaultTagConnector = this.value;
 				Cookies.set('defaultTagConnector', this.value);
 			});
+			nestTags.change(function(event){
+				_this.nestTags = this.checked;
+				Cookies.set('nestTags', this.checked);
+			})
 		}
 	},
 	getFilterData: function() {
