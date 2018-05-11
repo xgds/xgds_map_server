@@ -75,7 +75,7 @@
 	{% block jsInitPreApp %}
 	 app.vent.on('onMapSetup', function() {
         	xgds_gridstack.initializeGridstack();
-    		xgds_search.hookAdvancedSearchButton();
+            {# xgds_search.hookAdvancedSearchButton(); #}
 {#            xgds_search.hookMasterCheckbox();#}
         });
         
@@ -90,11 +90,6 @@
 	
 	{% block initGridstack %}
 	{% endblock initGridstack %}
-
-{% block buttonrowRight %}
-	<button id="advanced_search_button" role="button" class="btn btn-primary mr-2 my-1" style="max-height:1.8rem;">Filter</button>
-{% endblock buttonrowRight %}
-
 
 {% block preDashboard %}
 

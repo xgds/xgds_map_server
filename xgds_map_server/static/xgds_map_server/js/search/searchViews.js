@@ -413,6 +413,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 		'keydown [name="search-keyword"]': 'keywordKeydown',
 		'keyup [name="search-keyword"]': 'keywordKeyup',
 		'keydown .ss-container': 'handleEnterSubmit',
+		'click #advanced_search_button': 'advancedSearchModal',
 		'click #clear-search-btn-id': 'clearSearch',
 		'click #keyword-dropdown-btn': function(){ this.generateQueryList("keyword") },
 		'click #tags-dropdown-btn': function(){ this.generateQueryList("tag") },
@@ -716,6 +717,18 @@ app.views.SearchResultsView = Marionette.View.extend({
         this.filterMapData(undefined);
         app.vent.trigger("repack");
     },
+	// Open the advanced search modal when the filter button is clicked
+	advancedSearchModal: function(event){
+		if ($('#myModal').is(':visible')){
+			$('#advancedSearchModal').modal('hide');
+		} else{
+			event.preventDefault();
+		    var searchDiv = $("#searchDiv");
+		    searchDiv.show();
+		    $('#advancedSearchModal').modal('show');
+		}
+	},
+	// Put the needed data for exporting into a hidden form
 	initializeExportData: function(){
     	var _this = this;
     	$('.export-err').hide();
@@ -736,6 +749,7 @@ app.views.SearchResultsView = Marionette.View.extend({
     	if (this.selectedIds.length === 0) $('.export-err').show();
 		else $('#exportModal').modal('show');
 	},
+	// Filters the datatable when the search button is clicked
 	filterDatatable: function(){
 		this.checkLastTag();
 		var tags = $('#search-tags-id').val();
@@ -771,6 +785,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 			}
 		}
 	},
+	// Handles keydown events in the keyword input
 	keywordKeydown: function(e){
 		// Space key
 		if (e.which === 32) {
@@ -795,6 +810,7 @@ app.views.SearchResultsView = Marionette.View.extend({
             }
 		}
 	},
+	// Handles keyup events in the keyword input
 	keywordKeyup: function(e){
 		// Shift key
 		if (e.which === 16) {
@@ -1124,6 +1140,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 
 		return buttonRow;
 	},
+	// Sets the correct values of nest tags and the default and/or when opening the dropdown
 	setDropdownCheckedValues: function(type){
 		if (type === "keyword"){
 			if (this.defaultKeywordConnector === "or") $("input[name=default-connector-keywords][value='or']").prop("checked",true);
@@ -1137,6 +1154,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 			else $("input[name=default-connector-tags][value='and']").prop("checked",true);
 		}
 	},
+	// Creates the event listeners for the nest tags and default and/or when opening the dropdown
 	createDropdownEvents: function(type){
 		var _this = this;
 		var keywordRadio = $('input[type=radio][name=default-connector-keywords]');
@@ -1458,7 +1476,7 @@ app.views.SearchResultsView = Marionette.View.extend({
     }
 });
 
-var xgds_search = xgds_search || {};
+/* var xgds_search = xgds_search || {};
 $.extend(xgds_search,{
 	hookAdvancedSearchButton : function() {
 		// turn off by default
@@ -1471,4 +1489,4 @@ $.extend(xgds_search,{
 		    $('#advancedSearchModal').modal('show');
 		});
 	}
-});
+}); */
