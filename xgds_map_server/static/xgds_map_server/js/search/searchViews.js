@@ -851,7 +851,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 	// Updates the keyword search input from the dropdown inputs
 	updateKeywordSearch: function(queryEditor, searchId){
 		var words = [], connectors = [];
-		queryEditor.find('input').each(function () { words.push(this.value) });
+		queryEditor.find('.ss-keyword-word-input').each(function () { console.log(this); words.push(this.value) });
 		queryEditor.find('select').each(function () { connectors.push(this.value) });
 
 		// If we have only one word just add it, otherwise iterate through and update the main input
