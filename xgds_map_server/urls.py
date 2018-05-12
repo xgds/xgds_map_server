@@ -58,6 +58,8 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,{},'xgds_map_server_index'
                url(r'^editTile/(?P<tileID>[\w-]+)/', views.getEditTilePage, {}, 'mapEditTile'),
                url(r'^addMapDataTile/', views.getAddMapDataTilePage, {}, 'mapAddDataTile'),
                url(r'^editMapDataTile/(?P<tileID>[\w-]+)/', views.getEditMapDataTilePage, {}, 'mapEditDataTile'),
+               url(r'^addWMS/', views.getAddWMSTilePage, {}, 'mapAddWMSTile'),
+               url(r'^editWMS/(?P<tileID>[\w-]+)/', views.getEditWMSTilePage, {}, 'mapEditWMSTile'),
 
                # TODO all of the below urls depended on xgds_data and need to be reimplemented
                # url(r'^addMapSearch/', views.getAddMapSearchPage, {}, 'mapAddMapSearch'),

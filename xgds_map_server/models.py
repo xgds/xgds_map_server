@@ -277,7 +277,7 @@ class AbstractWMS(AbstractMap):
         result["data"]["format"] = self.format
         result["data"]["layers"] = self.layers
         result["data"]["tileWidth"] = self.tileWidth
-        result["data"]["tileWidth"] = self.tileHeight
+        result["data"]["tileHeight"] = self.tileHeight
         result["data"]["wmsVersion"] = self.wmsVersion
         result["data"]["srs"] = self.srs
         result["data"]["hasTime"] = self.hasTime

@@ -24,7 +24,7 @@ from django.forms.fields import IntegerField, ChoiceField
 
 from resumable.fields import ResumableFileField
 
-from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile,  MapDataTile
+from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile,  MapDataTile, WMSTile
 from geocamUtil.models import SiteFrame
 
 # pylint: disable=C1001
@@ -38,7 +38,8 @@ class AbstractMapForm(forms.ModelForm):
     def getModel(self):
         return None
 
-    def getExclude(self):
+    @staticmethod
+    def getExclude():
         return ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'minLat', 'minLon', 'maxLat', 'maxLon']
 
     def getParentGroup(self):
@@ -54,7 +55,8 @@ class AbstractMapForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'size': 50}),
             'description': forms.Textarea(attrs={'cols': 50, 'rows': 7})
         }
-        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'minLat', 'minLon', 'maxLat', 'maxLon']
+        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'minLat', 'minLon', 'maxLat',
+                   'maxLon']
 
 
 class MapForm(AbstractMapForm):
@@ -70,7 +72,15 @@ class MapGroupForm(AbstractMapForm):
 class MapLayerForm(AbstractMapForm):
     class Meta(AbstractMapForm.Meta):
         model = MapLayer
-        exclude = ['minLat', 'minLon', 'maxLat', 'maxLon', 'jsonFeatures', 'creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'defaultColor']
+        exclude = ['minLat', 'minLon', 'maxLat', 'maxLon', 'jsonFeatures', 'creator', 'modifier', 'creation_time',
+                   'modification_time', 'deleted', 'defaultColor']
+
+
+class WMSTileForm(AbstractMapForm):
+    class Meta(AbstractMapForm.Meta):
+        model = WMSTile
+        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'minLat', 'minLon', 'maxLat',
+                   'maxLon']
 
 
 class MapLayerFromSelectedForm(AbstractMapForm):

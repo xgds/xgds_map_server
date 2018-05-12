@@ -58,8 +58,10 @@ from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJ
 from geocamUtil.models import SiteFrame
 from xgds_core.views import get_handlebars_templates, OrderListJson
 from xgds_core.util import addPort
-from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapLayerFromSelectedForm, MapTileForm, MapDataTileForm, EditMapTileForm, EditMapDataTileForm
-from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapDataTile, MapLink, MAP_NODE_MANAGER, MAP_MANAGER, GroundOverlayTime
+from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapLayerFromSelectedForm, MapTileForm, \
+    MapDataTileForm, EditMapTileForm, EditMapDataTileForm, WMSTileForm
+from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapDataTile, MapLink, MAP_NODE_MANAGER, \
+    MAP_MANAGER, GroundOverlayTime, WMSTile
 from xgds_map_server.kmlLayerExporter import exportMapLayer
 from geocamUtil.KmlUtil import wrapKmlForDownload
 from fastkml import kml
@@ -587,6 +589,80 @@ def getEditMapDataTilePage(request, tileID):
                        'instructions': instructions,
                        'title': title},
                       )
+
+
+@csrf_protect
+@condition(etag_func=None)
+def getAddWMSTilePage(request):
+    """
+    HTML view to create a new wms tile
+    """
+    title = "Add WMS Tile"
+    instructions = "Reference a WMS layer on a remote server"
+
+    if request.method == 'POST':
+        tile_form = WMSTileForm(request.POST, request.FILES)
+        if tile_form.is_valid():
+            tile_form.save()
+        else:
+            return render(request,
+                          "AddNode.html",
+                          {'form': tile_form,
+                           'error': True,
+                           'instructions': instructions,
+                           'title': title},
+                          )
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
+    else:
+        tile_form = WMSTileForm(initial={'username': request.user.username})
+        return render(request,
+                      "AddNode.html",
+                      {'form': tile_form,
+                       'error': False,
+                       'instructions': instructions,
+                       'title': title},
+                      )
+
+
+@csrf_protect
+@condition(etag_func=None)
+def getEditWMSTilePage(request, tileID):
+    """
+    HTML view to edit an existing wms tile
+    """
+    try:
+        mapTile = WMSTile.objects.get(pk=tileID)
+    except WMSTile.DoesNotExist:
+        raise Http404
+    except WMSTile.MultipleObjectsReturned:
+        # this really shouldn't happen, ever
+        return HttpResponseServerError()
+    title = "Edit WMS Tile"
+    instructions = "You may modify anything."
+
+    if request.method == 'POST':
+        tile_form = WMSTileForm(request.POST, request.FILES, instance=mapTile)
+        if tile_form.is_valid():
+            tile_form.save()
+        else:
+            return render(request,
+                          "EditNode.html",
+                          {'form': tile_form,
+                           'error': True,
+                           'instructions': instructions,
+                           'title': title},
+                          )
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
+    else:
+        tile_form = WMSTileForm(instance=mapTile, initial={'username': request.user.username})
+        return render(request,
+                      "EditNode.html",
+                      {'form': tile_form,
+                       'error': False,
+                       'instructions': instructions,
+                       'title': title},
+                      )
+
 
 def getAddFolderPage(request):
     """
