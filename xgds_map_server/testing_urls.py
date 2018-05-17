@@ -14,10 +14,8 @@
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
 
-from django.conf.urls import patterns, include
+from django.conf.urls import include, url
 
-urlpatterns = patterns(
-    '',
-
-    (r'^xgds_map_server/', include('xgds_map_server.urls')),
-)
+urlpatterns = [
+    url(r'^xgds_map_server/', include('xgds_map_server.urls')),
+]
