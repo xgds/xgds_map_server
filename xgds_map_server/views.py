@@ -938,9 +938,6 @@ def getDeleteFolderPage(request, groupID):
         return HttpResponseRedirect(request.build_absolute_uri(reverse("mapTree")))
 
     else:
-        # either there's some transaction I'm not aware of happening,
-        # or transaction just expects a call regardless of any database activity
-        transaction.rollback()
         return render(request,
                       "FolderDelete.html",
                       {'groupObj': map_group})
