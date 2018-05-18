@@ -24,8 +24,7 @@ from unittest import skip
 
 
 class TestMaps(TestCase):
-    fixtures = ['xgds_map_server_testing.json',
-                'xgds_map_server_auth.json']
+    fixtures = ['xgds_map_server_testing.json']
     urls = "xgds_map_server.testing_urls"
 
     def test_index(self):
@@ -41,12 +40,13 @@ class TestMaps(TestCase):
         response = self.client.get(reverse('mapTree'))
         self.assertEqual(response.status_code, 200)
 
+    @skip('no matching url in urls.py')
     def test_mapListJSON(self):
         response = self.client.get(reverse('mapListJSON'))
         self.assertEqual(response.status_code, 200)
 
     def test_mapDetail(self):
-        mapId = '1'
+        mapId = '2'
         response = self.client.get(reverse('mapDetail', args=[mapId]))
         self.assertEqual(response.status_code, 200)
 
@@ -68,22 +68,27 @@ class TestMaps(TestCase):
         response = self.client.get(reverse('addKml'))
         self.assertEqual(response.status_code, 200)
 
-    def test_mapDelete(self):
+    def test_nodeDelete(self):
         mapId = '1'
-        response = self.client.get(reverse('mapDelete', args=[mapId]))
+        response = self.client.get(reverse('nodeDelete', args=[mapId]))
         self.assertEqual(response.status_code, 200)
 
-    def test_deletedMaps(self):
-        response = self.client.get(reverse('deletedMaps'))
+    def test_deletedNodes(self):
+        response = self.client.get(reverse('deletedNodes'))
         self.assertEqual(response.status_code, 200)
 
-    @skip('Test is broken')
-    def test_jsonMove(self):
-        response = self.client.get(reverse('jsonMove'))
+    def test_moveNode(self):
+        data = {'nodeUuid':2,'parentUuid':1}
+        response = self.client.post(reverse('moveNode'), data=data)
         self.assertEqual(response.status_code, 200)
 
     def test_feed(self):
         # currently the only feed possible is the master feed
         feedName = ''
         response = self.client.get(reverse('xgds_map_server_feed', args=[feedName]))
+        self.assertEqual(response.status_code, 200)
+
+    def test_feed_page(self):
+        # currently the only feed possible is the master feed
+        response = self.client.get(reverse('xgds_map_server_feed_page'))
         self.assertEqual(response.status_code, 200)
