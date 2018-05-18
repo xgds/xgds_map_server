@@ -8,7 +8,7 @@
 {% for node in nodes %}
 <tr>
 <td>
-{% if node|get_class_name = 'MapGroup' %}
+{% if node|get_class_name == 'MapGroup' %}
 <a href="{% url 'folderDelete' node.uuid %}">{{ node.name }}</a><br>
 {% else %}
 <a href="{% url 'nodeDelete' node.uuid %}">{{ node.name }}</a><br>
