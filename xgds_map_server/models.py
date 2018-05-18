@@ -249,7 +249,7 @@ class AbstractWMS(AbstractMap):
     sourceFile = models.FileField(upload_to=settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR, max_length=256,
                                   null=True, blank=True)
     projectionName = models.CharField(null=True, max_length=32, blank=True)
-    wmsUrl = models.CharField(null=True, max_length=512, db_index=True)
+    wmsUrl = models.CharField(null=True, max_length=512)
     layers = models.CharField(null=True, max_length=64, db_index=True)
     # geoserver specific stuff
     workspaceName = models.CharField(null=True, max_length=32, blank=True)
