@@ -69,6 +69,9 @@ from shapely.geometry import Point, LineString, Polygon
 from xgds_core.views import buildFilterDict
 from xgds_core.util import insertIntoPath
 
+if 'xgds_timeseries' in settings.INSTALLED_APPS:
+    from xgds_timeseries.views import get_time_series_classes_and_titles
+
 #from django.http import StreamingHttpResponse
 # pylint: disable=E1101,R0911
 latestRequestG = None
@@ -1732,6 +1735,12 @@ def getMappedObjectsExtens(request, object_name, extens, today=False):
 
 def getFlightPlaybackPage(request, flight_name, templatePath='xgds_map_server/flight_playback.html', forceUserSession=False):
     flight = FLIGHT_MODEL.get().objects.get(name=flight_name)
+
+    #load time series data
+    timeseries_config = []
+    if 'xgds_timeseries' in settings.INSTALLED_APPS:
+        timeseries_config =  get_time_series_classes_and_titles()
+
     return render(request,
                   templatePath,
                   {'help_content_path': 'xgds_map_server/help/flightPlayback.rst',
@@ -1740,6 +1749,7 @@ def getFlightPlaybackPage(request, flight_name, templatePath='xgds_map_server/fl
                                                          'XGDS_MAP_SERVER_HANDLEBARS_DIRS'),
                    'searchForms': getSearchForms(),
                    'flight': flight,
+                   'timeseries_config': timeseries_config,
                    'forceUserSession': forceUserSession,
                    'app': 'xgds_map_server/js/replay/mapReplayApp.js'},
                   )

@@ -28,25 +28,8 @@
 {% endblock preDashboard %}
 
 {% block postMap %}
-<div id="view-gridstack-item" class="grid-stack-item"
-    data-gs-x="3" data-gs-y="0"
-    data-gs-width="3" data-gs-height="4" >
-    <div class="grid-stack-item-content" id="view-gridstack-item-content" >
-        <ul class="nav justify-content-end">
-            <i class="fa fa-lock pinDiv gray-light"></i>
-        </ul>
-        <div id="viewDiv" class="mt-negative-1rem">
-            <div id="plot-container" class="plot-container" >
-                <div id="plotTitle" class="row ml-2"></div>
-                <div id="plotDiv" class="plot-div" style="height:200px;">PLOT DIV yo</div>
-                <div id="plotLegend" class="row ml-2"></div>
-            </div>
-            <div id="timeseries_message" >
-            </div>
-        </div>
-    </div>
-</div>
 
+<!--
 <div id="notes-gridstack-item" class="grid-stack-item"
 		data-gs-x="3" data-gs-y="2"
         data-gs-width="3" data-gs-height="2" >
@@ -58,6 +41,7 @@
                 NOTES div yo
 			</div>
 		</div>
+		-->
 {% endblock postMap %}
 
 {% block map %}
@@ -80,7 +64,7 @@
         data-gs-width="1" data-gs-height="3" >
         <div class="grid-stack-item-content" id="layers-gridstack-item-content">
         <ul class="nav justify-content-end">
-            <i class="fa fa-unlock-alt gray-light pinDiv mr-1"></i>
+            <i class="fa fa-lock gray-light pinDiv mr-1"></i>
             <i class="fa fa-window-close gray-light fa-lg"></i>
         </ul>
         <div id="layers" class="mt-negative-1rem"></div>
@@ -109,7 +93,7 @@
 
     <script type="x-template/underscore" id="plot_contents">
         <div id="plotTitle" class="row ml-2"></div>
-        <div id="plotDiv" class="plot-div" style="height:200px;">placeholder</div>
+        <div id="plotDiv" class="plot-div mt-2" style="height:150px;"></div>
         <div id="plotLegend" class="row ml-2"></div>
         <div id="timeseries_message"></div>
     </script>
@@ -180,10 +164,7 @@
             XGDS_PLANNER_LINKS_LOADED_CALLBACK: '{{ settings.XGDS_PLANNER_LINKS_LOADED_CALLBACK }}',
             searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
             settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:'true,false' }},
-            plots: {{ settings.XGDS_PLANNER_PLOTS|safe }},
-            plotOptions: { title: 'Environmental',
-                           model_name: 'xgds_braille_app.Environmental',
-                           flight_ids: [22]}
+            flight_ids: [{{ flight.pk }}]
      };
 
         {% if extras %}
@@ -199,21 +180,24 @@
 {% block jsInit %}
 
 	{% block jsInitPreApp %}
+        appOptions.timeseries_config = [];
+        {% for dict in timeseries_config %}
+            appOptions.timeseries_config.push({{ dict|safe }});
+        {% endfor %}
 	{% endblock jsInitPreApp %}
 
 	$(function(){
 		app.start(appOptions);
-    /*
     	app.vent.on("mapSearch:drewFeatures", function(e) {
         	app.vent.trigger('mapSearch:fit');
         });
-    */
 
         {% block preLayout %}
 		{% endblock preLayout %}
 
     	xgds_gridstack.initializeGridstack();
-    // right here the map is the right height and when we exit this method it is not.
+
+        // right here the map is the right height and when we exit this method it is not.
 
         {% block otherJSInit %}
 
