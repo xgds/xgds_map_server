@@ -90,6 +90,9 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,{},'xgds_map_server_index'
                url(r'^view/(?P<modelName>[\w]+)/(?P<modelPK>[\d]+)$', views.getViewSingleModelPage, {}, 'search_map_single_object'),
                #url(r'^view/(?P<modelName>[\w]+)/(?P<modelPK>[\d]+)$', views.getViewMultiModelPage, {}, 'search_map_single_object'),
 
+               # replay in map page
+               url(r'^replay/(?P<flight_name>[\w]+)$', views.getFlightPlaybackPage, (), 'map_replay_flight'),
+
                # Export datatable rows from search pages to CSV file
                url(r'^search/exportSearchResults/', views.ExportOrderListJson.as_view(), {}, 'exportSearchResults'),
 

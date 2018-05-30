@@ -75,7 +75,7 @@ latestRequestG = None
 
 XGDS_MAP_SERVER_GEOTIFF_PATH = os.path.join(settings.DATA_ROOT, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR)
 SEARCH_FORMS = {}
-
+FLIGHT_MODEL = LazyGetModelByName(settings.XGDS_CORE_FLIGHT_MODEL)
 
 def setTransparency(request, uuid, mapType, value):
     try:
@@ -1728,6 +1728,22 @@ def getMappedObjectsExtens(request, object_name, extens, today=False):
             return HttpResponse(content=json_data,
                                 content_type="application/json")
         return ""
+
+
+def getFlightPlaybackPage(request, flight_name, templatePath='xgds_map_server/flight_playback.html', forceUserSession=False):
+    flight = FLIGHT_MODEL.get().objects.get(name=flight_name)
+    return render(request,
+                  templatePath,
+                  {'help_content_path': 'xgds_map_server/help/flightPlayback.rst',
+                   'title': '%s playback' % settings.XGDS_CORE_FLIGHT_MONIKER,
+                   'templates': get_handlebars_templates(list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS),
+                                                         'XGDS_MAP_SERVER_HANDLEBARS_DIRS'),
+                   'searchForms': getSearchForms(),
+                   'flight': flight,
+                   'forceUserSession': forceUserSession,
+                   'app': 'xgds_map_server/js/replay/mapReplayApp.js'},
+                  )
+
 
 def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSearch.html', forceUserSession=False, searchForms=None, filter=None):
     searchModelDict = settings.XGDS_MAP_SERVER_JS_MAP

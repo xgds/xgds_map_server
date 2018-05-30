@@ -1,0 +1,227 @@
+{% extends "dashboard_base.html" %}
+
+{% load pipeline %}
+{% load static %}
+{% load siteFrames %}
+
+
+{% block sitemenu-content-secondary %}
+{% include "xgds_planner2/planner2_subnav.html" %}
+{% endblock %}
+
+{% block cssExtras %}
+{{ block.super }}
+{% if 'xgds_notes2' in settings.INSTALLED_APPS %}
+{% include "xgds_notes2/NoteCSS.html" %}
+{% endif %}
+{% endblock cssExtras %}
+
+{% block siteSection %}Replay {{ flight.name }}{% endblock %}
+
+{% block preDashboard %}
+    <div id="controllers" >
+    	{% include "xgds_core/playback_controller.html" %}
+    </div>
+    <div id="masterSlider" class="masterSlider" >
+    </div>
+
+{% endblock preDashboard %}
+
+{% block postMap %}
+<div id="view-gridstack-item" class="grid-stack-item"
+    data-gs-x="3" data-gs-y="0"
+    data-gs-width="3" data-gs-height="4" >
+    <div class="grid-stack-item-content" id="view-gridstack-item-content" >
+        <ul class="nav justify-content-end">
+            <i class="fa fa-lock pinDiv gray-light"></i>
+        </ul>
+        <div id="viewDiv" class="mt-negative-1rem">
+            <div id="plot-container" class="plot-container" >
+                <div id="plotTitle" class="row ml-2"></div>
+                <div id="plotDiv" class="plot-div" style="height:200px;">PLOT DIV yo</div>
+                <div id="plotLegend" class="row ml-2"></div>
+            </div>
+            <div id="timeseries_message" >
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="notes-gridstack-item" class="grid-stack-item"
+		data-gs-x="3" data-gs-y="2"
+        data-gs-width="3" data-gs-height="2" >
+        <div class="grid-stack-item-content" id="notes-gridstack-item-content" >
+        	<ul class="nav justify-content-end">
+				<i class="fa fa-lock pinDiv gray-light"></i>
+			</ul>
+			<div id="notesDiv" class="mt-negative-1rem">
+                NOTES div yo
+			</div>
+		</div>
+{% endblock postMap %}
+
+{% block map %}
+    <div id="map-gridstack-item" class="grid-stack-item"
+    data-gs-x="0" data-gs-y="0"
+    data-gs-width="2" data-gs-height="4" >
+        <div class="grid-stack-item-content" id="map-gridstack-item-content" >
+            {% siteframe_form %}
+            <ul class="nav justify-content-end">
+                <i class="fa fa-lock pinDiv gray-light"></i>
+            </ul>
+            <div id="map"></div>
+        </div>
+    </div>
+    {% endblock map %}
+
+    {% block layers %}
+    <div id="layers-gridstack-item" class="grid-stack-item"
+        data-gs-x="2" data-gs-y="0"
+        data-gs-width="1" data-gs-height="3" >
+        <div class="grid-stack-item-content" id="layers-gridstack-item-content">
+        <ul class="nav justify-content-end">
+            <i class="fa fa-unlock-alt gray-light pinDiv mr-1"></i>
+            <i class="fa fa-window-close gray-light fa-lg"></i>
+        </ul>
+        <div id="layers" class="mt-negative-1rem"></div>
+        </div>
+    </div>
+    {% endblock layers %}
+
+
+{% block scripts %}
+{{block.super}}
+    <script type="text/javascript" src="{{ EXTERNAL_URL }}flot/jquery.flot.js" ></script>
+	<script type="text/javascript" src="{{ EXTERNAL_URL }}flot/jquery.flot.time.js" ></script>
+	<script type="text/javascript" src="{{ EXTERNAL_URL }}flot/jquery.flot.resize.js" ></script>
+
+{% if 'xgds_notes2' in settings.INSTALLED_APPS %}
+	{% include "xgds_notes2/NoteJS.html" %}
+{% else %}
+    {% include "xgds_core/timeJS.html" %}
+    <script type="text/javascript" src="{{ EXTERNAL_URL }}datatables.net-plugins/sorting/datetime-moment.js"></script>
+{% endif %}
+    <script type="text/javascript">
+   		DEFAULT_PLOT_TIME_FORMAT = '%H:%M';
+   	</script>
+    {% include "xgds_core/playbackJS.html" %}
+    <script type="text/javascript" src="{% static 'xgds_timeseries/js/timeseriesUtils.js' %}"></script>
+
+    <script type="x-template/underscore" id="plot_contents">
+        <div id="plotTitle" class="row ml-2"></div>
+        <div id="plotDiv" class="plot-div" style="height:200px;">placeholder</div>
+        <div id="plotLegend" class="row ml-2"></div>
+        <div id="timeseries_message"></div>
+    </script>
+
+	{% for template_name, template in templates.items %}
+	<script type="text/handlebars" id="template-{{template_name}}">
+		{{template|safe}}
+	</script>
+    {% endfor %}
+{% endblock scripts %}
+
+
+{% block nothing %}
+
+    <!-- stuff from planner should probably go in a separate js include file -->
+     <script type="text/javascript" src="{{ EXTERNAL_URL }}jquery-ui-timepicker-addon/dist/jquery-ui-timepicker-addon.min.js"></script>
+     <script type="text/javascript" src="{{ EXTERNAL_URL }}moment-duration-format/lib/moment-duration-format.js"></script>
+
+     <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-migrate/dist/jquery-migrate.min.js'></script>
+     <script type="text/javascript" src='{{ EXTERNAL_URL }}pure-uuid/uuid.js'></script>
+ 	 <script type="text/javascript" src='{{ EXTERNAL_URL }}backbone-relational/backbone-relational.js'></script>
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}backbone-forms/distribution/backbone-forms.min.js'></script>
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}string-format/lib/string-format.js'></script>
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}usng.js/usng.js'></script>
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-file-download/src/Scripts/jquery.fileDownload.js'></script>
+    <script type="text/javascript" src="{{ EXTERNAL_URL }}gridstack/dist/gridstack.min.js" ></script>
+	<script type="text/javascript" src="{% static 'xgds_core/js/gridstackUtils.js' %}"></script>
+
+    <script type="text/javascript" src="{% static 'xgds_map_server/js/util/handlebars-helpers.js' %}"></script>
+    <script type="text/javascript" src="{% static 'xgds_map_server/js/util/geo.js' %}"></script>
+    <script type="text/javascript" src="{% static 'xgds_map_server/js/util/forms.js' %}"></script>
+
+    <!--
+    <script type="text/javascript" src="{% static 'xgds_planner2/js/simulatorDriver.js' %}"></script>
+    <script type="text/javascript" src="{% static 'xgds_planner2/js/vehicleDriver.js' %}"></script>
+    -->
+
+  	{% javascript 'custom_map' %}
+
+   	{% include "xgds_map_server/SearchForms.html" with searchForms=searchForms %}
+
+   	{% block extraScripts %}
+   	{% endblock extraScripts %}
+{% endblock nothing %}
+
+{% block preMapJS %}
+    <script type="text/javascript">
+	var siteFrames = {% siteframes_dict %};
+
+	getTimeZone = function() {
+	    return "{{ flight.timezone }}";
+    }
+
+    var appOptions = {
+        	BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
+        	DEFAULT_COORD_SYSTEM: '{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}',
+        	SETUP_COORD_SYSTEM: '{{ settings.XGDS_MAP_SERVER_MAP_SETUP_COORD_SYSTEM }}',
+            DEFAULT_COORD_SYSTEM_CENTER: {{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM_CENTER }},
+    		DEFAULT_ZOOM: {{ settings.XGDS_MAP_SERVER_DEFAULT_ZOOM }},
+    		DEFAULT_ROTATION: {{ settings.XGDS_MAP_SERVER_DEFAULT_ROTATION }},
+    		SHOW_COMPASS: {{ settings.XGDS_MAP_SERVER_SHOW_COMPASS}},
+    		offline: {{ settings.XGDS_PLANNER_OFFLINE|yesno:'true,false'}},
+       	    selectedLayerUrl: '{{ settings.XGDS_MAP_SERVER_SELECTED_LAYER_URL }}',
+            layerFeedUrl: '{{ settings.XGDS_PLANNER_LAYER_FEED_URL }}',
+            dataUrl: '{{ settings.DATA_URL }}',
+            simulator: '{{ simulator }}',
+            XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: '{{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }}',
+            XGDS_PLANNER_LINKS_LOADED_CALLBACK: '{{ settings.XGDS_PLANNER_LINKS_LOADED_CALLBACK }}',
+            searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
+            settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:'true,false' }},
+            plots: {{ settings.XGDS_PLANNER_PLOTS|safe }},
+            plotOptions: { title: 'Environmental',
+                           model_name: 'xgds_braille_app.Environmental',
+                           flight_ids: [22]}
+     };
+
+        {% if extras %}
+            var extras = {{ extras|safe }};
+            for (var key in extras) {
+            	appOptions[key] = extras[key];
+            }
+        {% endif %}
+    </script>
+{% endblock preMapJS %}
+
+
+{% block jsInit %}
+
+	{% block jsInitPreApp %}
+	{% endblock jsInitPreApp %}
+
+	$(function(){
+		app.start(appOptions);
+    /*
+    	app.vent.on("mapSearch:drewFeatures", function(e) {
+        	app.vent.trigger('mapSearch:fit');
+        });
+    */
+
+        {% block preLayout %}
+		{% endblock preLayout %}
+
+    	xgds_gridstack.initializeGridstack();
+    // right here the map is the right height and when we exit this method it is not.
+
+        {% block otherJSInit %}
+
+		{% endblock otherJSInit %}
+
+	});
+
+    {% endblock jsInit%}
+
+{% block footer %}
+{% endblock footer %}
