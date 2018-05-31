@@ -1739,7 +1739,7 @@ def getFlightPlaybackPage(request, flight_name, templatePath='xgds_map_server/fl
     #load time series data
     timeseries_config = []
     if 'xgds_timeseries' in settings.INSTALLED_APPS:
-        timeseries_config =  get_time_series_classes_and_titles()
+        timeseries_config = get_time_series_classes_and_titles()
 
     return render(request,
                   templatePath,
