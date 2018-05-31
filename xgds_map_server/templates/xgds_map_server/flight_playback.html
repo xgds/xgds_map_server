@@ -78,6 +78,7 @@
     <script type="text/javascript" src="{{ EXTERNAL_URL }}flot/jquery.flot.js" ></script>
 	<script type="text/javascript" src="{{ EXTERNAL_URL }}flot/jquery.flot.time.js" ></script>
 	<script type="text/javascript" src="{{ EXTERNAL_URL }}flot/jquery.flot.resize.js" ></script>
+	<script type="text/javascript" src="{{ EXTERNAL_URL }}timezone-js/src/date.js" ></script>
 
 {% if 'xgds_notes2' in settings.INSTALLED_APPS %}
 	{% include "xgds_notes2/NoteJS.html" %}
@@ -180,6 +181,13 @@
 {% block jsInit %}
 
 	{% block jsInitPreApp %}
+        moment.tz.setDefault(getTimeZone());
+
+        // flot currently depends on timezoneJS.
+        timezoneJS.timezone.zoneFileBasePath = "{% static 'tz' %}";
+		timezoneJS.timezone.defaultZoneFile = [];
+		timezoneJS.timezone.init({async: false});
+
         appOptions.timeseries_config = [];
         {% for dict in timeseries_config %}
             appOptions.timeseries_config.push({{ dict|safe }});
