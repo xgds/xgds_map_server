@@ -1741,13 +1741,20 @@ def getFlightPlaybackPage(request, flight_name, templatePath='xgds_map_server/fl
     if 'xgds_timeseries' in settings.INSTALLED_APPS:
         timeseries_config = get_time_series_classes_and_titles()
 
+    modelName = None
+    if 'xgds_notes2' in settings.INSTALLED_APPS:
+        modelName = LazyGetModelByName(settings.XGDS_NOTES_NOTE_MODEL).get().cls_type()
+
+    searchForms = getSearchForms(modelName, {'flight__id': flight.id})
+
     return render(request,
                   templatePath,
                   {'help_content_path': 'xgds_map_server/help/flightPlayback.rst',
                    'title': '%s playback' % settings.XGDS_CORE_FLIGHT_MONIKER,
                    'templates': get_handlebars_templates(list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS),
                                                          'XGDS_MAP_SERVER_HANDLEBARS_DIRS'),
-                   'searchForms': getSearchForms(),
+                   'modelName': modelName,
+                   'searchForms': searchForms,
                    'flight': flight,
                    'timeseries_config': timeseries_config,
                    'forceUserSession': forceUserSession,

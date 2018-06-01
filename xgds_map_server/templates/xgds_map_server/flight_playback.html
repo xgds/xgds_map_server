@@ -151,7 +151,7 @@
     var appOptions = {
         	BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
         	DEFAULT_COORD_SYSTEM: '{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}',
-        	SETUP_COORD_SYSTEM: '{{ settings.XGDS_MAP_SERVER_MAP_SETUP_COORD_SYSTEM }}',
+        	SETUP_COORD_SYSTEM: {{ settings.XGDS_MAP_SERVER_MAP_SETUP_COORD_SYSTEM }},
             DEFAULT_COORD_SYSTEM_CENTER: {{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM_CENTER }},
     		DEFAULT_ZOOM: {{ settings.XGDS_MAP_SERVER_DEFAULT_ZOOM }},
     		DEFAULT_ROTATION: {{ settings.XGDS_MAP_SERVER_DEFAULT_ROTATION }},
@@ -161,11 +161,12 @@
             layerFeedUrl: '{{ settings.XGDS_PLANNER_LAYER_FEED_URL }}',
             dataUrl: '{{ settings.DATA_URL }}',
             simulator: '{{ simulator }}',
+            siteFrame: {% siteframe settings.XGDS_CURRENT_SITEFRAME_ID %},
             XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: '{{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }}',
-            XGDS_PLANNER_LINKS_LOADED_CALLBACK: '{{ settings.XGDS_PLANNER_LINKS_LOADED_CALLBACK }}',
             searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
             settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:'true,false' }},
-            flight_ids: [{{ flight.pk }}]
+            flight_ids: [{{ flight.pk }}],
+            track_urls: []
      };
 
         {% if extras %}
@@ -192,6 +193,10 @@
         {% for dict in timeseries_config %}
             appOptions.timeseries_config.push({{ dict|safe }});
         {% endfor %}
+
+        {% if flight.track %}
+            appOptions.track_urls = ["{% url 'geocamTrack_mapJsonTrack' flight.track.uuid %}"];
+        {% endif %}
 	{% endblock jsInitPreApp %}
 
 	$(function(){
@@ -204,6 +209,7 @@
 		{% endblock preLayout %}
 
     	xgds_gridstack.initializeGridstack();
+
 
         // right here the map is the right height and when we exit this method it is not.
 
