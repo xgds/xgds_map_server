@@ -27,7 +27,7 @@
     	getValue: function() {
     		var value = this.$el.val();
 
-    		return value === "" ? null : parseFloat(value, 10);
+    		return value === "" ? null : parseFloat(value);
     	}
     });
 
@@ -79,14 +79,14 @@
         getValue: function() {
             var value = this.$el.val();
 
-            return value === '' ? null : parseFloat(value, 10);
+            return value === '' ? null : parseFloat(value);
         },
 
         setValue: function(value) {
             value = (function() {
                 if (_.isNumber(value)) return value;
 
-                if (_.isString(value) && value != '') return parseFloat(value, 10);
+                if (_.isString(value) && value != '') return parseFloat(value);
 
                 return null;
             })();
@@ -226,6 +226,23 @@
                 }
             },
 
+            onKeyPress: function(e) {
+                // override the parent to take negative sign
+                var t = this
+                  , n = function() {
+                    setTimeout(function() {
+                        t.determineChange()
+                    }, 0)
+                };
+                if (e.charCode === 0) {
+                    n();
+                    return
+                }
+                var r = this.$el.val();
+                e.charCode != undefined && (r += String.fromCharCode(e.charCode));
+                var i = /^[-]*[0-9]*\.?[0-9]*?$/.test(r);
+                i ? n() : e.preventDefault()
+            },
             validate: function() {
                 var error = Form.editors.Number.prototype.validate
                     .call(this);
@@ -234,13 +251,13 @@
                 }
                 if (_.isNumber(this.minimum)) {
                     if (this.strictMinimum &&
-                        this.minimum >= this.getValue()) {
+                        this.getValue() <= this.minimum) {
                         error = {
                             type: 'minimum',
                             message: 'Value must be greater than ' +
                                 this.minimum
                         };
-                    } else if (this.minimum > this.getValue()) {
+                    } else if (this.getValue() < this.minimum) {
                         error = {
                             type: 'minimum',
                             message: 'Value must be greater than or equal to ' +
@@ -250,17 +267,17 @@
                 }
                 if (_.isNumber(this.maximum)) {
                     if (this.strictMaximum &&
-                        this.maximum <= this.getValue()) {
+                        this.getValue() >= this.maximum) {
                         error = {
                             type: 'maximum',
                             message: 'Value must be less than ' +
                                 this.maximum
                         };
-                    } else if (this.maximum < this.getValue()) {
+                    } else if (this.getValue() > this.maximum) {
                         error = {
                             type: 'maximum',
                             message: 'Value must be less than or equal to ' +
-                                this.minimum
+                                this.maximum
                         };
                     }
                 }
