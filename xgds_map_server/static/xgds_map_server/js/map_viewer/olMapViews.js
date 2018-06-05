@@ -160,13 +160,11 @@ $(function() {
                 this.listenTo(app.vent, 'treeNode:loaded', function(data) {context.updateNodesFromCookies(data)});
                 this.listenTo(app.vent, 'tree:loaded', this.updateMapLayers);
                 this.listenTo(app.vent, 'preloadNode', function(uuid){ this.preloadNode(uuid);});
-                app.vent.trigger('layers:loaded');
-                this.drawLatestPlan();
-                
                 this.listenTo(app.vent, 'mapNode:create', function(node) {
                     this.createNode(node);
                 });
-                
+                app.vent.trigger('layers:loaded');
+                this.drawLatestPlan();
             },
             onAttach: function() {
             	
@@ -453,6 +451,7 @@ $(function() {
                     	this.createDynamicView(node);
                     }
                 }
+                app.vent.trigger('app.nodeMap:exists', node.key);
             },
             
             handleResize: function() {
@@ -1027,6 +1026,7 @@ $(function() {
         },
         cacheJSON: function(data){
             this.objectsJson = data;
+            app.vent.trigger('cacheJSON', this.options.node.key);
         }
     });
     

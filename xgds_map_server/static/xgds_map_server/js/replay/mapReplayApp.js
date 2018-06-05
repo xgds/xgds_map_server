@@ -38,7 +38,16 @@
 			// plotRegion: '#plot-container',
 			notesRegion: '#notesDiv'
 		},
+		renderTracks: function() {
+
+			_.each(appOptions.track_metadata, function(track_metadata){
+				var trackView = new app.views.TrackView(track_metadata);
+			});
+
+		},
 		onRender: function() {
+			this.listenTo(app.vent, 'layers:loaded', this.renderTracks);
+
 			app.map = new app.views.OLMapView();
 			this.showChildView('mapRegion', app.map);
 			this.showChildView('layersRegion', new app.views.FancyTreeView());

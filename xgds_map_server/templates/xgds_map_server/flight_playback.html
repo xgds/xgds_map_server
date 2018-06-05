@@ -3,7 +3,7 @@
 {% load pipeline %}
 {% load static %}
 {% load siteFrames %}
-
+{% load jsonify %}
 
 {% block sitemenu-content-secondary %}
 {% include "xgds_planner2/planner2_subnav.html" %}
@@ -91,6 +91,7 @@
    	</script>
     {% include "xgds_core/playbackJS.html" %}
     <script type="text/javascript" src="{% static 'xgds_timeseries/js/timeseriesUtils.js' %}"></script>
+    <script type="text/javascript" src="{% static 'geocamTrack/js/trackBackbone.js' %}"></script>
 
     <script type="x-template/underscore" id="plot_contents">
         <div id="plotTitle" class="row ml-2"></div>
@@ -196,6 +197,7 @@
 
         {% if flight.track %}
             appOptions.track_urls = ["{% url 'geocamTrack_mapJsonTrack' flight.track.uuid %}"];
+            appOptions.track_metadata = [{{flight.track.getTreeJson|jsonify }}];
         {% endif %}
 	{% endblock jsInitPreApp %}
 
