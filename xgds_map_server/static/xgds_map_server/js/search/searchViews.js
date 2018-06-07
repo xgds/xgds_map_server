@@ -620,7 +620,8 @@ app.views.SearchResultsView = Marionette.View.extend({
 					checkbox.setAttribute("type", "checkbox");
 					checkbox.setAttribute("class", "check");
 
-					if ((context.selectedIds.indexOf(data.toString()) > -1) || $('#pick_master').is(":checked")){
+					var id = row[row.length - 1];  // used to be data.toString()
+					if ((context.selectedIds.indexOf(id) > -1) || $('#pick_master').is(":checked")){
 						if ($('#pick_master').is(":checked")) context.selectedIds.push(data);
 						checkbox.setAttribute("checked", true);
 					}
