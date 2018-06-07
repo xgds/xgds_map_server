@@ -2009,6 +2009,8 @@ class ExportOrderListJson(OrderListJson):
                     response = self.exportCSV(data, modelDict, filename + ".csv")
                 elif (filetype == "KML"):
                     response = self.exportKML(data, modelDict, modelName, filename + ".kml")
+                elif (filetype == "ZIP"):
+                    response = self.exportZIP(data, filename + ".zip")
                 else:
                     response = HttpResponse(json.dumps({'error': 'unknown file type.'}), content_type='application/json', status=500)
 
@@ -2074,6 +2076,42 @@ class ExportOrderListJson(OrderListJson):
 
         response = HttpResponse(k.to_string(prettyprint=True), content_type='application/vnd.google-earth.kml+xml')
         response['Content-Disposition'] = 'attachment; filename="' + filename + '"'
+        return response
+
+    def exportZIP(self, data, filename):
+        """
+        Export a ZIP file that contains all full resolution images inside
+
+        :param data: iterable object containing models
+        :param filename: file name of the zip file (not inc. the suffix)
+        :return: HttpResponse
+        """
+        from zipfile import ZipFile
+        from tempfile import mkstemp
+        from os import close
+
+        # create a temporary zip file to fill in
+        temp_file_handle, abs_file_path = mkstemp(suffix=".zip")
+
+        temporary_zip_file = ZipFile(abs_file_path, 'w')
+        for data_object in data:
+            path_inside_zip = str(data_object.getRawImage().file)
+            if "/" in path_inside_zip:
+                path_inside_zip = path_inside_zip.split("/")[-1]
+            temporary_zip_file.writestr(path_inside_zip, data_object.getRawImage().file.read())
+
+        # stop writing to the temporary zip file
+        temporary_zip_file.close()
+
+        # write the file as an http response
+        with open(abs_file_path, "r") as f:
+            response = HttpResponse(f.read(), content_type='application/zip')
+
+        # delete the temporary zip file
+        close(temp_file_handle)
+
+        response['Content-Disposition'] = 'attachment; filename="' + filename + '"'
+
         return response
 
 
