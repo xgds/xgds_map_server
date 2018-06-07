@@ -2089,16 +2089,18 @@ class ExportOrderListJson(OrderListJson):
         from zipfile import ZipFile
         from tempfile import mkstemp
         from os import close
+        from xgds_core.models import HasDownloadableFiles
 
         # create a temporary zip file to fill in
         temp_file_handle, abs_file_path = mkstemp(suffix=".zip")
 
         temporary_zip_file = ZipFile(abs_file_path, 'w')
         for data_object in data:
-            path_inside_zip = str(data_object.getRawImage().file)
-            if "/" in path_inside_zip:
-                path_inside_zip = path_inside_zip.split("/")[-1]
-            temporary_zip_file.writestr(path_inside_zip, data_object.getRawImage().file.read())
+            if isinstance(data_object, HasDownloadableFiles):
+                for downloadable_file in data_object.getDownloadableFiles():
+                    path_inside_zip = str(downloadable_file)
+                    if "/" in path_inside_zip: path_inside_zip = path_inside_zip.split("/")[-1]
+                    temporary_zip_file.writestr(path_inside_zip, downloadable_file.read())
 
         # stop writing to the temporary zip file
         temporary_zip_file.close()
