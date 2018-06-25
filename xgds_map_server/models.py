@@ -694,8 +694,20 @@ class MapLink(AbstractMap):
         return result
 
 
+class GeoJSON(AbstractMap):
+    geoJSON = models.TextField()
+
+    def getTreeJson(self):
+        result = super(AbstractMap, self).getTreeJson()
+        result["data"]["geoJSON"] = self.geoJSON
+        return result
+
+    class Meta:
+        abstract = False
+
+
 """ IMPORTANT These have to be defined after the models they refer to are defined."""
-MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile, MapDataTile, MapLink, GroundOverlayTime, WMSTile, WMTSTile])
+MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile, MapDataTile, MapLink, GroundOverlayTime, WMSTile, WMTSTile, GeoJSON])
 
 # this manager does not include groups
-MAP_MANAGER = ModelCollectionManager(AbstractMap, [MapLayer, KmlMap, MapTile, MapDataTile, MapLink, GroundOverlayTime, WMSTile, WMTSTile])
+MAP_MANAGER = ModelCollectionManager(AbstractMap, [MapLayer, KmlMap, MapTile, MapDataTile, MapLink, GroundOverlayTime, WMSTile, WMTSTile, GeoJSON])

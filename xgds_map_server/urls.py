@@ -53,6 +53,7 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,{},'xgds_map_server_index'
                # HTML view to add new map
                url(r'^addkml/', views.getAddKmlPage, {}, 'addKml'),
                url(r'^addlayer/', views.getAddLayerPage, {}, 'mapAddLayer'),
+               url(r'^addGeoJSON/', views.getAddGeoJSONPage, {}, 'mapAddGeoJSON'),
                url(r'^addLayerFromSelected/', views.addLayerFromSelected, {}, 'addLayerFromSelected'),
                url(r'^addTile/', views.getAddTilePage, {}, 'mapAddTile'),
                url(r'^editTile/(?P<tileID>[\w-]+)/', views.getEditTilePage, {}, 'mapEditTile'),

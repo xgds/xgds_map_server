@@ -447,6 +447,8 @@ $(function() {
                         app.nodeMap[node.key] = this.createWMSTileView(node);
                     } else if (node.data.type == "GroundOverlayTime"){
                         app.nodeMap[node.key] = this.createOverlayTimeView(node);
+                    } else if (node.data.type == "GeoJSON") {
+                        app.nodeMap[node.key] = this.createGeoJSONView(node);
                     } else {
                     	this.createDynamicView(node);
                     }
@@ -491,6 +493,8 @@ $(function() {
                 this.dynamicGroup.set('name','Dynamic');
                 this.collectionGroup = new ol.layer.Group();
                 this.collectionGroup.set('name','Collection');
+                this.geoJSONGroup = new ol.layer.Group();
+                this.geoJSONGroup.set('name','GeoJSON');
                 this.searchGroup = new ol.layer.Group();
                 this.searchGroup.set('name','Search');
                 this.mapLinkGroup = new ol.layer.Group();
@@ -509,6 +513,7 @@ $(function() {
                 this.layersForMap.push(this.dynamicGroup);
                 this.layersForMap.push(this.mapLinkGroup);
                 this.layersForMap.push(this.collectionGroup);
+                this.layersForMap.push(this.geoJSONGroup);
                 this.layersForMap.push(this.searchGroup);
                 this.layersForMap.push(this.liveSearchGroup);
                 this.layersForMap.push(this.mapNotesGroup);
@@ -777,6 +782,15 @@ $(function() {
               node.mapView = otView;
               return otView;
             },
+            createGeoJSONView: function(node) {
+              var geoJSONView = new app.views.GeoJSONView({
+                  node: node,
+                  group: this.geoJSONGroup,
+                  geoJSON: node.data.geoJSON,
+              });
+              node.mapView = geoJSONView;
+              return geoJSONView;
+            },
             createCollectionView: function(node){
                 var collectionView = new app.views.MapCollectionView({
                     node: node,
@@ -878,7 +892,13 @@ $(function() {
                             var xcoords = inverseTransform(coords);
                             location = "<br/>lat: " + xcoords[1] + "<br/>lon:" + xcoords[0];
                         }
-                        var popupContents = '<div><b>' + feature.get('name') + '</b>';
+                        var popupContents = "";
+                        if ('geometry' in feature.N) {
+                            popupContents  = '<div><b>Band Depth</b><br>' + feature.get('band-depth') + '<br/><br/>';
+                            popupContents += '<b>Number of Samples</b><br/>' + feature.get('confidence') + '<br/>';
+                        } else {
+                            popupContents = '<div><b>' + feature.get('name') + '</b>';
+                        }
                         var view_url = feature.get("view_url");
                         if (!_.isUndefined(view_url) && !_.isEmpty(view_url)){
                         	popupContents += '&nbsp;&nbsp;<button class="small" onClick="window.open(\''
@@ -1381,7 +1401,44 @@ $(function() {
 
 
     });
-    
+
+    app.views.GeoJSONView = app.views.TreeMapElement.extend({
+        initialize: function(options) {
+            this.geoJSON = options.geoJSON;
+            this.setupOpacity(options);
+            app.views.TreeMapElement.prototype.initialize.call(this, options);
+        },
+        checkRequired: function() {
+            if (!this.geoJSON) {
+                console.log(this);
+                throw 'Missing GeoJSON specifications';
+            }
+            app.views.TreeMapElement.prototype.checkRequired.call(this);
+        },
+        constructMapElements: function() {
+            if (_.isUndefined(this.mapElement)){
+
+                this.mapElement = new ol.layer.Vector({
+                    source: new ol.source.Vector({
+                        features: (new ol.format.GeoJSON()).readFeatures(this.geoJSON, {featureProjection: 'EPSG:3857'})
+                    }),
+                    opacity: this.opacity,
+                    style: function (feature, resolution) {
+                        return new ol.style.Style({
+                            stroke: new ol.style.Stroke({
+                              color: 'black',
+                              width: 0
+                            }),
+                            fill: new ol.style.Fill({
+                              color: feature.N.fill
+                            })
+                        });
+                    }
+                });
+            }
+        }
+    });
+
     app.views.DataTileView = app.views.TileView.extend({
     	/// A DataTile view has an optional legend and shows the value from the data file below the map (when turned on).
         initialize: function(options) {

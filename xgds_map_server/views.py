@@ -59,9 +59,9 @@ from geocamUtil.models import SiteFrame
 from xgds_core.views import get_handlebars_templates, OrderListJson
 from xgds_core.util import addPort
 from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapLayerFromSelectedForm, MapTileForm, \
-    MapDataTileForm, EditMapTileForm, EditMapDataTileForm, WMSTileForm
+    MapDataTileForm, EditMapTileForm, EditMapDataTileForm, WMSTileForm, GeoJSONForm
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapDataTile, MapLink, MAP_NODE_MANAGER, \
-    MAP_MANAGER, GroundOverlayTime, WMSTile
+    MAP_MANAGER, GroundOverlayTime, WMSTile, GeoJSON
 from xgds_map_server.kmlLayerExporter import exportMapLayer
 from geocamUtil.KmlUtil import wrapKmlForDownload
 from fastkml import kml
@@ -361,6 +361,42 @@ def getAddKmlPage(request):
                       {'mapForm': map_form,
                        'help_content_path': 'xgds_map_server/help/addKML.rst',
                        'title': 'Add KML',
+                       },
+                      )
+
+
+def getAddGeoJSONPage(request):
+    """
+    HTML view to create new map
+    """
+    if request.method == 'POST':
+        map_form = GeoJSONForm(request.POST)
+
+        if map_form.is_valid():
+            map_obj = GeoJSON()
+            map_obj.name = map_form.cleaned_data['name']
+            map_obj.region = map_form.cleaned_data['region']
+            map_obj.parent = map_form.cleaned_data['parent']
+            map_obj.description = map_form.cleaned_data['description']
+            map_obj.geoJSON = map_form.cleaned_data['geoJSON']
+            map_obj.save()
+        else:
+            return render(request,
+                          "AddGeoJSON.html",
+                          {'mapForm': map_form,
+                           'error': True,
+                           'help_content_path': 'xgds_map_server/help/addKML.rst',
+                           'title': 'Add GeoJSON',
+                           'errorText': 'Invalid form entries'})
+
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
+    else:
+        map_form = GeoJSONForm()
+        return render(request,
+                      "AddGeoJSON.html",
+                      {'mapForm': map_form,
+                       'help_content_path': 'xgds_map_server/help/addKML.rst',
+                       'title': 'Add GeoJSON',
                        },
                       )
 

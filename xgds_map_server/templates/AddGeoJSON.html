@@ -4,25 +4,32 @@
 {{ block.super }}
 <div class="btn-toolbar" role="toolbar" >
   <div class="btn-group mr-2" role="group" >
-	<a href="{% url 'folderAdd' %}" class="btn btn-primary active"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Folder</a>
+	<a href="{% url 'folderAdd' %}" class="btn btn-primary"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Folder</a>
 	<a href="{% url 'addKml' %}" class="btn btn-primary"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Kml</a>
-	<a href="{% url 'mapAddLayer' %}" class="btn btn-primary "><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Map Layer</a>
+	<a href="{% url 'mapAddLayer' %}" class="btn btn-primary"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Map Layer</a>
 	<a href="{% url 'mapAddTile' %}" class="btn btn-primary"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Tile</a>
 	<a href="{% url 'mapAddDataTile' %}" class="btn btn-primary"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>Data Tile</a>
-	<a href="{% url 'mapAddGeoJSON' %}" class="btn btn-primary"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>GeoJSON</a>
+	<a href="{% url 'mapAddGeoJSON' %}" class="btn btn-primary active"><i class="fa fa-plus fa-fw" aria-hidden="true"></i>GeoJSON</a>
   </div>
  </div>
- 
 {% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
 <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
 <p>
 <label></label>
-<span class="h6"> Add Folder</span>
+<span class="h6"> Add GeoJSON layer</span>
 </p>
-{{ groupForm.as_p }}
 <p>
-<label for="id_createButton"></label>
-<input type="submit" value="Create"  id="id_createButton"/>
+<label></label>
+<span>
+Create a new Map Layer. You can add polygons, lines and points to the 
+Map Layer in the Map Layer editor.
+</span>
+</p> 
+
+{{ mapForm.as_p }}
+<p class="form-group">
+<label></label>
+<input type="submit" value="Create" />
 </p>
 </form>
 {% endblock %}

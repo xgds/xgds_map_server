@@ -24,7 +24,7 @@ from django.forms.fields import IntegerField, ChoiceField
 
 from resumable.fields import ResumableFileField
 
-from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile,  MapDataTile, WMSTile
+from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile,  MapDataTile, WMSTile, GeoJSON
 from geocamUtil.models import SiteFrame
 
 # pylint: disable=C1001
@@ -81,6 +81,11 @@ class WMSTileForm(AbstractMapForm):
         model = WMSTile
         exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'minLat', 'minLon', 'maxLat',
                    'maxLon']
+
+class GeoJSONForm(AbstractMapForm):
+    class Meta(AbstractMapForm.Meta):
+        model = GeoJSON
+        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'minLat', 'minLon', 'maxLat', 'maxLon']
 
 
 class MapLayerFromSelectedForm(AbstractMapForm):
