@@ -1797,7 +1797,6 @@ def getFlightPlaybackPage(request, flight_name, templatePath='xgds_map_server/fl
                    'app': 'xgds_map_server/js/replay/mapReplayApp.js'},
                   )
 
-
 def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSearch.html', forceUserSession=False, searchForms=None, filter=None):
     searchModelDict = settings.XGDS_MAP_SERVER_JS_MAP
     if modelName and not searchForms:
