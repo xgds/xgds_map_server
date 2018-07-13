@@ -892,12 +892,14 @@ $(function() {
                             var xcoords = inverseTransform(coords);
                             location = "<br/>lat: " + xcoords[1] + "<br/>lon:" + xcoords[0];
                         }
-                        var popupContents = "";
-                        if ('geometry' in feature.N) {
-                            popupContents  = '<div><b>Band Depth</b><br>' + feature.get('band-depth') + '<br/><br/>';
-                            popupContents += '<b>Number of Samples</b><br/>' + feature.get('confidence') + '<br/>';
+                        var popupContents = "<div>";
+                        if ('geometry' in feature.N && feature.get('popup-content') !== undefined) {
+                            for (var name in feature.get('popup-content')) {
+                                var popupSubContent = feature.get('popup-content')[name];
+                                popupContents += '<b>' + name + '</b><br/>' + popupSubContent + '<br/>';
+                            }
                         } else {
-                            popupContents = '<div><b>' + feature.get('name') + '</b>';
+                            popupContents = '<b>' + feature.get('name') + '</b>';
                         }
                         var view_url = feature.get("view_url");
                         if (!_.isUndefined(view_url) && !_.isEmpty(view_url)){
