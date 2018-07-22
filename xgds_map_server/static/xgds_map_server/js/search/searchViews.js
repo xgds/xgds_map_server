@@ -65,6 +65,7 @@ app.views.SearchView = Marionette.View.extend({
         Handlebars.registerHelper('modelSelected', function( input, modelName ){
         	return input === modelName ? 'selected' : '';
         });
+        xgds_notes.initializeInput();
     },
     templateContext: function() {
     	var data = {searchModels: this.searchableModels,
@@ -258,6 +259,7 @@ app.views.SearchDetailView = Marionette.View.extend({
     	this.neverShown = true;
     	var context = this;
     	this.on('updateContents', _.debounce(context.updateContents, 500));
+    	app.on('updateNewWindowButton', function(data) { context.updateNewWindowButton(data.type, data.pk)});
     },
     setHandlebars: function(handlebarSource){
     	if (handlebarSource != this.handlebarSource){
@@ -279,16 +281,18 @@ app.views.SearchDetailView = Marionette.View.extend({
     templateContext: function() {
     	return this.data;
     },
-    updateContents: function() {
+	updateNewWindowButton: function(model, pk) {
     	try {
 	    	var new_window_btn = this.$el.parent().parent().find("#view-new-window-target");
 	    	if (new_window_btn.length > 0){
-	    		new_window_btn.attr("href","/xgds_map_server/view/" + this.selectedModel + "/" + this.data.pk );
+	    		new_window_btn.attr("href","/xgds_map_server/view/" + model + "/" + pk );
 	    	}
     	} catch (err) {
     		// gulp we do not always have a new window button
     	}
-	    
+	},
+    updateContents: function() {
+    	this.updateNewWindowButton(this.selectedModel, this.data.pk);
     	if (this.modelMap.viewInitMethods != undefined){
     		for (var i=0; i < this.modelMap.viewInitMethods.length; i++){
     			$.executeFunctionByName(this.modelMap.viewInitMethods[i], window, this.data);
@@ -462,7 +466,9 @@ app.views.SearchResultsView = Marionette.View.extend({
 		if (notesDiv.length == 0){
 			notesDiv = $('#notesDiv');
 		}
-		this.addRegion('viewNotesRegion', {el: notesDiv});
+		if (notesDiv.length > 0) {
+            this.addRegion('viewNotesRegion', {el: notesDiv});
+        }
 		
 		
 	},
@@ -1236,7 +1242,7 @@ app.views.SearchResultsView = Marionette.View.extend({
     	this.theDataTable.off('select.dt');
     	this.theDataTable.on( 'select.dt', function ( e, dt, type, indexes ) {
     	    if ( type === 'row' ) {
-    	    	for (var i=0; i<indexes.length; i++){
+				for (var i=0; i<indexes.length; i++){
         	        var modelMap = context.lookupModelMap(context.selectedModel);
         	    	var data = _.object(modelMap.columns, dt.row(indexes[i]).data());
         	    	if (app.options.showDetailView){
