@@ -216,8 +216,8 @@
         // right here the map is the right height and when we exit this method it is not.
 
         {% block otherJSInit %}
-            var flight_start = {% if flight.start_time %}new moment('{{ flight.start_time.isoformat }}'){% else %}null{% endif %};
-        var flight_end = {% if flight.end_time %}new moment('{{ flight.end_time.isoformat }}'){% else %}null{% endif %};
+        flight_start = {% if flight.start_time %}new moment('{{ flight.start_time.isoformat }}'){% else %}null{% endif %};
+        flight_end = {% if flight.end_time %}new moment('{{ flight.end_time.isoformat }}'){% else %}null{% endif %};
         playback.initialize({getStartTime: function(){return flight_start;},
                              getEndTime: function(){return flight_end;},
                              displayTZ: getTimeZone(),
