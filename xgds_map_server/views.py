@@ -70,7 +70,7 @@ from xgds_core.views import buildFilterDict
 from xgds_core.util import insertIntoPath
 
 if 'xgds_timeseries' in settings.INSTALLED_APPS:
-    from xgds_timeseries.views import get_time_series_classes_and_titles
+    from xgds_timeseries.views import get_time_series_classes_metadata
 
 #from django.http import StreamingHttpResponse
 # pylint: disable=E1101,R0911
@@ -1775,7 +1775,7 @@ def getFlightPlaybackPage(request, flight_name, templatePath='xgds_map_server/fl
     #load time series data
     timeseries_config = []
     if 'xgds_timeseries' in settings.INSTALLED_APPS:
-        timeseries_config = get_time_series_classes_and_titles()
+        timeseries_config = get_time_series_classes_metadata(flight_ids=[flight.id])
 
     modelName = None
     if 'xgds_notes2' in settings.INSTALLED_APPS:
