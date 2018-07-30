@@ -56,6 +56,7 @@ from geocamUtil.geoEncoder import GeoDjangoEncoder
 from geocamUtil.loader import LazyGetModelByName, getClassByName, getModelByName, getFormByName
 from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
 from geocamUtil.models import SiteFrame
+from xgds_core.models import HasDataFrame
 from xgds_core.views import get_handlebars_templates, OrderListJson
 from xgds_core.util import addPort
 from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapLayerFromSelectedForm, MapTileForm, \
@@ -2068,21 +2069,28 @@ class ExportOrderListJson(OrderListJson):
         return data
 
     def exportCSV(self, data, modelDict, filename):
-        pseudo_buffer = PsuedoBuffer()
-        writer = csv.writer(pseudo_buffer)
-        rows = []
-        rows.append(modelDict['columns'][1:])
-        for obj in data:
-            row = []
-            for column in modelDict['columns'][1:]:
-                if isinstance(getattr(obj, column), basestring):
-                    row.append(getattr(obj, column).encode('utf-8'))
-                else:
-                    row.append(getattr(obj, column))
-            rows.append(row)
+        if isinstance(data[0], HasDataFrame):
+            dataframe = data[0].mergeDataFrames([d.getDataFrame() for d in data])
+            response = HttpResponse(content_type='text/csv')
+            dataframe.to_csv(response)
 
-        # Needs to be streaming response because of the large number of rows in some cases (notes + photos especially)
-        response = StreamingHttpResponse((writer.writerow(row) for row in rows), content_type='text/csv')
+        else:
+            pseudo_buffer = PsuedoBuffer()
+            writer = csv.writer(pseudo_buffer)
+            rows = []
+            rows.append(modelDict['columns'][1:])
+            for obj in data:
+                row = []
+                for column in modelDict['columns'][1:]:
+                    if isinstance(getattr(obj, column), basestring):
+                        row.append(getattr(obj, column).encode('utf-8'))
+                    else:
+                        row.append(getattr(obj, column))
+                rows.append(row)
+
+            # Needs to be streaming response because of the large number of rows in some cases (notes + photos especially)
+            response = StreamingHttpResponse((writer.writerow(row) for row in rows), content_type='text/csv')
+
         response['Content-Disposition'] = 'attachment; filename="' + filename + '"'
         return response
 
