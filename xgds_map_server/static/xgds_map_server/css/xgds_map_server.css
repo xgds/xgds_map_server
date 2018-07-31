@@ -395,6 +395,10 @@ i.pinDiv {
 	min-width: 280px;
 }
 
+.ol-popup-content {
+	user-select: text !important;
+}
+
 .ol-popup:after, .ol-popup:before {
 	top: 100%;
 	border: solid transparent;
