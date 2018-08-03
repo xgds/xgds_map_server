@@ -1713,7 +1713,11 @@ $(function() {
         },
         constructMapFeatures: function() {
             if (_.isUndefined(this.mapElement)){
-                this.mapElement = new ol.layer.Group({name:this.options.name});
+                var name = this.options.name;
+                if (name === undefined){
+                    name = this.options.node.name;
+                }
+                this.mapElement = new ol.layer.Group({name:name});
                 this.map = {};
             }
             for (i = 0; i < this.objectsJson.length; i++){
