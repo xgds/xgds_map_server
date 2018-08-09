@@ -13,6 +13,7 @@
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
+
 import traceback
 from cStringIO import StringIO
 import datetime
@@ -53,6 +54,7 @@ from django.views.decorators.http import condition
 
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
 from geocamUtil.geoEncoder import GeoDjangoEncoder
+from geocamUtil import TimeUtil
 from geocamUtil.loader import LazyGetModelByName, getClassByName, getModelByName, getFormByName
 from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
 from geocamUtil.models import SiteFrame
@@ -144,16 +146,10 @@ def getMapTreePage(request):
 def populateSearchFormHash(key, entry, SEARCH_FORMS, filter=None):
     if 'search_form_class' in entry:
         theForm = getFormByName(entry['search_form_class'])
-        theFormSet = theForm()
+        initial = buildFilterDict(filter)
+        theFormSet = theForm(initial=initial)
         SEARCH_FORMS[key] = [theFormSet, entry['model']]
-        if filter:
-            SEARCH_FORMS[key][0].initial = buildFilterDict(filter)
 
-#     else:
-#         theClass = LazyGetModelByName(entry['model'])
-#         theForm = SpecializedForm(SearchForm, theClass.get())
-#         theFormSetMaker = formset_factory(theForm, extra=0)
-#         theFormSet = theFormSetMaker(initial=[{'modelClass': entry['model']}])
 
 def getSearchForms(key=None, filter=None):
     # get the dictionary of forms for searches
@@ -2028,23 +2024,49 @@ def getOverlayTime(request, overlayId, timeString=None):
 # Must extend OrderListJson to use its filter functions.
 # Responses can timeout due to very large data exports.
 class ExportOrderListJson(OrderListJson):
+
+    def cleanAdvancedSearch(self, data):
+        field_name = self.model.get_time_bounds_field_name()
+
+        clean_timezone = TimeUtil.clean_timezone(data[field_name + 'zone'])
+
+        kill_timezone = False
+        if 'min_' + field_name in data:
+            min_time_string = data['min_' + field_name]
+            min_time = dateparser(min_time_string)
+            min_time = TimeUtil.convert_time_with_zone(min_time, clean_timezone)
+            data['min_' + field_name] = min_time
+            kill_timezone = True
+
+        if 'max_' + field_name in data:
+            max_time_string = data['max_' + field_name]
+            max_time = dateparser(max_time_string)
+            max_time = TimeUtil.convert_time_with_zone(max_time, clean_timezone)
+            data['max_' + field_name] = max_time
+            kill_timezone = True
+
+        if kill_timezone:
+            del data[field_name + 'zone']
+        return data
+
     def dispatch(self, request, *args, **kwargs):
         if request.method == 'POST':
-            modelName = request.POST.get('modelName', None)
-            modelDict = settings.XGDS_MAP_SERVER_JS_MAP[modelName]
+            self.modelName = request.POST.get('modelName', None)
+            self.modelDict = settings.XGDS_MAP_SERVER_JS_MAP[self.modelName]
             rowIds = json.loads(request.POST.get('rowIds', None))
             simpleSearchData = json.loads(request.POST.get('simpleSearchData', None))
             advancedSearchData = json.loads(request.POST.get('advancedSearchData', None))
             filetype = request.POST.get('filetype', None)
             filename = request.POST.get('filename', None)
 
-            self.lookupModel(modelDict["model"])
+            self.lookupModel(self.modelDict["model"])
+
             if rowIds:
                 data = self.filterData(rowIds, simpleSearchData, advancedSearchData)
                 if (filetype == "CSV"):
-                    response = self.exportCSV(data, modelDict, filename + ".csv")
+                    response = self.exportCSV(data, self.modelDict, filename + ".csv")
                 elif (filetype == "KML"):
-                    response = self.exportKML(data, modelDict, modelName, filename + ".kml")
+                    response = self.exportKML(data, self.modelDict, self.modelName, filename + ".kml")
                 elif (filetype == "ZIP"):
                     response = self.exportZIP(data, filename + ".zip")
                 else:
@@ -2058,11 +2080,19 @@ class ExportOrderListJson(OrderListJson):
     # Filter the model's data using the advanced search, simple search, or both
     def filterData(self, rowIds, simpleSearchData, advancedSearchData):
         if rowIds[-1] == "All":
-            data = self.model.objects.all()
-            if (len(advancedSearchData) > 0):
-                data = self.filter_queryset_advanced_search(data, advancedSearchData)
-            if (simpleSearchData):
-                data = self.filter_queryset_simple_search(data, simpleSearchData["search"], simpleSearchData["tags"])
+            # We have to refilter the data based on the form
+            form_class = getFormByName(self.modelDict['search_form_class'])
+            search_form = form_class(advancedSearchData)
+            valid = search_form.is_valid()
+            if not valid:
+                # TODO throw error?
+                raise Exception("Form not valid", search_form.errors)
+
+            self.formQueries = search_form.getQueries()
+
+            all = self.model.objects.all()
+            data = self.filter_queryset(all)
+
         else:
             data = self.model.objects.filter(pk__in=rowIds)
 
