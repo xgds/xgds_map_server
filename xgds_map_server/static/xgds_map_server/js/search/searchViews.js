@@ -571,9 +571,18 @@ app.views.SearchResultsView = Marionette.View.extend({
 					return getLocalTimeString(row[1], row[2], "z");
 				};
     		} else if  (heading.toLowerCase().indexOf('time') > -1){
-    			columnDef['render'] = function ( data, type, row ) {
-					return getLocalTimeString(row[1], row[2], "MM/DD/YY HH:mm:ss");
-				};
+    			if (this.columnTitles.includes('TZ')) {
+                    columnDef['render'] = function (data, type, row) {
+
+                        return getLocalTimeString(row[1], row[2], "MM/DD/YY HH:mm:ss");
+                    };
+                } else {
+    				columnDef['render'] = function (data, type, row) {
+                        return getLocalTimeString(row[1], undefined, "MM/DD/YY HH:mm:ss");
+                    };
+				}
+    		} else if  (heading.toLowerCase().indexOf('content') > -1){
+    			columnDef['className'] = 'content_col editable';
     		} else if (heading.toLowerCase().indexOf('thumbnail') > -1) {
     			columnDef['render'] = function(data, type, row){
 					if (!_.isUndefined(data) && !_.isNull(data) && data != ''){
@@ -585,11 +594,12 @@ app.views.SearchResultsView = Marionette.View.extend({
 					}
 				};
     		} else if (heading.toLowerCase().indexOf('tag') > -1){
+    			columnDef['className'] = 'tag_col editable';
 				columnDef['render'] =  function(data, type, row) {
 					if (!_.isUndefined(data) && !_.isNull(data) && data != ''){
 						var result = "";
 						for (var i = 0; i < data.length; i++) {
-							result = result + '<span class="tag label label-info">' + data[i] + '</span>&nbsp;';
+							result = result + '<span class="tag label label-info">' + data[i] + '</span> ';
 						}
 						return result;
 					}
