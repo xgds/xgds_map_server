@@ -21,13 +21,33 @@ from django import forms
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.forms.fields import IntegerField, ChoiceField
+from django.db.models import Q
 
 from resumable.fields import ResumableFileField
 
-from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile,  MapDataTile, WMSTile, GeoJSON
+from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile,  MapDataTile, WMSTile, GeoJSON, Place
 from geocamUtil.models import SiteFrame
 
 # pylint: disable=C1001
+
+
+def buildQueryForPlace(fieldname, field, value, hierarchy):
+    """
+    Build a query for place which handles hierarchy
+    :param fieldname:
+    :param field:
+    :param value:
+    :param hierarchy:
+    :return:
+    """
+    if not value:
+        return None
+
+    if hierarchy:
+        place_qs = Place.get_tree(value)
+        return Q(**{fieldname + '__in': place_qs})
+    else:
+        return Q(**{fieldname+'__id': value.pk})
 
 
 class AbstractMapForm(forms.ModelForm):

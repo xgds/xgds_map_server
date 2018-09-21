@@ -23,6 +23,8 @@ import untangle
 import traceback
 import copy
 
+from treebeard.mp_tree import MP_Node
+
 from dateutil.parser import parse as dateparser
 
 
@@ -45,23 +47,50 @@ from xgds_core.util import insertIntoPath
 LOGO_REGEXES = None
 
 
-class AbstractMapNode(models.Model):
+class AbstractNode(models.Model):
     """
-    Abstract Map Node for an entry in the map tree, which can have a parent.
+    Abstract Map Node base class
     """
-    uuid = UuidField(primary_key=True)
     name = models.CharField('name', max_length=128, db_index=True)
     description = models.CharField('description', max_length=1024, blank=True)
     creator = models.CharField('creator', max_length=200)
-    modifier = models.CharField('modifier', max_length=200, null=True, blank=True)
     creation_time = models.DateTimeField(null=True, blank=True, db_index=True)
+    minLat = models.FloatField(blank=True, null=True, db_index=True)
+    minLon = models.FloatField(blank=True, null=True, db_index=True)
+    maxLat = models.FloatField(blank=True, null=True, db_index=True)
+    maxLon = models.FloatField(blank=True, null=True, db_index=True)
+    region = models.ForeignKey('geocamUtil.SiteFrame', null=True)
+
+    def __unicode__(self):
+        return self.name
+
+    class Meta:
+        abstract = True
+        ordering = ['name']
+
+
+class Place(AbstractNode, MP_Node):
+    """
+    Represents a Place with name, used for geocoding
+    https://developers.arcgis.com/rest/geocode/api-reference/geocoding-category-filtering.htm
+    Currently this does not contain geometry; we could eventually add a fk to a map layer
+    """
+    verified = models.BooleanField(default=False)  # true if a user has verified this place, ie by editing it manually
+    centerLat = models.FloatField(blank=True, null=True, db_index=True)
+    centerLon = models.FloatField(blank=True, null=True, db_index=True)
+    radius = models.FloatField(blank=True, null=True, db_index=True)
+    extras = ExtrasDotField(default='')  # a dictionary of name/value pairs to support flexible extra metadata
+    node_order_by = ['name']
+
+
+class AbstractMapNode(AbstractNode):
+    """
+    Abstract Map Node for an entry in the map tree, which can have a parent.
+    """
+    modifier = models.CharField('modifier', max_length=200, null=True, blank=True)
     modification_time = models.DateTimeField(null=True, blank=True, db_index=True)
     deleted = models.BooleanField(blank=True, default=False)
-    minLat = models.FloatField(blank=True, null=True)
-    minLon = models.FloatField(blank=True, null=True)
-    maxLat = models.FloatField(blank=True, null=True)
-    maxLon = models.FloatField(blank=True, null=True)
-    region = models.ForeignKey('geocamUtil.SiteFrame', null=True)
+    uuid = UuidField(primary_key=True)
 
     @property
     def parent(self):
