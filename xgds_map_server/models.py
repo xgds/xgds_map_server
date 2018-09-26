@@ -73,14 +73,13 @@ class Place(AbstractNode, MP_Node):
     """
     Represents a Place with name, used for geocoding
     https://developers.arcgis.com/rest/geocode/api-reference/geocoding-category-filtering.htm
-    Currently this does not contain geometry; we could eventually add a fk to a map layer
+    Extending treebeard MP_Node provides the hierarchy
     """
     verified = models.BooleanField(default=False)  # true if a user has verified this place, ie by editing it manually
-    centerLat = models.FloatField(blank=True, null=True, db_index=True)
-    centerLon = models.FloatField(blank=True, null=True, db_index=True)
-    radius = models.FloatField(blank=True, null=True, db_index=True)
     extras = ExtrasDotField(default='')  # a dictionary of name/value pairs to support flexible extra metadata
-    node_order_by = ['name']
+    geometry = ExtrasDotField(default='')  # a dictionary of name/value pairs to support geometry
+
+    node_order_by = ['name']  # for treebeard ordering
 
 
 class AbstractMapNode(AbstractNode):

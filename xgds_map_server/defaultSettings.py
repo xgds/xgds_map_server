@@ -101,6 +101,9 @@ XGDS_MAP_SERVER_BODY_RADIUS_METERS = 6371010
 XGDS_MAP_SERVER_SITE_MONIKER = 'Site'
 XGDS_MAP_SERVER_PLACE_MONIKER = 'Place'
 
+# in case you are using this as a default, for example for sample recording
+XGDS_MAP_SERVER_DEFAULT_PLACE_ID = None
+
 XGDS_DATA_IMPORTS = getOrCreateDict('XGDS_DATA_IMPORTS')
 XGDS_DATA_IMPORTS['GeoTiff Map Tile'] = '/xgds_map_server/addTile'
 
