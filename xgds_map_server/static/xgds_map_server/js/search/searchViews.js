@@ -581,8 +581,6 @@ app.views.SearchResultsView = Marionette.View.extend({
                         return getLocalTimeString(row[1], undefined, "MM/DD/YY HH:mm:ss");
                     };
 				}
-    		} else if  (heading.toLowerCase().indexOf('content') > -1){
-    			columnDef['className'] = 'content_col editable';
     		} else if (heading.toLowerCase().indexOf('thumbnail') > -1) {
     			columnDef['render'] = function(data, type, row){
 					if (!_.isUndefined(data) && !_.isNull(data) && data != ''){
@@ -628,6 +626,8 @@ app.views.SearchResultsView = Marionette.View.extend({
 					}
 					return '';
 				};
+    		} else if  (heading.toLowerCase().indexOf('content') > -1){
+    			columnDef['className'] = 'content_col editable';
 			} else if (heading.toLowerCase().indexOf('checkbox') > -1) {
 				columnDef['orderable'] = false;
 				columnDef['render'] = function (data, type, row) {
