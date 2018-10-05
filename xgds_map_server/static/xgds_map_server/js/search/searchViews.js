@@ -548,11 +548,19 @@ app.views.SearchResultsView = Marionette.View.extend({
     	if (_.isUndefined(searchableColumns)) searchableColumns = [];
     	if (_.isUndefined(unsortableColumns)) unsortableColumns = [];
 
+    	columnWidths = undefined;
+    	if ('columnWidths' in modelMap) {
+    		columnWidths = modelMap.columnWidths;
+		}
+
     	for (var i = 0; i < displayColumns.length; i++){
     		var heading = displayColumns[i];
     		var dataIndex = modelMap.columns.indexOf(heading);
     		var columnDef = {};
     		columnDef['targets'] = i;
+    		if (!_.isUndefined(columnWidths)) {
+    			columnDef['width'] = columnWidths[i];
+			}
     		if ($.inArray(heading, searchableColumns) > -1) columnDef['searchable'] = true;
     		if ($.inArray(heading, unsortableColumns) > -1) columnDef['orderable'] = false;
 
@@ -675,9 +683,10 @@ app.views.SearchResultsView = Marionette.View.extend({
         	tableheight = app.options.tableHeight;
         }
 
+        var hasColumnWidth = ('columnWidths' in modelMap);
         var dataTableObj = {
                 columns: this.columnHeaders,
-                autoWidth: true,
+                autoWidth: !hasColumnWidth,
                 dom: '<"top"' +
 						'<"row"' +
 							'<"col-12 no-padding"' +
@@ -726,6 +735,7 @@ app.views.SearchResultsView = Marionette.View.extend({
         }
 
         this.theDataTable = $(this.theTable).DataTable(dataTableObj);
+        this.theDataTable.columns.adjust().draw();
         this.connectSinglePickCallback();
         this.connectMasterPickCallback();
         this.connectSelectCallback();

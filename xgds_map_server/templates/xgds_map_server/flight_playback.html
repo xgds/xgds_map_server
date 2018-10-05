@@ -197,7 +197,7 @@
 
         {% if flight.track %}
             appOptions.track_urls = ["{% url 'geocamTrack_mapJsonTrack' flight.track.uuid %}"];
-            appOptions.track_metadata = [{{flight.track.getTreeJson|jsonify }}];
+            appOptions.track_metadata = [{{flight.track.get_tree_json|jsonify }}];
         {% endif %}
 	{% endblock jsInitPreApp %}
 

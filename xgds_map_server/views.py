@@ -1212,7 +1212,7 @@ def getSelectedNodesJSON(request):
     node_dict = []
     nodes = MAP_MANAGER.filter(deleted=False, visible=True)
     for node in nodes:
-        node_dict.append(node.getTreeJson())
+        node_dict.append(node.get_tree_json())
     json_data = json.dumps(node_dict, indent=4, cls=GeoDjangoEncoder)
     return HttpResponse(content=json_data,
                         content_type="application/json")
@@ -1223,7 +1223,7 @@ def getNodesByUuidJSON(request):
         nodes = MAP_MANAGER.filter(uuid__in=uuids)
         node_dict = []
         for node in nodes:
-            node_dict.append(node.getTreeJson())
+            node_dict.append(node.get_tree_json())
         json_data = json.dumps(node_dict, indent=4, cls=GeoDjangoEncoder)
         return HttpResponse(content=json_data,
                             content_type="application/json")
@@ -1249,7 +1249,7 @@ def addGroupToFancyJSON(group, map_tree_json):
     if group is None:
         return  # don't do anything if group is None
     sub_nodes = []
-    group_json = group.getTreeJson()
+    group_json = group.get_tree_json()
     if not group_json['data']['parentId']:
         # ensure that we don't have conflicts with the base map
         # for the detail page, and that nobody deletes every map
@@ -1263,7 +1263,7 @@ def addGroupToFancyJSON(group, map_tree_json):
         if node.__class__.__name__ == MapGroup.__name__:  # @UndefinedVariable
             sub_nodes.append(addGroupToFancyJSON(node, [])[0])
         else:
-            treeJson = node.getTreeJson()
+            treeJson = node.get_tree_json()
             if treeJson:
                 sub_nodes.append(treeJson)
     group_json['children'] = sub_nodes

@@ -117,7 +117,7 @@ class AbstractMapNode(AbstractNode):
         """ If this is a map layer with time, return the url to get the data for that time """
         return None
 
-    def getTreeJson(self):
+    def get_tree_json(self):
         """ Get the json block that the fancy tree needs to render this node """
         result = {"title": self.name,
                   "key": self.uuid,
@@ -160,9 +160,9 @@ class MapGroup(AbstractMapNode):
                                null=True, blank=True,
                                verbose_name='parent group')
 
-    def getTreeJson(self):
+    def get_tree_json(self):
         """ Get the json block that the fancy tree needs to render this node """
-        result = super(MapGroup, self).getTreeJson()
+        result = super(MapGroup, self).get_tree_json()
         result["folder"] = True
         return result
 
@@ -181,9 +181,9 @@ class AbstractMap(AbstractMapNode):
                                null=True, blank=True,
                                verbose_name='group')
 
-    def getTreeJson(self):
+    def get_tree_json(self):
         """ Get the json block that the fancy tree needs to render this node """
-        result = super(AbstractMap, self).getTreeJson()
+        result = super(AbstractMap, self).get_tree_json()
         result["data"]["transparency"] = self.transparency
         result["selected"] = self.visible
         return result
@@ -256,11 +256,11 @@ class KmlMap(AbstractMap):
             """ If this element has an url which returns kml, override this function to return that url. """
             return self.getUrl()
 
-    def getTreeJson(self):
+    def get_tree_json(self):
         """ Get the json block that the fancy tree needs to render this node """
         if self.hasNetworkLink:
             return None
-        result = super(KmlMap, self).getTreeJson()
+        result = super(KmlMap, self).get_tree_json()
         result["data"]["openable"] = self.openable
 #         result["data"]["transparency"] = self.transparency
         if self.localFile:
@@ -298,9 +298,9 @@ class AbstractWMS(AbstractMap):
     def getUrl(self):
         return self.wmsUrl
 
-    def getTreeJson(self):
+    def get_tree_json(self):
         """ Get the json block that the fancy tree needs to render this node """
-        result = super(AbstractWMS, self).getTreeJson()
+        result = super(AbstractWMS, self).get_tree_json()
         result["data"]["tileURL"] = self.getUrl()
         result["data"]["format"] = self.format
         result["data"]["layers"] = self.layers
@@ -350,9 +350,9 @@ class WMTSTile(AbstractWMS):
     end = models.DateTimeField(null=True, blank=True, db_index=True)
     interval = models.FloatField(null=True, blank=True)
 
-    def getTreeJson(self):
+    def get_tree_json(self):
         """ Get the json block that the fancy tree needs to render this node """
-        result = super(WMTSTile, self).getTreeJson()
+        result = super(WMTSTile, self).get_tree_json()
         #result["data"]["urlPattern"] = self.urlPattern
         result["data"]["style"] = self.style
         result["data"]["start"] = self.start
@@ -443,9 +443,9 @@ class AbstractMapTile(AbstractMap):
         result = os.path.join(settings.DATA_URL, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR, self.name.replace(' ', '_'))
         return result
 
-    def getTreeJson(self):
+    def get_tree_json(self):
         """ Get the json block that the fancy tree needs to render this node """
-        result = super(AbstractMapTile, self).getTreeJson()
+        result = super(AbstractMapTile, self).get_tree_json()
         result["data"]["tileURL"] = self.getUrl()
         result["data"]["tilePath"] = self.getTilePath()
         if self.minx:
@@ -501,9 +501,9 @@ class GroundOverlayTime(AbstractMap):
         """ If this is a map layer with time, return the interval in decimal seconds """
         return self.interval
 
-    def getTreeJson(self):
+    def get_tree_json(self):
         """ Get the json block that the fancy tree needs to render this node """
-        result = super(GroundOverlayTime, self).getTreeJson()
+        result = super(GroundOverlayTime, self).get_tree_json()
         result['data']['minLat'] = self.minLat
         result['data']['minLon'] = self.minLon
         result['data']['maxLat'] = self.maxLat
@@ -589,9 +589,9 @@ class MapDataTile(AbstractMapTile):
             return self.legendFile.url
         return None
     
-    def getTreeJson(self):
+    def get_tree_json(self):
         """ Get the json block that the fancy tree needs to render this node """
-        result = super(MapDataTile, self).getTreeJson()
+        result = super(MapDataTile, self).get_tree_json()
         result["data"]["dataFileURL"] = self.getDataFileUrl()
         result["data"]["legendFileURL"] = self.getLegendFileUrl()
         result["data"]["legendVisible"] = self.legendDefaultVisible
@@ -619,9 +619,9 @@ class MapLayer(AbstractMap):
         result['uuid'] = self.uuid
         return result
 
-    def getTreeJson(self):
+    def get_tree_json(self):
         """ Get the json block that the fancy tree needs to render this node """
-        result = super(MapLayer, self).getTreeJson()
+        result = super(MapLayer, self).get_tree_json()
         result["data"]["layerJSON"] = reverse('mapLayerJSON', kwargs={'layerID': self.uuid})
         return result
     
@@ -651,9 +651,9 @@ class MapLayer(AbstractMap):
 #     def getEditHref(self):
 #         return reverse('mapEditMapCollection', kwargs={'mapCollectionID': self.uuid})
 #
-#     def getTreeJson(self):
+#     def get_tree_json(self):
 #         """ Get the json block that the fancy tree needs to render this node """
-#         result = super(MapCollection, self).getTreeJson()
+#         result = super(MapCollection, self).get_tree_json()
 #         result["data"]["collectionJSON"] = self.getUrl()
 #         return result
 
@@ -672,9 +672,9 @@ class MapLayer(AbstractMap):
 #     def getEditHref(self):
 #         return reverse('mapEditMapSearch', kwargs={'mapSearchID': self.uuid})
 # 
-#     def getTreeJson(self):
+#     def get_tree_json(self):
 #         """ Get the json block that the fancy tree needs to render this node """
-#         result = super(MapSearch, self).getTreeJson()
+#         result = super(MapSearch, self).get_tree_json()
 #         result["data"]["searchJSON"] = self.getUrl()
 # #         result["data"]["searchResultsJSON"] = reverse('data_searchResultsJSON', kwargs={'collectionID': self.requestLog.pk})
 #         return result
@@ -704,9 +704,9 @@ class MapLink(AbstractMap):
         """
         return ""
 
-    def getTreeJson(self):
+    def get_tree_json(self):
         """ Get the json block that the fancy tree needs to render this node """
-        result = super(MapLink, self).getTreeJson()
+        result = super(MapLink, self).get_tree_json()
         if self.url:
             result["data"]["json"] = self.url
         if self.childNodesUrl:
@@ -725,8 +725,8 @@ class MapLink(AbstractMap):
 class GeoJSON(AbstractMap):
     geoJSON = models.TextField()
 
-    def getTreeJson(self):
-        result = super(AbstractMap, self).getTreeJson()
+    def get_tree_json(self):
+        result = super(AbstractMap, self).get_tree_json()
         result["data"]["geoJSON"] = self.geoJSON
         return result
 
