@@ -1998,6 +1998,7 @@ class MapOrderListJson(OrderListJson):
                     self.order_columns = self.columns
         return super(MapOrderListJson, self).dispatch(request, *args, **kwargs)
 
+
 def prepOverlayTimeRequest(overlayId, timeString):
     got = GroundOverlayTime.objects.get(uuid=overlayId)
     if timeString:
@@ -2005,6 +2006,7 @@ def prepOverlayTimeRequest(overlayId, timeString):
     else:
         theTime = None
     return (got, theTime)
+
 
 def getOverlayTimeImage(request, overlayId, timeString=None):
     got, theTime = prepOverlayTimeRequest(overlayId, timeString)
