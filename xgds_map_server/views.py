@@ -1980,6 +1980,7 @@ def copyFeatures(request):
     request.session['copiedFeatures'] = features
     return HttpResponse('ok')
 
+
 class MapOrderListJson(OrderListJson):
     
     def dispatch(self, request, *args, **kwargs):
@@ -1991,7 +1992,10 @@ class MapOrderListJson(OrderListJson):
                 self.lookupModel(modelName)
                 self.form = lookupForm(modelMap['search_form_class'])
                 self.columns = modelMap['columns']
-                self.order_columns = self.columns
+                if 'order_columns' in modelMap:
+                    self.order_columns = modelMap['order_columns']
+                else:
+                    self.order_columns = self.columns
         return super(MapOrderListJson, self).dispatch(request, *args, **kwargs)
 
 def prepOverlayTimeRequest(overlayId, timeString):
