@@ -1,0 +1,54 @@
+[
+  {
+    "pk": "mg1",
+    "model": "xgds_map_server.MapGroup",
+    "fields": {
+      "name": "xGDS Maps",
+      "description": "Root for all of the maps on the xGDS server"
+    }
+  },
+  {
+    "pk": "kml2",
+    "model": "xgds_map_server.KmlMap",
+    "fields": {
+      "name": "Plans",
+      "description": "All of the plans on the server",
+      "kmlFile": "/xgds_planner2/planIndex.kml",
+      "openable": 1,
+      "visible": 0,
+      "hasNetworkLink": 1,
+      "parent": "mg1"
+    }
+  },
+  {
+    "pk": "kml44",
+    "model": "xgds_map_server.KmlMap",
+    "fields": {
+      "name": "Live Position Tracks",
+      "description": "Current position and tracks",
+      "kmlFile": "/track/trackIndex.kml",
+      "openable": 1,
+      "visible": 0,
+      "hasNetworkLink": 1,
+      "parent": "mg1"
+    }
+  },
+  {
+    "pk": 1,
+    "model": "geocamUtil.SiteFrame",
+    "fields": {
+      "name": "Ames",
+      "displayName": "Ames",
+      "east0": 582753.18,
+      "north0": 4141805.69,
+      "zone": "10S",
+      "zoneNumber": 10,
+      "south": 0,
+      "axes": "NED",
+      "north": "grid",
+      "timezone": "America/Los_Angeles",
+      "projCode": "EPSG:2227",
+      "projString": "+proj=utm +zone=10 +ellps=WGS84 +datum=WGS84 +units=m +no_defs"
+    }
+  }
+]
