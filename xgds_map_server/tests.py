@@ -18,12 +18,12 @@
 
 # TODO: write tests that do more than check pages with GET requests.
 
-from django.test import TestCase
+from django.test import TransactionTestCase
 from django.core.urlresolvers import reverse
 from unittest import skip
 
 
-class TestMaps(TestCase):
+class TestMaps(TransactionTestCase):
     fixtures = ['xgds_map_server_testing.json']
     urls = "xgds_map_server.testing_urls"
 
