@@ -17,10 +17,17 @@
 # import logging
 
 # TODO: write tests that do more than check pages with GET requests.
+from unittest import skip
 
 from django.test import TransactionTestCase
 from django.core.urlresolvers import reverse
-from unittest import skip
+from django.conf import settings
+from django.utils import timezone
+
+from xgds_map_server.models import Place
+from geocamUtil.models import SiteFrame
+
+from django.contrib.auth.models import User
 
 
 class TestMaps(TransactionTestCase):
@@ -92,3 +99,26 @@ class TestMaps(TransactionTestCase):
         # currently the only feed possible is the master feed
         response = self.client.get(reverse('xgds_map_server_feed_page'))
         self.assertEqual(response.status_code, 200)
+
+    def test_add_place(self):
+        site_frame = SiteFrame.objects.first()
+        user = User.objects.first()
+        place = Place(name='Test Place', creator=user,
+                      creation_time=timezone.now(),
+                      region=site_frame)
+        Place.add_root(instance=place)
+        self.assertIsNotNone(place.pk)
+        self.assertEqual(place.name, 'Test Place')
+        self.assertEqual(place.creator, user)
+        self.assertEqual(place.region, site_frame)
+
+        child_place = Place(name='Child Place', creator=user,
+                            creation_time=timezone.now(),
+                            region=site_frame)
+        place.add_child(instance=child_place)
+        self.assertIsNotNone(child_place.pk)
+
+
+
+
+
