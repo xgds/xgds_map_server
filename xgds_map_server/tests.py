@@ -38,18 +38,8 @@ class TestMaps(TransactionTestCase):
         response = self.client.get(reverse('xgds_map_server_index'))
         self.assertEqual(response.status_code, 200)
 
-    @skip('Url disabled in urls.py')
-    def test_mapList(self):
-        response = self.client.get(reverse('mapList'))
-        self.assertEqual(response.status_code, 200)
-
     def test_mapTree(self):
         response = self.client.get(reverse('mapTree'))
-        self.assertEqual(response.status_code, 200)
-
-    @skip('no matching url in urls.py')
-    def test_mapListJSON(self):
-        response = self.client.get(reverse('mapListJSON'))
         self.assertEqual(response.status_code, 200)
 
     def test_mapDetail(self):
