@@ -146,6 +146,9 @@
 	var siteFrames = {% siteframes_dict %};
 
 	getTimeZone = function() {
+	    if ("{{ flight.timezone }}" === "Etc/UTC") {
+	        return "utc";
+        }
 	    return "{{ flight.timezone }}";
     }
 
