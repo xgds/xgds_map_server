@@ -1807,18 +1807,14 @@ def getGroupFlightPlaybackPage(request, group_flight_name, templatePath='xgds_ma
     if 'xgds_timeseries' in settings.INSTALLED_APPS:
         timeseries_config = get_time_series_classes_metadata(flight_ids=[f.id for f in group_flight.flights])
 
-    modelName = None
-    if 'xgds_notes2' in settings.INSTALLED_APPS:
-        modelName = LazyGetModelByName(settings.XGDS_NOTES_NOTE_MODEL).get().cls_type()
-
-    searchForms = getSearchForms(modelName, {'flight__group__id': group_flight.id})
+    searchForms = getSearchForms(filter={'flight__group__id': group_flight.id})
 
     return render(request,
                   templatePath,
                   {'help_content_path': 'xgds_map_server/help/groupFlightPlayback.rst', # TODO IMPLEMENT
                    'title': '%s playback' % settings.XGDS_CORE_GROUP_FLIGHT_MONIKER,
                    'templates': templates,
-                   'modelName': modelName,
+                   'modelName': None,
                    'searchForms': searchForms,
                    'group_flight': group_flight,
                    'timeseries_config': timeseries_config,

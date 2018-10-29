@@ -20,9 +20,11 @@ app.views.FlightInfoTabView = Marionette.View.extend({
 	template: '#template-group-flight-info',
 });
 
+
 app.views.TabNavView = xGDS.TabNavView.extend({
     viewMap: {
-    	'info': app.views.FlightInfoTabView
+    	'info': app.views.FlightInfoTabView,
+        'search': app.views.SearchView
     },
 
     initialize: function() {
