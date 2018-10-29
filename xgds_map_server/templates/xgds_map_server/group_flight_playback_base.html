@@ -166,6 +166,11 @@
 	    return "{{ group_flight.timezone }}";
     }
 
+    var conditions = [];
+    {% for c in group_flight.conditions %}
+    conditions.push({{ c.toJson|safe }});
+    {% endfor %}
+
     var appOptions = {
         	BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
         	DEFAULT_COORD_SYSTEM: '{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}',
@@ -184,7 +189,8 @@
             searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
             settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:'true,false' }},
             track_urls: [],
-            group_flight: {{ group_flight.toJson|safe }}
+            group_flight: {{ group_flight.toJson|safe }},
+            conditions: conditions
      };
 
         {% if extras %}
