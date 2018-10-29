@@ -20,7 +20,7 @@
 
 // debug: prints the current template context, and optionally
 // a specified value, to the console.
-Handlebars.registerHelper('debug', function(optionalValue) {
+Handlebars.registerHelper('debug', function (optionalValue) {
     console.log('Current Context');
     console.log('====================');
     console.log(this);
@@ -32,14 +32,14 @@ Handlebars.registerHelper('debug', function(optionalValue) {
     }
 });
 
-Handlebars.registerHelper('getColor', function(key) {
+Handlebars.registerHelper('getColor', function (key) {
     return app.getColor(key);
 });
 
 //
 // Conditional that compares two values
 //
-Handlebars.registerHelper('ifequal', function(val1, val2, options) {
+Handlebars.registerHelper('ifequal', function (val1, val2, options) {
     if (val1 === val2) {
         return options.fn(this);
     }
@@ -48,7 +48,7 @@ Handlebars.registerHelper('ifequal', function(val1, val2, options) {
     }
 });
 
-Handlebars.registerHelper('ifunequal', function(val1, val2, options) {
+Handlebars.registerHelper('ifunequal', function (val1, val2, options) {
     if (val1 !== val2) {
         return options.fn(this);
     }
@@ -58,31 +58,31 @@ Handlebars.registerHelper('ifunequal', function(val1, val2, options) {
 });
 
 
-Handlebars.registerHelper('filename', function(value) {
-	if (!_.isEmpty(value)){
-		return value.split('/').pop();
-	}
-	return value;
+Handlebars.registerHelper('filename', function (value) {
+    if (!_.isEmpty(value)) {
+        return value.split('/').pop();
+    }
+    return value;
 });
 
-Handlebars.registerHelper('prettyDecimal', function(value) {
-	if (_.isNumber(value)){
-		return value.toFixed(2);
-	}
-	return value;
+Handlebars.registerHelper('prettyDecimal', function (value) {
+    if (_.isNumber(value)) {
+        return value.toFixed(2);
+    }
+    return value;
 });
 
 
-Handlebars.registerHelper('getattr', function(obj, key) {
+Handlebars.registerHelper('getattr', function (obj, key) {
     return obj[key];
 });
 
-Handlebars.registerHelper('group', function(list, groupKey, options) {
+Handlebars.registerHelper('group', function (list, groupKey, options) {
     var ret = '';
     var groups = {};
     var groupNum = 0;
-    _.each(list, function(item) {
-        if (! _.has(groups, item[groupKey])) {
+    _.each(list, function (item) {
+        if (!_.has(groups, item[groupKey])) {
             groupNum++;
             groups[item[groupKey]] = {
                 groupName: item[groupKey],
@@ -94,20 +94,32 @@ Handlebars.registerHelper('group', function(list, groupKey, options) {
     });
     groups = _.sortBy(groups, 'groupName');
 
-    _.each(groups, function(group) {
+    _.each(groups, function (group) {
         ret = ret + options.fn(group);
     });
     return ret;
 });
 
-Handlebars.registerHelper('firstDefined', function() {
+Handlebars.registerHelper('firstDefined', function () {
     // given a list of values, regurn the first one defined within this context
     var args = Array.prototype.slice.call(arguments);
     var val;
     while (args.length > 0) {
         val = args.shift();
-        if (val != undefined) { return val; }
+        if (val != undefined) {
+            return val;
+        }
     }
     return undefined;
 
+});
+
+Handlebars.registerHelper('prettyTime', function (sourceTime, timeZone) {
+    return getLocalTimeString(sourceTime, timeZone);
+});
+Handlebars.registerHelper('prettyHHMM', function (sourceTime, timeZone) {
+    return getLocalTimeString(sourceTime, timeZone, 'HH:mm');
+});
+Handlebars.registerHelper('prettyHHMMSS', function (sourceTime, timeZone) {
+    return getLocalTimeString(sourceTime, timeZone, 'HH:mm:ss');
 });

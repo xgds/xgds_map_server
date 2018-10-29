@@ -93,6 +93,7 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,{},'xgds_map_server_index'
 
                # replay in map page
                url(r'^replay/(?P<flight_name>[\w]+)$', views.getFlightPlaybackPage, (), 'map_replay_flight'),
+               url(r'^greplay/(?P<group_flight_name>[\w]+)$', views.getGroupFlightPlaybackPage, (), 'map_replay_group_flight'),
 
                # Export datatable rows from search pages to CSV file
                url(r'^search/exportSearchResults/', views.ExportOrderListJson.as_view(), {}, 'exportSearchResults'),

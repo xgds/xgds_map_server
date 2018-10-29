@@ -82,6 +82,8 @@ latestRequestG = None
 XGDS_MAP_SERVER_GEOTIFF_PATH = os.path.join(settings.DATA_ROOT, settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR)
 SEARCH_FORMS = {}
 FLIGHT_MODEL = LazyGetModelByName(settings.XGDS_CORE_FLIGHT_MODEL)
+GROUP_FLIGHT_MODEL = LazyGetModelByName(settings.XGDS_CORE_GROUP_FLIGHT_MODEL)
+
 
 def setTransparency(request, uuid, mapType, value):
     try:
@@ -1793,6 +1795,37 @@ def getFlightPlaybackPage(request, flight_name, templatePath='xgds_map_server/fl
                    'forceUserSession': forceUserSession,
                    'app': 'xgds_map_server/js/replay/mapReplayApp.js'},
                   )
+
+
+def getGroupFlightPlaybackPage(request, group_flight_name, templatePath='xgds_map_server/group_flight_playback.html', forceUserSession=False):
+    group_flight = GROUP_FLIGHT_MODEL.get().objects.get(name=group_flight_name)
+
+    templates = get_handlebars_templates(list(settings.XGDS_MAP_SERVER_REPLAY_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_MAP_REPLAY')
+
+    #load time series data
+    timeseries_config = []
+    if 'xgds_timeseries' in settings.INSTALLED_APPS:
+        timeseries_config = get_time_series_classes_metadata(flight_ids=[f.id for f in group_flight.flights])
+
+    modelName = None
+    if 'xgds_notes2' in settings.INSTALLED_APPS:
+        modelName = LazyGetModelByName(settings.XGDS_NOTES_NOTE_MODEL).get().cls_type()
+
+    searchForms = getSearchForms(modelName, {'flight__group__id': group_flight.id})
+
+    return render(request,
+                  templatePath,
+                  {'help_content_path': 'xgds_map_server/help/groupFlightPlayback.rst', # TODO IMPLEMENT
+                   'title': '%s playback' % settings.XGDS_CORE_GROUP_FLIGHT_MONIKER,
+                   'templates': templates,
+                   'modelName': modelName,
+                   'searchForms': searchForms,
+                   'group_flight': group_flight,
+                   'timeseries_config': timeseries_config,
+                   'forceUserSession': forceUserSession,
+                   'app': 'xgds_map_server/js/replay/groupFlightReplayApp.js'},
+                  )
+
 
 def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSearch.html', forceUserSession=False, searchForms=None, filter=None):
     searchModelDict = settings.XGDS_MAP_SERVER_JS_MAP

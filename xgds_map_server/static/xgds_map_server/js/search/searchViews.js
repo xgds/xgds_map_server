@@ -247,10 +247,6 @@ app.views.SearchFormView = Marionette.View.extend({
 
 app.views.SearchDetailView = Marionette.View.extend({
     initialize: function(options) {
-        Handlebars.registerHelper('prettyTime', function( sourceTime, timeZone ){
-        	return getLocalTimeString(sourceTime, timeZone);
-        });
-
     	this.handlebarSource = '';
     	this.data = options.data;
     	this.selectedModel = options.selectedModel;

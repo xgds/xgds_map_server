@@ -32,6 +32,10 @@ XGDS_MAP_SERVER_HANDLEBARS_DIRS = [os.path.join('xgds_map_server', 'templates', 
                                    os.path.join('xgds_map_server', 'templates', 'handlebars', 'search')]
 
 
+XGDS_MAP_SERVER_REPLAY_HANDLEBARS_DIRS = [os.path.join('xgds_map_server', 'templates', 'handlebars'),
+                                          os.path.join('xgds_map_server', 'templates', 'handlebars', 'search'),
+                                          os.path.join('xgds_map_server', 'templates', 'handlebars', 'replay')]
+
 XGDS_MAP_SERVER_OVERLAY_IMAGES_DIR = XGDS_MAP_SERVER_DATA_SUBDIR + "MapOverlayImages"
 
 XGDS_MAP_SERVER_TOP_LEVEL = {

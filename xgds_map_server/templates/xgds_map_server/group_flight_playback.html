@@ -1,0 +1,243 @@
+{% extends "dashboard_base.html" %}
+
+{% load pipeline %}
+{% load static %}
+{% load siteFrames %}
+{% load jsonify %}
+
+{% block sitemenu-content-secondary %}
+{% include "xgds_planner2/planner2_subnav.html" %}
+{% endblock %}
+
+{% block cssExtras %}
+{{ block.super }}
+{% if 'xgds_notes2' in settings.INSTALLED_APPS %}
+{% include "xgds_notes2/NoteCSS.html" %}
+{% endif %}
+{% endblock cssExtras %}
+
+{% block siteSection %}Replay {{ flight.name }}{% endblock %}
+
+{% block pretemplate %}
+    <script type="x-template/underscore" id="plot_contents">
+		<div id="plotDiv" class="plot-div"></div>
+		<div id="plotLegend" class="row ml-2"></div>
+    </script>
+{% endblock pretemplate %}
+
+{% block preDashboard %}
+    <div id="controllers" >
+    	{% include "xgds_core/playback_controller.html" %}
+    </div>
+    <div id="masterSlider" class="masterSlider" >
+    </div>
+    <div id="plot-container" class="plot-container">
+        HELLO I AM THE PLOT CONTAINER
+	</div>
+{% endblock preDashboard %}
+
+
+{% block map %}
+    <div id="map-gridstack-item" class="grid-stack-item"
+    data-gs-x="0" data-gs-y="0"
+    data-gs-width="2" data-gs-height="4" >
+        <div class="grid-stack-item-content" id="map-gridstack-item-content" >
+            {% siteframe_form %}
+            <ul class="nav justify-content-end">
+                <i class="fa fa-lock pinDiv gray-light"></i>
+            </ul>
+            <div id="map"></div>
+        </div>
+    </div>
+    {% endblock map %}
+
+    {% block layers %}
+    <div id="layers-gridstack-item" class="grid-stack-item"
+        data-gs-x="2" data-gs-y="0"
+        data-gs-width="1" data-gs-height="3" >
+        <div class="grid-stack-item-content" id="layers-gridstack-item-content">
+        <ul class="nav justify-content-end">
+            <i class="fa fa-lock gray-light pinDiv mr-1"></i>
+            <i class="fa fa-window-close gray-light fa-lg"></i>
+        </ul>
+        <div id="layers" class="mt-negative-1rem"></div>
+        </div>
+    </div>
+    {% endblock layers %}
+
+{% block postMap %}
+    <div id="tabs-gridstack-item" class="grid-stack-item"  data-gs-x="4" data-gs-y="4" data-gs-width="3" data-gs-height="4" >
+    		<div id="tabs-gridstack-item-content" class="grid-stack-item-content" >
+			<ul class="nav justify-content-end">
+				<i class="fa fa-lock pinDiv gray-light"></i>
+			</ul>
+	        <div id="tabs" class="mt-negative-1rem"></div>
+	    </div>
+{% endblock postMap %}
+
+
+{% block scripts %}
+{{block.super}}
+    <script type="text/javascript" src="{{ EXTERNAL_URL }}flot/jquery.flot.js" ></script>
+	<script type="text/javascript" src="{{ EXTERNAL_URL }}flot/jquery.flot.time.js" ></script>
+	<script type="text/javascript" src="{{ EXTERNAL_URL }}flot/jquery.flot.resize.js" ></script>
+	<script type="text/javascript" src="{{ EXTERNAL_URL }}timezone-js/src/date.js" ></script>
+
+{% if 'xgds_notes2' in settings.INSTALLED_APPS %}
+	{% include "xgds_notes2/NoteJS.html" %}
+{% else %}
+    {% include "xgds_core/timeJS.html" %}
+    <script type="text/javascript" src="{{ EXTERNAL_URL }}datatables.net-plugins/sorting/datetime-moment.js"></script>
+{% endif %}
+    <script type="text/javascript">
+   		DEFAULT_PLOT_TIME_FORMAT = '%H:%M';
+   	</script>
+    {% include "xgds_core/playbackJS.html" %}
+    <script type="text/javascript" src="{% static 'xgds_timeseries/js/timeseriesUtils.js' %}"></script>
+    <script type="text/javascript" src="{% static 'geocamTrack/js/trackBackbone.js' %}"></script>
+    <script type="text/javascript" src="{% static 'xgds_map_server/js/replay/mapReplayModels.js' %}"></script>
+    <script type="text/javascript" src="{% static 'xgds_map_server/js/replay/mapReplayViews.js' %}"></script>
+
+
+    <script type="x-template/underscore" id="plot_contents">
+        <div id="plotTitle" class="row ml-2"></div>
+        <div id="plotDiv" class="plot-div mt-2" style="height:150px;"></div>
+        <div id="plotLegend" class="row ml-2"></div>
+        <div id="timeseries_message"></div>
+    </script>
+
+	{% for template_name, template in templates.items %}
+	<script type="text/handlebars" id="template-{{template_name}}">
+		{{template|safe}}
+	</script>
+    {% endfor %}
+{% endblock scripts %}
+
+
+{% block nothing %}
+
+    <!-- stuff from planner should probably go in a separate js include file -->
+     <script type="text/javascript" src="{{ EXTERNAL_URL }}jquery-ui-timepicker-addon/dist/jquery-ui-timepicker-addon.min.js"></script>
+     <script type="text/javascript" src="{{ EXTERNAL_URL }}moment-duration-format/lib/moment-duration-format.js"></script>
+
+     <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-migrate/dist/jquery-migrate.min.js'></script>
+     <script type="text/javascript" src='{{ EXTERNAL_URL }}pure-uuid/uuid.js'></script>
+ 	 <script type="text/javascript" src='{{ EXTERNAL_URL }}backbone-relational/backbone-relational.js'></script>
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}backbone-forms/distribution/backbone-forms.min.js'></script>
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}string-format/lib/string-format.js'></script>
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}usng.js/usng.js'></script>
+    <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-file-download/src/Scripts/jquery.fileDownload.js'></script>
+    <script type="text/javascript" src="{{ EXTERNAL_URL }}gridstack/dist/gridstack.min.js" ></script>
+	<script type="text/javascript" src="{% static 'xgds_core/js/gridstackUtils.js' %}"></script>
+
+    <script type="text/javascript" src="{% static 'xgds_map_server/js/util/handlebars-helpers.js' %}"></script>
+    <script type="text/javascript" src="{% static 'xgds_map_server/js/util/geo.js' %}"></script>
+    <script type="text/javascript" src="{% static 'xgds_map_server/js/util/forms.js' %}"></script>
+
+
+    <!--
+    <script type="text/javascript" src="{% static 'xgds_planner2/js/simulatorDriver.js' %}"></script>
+    <script type="text/javascript" src="{% static 'xgds_planner2/js/vehicleDriver.js' %}"></script>
+    -->
+
+  	{% javascript 'custom_map' %}
+
+   	{% include "xgds_map_server/SearchForms.html" with searchForms=searchForms %}
+
+   	{% block extraScripts %}
+   	{% endblock extraScripts %}
+{% endblock nothing %}
+
+{% block preMapJS %}
+    <script type="text/javascript">
+	var siteFrames = {% siteframes_dict %};
+
+	getTimeZone = function() {
+	    if ("{{ group_flight.timezone }}" === "Etc/UTC") {
+	        return "utc";
+        }
+	    return "{{ group_flight.timezone }}";
+    }
+
+    var appOptions = {
+        	BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
+        	DEFAULT_COORD_SYSTEM: '{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}',
+        	SETUP_COORD_SYSTEM: {{ settings.XGDS_MAP_SERVER_MAP_SETUP_COORD_SYSTEM }},
+            DEFAULT_COORD_SYSTEM_CENTER: {{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM_CENTER }},
+    		DEFAULT_ZOOM: {{ settings.XGDS_MAP_SERVER_DEFAULT_ZOOM }},
+    		DEFAULT_ROTATION: {{ settings.XGDS_MAP_SERVER_DEFAULT_ROTATION }},
+    		SHOW_COMPASS: {{ settings.XGDS_MAP_SERVER_SHOW_COMPASS}},
+    		offline: {{ settings.XGDS_PLANNER_OFFLINE|yesno:'true,false'}},
+       	    selectedLayerUrl: '{{ settings.XGDS_MAP_SERVER_SELECTED_LAYER_URL }}',
+            layerFeedUrl: '{{ settings.XGDS_PLANNER_LAYER_FEED_URL }}',
+            dataUrl: '{{ settings.DATA_URL }}',
+            simulator: '{{ simulator }}',
+            siteFrame: {% siteframe settings.XGDS_CURRENT_SITEFRAME_ID %},
+            XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: '{{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }}',
+            searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
+            settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:'true,false' }},
+            track_urls: [],
+            group_flight: {{ group_flight.toJson|safe }}
+     };
+
+        {% if extras %}
+            var extras = {{ extras|safe }};
+            for (var key in extras) {
+            	appOptions[key] = extras[key];
+            }
+        {% endif %}
+    </script>
+{% endblock preMapJS %}
+
+
+{% block jsInit %}
+
+	{% block jsInitPreApp %}
+        moment.tz.setDefault(getTimeZone());
+
+        // flot currently depends on timezoneJS.
+        timezoneJS.timezone.zoneFileBasePath = "{% static 'tz' %}";
+		timezoneJS.timezone.defaultZoneFile = [];
+		timezoneJS.timezone.init({async: false});
+
+        appOptions.timeseries_config = [];
+        {% for dict in timeseries_config %}
+            appOptions.timeseries_config.push({{ dict|safe }});
+        {% endfor %}
+
+        {% if flight.track %}
+            appOptions.track_urls = ["{% url 'geocamTrack_mapJsonTrack' flight.track.uuid %}"];
+            appOptions.track_metadata = [{{flight.track.get_tree_json|jsonify }}];
+        {% endif %}
+	{% endblock jsInitPreApp %}
+
+	$(function(){
+		app.start(appOptions);
+    	app.vent.on("mapSearch:drewFeatures", function(e) {
+        	app.vent.trigger('mapSearch:fit');
+        });
+
+        {% block preLayout %}
+		{% endblock preLayout %}
+
+    	xgds_gridstack.initializeGridstack();
+
+
+        // right here the map is the right height and when we exit this method it is not.
+
+        {% block otherJSInit %}
+        group_flight_start = {% if group_flight.start_time %}new moment('{{ group_flight.start_time.isoformat }}'){% else %}null{% endif %};
+        group_flight_end = {% if group_flight.end_time %}new moment('{{ group_flight.end_time.isoformat }}'){% else %}null{% endif %};
+        playback.initialize({getStartTime: function(){return group_flight_start;},
+                             getEndTime: function(){return group_flight_end;},
+                             displayTZ: getTimeZone(),
+                             slider: true
+                            });
+		{% endblock otherJSInit %}
+
+	});
+
+    {% endblock jsInit%}
+
+{% block footer %}
+{% endblock footer %}
