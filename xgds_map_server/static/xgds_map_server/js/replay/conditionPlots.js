@@ -14,26 +14,26 @@
 // specific language governing permissions and limitations under the License.
 //__END_LICENSE__
 
-app.models = app.models || {};
 
-(function(models) {
+//This file supports overriding how the plan is represented in the plan plot
 
-	models.GroupFlight = Backbone.Model.extend({
-		initialize: function(plain_object) {
-			Object.assign(this, plain_object);
-			this.updateTimes();
-		},
-		updateTimes: function() {
-			this.start_moment = moment(this.start_time);
-			this.end_moment = undefined;
-			if (_.isUndefined(this.end_time)){
-				this.end_moment = moment();
-			} else {
-				this.end_moment = moment(this.end_time);
-			}
-			this.duration = this.end_moment.diff(this.start_moment, 'seconds')
-		}
-	});
+plots = {};
+
+$.extend(plots, {
+	defaultConditionColor: '#FFA500',
+	getConditionMarkings: function(startEndTimes) {
+    	var conditionMarkings = [];
+
+    	for (var i=0; i<startEndTimes.length; i++){
+    		conditionMarkings.push({xaxis: {from:startEndTimes[i].start.toDate().getTime(),
+    							 		    to: startEndTimes[i].end.toDate().getTime()},
+    							 		    color:plots.defaultConditionColor});
+    	}
+    	return conditionMarkings;
+    },
 
 
-})(app.models);
+
+});
+
+

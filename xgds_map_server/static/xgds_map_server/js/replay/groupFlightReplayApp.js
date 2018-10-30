@@ -21,7 +21,8 @@
 		regions: {
 			mapRegion: '#map',
 			layersRegion: '#layers',
-			tabsRegion: '#tabs'
+			tabsRegion: '#tabs',
+			plotRegion: '#plot-container'
 		},
 		renderTracks: function() {
 
@@ -37,7 +38,7 @@
 			this.showChildView('mapRegion', app.map);
 			this.showChildView('layersRegion', new app.views.FancyTreeView());
 			this.showChildView('tabsRegion', new app.views.TabNavView());
-
+			this.showChildView('plotRegion', new app.views.ReplayPlotView());
 		}
 	});
 	
@@ -52,8 +53,16 @@
         },
 		parseJSON: function() {
             app.groupFlight = new app.models.GroupFlight(app.options.group_flight);
+            app.conditions = app.options.conditions;
     		this.vent.trigger('onGroupFlightLoaded');
         },
+        getConditionStartEndTimes: function() {
+			var result = [];
+			_.each(app.conditions, function(condition, i, conditions) {
+			    result.push({start:moment(condition.start_time), end:moment(condition.end_time)});
+			});
+			return result;
+		},
 	});
 	
 	xGDS.Factory = {
