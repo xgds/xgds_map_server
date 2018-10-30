@@ -384,12 +384,9 @@ app.views.ReplayPlotView = Marionette.View.extend({
 	drawConditionLabels: function() {
 		// draw labels
 		var context = this;
-		var index = 0;
-		var saveUs = [];
-		var deathRow = []
 		var plotDiv = this.$el.find("#plotDiv");
 		_.each(app.conditions, function(condition, i, conditions) {
-				var startEndTime = this.startEndTimes[index];
+				var startEndTime = this.startEndTimes[i];
 				if (startEndTime !== undefined) {
 					var o = context.plot.pointOffset({ x: startEndTime.start.toDate().getTime(), y: 0 });
 					if (condition.id in context.plotLabels){
@@ -400,8 +397,6 @@ app.views.ReplayPlotView = Marionette.View.extend({
 						el.appendTo(plotDiv);
 						context.plotLabels[condition.id] = el;
 					}
-					saveUs.push(condition.id);
-					index++;
 			}
 		}, this);
 	},
@@ -634,9 +629,8 @@ app.views.ReplayPlotView = Marionette.View.extend({
 					context.selectData(item.dataIndex);
 				}
 			});
-			this.drawConditionLabels();
 			this.drawLegendLabels();
-			$('#plot-container').resize(function(event) {context.handleResize();});
+			$('#plot-container').resize(function(event) {context.handleResize(event);});
 		} else {
 			var plotOptions = this.plot.getOptions();
 			plotOptions.xaxis.timeformat = this.plotOptions.xaxis.timeformat;

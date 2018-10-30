@@ -16,28 +16,20 @@
 
 app.views = app.views || {};
 
-app.views.FlightInfoTabView = Marionette.View.extend({
-	template: '#template-group-flight-info',
-});
+app.views.ReplayLinksView = Marionette.View.extend({
+    template: '#template-links',
+    templateContext: function() {
+    	var flight_ids = [];
+    	_.each(app.groupFlight.flights, function(flight, i, flights){
+    		flight_ids.append(flight.id);
+		});
 
-
-app.views.TabNavView = xGDS.TabNavView.extend({
-    viewMap: {
-    	'info': app.views.FlightInfoTabView,
-        'search': app.views.SearchView,
-        //'plot': app.views.PlotDataView,
-        'links': app.views.ReplayLinksView
-    },
-
-    initialize: function() {
-    	xGDS.TabNavView.prototype.initialize.call(this);
-        var context = this;
-        this.listenTo(app.vent, 'onGroupFlightLoaded', function() {
-        	 this.setTab('info');
-        }, this);
-    },
-    getModel: function() {
-        return app.groupFlight;
+    	var data = {
+			group_flight_links: [], //app.group_flight_links,
+			group_flight_named_urls: app.group_flight_named_urls,
+			group_flight_id: app.groupFlight.id,
+			flight_ids: flight_ids
+    	}
+    	return data;
     }
-
 });

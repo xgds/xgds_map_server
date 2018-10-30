@@ -102,6 +102,7 @@
     <script type="text/javascript" src="{% static 'xgds_map_server/js/replay/mapReplayModels.js' %}"></script>
     <script type="text/javascript" src="{% static 'xgds_map_server/js/replay/replayPlots.js' %}"></script>
     <script type="text/javascript" src="{% static 'xgds_map_server/js/replay/conditionPlots.js' %}"></script>
+    <script type="text/javascript" src="{% static 'xgds_map_server/js/replay/replayLinksViews.js' %}"></script>
     <script type="text/javascript" src="{% static 'xgds_map_server/js/replay/mapReplayViews.js' %}"></script>
 
 
@@ -170,7 +171,12 @@
 
     var conditions = [];
     {% for c in group_flight.conditions %}
-    conditions.push({{ c.toJson|safe }});
+        conditions.push({{ c.toJson|safe }});
+    {% endfor %}
+
+    var named_urls = {};
+    {% for u in group_flight.links.all %}
+        named_urls['{{ u.name }}'] ='{{ u.url }}';
     {% endfor %}
 
     var appOptions = {
@@ -192,6 +198,7 @@
             settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:'true,false' }},
             track_urls: [],
             group_flight: {{ group_flight.toJson|safe }},
+            group_flight_named_urls: named_urls,
             conditions: conditions
      };
 
