@@ -545,7 +545,7 @@ class GroundOverlayTime(AbstractMap):
             cleanTime = self.start
         else:
             # check the bounds
-            valid = self.start <= theTime <= self.end  #heretamar
+            valid = self.start <= theTime <= self.end
             if not valid:
                 cleanTime = None
             else:

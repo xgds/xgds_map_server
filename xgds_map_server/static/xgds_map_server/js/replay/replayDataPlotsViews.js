@@ -16,28 +16,12 @@
 
 app.views = app.views || {};
 
-app.views.FlightInfoTabView = Marionette.View.extend({
-	template: '#template-group-flight-info',
-});
-
-
-app.views.TabNavView = xGDS.TabNavView.extend({
-    viewMap: {
-    	'info': app.views.FlightInfoTabView,
-        'search': app.views.SearchView,
-        'plot': app.views.ReplayDataPlotsView,
-        'links': app.views.ReplayLinksView
-    },
-
-    initialize: function() {
-    	xGDS.TabNavView.prototype.initialize.call(this);
-        var context = this;
-        this.listenTo(app.vent, 'onGroupFlightLoaded', function() {
-        	 this.setTab('info');
-        }, this);
-    },
-    getModel: function() {
-        return app.groupFlight;
-    }
+app.views.ReplayDataPlotsView = Marionette.View.extend({
+    data_plot_html:
+    '        <div id="view$KEYDiv" class="mt-negative-1rem">\n' +
+    '            <div id="$KEY-plot-container" class="plot-container" >\n' +
+    '            </div>\n' +
+    '        </div>',
+    template: '#template-data-plots',
 
 });

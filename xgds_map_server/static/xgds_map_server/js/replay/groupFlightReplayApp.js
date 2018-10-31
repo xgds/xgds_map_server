@@ -17,12 +17,6 @@
 
 (function( xGDS, $, _, Backbone, Marionette ) {
 
-    xGDS.flight_plot_html =
-        '        <div id="view$KEYDiv" class="mt-negative-1rem">\n' +
-        '            <div id="$KEY-plot-container" class="plot-container" >\n' +
-        '            </div>\n' +
-        '        </div>';
-
 	xGDS.ReplayRootView = xGDS.RootView.extend({
 		regions: {
 			mapRegion: '#map',
