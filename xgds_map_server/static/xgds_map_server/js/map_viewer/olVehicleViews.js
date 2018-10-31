@@ -53,6 +53,21 @@ $(function() {
             return this.olFeature;
         },
         getStyles: function() {
+    	    if (this.featureJson.vehicle in olStyles.styles){
+    	        return [olStyles.styles[this.featureJson.vehicle]];
+            } else if ('icon_url' in this.featureJson) {
+    	        // build the new style
+                var newStyleDict = {'src':this.featureJson.icon_url,
+                                'scale':this.featureJson.icon_scale};
+                if (!_.isEmpty(this.featureJson.icon_color)){
+                    newStyleDict['color'] = this.featureJson.icon_color;
+                }
+                var newStyle = new ol.style.Style({
+                    image: new ol.style.Icon(newStyleDict)
+                });
+                olStyles.styles[this.featureJson.vehicle] = newStyle;
+                return [newStyle];
+            }
         	return [olStyles.styles['vehicle']];
         },
         updateVehicle: function(params) {
