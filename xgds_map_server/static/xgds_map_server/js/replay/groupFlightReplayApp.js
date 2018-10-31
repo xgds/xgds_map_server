@@ -24,15 +24,8 @@
 			tabsRegion: '#tabs',
 			plotRegion: '#plot-container'
 		},
-		renderTracks: function() {
 
-			_.each(appOptions.track_metadata, function(track_metadata){
-				var trackView = new app.views.TrackView(track_metadata);
-			});
-
-		},
 		onRender: function() {
-			this.listenTo(app.vent, 'layers:loaded', this.renderTracks);
 
 			app.map = new app.views.OLMapView();
 			this.showChildView('mapRegion', app.map);
@@ -43,6 +36,7 @@
 	});
 	
 	xGDS.ReplayApplication = xGDS.Application.extend( {
+        trackViews: [],
 		mapBottomPadding: 50,
 		getRootView: function() {
 			return new xGDS.ReplayRootView();
@@ -51,6 +45,10 @@
         	xGDS.Application.prototype.onStart.call(this);
         	this.parseJSON();
         },
+        initialize: function(options){
+            xGDS.Application.prototype.initialize(options);
+			this.listenTo(this.vent, 'layers:loaded', this.renderTracks);
+		},
 		parseJSON: function() {
             app.groupFlight = new app.models.GroupFlight(app.options.group_flight);
             app.conditions = app.options.conditions;
@@ -62,6 +60,14 @@
 			    result.push({start:moment(condition.start_time), end:moment(condition.end_time)});
 			});
 			return result;
+		},
+        renderTracks: function() {
+            var context = this;
+			_.each(appOptions.track_metadata, function(track_metadata){
+				var trackView = new app.views.TrackView(track_metadata);
+				context.trackViews.push(trackView);
+			});
+
 		},
 	});
 	

@@ -21,7 +21,7 @@ app.views.ReplayLinksView = Marionette.View.extend({
     templateContext: function() {
     	var flight_ids = [];
     	_.each(app.groupFlight.flights, function(flight, i, flights){
-    		flight_ids.append(flight.id);
+    		flight_ids.push(flight.id);
 		});
 
     	var data = {

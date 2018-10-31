@@ -28,6 +28,7 @@ $(function() {
             this.constructContent();
             this.render();
             this.listenTo(app.vent, 'vehicle:change', function(params) {this.updateVehicle(params)});
+            this.listenTo(app.vent, this.options.featureJson.vehicle + ':change', function(params) {this.updateVehicle(params)});
         },
         constructContent: function() {
             this.feature = this.constructFeature();
