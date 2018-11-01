@@ -42,10 +42,14 @@ $(function() {
                 });
                 this.vectorLayer.setZIndex(1000);
             }
+            // set rotation
+            if (!_.isNull(this.featureJson.startPoint.rotation)) {
+                this.setRotation(this.featureJson.startPoint.rotation);
+            }
         },
     	constructFeature: function() {
             if (this.olFeature == undefined){
-            	this.geometry = new ol.geom.Point(this.featureJson.startPoint);
+            	this.geometry = new ol.geom.Point(this.featureJson.startPoint.location);
 	        	this.olFeature = new ol.Feature({
 	        	    name: this.featureJson.name,
 	        	    geometry: this.geometry
@@ -88,7 +92,7 @@ $(function() {
         },
         setRotation: function(newRotation) {
         	// in radians
-        	var image = this.vectorLayer.getStyle()[0].getImage()
+        	var image = this.vectorLayer.getStyle()[0].getImage();
         	image.setRotation(newRotation);
         	this.vectorLayer.changed();
         },
