@@ -968,15 +968,19 @@ $(function() {
         	this.mapElement.setOpacity(this.opacity);
         },
         onRender: function() {
-            if (_.isUndefined(this.node)){
-                this.show();
-            } else if (this.node.selected){
-                this.show();    
-            } else if (this.node.latestPlan){
+    	    var key = null;
+            if (_.isUndefined(this.node)) {
                 this.show();
             } else {
-                this.hide();
+                key = this.node.key;
+                if (this.node.selected || this.node.latestPlan) {
+                    this.show();
+                } else {
+                    this.hide();
+                }
             }
+            app.vent.trigger('olNode:rendered', key);
+
         },
         show: function() {
             if (!this.visible){
@@ -1803,7 +1807,12 @@ $(function() {
                 this.clearDataAndFeatures();
             });
             this.listenTo(app.vent, 'mapSearch:fit', function(e){
-            	this.fitExtent();
+                if (_.isUndefined(e)) {
+                    this.fitExtent();
+                } else {
+                    // fit to a thing
+                    this.fitLayer(e);
+                }
             });
             this.listenTo(app.vent, 'mapSearch:highlight', function(data) {
                 this.selectFeatures(data);
@@ -1823,10 +1832,24 @@ $(function() {
         	return null;
             }
         },
+        fitLayer: function(layer) {
+    	    var extent = ol.extent.createEmpty();
+            var layers = layer.getLayers();
+            if (!_.isUndefined(layers)) {
+                layers.forEach(function (l) {
+                    ol.extent.extend(extent, l.getSource().getExtent());
+                });
+            } else {
+    	        extent = layer.getSource().getExtent();
+            }
+    	    if (extent != null){
+        	    app.mapView.fit(extent, app.map.map.getSize(), options={maxZoom:19});
+            }
+        },
         fitExtent: function() {
             var extent = this.getExtent();
             if (extent != null){
-        	app.mapView.fit(this.getExtent(), app.map.map.getSize(), options={maxZoom:19});
+        	    app.mapView.fit(this.getExtent(), app.map.map.getSize(), options={maxZoom:19});
             }
         },
         clearDataAndFeatures: function() {
@@ -2153,7 +2176,7 @@ $(function() {
 		},
         onRender: function(selected) {
             if (_.isUndefined(selected)){
-        	selected = true;
+        	    selected = true;
             }
             if (_.isUndefined(this.node)){
                 this.show();
