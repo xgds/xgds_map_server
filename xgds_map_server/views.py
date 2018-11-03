@@ -1802,11 +1802,6 @@ def getGroupFlightPlaybackPage(request, group_flight_name, templatePath='xgds_ma
 
     templates = get_handlebars_templates(list(settings.XGDS_MAP_SERVER_REPLAY_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_MAP_REPLAY')
 
-    #load time series data
-    timeseries_config = []
-    if 'xgds_timeseries' in settings.INSTALLED_APPS:
-        timeseries_config = get_time_series_classes_metadata(flight_ids=[f.id for f in group_flight.flights])
-
     searchForms = getSearchForms(filter={'flight__group__id': group_flight.id})
 
     return render(request,
@@ -1817,7 +1812,6 @@ def getGroupFlightPlaybackPage(request, group_flight_name, templatePath='xgds_ma
                    'modelName': None,
                    'searchForms': searchForms,
                    'group_flight': group_flight,
-                   'timeseries_config': timeseries_config,
                    'forceUserSession': forceUserSession,
                    'app': 'xgds_map_server/js/replay/groupFlightReplayApp.js'},
                   )

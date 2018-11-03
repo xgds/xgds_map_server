@@ -198,6 +198,8 @@
             searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
             settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:'true,false' }},
             track_urls: [],
+            flight_ids: [],
+            timeseries_config: [],
             group_flight: {{ group_flight.toJson|safe }},
             group_flight_named_urls: named_urls,
             conditions: conditions
@@ -223,20 +225,34 @@
 		timezoneJS.timezone.defaultZoneFile = [];
 		timezoneJS.timezone.init({async: false});
 
-        appOptions.timeseries_config = [];
-        {% for dict in timeseries_config %}
-            appOptions.timeseries_config.push({{ dict|safe }});
-        {% endfor %}
-
         appOptions.track_urls = [];
         appOptions.track_metadata = [];
         {% for flight in group_flight.flights %}
             {% if flight.track %}
-                appOptions.track_urls.push("{% url 'geocamTrack_mapJsonTrack' flight.track.uuid %}");
+                appOptions.track_urls.push("{% url 'geocamTrack_mapJsonTrack_downsample' flight.track.uuid %}");
                 appOptions.track_metadata.push({{flight.track.get_tree_json|jsonify }});
             {% endif %}
+            appOptions.flight_ids.push({{ flight.id }});
         {% endfor %}
 	{% endblock jsInitPreApp %}
+
+    // get the timeseries configs to know what timeseries data to load on the data plots tab
+    _.each(appOptions.flight_ids, function(flight_id) {
+            $.ajax({
+                url : '/timeseries/classes/metadata/json',
+                type: "POST",
+                data: {flight_ids:[flight_id]},
+                dataType: "json",
+                contentType: "application/json",
+                success: function(data) {
+                    _.each(data, function(d) {
+
+                        d.flight_ids = [flight_id];
+                        appOptions.timeseries_config.push(d);
+                    });
+                }
+            });
+    });
 
 	$(function(){
 		app.start(appOptions);

@@ -23,5 +23,19 @@ app.views.ReplayDataPlotsView = Marionette.View.extend({
     '            </div>\n' +
     '        </div>',
     template: '#template-data-plots',
+    onRender: function(){
+
+        _.each(appOptions.timeseries_config, function(plotOptions) {
+			    var clean_model_name = plotOptions.model_name.replace(/\./g, "_");
+			    var the_html = this.data_plot_html.replace( new RegExp("\\$KEY","gm"), clean_model_name);
+			    var parent = this.$el.find("div#data-plots-div");
+			    parent.append(the_html);
+			    var regionName = clean_model_name + 'Region';
+			    this.addRegion(regionName, '#' + clean_model_name + '-plot-container');
+				var plotView = new app.views.TimeseriesPlotView(plotOptions);
+				this.showChildView(regionName, plotView);
+			}, this);
+    }
 
 });
+
