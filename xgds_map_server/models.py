@@ -332,6 +332,56 @@ class AbstractWMS(AbstractMap):
     class Meta:
         abstract = True
 
+class AbstractGeotiff(AbstractMap):
+    sourceFile = models.FileField(upload_to=settings.XGDS_MAP_SERVER_GEOTIFF_SUBDIR, max_length=256, null=True, blank=True)
+    projectionName = models.CharField(null=True, max_length=32, default="EPSG:3857")
+    wmsUrl = models.CharField(null=True, max_length=512, blank=True)
+    layers = models.CharField(null=True, max_length=64, db_index=True, blank=True)
+    format = models.CharField(max_length=16, default="image/png")  # the format on geoserver
+    tileWidth = models.IntegerField(default=256)
+    tileHeight = models.IntegerField(default=256)
+    minLevel = models.IntegerField(default=0)
+    maxLevel = models.IntegerField(null=True, blank=True)
+    wmsVersion = models.CharField(default='1.1.1', max_length=16)  # wms version, 1.1.1, or could be 1.3.0
+    srs = models.CharField(null=True, blank=True, max_length=32)  # srs or crs if we are wms version 1.3.0 or higher
+
+    def getUrl(self):
+        return self.wmsUrl
+
+    def get_tree_json(self):
+        """ Get the json block that the fancy tree needs to render this node """
+        result = super(AbstractGeotiff, self).get_tree_json()
+        result["data"]["tileURL"] = self.getUrl()
+        result["data"]["format"] = self.format
+        result["data"]["layers"] = self.layers
+        result["data"]["tileWidth"] = self.tileWidth
+        result["data"]["tileHeight"] = self.tileHeight
+        result["data"]["wmsVersion"] = self.wmsVersion
+        result["data"]["srs"] = self.srs
+        result["data"]["hasTime"] = False
+
+        if self.minLevel > 0:
+            result["data"]["minLevel"] = self.minLevel
+        if self.maxLevel:
+            result["data"]["maxLevel"] = self.maxLevel
+        if self.projectionName:
+            result["data"]["projectionName"] = self.projectionName
+
+        if self.minLat:
+            result['data']['miny'] = self.minLat
+            result['data']['minx'] = self.minLon
+            result['data']['maxy'] = self.maxLat
+            result['data']['maxx'] = self.maxLon
+
+        return result
+
+    class Meta:
+        abstract = True
+
+class Geotiff(AbstractGeotiff):
+    class Meta:
+        abstract = False
+
 
 class WMSTile(AbstractWMS):
 
@@ -735,7 +785,7 @@ class GeoJSON(AbstractMap):
 
 
 """ IMPORTANT These have to be defined after the models they refer to are defined."""
-MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile, MapDataTile, MapLink, GroundOverlayTime, WMSTile, WMTSTile, GeoJSON])
+MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile, MapDataTile, MapLink, GroundOverlayTime, WMSTile, WMTSTile, GeoJSON, Geotiff])
 
 # this manager does not include groups
-MAP_MANAGER = ModelCollectionManager(AbstractMap, [MapLayer, KmlMap, MapTile, MapDataTile, MapLink, GroundOverlayTime, WMSTile, WMTSTile, GeoJSON])
+MAP_MANAGER = ModelCollectionManager(AbstractMap, [MapLayer, KmlMap, MapTile, MapDataTile, MapLink, GroundOverlayTime, WMSTile, WMTSTile, GeoJSON, Geotiff])
