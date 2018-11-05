@@ -30,7 +30,6 @@ app.views.ReplayLinksView = Marionette.View.extend({
 			flight_ids: flight_ids
     	}
 
-    	console.log(data);
     	return data;
     }
 });

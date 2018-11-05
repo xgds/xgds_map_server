@@ -239,15 +239,14 @@
 
     // get the timeseries configs to know what timeseries data to load on the data plots tab
     _.each(appOptions.flight_ids, function(flight_id) {
+            var jsonData = {'flight_ids':[flight_id]};
             $.ajax({
                 url : '/timeseries/classes/metadata/json',
                 type: "POST",
-                data: {flight_ids:[flight_id]},
+                data: jsonData,
                 dataType: "json",
-                contentType: "application/json",
                 success: function(data) {
                     _.each(data, function(d) {
-
                         d.flight_ids = [flight_id];
                         appOptions.timeseries_config.push(d);
                     });
