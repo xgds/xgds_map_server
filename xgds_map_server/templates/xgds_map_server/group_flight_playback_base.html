@@ -175,9 +175,9 @@
         conditions.push({{ c.toJson|safe }});
     {% endfor %}
 
-    var named_urls = {};
+    var group_flight_links = {};
     {% for u in group_flight.links.all %}
-        named_urls['{{ u.name }}'] ='{{ u.url }}';
+        group_flight_links['{{ u.name }}'] ='{{ u.url }}';
     {% endfor %}
 
     var appOptions = {
@@ -201,7 +201,7 @@
             flight_ids: [],
             timeseries_config: [],
             group_flight: {{ group_flight.toJson|safe }},
-            group_flight_named_urls: named_urls,
+            group_flight_links: group_flight_links,
             conditions: conditions
      };
 
@@ -234,6 +234,7 @@
             {% endif %}
             appOptions.flight_ids.push({{ flight.id }});
         {% endfor %}
+
 	{% endblock jsInitPreApp %}
 
     // get the timeseries configs to know what timeseries data to load on the data plots tab

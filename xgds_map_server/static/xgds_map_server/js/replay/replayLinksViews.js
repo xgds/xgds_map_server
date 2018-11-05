@@ -25,11 +25,12 @@ app.views.ReplayLinksView = Marionette.View.extend({
 		});
 
     	var data = {
-			group_flight_links: [], //app.group_flight_links,
-			group_flight_named_urls: app.group_flight_named_urls,
+			group_flight_links: app.options.group_flight_links,
 			group_flight_id: app.groupFlight.id,
 			flight_ids: flight_ids
     	}
+
+    	console.log(data);
     	return data;
     }
 });
