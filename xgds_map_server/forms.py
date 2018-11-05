@@ -25,9 +25,9 @@ from django.db.models import Q
 
 from resumable.fields import ResumableFileField
 
-from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile,  MapDataTile, WMSTile, GeoJSON, Place
+from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile,  MapDataTile, WMSTile, GeoJSON, Place, Geotiff
 from geocamUtil.models import SiteFrame
-
+from xgds_map_server.uploadGeotiff import upload_geotiff
 # pylint: disable=C1001
 
 
@@ -97,10 +97,53 @@ class MapLayerForm(AbstractMapForm):
 
 
 class WMSTileForm(AbstractMapForm):
+    def save(self, commit=True):
+        instance = super(WMSTileForm, self).save(commit=False)
+        if not instance.creator:
+            instance.creator = self.cleaned_data['username']
+            instance.creation_time = datetime.datetime.now(pytz.utc)
+        else:
+            instance.modifier = self.cleaned_data['username']
+            instance.modification_time = self.cleaned_data['username']
+        instance.parent = self.getParentGroup()
+        if commit:
+            instance.save()
+
     class Meta(AbstractMapForm.Meta):
         model = WMSTile
         exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'minLat', 'minLon', 'maxLat',
                    'maxLon']
+
+class GeotiffForm(AbstractMapForm):
+    def save(self, commit=True):
+        instance = super(GeotiffForm, self).save(commit=False)
+        if not instance.creator:
+            instance.creator = self.cleaned_data['username']
+            instance.creation_time = datetime.datetime.now(pytz.utc)
+        else:
+            instance.modifier = self.cleaned_data['username']
+            instance.modification_time = self.cleaned_data['username']
+        instance.parent = self.getParentGroup()
+
+        store_name = instance.name
+
+        try:
+            upload_geotiff(instance.sourceFile, settings.GEOSERVER_DEFAULT_WORKSPACE, store_name)
+        except AssertionError:
+            # TODO: properly handle a 500 error by returing a form error
+            return
+
+        instance.wmsUrl = "%sgeoserver/%s/wms" % (settings.SERVER_ROOT_URL, settings.GEOSERVER_DEFAULT_WORKSPACE)
+        instance.layers = "%s:%s" % (settings.GEOSERVER_DEFAULT_WORKSPACE, store_name)
+
+        if commit:
+            instance.save()
+
+    class Meta(AbstractMapForm.Meta):
+        model = Geotiff
+        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'minLat', 'minLon', 'maxLat', 'maxLon', 
+            'tileWidth', 'tileHeight', 'projectionName', 'wmsUrl', 'layers', 'wmsVersion', 'minLevel', 'maxLevel', 'srs', 'format']
+
 
 class GeoJSONForm(AbstractMapForm):
     class Meta(AbstractMapForm.Meta):

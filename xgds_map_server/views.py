@@ -62,9 +62,9 @@ from xgds_core.models import HasDataFrame
 from xgds_core.views import get_handlebars_templates, OrderListJson
 from xgds_core.util import addPort
 from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapLayerFromSelectedForm, MapTileForm, \
-    MapDataTileForm, EditMapTileForm, EditMapDataTileForm, WMSTileForm, GeoJSONForm
+    MapDataTileForm, EditMapTileForm, EditMapDataTileForm, WMSTileForm, GeoJSONForm, GeotiffForm
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapDataTile, MapLink, MAP_NODE_MANAGER, \
-    MAP_MANAGER, GroundOverlayTime, WMSTile, GeoJSON
+    MAP_MANAGER, GroundOverlayTime, WMSTile, GeoJSON, Geotiff
 from xgds_map_server.kmlLayerExporter import exportMapLayer
 from geocamUtil.KmlUtil import wrapKmlForDownload
 from fastkml import kml
@@ -363,6 +363,36 @@ def getAddKmlPage(request):
                        },
                       )
 
+def getAddGeotiffPage(request):
+    """
+    HTML view to create new map
+    """
+    if request.method == 'POST':
+        map_form = GeotiffForm(request.POST, request.FILES)
+
+        print(map_form)
+
+        if map_form.is_valid():
+            map_form.save()
+        else:
+            return render(request,
+                          "AddGeotiff.html",
+                          {'mapForm': map_form,
+                           'error': True,
+                           'help_content_path': 'xgds_map_server/help/addKML.rst',
+                           'title': 'Add Geotiff',
+                           'errorText': 'Invalid form entries'})
+
+        return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
+    else:
+        map_form = GeotiffForm()
+        return render(request,
+                      "AddGeotiff.html",
+                      {'mapForm': map_form,
+                       'help_content_path': 'xgds_map_server/help/addKML.rst',
+                       'title': 'Add Geotiff',
+                       },
+                      )
 
 def getAddGeoJSONPage(request):
     """

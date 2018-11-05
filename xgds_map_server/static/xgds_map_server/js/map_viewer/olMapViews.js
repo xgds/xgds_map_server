@@ -449,6 +449,8 @@ $(function() {
                         app.nodeMap[node.key] = this.createOverlayTimeView(node);
                     } else if (node.data.type == "GeoJSON") {
                         app.nodeMap[node.key] = this.createGeoJSONView(node);
+                    } else if (node.data.type == "Geotiff") {
+                        app.nodeMap[node.key] = this.createWMSTileView(node);
                     } else {
                     	this.createDynamicView(node);
                     }
