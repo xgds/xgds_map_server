@@ -18,7 +18,7 @@ app.views = app.views || {};
 
 app.views.ReplayDataPlotsView = Marionette.View.extend({
     data_plot_html:
-    '        <div id="view$KEYDiv" class="mt-negative-1rem">\n' +
+    '        <div id="view$KEYDiv" class="mb-3">\n' +
     '            <div id="$KEY-plot-container" class="plot-container" >\n' +
     '            </div>\n' +
     '        </div>',
