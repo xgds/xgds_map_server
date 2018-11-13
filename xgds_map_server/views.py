@@ -1832,7 +1832,7 @@ def getGroupFlightPlaybackPage(request, group_flight_name, templatePath='xgds_ma
 
     templates = get_handlebars_templates(list(settings.XGDS_MAP_SERVER_REPLAY_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_MAP_REPLAY')
 
-    searchForms = getSearchForms(filter={'flight__group__id': group_flight.id})
+    searchForms = getSearchForms(filter={'flight__group': group_flight})
 
     return render(request,
                   templatePath,
@@ -1864,7 +1864,8 @@ def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSear
                    #'saveSearchForm': MapSearchForm(),
                    'app': 'xgds_map_server/js/search/mapViewerSearchApp.js'},
                   )
-    
+
+
 def getViewSingleModelPage(request, modelName, modelPK):
     fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     templates = get_handlebars_templates(fullTemplateList, 'XGDS_MAP_SERVER_HANDLEBARS_DIRS')
@@ -1876,6 +1877,7 @@ def getViewSingleModelPage(request, modelName, modelPK):
                    'templates': templates,
                    'app': 'xgds_map_server/js/search/mapViewerSingleModelApp.js'},
                   )
+
 
 def getViewMultiModelPage(request, object_names, object_pks=None, filters=None, latest=True):
     fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
