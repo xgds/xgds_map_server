@@ -22,6 +22,16 @@
     <h4>{{ group_flight.name }}</h4>
 {% endblock buttonrowLeft %}
 
+{% if 'xgds_notes2' in settings.INSTALLED_APPS %}
+{% block buttonrowRight %}
+<div id="full_notesDiv">
+	<div id="notes_content" class="notes_content mb-2">
+		{% include 'xgds_notes2/notes_input_include_full.html' %}
+ 	</div>
+ </div>
+{% endblock buttonrowRight %}
+{% endif %}
+
 {% block pretemplate %}
     <script type="x-template/underscore" id="plot_contents">
 		<div id="plotDiv" class="plot-div"></div>
@@ -36,7 +46,6 @@
     <div id="masterSlider" class="masterSlider" >
     </div>
     <div id="plot-container" class="plot-container">
-        HELLO I AM THE PLOT CONTAINER
 	</div>
 {% endblock preDashboard %}
 
@@ -89,6 +98,8 @@
 
 {% if 'xgds_notes2' in settings.INSTALLED_APPS %}
 	{% include "xgds_notes2/NoteJS.html" %}
+    <script type="text/javascript" src="{% static 'xgds_notes2/js/note_create_form.js' %}"></script>
+
 {% else %}
     {% include "xgds_core/timeJS.html" %}
     <script type="text/javascript" src="{{ EXTERNAL_URL }}datatables.net-plugins/sorting/datetime-moment.js"></script>
@@ -124,40 +135,6 @@
 
 {% endblock scripts %}
 
-
-{% block nothing %}
-
-    <!-- stuff from planner should probably go in a separate js include file -->
-     <script type="text/javascript" src="{{ EXTERNAL_URL }}jquery-ui-timepicker-addon/dist/jquery-ui-timepicker-addon.min.js"></script>
-     <script type="text/javascript" src="{{ EXTERNAL_URL }}moment-duration-format/lib/moment-duration-format.js"></script>
-
-     <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-migrate/dist/jquery-migrate.min.js'></script>
-     <script type="text/javascript" src='{{ EXTERNAL_URL }}pure-uuid/uuid.js'></script>
- 	 <script type="text/javascript" src='{{ EXTERNAL_URL }}backbone-relational/backbone-relational.js'></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}backbone-forms/distribution/backbone-forms.min.js'></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}string-format/lib/string-format.js'></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}usng.js/usng.js'></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-file-download/src/Scripts/jquery.fileDownload.js'></script>
-    <script type="text/javascript" src="{{ EXTERNAL_URL }}gridstack/dist/gridstack.min.js" ></script>
-	<script type="text/javascript" src="{% static 'xgds_core/js/gridstackUtils.js' %}"></script>
-
-    <script type="text/javascript" src="{% static 'xgds_map_server/js/util/handlebars-helpers.js' %}"></script>
-    <script type="text/javascript" src="{% static 'xgds_map_server/js/util/geo.js' %}"></script>
-    <script type="text/javascript" src="{% static 'xgds_map_server/js/util/forms.js' %}"></script>
-
-
-    <!--
-    <script type="text/javascript" src="{% static 'xgds_planner2/js/simulatorDriver.js' %}"></script>
-    <script type="text/javascript" src="{% static 'xgds_planner2/js/vehicleDriver.js' %}"></script>
-    -->
-
-  	{% javascript 'custom_map' %}
-
-   	{% include "xgds_map_server/SearchForms.html" with searchForms=searchForms %}
-
-   	{% block extraScripts %}
-   	{% endblock extraScripts %}
-{% endblock nothing %}
 
 {% block preMapJS %}
     <script type="text/javascript">
@@ -282,6 +259,138 @@
                              displayTZ: getTimeZone(),
                              slider: true
                             });
+
+            {% block initializeNotes %}
+            var container = $("#full_notes_input");
+            xgds_notes.setupNotesUI(container);
+            xgds_notes.initializeNotesForm(false);
+
+            // add a playback listener to set the time
+            timePlaybackListener =  {
+		        lastUpdate: undefined,
+		        invalid: false,
+		        initialize: function() {
+                    this.event_time_input = $("#id_event_time");
+		        },
+		        doSetTime: function(currentTime){
+			        if (currentTime === undefined){
+				        return;
+			        }
+			        this.lastUpdate = moment(currentTime);
+                    this.event_time_input.val(this.lastUpdate.format('MM/DD/YY HH:mm:ss zz'));
+		        },
+		        start: function(currentTime){
+			        this.doSetTime(currentTime);
+		        },
+		        update: function(currentTime){
+			        if (this.lastUpdate === undefined){
+				        this.doSetTime(currentTime);
+				        return;
+			        }
+			        var delta = currentTime.diff(this.lastUpdate);
+			        if (Math.abs(delta) >= 100) {
+				        this.doSetTime(currentTime);
+			        }
+		        },
+		        pause: function() {
+		        }
+            };
+                playback.addListener(timePlaybackListener);
+
+            {% endblock initializeNotes %}
+
+            {% block eventTimeFunction %}
+            xgds_notes.getEventTime = function(context) {
+                    var dataString = "";
+                    var parent = $(context).closest('.notes_input_container');
+                    var event_hidden = parent.find('#id_event_time');
+                    if (event_hidden.length == 0){
+                        event_hidden = $("#id_event_time");
+
+                    }
+                    var event_timestring = event_hidden.val();
+
+                    try {
+                        if (event_timestring !== undefined && event_timestring !== ""){
+                            if (!event_hidden.is(':visible')){ // in a form
+                                dataString = dataString + '&event_time=' + event_timestring;
+                                try {
+                                    var timezone_hidden = parent.find('#id_event_timezone');
+                                    dataString = dataString + "&event_timezone=" + timezone_hidden.val();
+                                } catch(err){
+                                    // no timezone
+                                }
+                            } else {
+                                var tzified = getUTCTime(event_timestring.substring(0, event_timestring.length-4), serverTimezone);
+                                var theUtc = tzified.utc().format('YYYY/MM/DD HH:mm:ss') + ' UTC';
+                                dataString = dataString + '&event_time=' + theUtc;
+                                try {
+                                    dataString = dataString + "&event_timezone=" + serverTimezone;
+                                } catch(err){
+                                    // no timezone
+                                }
+                            }
+                        } else {
+                            if (event_hidden.is(':visible')){
+                                dataString = dataString + "&serverNow=true";
+                            }
+                        }
+                    }
+                    catch(err) {
+                        dataString = dataString + "&serverNow=true";
+                    }
+                    return dataString;
+
+                };
+            xgds_notes.postSubmit = function(data) {
+               xgds_notes.clear_event_time();
+            };
+            {% endblock eventTimeFunction %}
+
+            xgds_notes.updateRole = function(stuff) {
+	var theForm = $("#edit_user_session_form");
+	var content = theForm.find("#id_location option:selected").text();
+	if (content == '---------'){
+		theForm.find("#id_location option[value='{{request.session.notes_user_session.location}}']").attr('selected', 'selected');
+		theForm.find("#id_vehicle option[value='{{request.session.notes_user_session.vehicle}}']").attr('selected', 'selected');
+		theForm.find("#id_role option[value='{{request.session.notes_user_session.role}}']").attr('selected', 'selected');
+		var content = theForm.find("#id_location option:selected").text();
+	}
+	content += ', ' + theForm.find("#id_vehicle option:selected").text();
+	content += ', ' + theForm.find("#id_role option:selected").text();
+	$("#roleLocationVehicle").text(content);
+	if (content.indexOf('--') == -1){
+		user_session_exists = true;
+	}
+}
+
+    xgds_notes.set_event_time = function() {
+            timePlaybackListener.doSetTime(playback.getCurrentTime());
+
+	};
+    xgds_notes.postSubmit = function(data) {
+            timePlaybackListener.doSetTime(playback.getCurrentTime());
+
+	};
+
+
+$("#changeRole").click(function(e){
+	xgds_notes.editUserSession('xgds_notes.updateRole');
+});
+
+xgds_notes.updateRole();
+
+            var input_initialized = false;
+ 		var formNote = $("#form-Note");
+ 		var input = formNote.find('.taginput');
+        xgds_notes.initializeInput(input);
+        var role = formNote.find("#id_role");
+        role.val(role.find("option:first").val());
+        var location = formNote.find("#id_location");
+        location.val(location.find("option:first").val());
+        input_initialized = true;
+                timePlaybackListener.doSetTime(playback.getCurrentTime());
+
 		{% endblock otherJSInit %}
 
 	});

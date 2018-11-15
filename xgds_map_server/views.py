@@ -1798,7 +1798,7 @@ def getMappedObjectsExtens(request, object_name, extens, today=False):
         return ""
 
 
-def getFlightPlaybackPage(request, flight_name, templatePath='xgds_map_server/flight_playback.html', forceUserSession=False):
+def getFlightPlaybackPage(request, flight_name, templatePath='xgds_map_server/flight_playback.html'):
     flight = FLIGHT_MODEL.get().objects.get(name=flight_name)
 
     #load time series data
@@ -1822,12 +1822,12 @@ def getFlightPlaybackPage(request, flight_name, templatePath='xgds_map_server/fl
                    'searchForms': searchForms,
                    'flight': flight,
                    'timeseries_config': timeseries_config,
-                   'forceUserSession': forceUserSession,
+                   'forceUserSession': forceUserSession,  # this has to be true to make the role location stuff work
                    'app': 'xgds_map_server/js/replay/mapReplayApp.js'},
                   )
 
 
-def getGroupFlightPlaybackPage(request, group_flight_name, templatePath='xgds_map_server/group_flight_playback.html', forceUserSession=False):
+def getGroupFlightPlaybackPage(request, group_flight_name, templatePath='xgds_map_server/group_flight_playback.html', forceUserSession=True):
     group_flight = GROUP_FLIGHT_MODEL.get().objects.get(name=group_flight_name)
 
     templates = get_handlebars_templates(list(settings.XGDS_MAP_SERVER_REPLAY_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_MAP_REPLAY')
@@ -1842,7 +1842,7 @@ def getGroupFlightPlaybackPage(request, group_flight_name, templatePath='xgds_ma
                    'modelName': None,
                    'searchForms': searchForms,
                    'group_flight': group_flight,
-                   'forceUserSession': forceUserSession,
+                   'forceUserSession': True,
                    'app': 'xgds_map_server/js/replay/groupFlightReplayApp.js'},
                   )
 
