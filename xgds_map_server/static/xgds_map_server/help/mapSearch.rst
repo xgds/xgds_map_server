@@ -26,8 +26,8 @@ Keyword + Tag Search Dropdown Editing
    The value of the *Default:* radio button will determine whether an *or*/*and* is automatically filled in for each input. This selection is saved as a cookie so it will not have to be changed each time.
    The tag search dropdown has a *Nest Tags* checkbox option. When checked, the tag search will search down the entire Tag Hierarchy. This option is also saved as a cookie. 
 
-Clear Search
-   Clicking the *Clear Search* button will reset the keyword and tag search inputs to be blank and reload the table.
+Clear
+   Clicking the *X* button on the right hand side will reset the keyword and tag search inputs to be blank and reload the table.
    
 Export Data
    After completing a search, use the checkboxes on the lefthand side of the table to select which rows of data you would like to export

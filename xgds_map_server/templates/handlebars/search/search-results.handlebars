@@ -8,9 +8,6 @@
         <span class="export-err">No rows selected.</span>
     </div>
     <div class="col-12 ss-container">
-        <div class="row clear-btn-row">
-            <button id="clear-search-btn-id" class="btn btn-sm btn-primary">Clear Search</button>
-        </div>
         <div class="row">
             <div class="col-5 ss-keyword-container input-group" id="ss-keyword-container-id">
                 <input type="text" class="form-control search-keyword" name="search-keyword" id="search-keyword-id" placeholder="Keyword">
@@ -35,8 +32,11 @@
                         <div id="tags-query-editor" class="dropdown-input-list col-12" tabindex="0"></div>
                     </div>
                 </div>
-                <span class="input-group-btn simple-search-btn-container">
+                <span class="input-group-btn">
                     <button class="btn btn-primary" id="simple-search-btn" type="button"><i class="fa fa-search" aria-hidden="true"></i></button>
+                </span>
+                <span class="input-group-btn">
+                    <button class="btn btn-primary" id="clear-search-btn-id" type="button"><i class="fa fa-times" aria-hidden="true"></i></button>
                 </span>
             </div>
         </div>

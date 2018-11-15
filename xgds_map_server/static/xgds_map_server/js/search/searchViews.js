@@ -18,7 +18,7 @@
 app.views.SearchView = Marionette.View.extend({
     template: '#template-search',
     events: {
-        'click #getSearchFormButton': 'setupSearchForm',
+        'click #getSearchFormButton': function() {this.setupSearchForm(true, true)},
         'click #doSearch': 'doSearch',
         'click #doSaveSearch': 'openSaveDialog',
     },
@@ -90,7 +90,10 @@ app.views.SearchView = Marionette.View.extend({
     onRender: function() {
         app.vent.trigger("repack");
     },
-    setupSearchForm: function(runSearch) {
+    setupSearchForm: function(runSearch, hideForm) {
+    	if (_.isUndefined(hideForm)){
+    		hideForm = false;
+		}
     	var newModel = app.options.modelName;
     	if (newModel == undefined || newModel == 'None') {
     		newModel = this.$("#searchModelSelector").val();
@@ -112,8 +115,12 @@ app.views.SearchView = Marionette.View.extend({
         }
         this.selectedModel = newModel;
         var templateName = '#template-' + this.selectedModel;
-        this.searchFormView = new app.views.SearchFormView({template:templateName})
-        this.getRegion('searchFormRegion').show(this.searchFormView);
+        this.searchFormView = new app.views.SearchFormView({template:templateName});
+        var sfRegion = this.getRegion('searchFormRegion');
+        if (hideForm) {
+            sfRegion.$el.hide();
+        }
+        sfRegion.show(this.searchFormView);
         
         var theModelMap = app.options.searchModels[newModel];
         if (theModelMap.searchInitMethods != undefined){
