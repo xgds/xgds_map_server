@@ -2169,14 +2169,32 @@ class ExportOrderListJson(OrderListJson):
             pseudo_buffer = PsuedoBuffer()
             writer = csv.writer(pseudo_buffer)
             rows = []
-            rows.append(modelDict['columns'][1:])
+
+            # unfold the extras
+            full_columns = []
+            for column in modelDict['columns'][1:]:
+                if column != 'extras':
+                    full_columns.append(column)
+                else:
+                    extras = data[0].toMapDict()['extras']
+                    for key in extras:
+                        full_columns.append(key)
+
+            rows.append(full_columns)
             for obj in data:
                 row = []
+                map_dict = obj.toMapDict()
                 for column in modelDict['columns'][1:]:
-                    if isinstance(getattr(obj, column), basestring):
-                        row.append(getattr(obj, column).encode('utf-8'))
+                    value = map_dict[column]
+                    if column == 'extras':
+                        for key, extras_value in value.iteritems():
+                            if isinstance(extras_value, basestring):
+                                extras_value = extras_value.encode('utf-8')
+                            row.append(extras_value)
                     else:
-                        row.append(getattr(obj, column))
+                        if isinstance(value, basestring):
+                            value = value.encode('utf-8')
+                        row.append(value)
                 rows.append(row)
 
             # Needs to be streaming response because of the large number of rows in some cases (notes + photos especially)
