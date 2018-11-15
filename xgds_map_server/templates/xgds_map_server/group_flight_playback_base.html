@@ -252,6 +252,8 @@
         // right here the map is the right height and when we exit this method it is not.
 
         {% block otherJSInit %}
+        server_time_url = "{% url 'server_time' %}";
+        serverTimezone = "{{TIME_ZONE}}";
         group_flight_start = {% if group_flight.start_time %}new moment('{{ group_flight.start_time.isoformat }}'){% else %}null{% endif %};
         group_flight_end = {% if group_flight.end_time %}new moment('{{ group_flight.end_time.isoformat }}'){% else %}null{% endif %};
         playback.initialize({getStartTime: function(){return group_flight_start;},
@@ -301,47 +303,47 @@
 
             {% block eventTimeFunction %}
             xgds_notes.getEventTime = function(context) {
-                    var dataString = "";
-                    var parent = $(context).closest('.notes_input_container');
-                    var event_hidden = parent.find('#id_event_time');
-                    if (event_hidden.length == 0){
-                        event_hidden = $("#id_event_time");
+                var parent = $(context).closest('.notes_input_container');
+                var event_hidden = parent.find('#id_event_time');
+                var dataString = "";
 
-                    }
-                    var event_timestring = event_hidden.val();
+                if (event_hidden.length == 0){
+                    event_hidden = $("#id_event_time");
+                }
+                var event_timestring = event_hidden.val();
 
-                    try {
-                        if (event_timestring !== undefined && event_timestring !== ""){
-                            if (!event_hidden.is(':visible')){ // in a form
-                                dataString = dataString + '&event_time=' + event_timestring;
-                                try {
-                                    var timezone_hidden = parent.find('#id_event_timezone');
-                                    dataString = dataString + "&event_timezone=" + timezone_hidden.val();
-                                } catch(err){
-                                    // no timezone
-                                }
-                            } else {
-                                var tzified = getUTCTime(event_timestring.substring(0, event_timestring.length-4), serverTimezone);
-                                var theUtc = tzified.utc().format('YYYY/MM/DD HH:mm:ss') + ' UTC';
-                                dataString = dataString + '&event_time=' + theUtc;
-                                try {
-                                    dataString = dataString + "&event_timezone=" + serverTimezone;
-                                } catch(err){
-                                    // no timezone
-                                }
+                try {
+                    if (event_timestring !== undefined && event_timestring !== ""){
+                        if (!event_hidden.is(':visible')){ // in a form
+                            dataString = dataString + '&event_time=' + event_timestring;
+                            try {
+                                var timezone_hidden = parent.find('#id_event_timezone');
+                                dataString = dataString + "&event_timezone=" + timezone_hidden.val();
+                            } catch(err){
+                                // no timezone
                             }
                         } else {
-                            if (event_hidden.is(':visible')){
-                                dataString = dataString + "&serverNow=true";
+                            var tzified = getUTCTime(event_timestring.substring(0, event_timestring.length-4), serverTimezone);
+                            var theUtc = tzified.utc().format('YYYY/MM/DD HH:mm:ss') + ' UTC';
+                            dataString = dataString + '&event_time=' + theUtc;
+                            try {
+                                dataString = dataString + "&event_timezone=" + serverTimezone;
+                            } catch(err){
+                                // no timezone
                             }
                         }
+                    } else {
+                        if (event_hidden.is(':visible')){
+                            dataString = dataString + "&serverNow=true";
+                        }
                     }
-                    catch(err) {
-                        dataString = dataString + "&serverNow=true";
-                    }
-                    return dataString;
+                }
+                catch(err) {
+                    dataString = dataString + "&serverNow=true";
+                }
+                return dataString;
 
-                };
+            };
             xgds_notes.postSubmit = function(data) {
                xgds_notes.clear_event_time();
             };
