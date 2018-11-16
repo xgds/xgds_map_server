@@ -394,7 +394,7 @@ app.views.ReplayPlotView = Marionette.View.extend({
 						context.plotLabels[condition.id].text(condition.name);
 						context.plotLabels[condition.id].css({bottom: bottom_offset, left: (o.left - 45), position:'absolute'});
 					} else {
-						var el = $("<div id='plotLabel_" + condition.id + "' class='verticaltext' style='position:absolute;left:" + (o.left - 45) + "px;bottom:" + bottom_offset + "px;color:black;font-weight:bold;'>" + condition.name + "</div>");
+						var el = $("<div id='plotLabel_" + condition.id + "' class='verticaltext' style='position:absolute;left:" + (o.left - 45) + "px;bottom:" + bottom_offset + "px;color:dimgray;font-weight:bold;'>" + condition.name + "</div>");
 						el.appendTo(plotDiv);
 						context.plotLabels[condition.id] = el;
 					}
