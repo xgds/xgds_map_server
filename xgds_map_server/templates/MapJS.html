@@ -23,6 +23,7 @@
     <script type='text/javascript' src='{{STATIC_URL}}{{ app }}'></script>
     {% endif %}
     <script>
+    	show_on_map = {% if settings.XGDS_NOTES_SHOW_ON_MAP_CHECKBOX %} true {% else %} false {% endif %};
     	app = xGDS.Factory.construct(appOptions);
     </script>
     <script type='text/javascript' src='{{EXTERNAL_URL}}ui-contextmenu/jquery.ui-contextmenu.min.js'></script>

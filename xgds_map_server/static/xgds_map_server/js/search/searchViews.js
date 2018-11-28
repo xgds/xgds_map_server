@@ -371,6 +371,7 @@ app.views.SearchNotesView = Marionette.View.extend({
     	this.modelName = options.modelName;
     	this.setupHandlebars();
     },
+	templateContext: {show_on_map:show_on_map},
     setupHandlebars: function(){
     	if (this.template == undefined){
     		var url = '/xgds_core/handlebar_string/xgds_notes2/templates/handlebars/object-notes.handlebars';

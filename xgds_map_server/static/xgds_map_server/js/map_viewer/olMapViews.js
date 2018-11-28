@@ -2440,10 +2440,14 @@ $(function() {
             if (this.viewPage == true) {
                 this.stationsDecorators = new ol.Collection();
                 var tolerance = this.getToleranceFeature();
+                if (!_.isUndefined(tolerance)){
+                    this.stationsDecorators.push(tolerance);
+                }
                 var boundary = this.getBoundaryFeature();
+                if (!_.isUndefined(boundary)){
+                    this.stationsDecorators.push(boundary);
+                }
 
-                this.stationsDecorators.push(tolerance);
-                this.stationsDecorators.push(boundary);
                 this.stationsDecoratorsLayer = new ol.layer.Vector({
                     name: this.featureJson.name + "_stnDecorator",
                     source: new ol.source.Vector({features: this.stationsDecorators})
@@ -2459,8 +2463,8 @@ $(function() {
 		},
 		getToleranceFeature: function() {
 			this.toleranceGeometry = this.getToleranceGeometry();
-			var style = this.createToleranceStyle(this.featureJson.style);
 			if (this.toleranceGeometry != undefined){
+			    var style = this.createToleranceStyle(this.featureJson.style);
 				if (this.olToleranceFeature != undefined){
 					this.olToleranceFeature.setGeometry(this.toleranceGeometry);
 				} else {
@@ -2510,6 +2514,9 @@ $(function() {
 		},
         createToleranceStyle: function(color){
             var rgbaColor = this.hexToRGB(color, 0.3);
+            if (_.isUndefined(rgbaColor)) {
+                rgbaColor =  'yellow';
+            }
 
             var style = new ol.style.Style({
                 fill: new ol.style.Fill({
@@ -2532,6 +2539,9 @@ $(function() {
             return style;
         },
         hexToRGB: function(hex, alpha) {
+            if (_.isUndefined(hex)){
+                return undefined;
+            }
             var r = parseInt(hex.slice(1, 3), 16),
                 g = parseInt(hex.slice(3, 5), 16),
                 b = parseInt(hex.slice(5, 7), 16);

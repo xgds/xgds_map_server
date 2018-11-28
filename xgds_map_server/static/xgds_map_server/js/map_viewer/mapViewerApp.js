@@ -23,10 +23,28 @@
 			layersRegion: '#layers'
 		},
 		onRender: function() {
+			this.listenTo(app.vent, 'onMapSetup', this.hookLayersButton);
 			app.map = new app.views.OLMapView();
 			this.showChildView('mapRegion', app.map);
 			this.ensureLayersTemplate();
 			this.showChildView('layersRegion', new app.views.FancyTreeView({template: this.layersTemplate}));
+		},
+		hookLayersButton: function() {
+			$('.modal-content').resizable({
+				alsoResize: ".modal-header, .modal-body, .modal-footer"
+			});
+			$(".modal-dialog").draggable({
+				handle: ".modal-header"
+			});
+			var layers_modal = $('#layers_modal');
+			var layers_button = $('#layers_button');
+			if (layers_button.length > 0) {
+				layers_button.off('click');
+				layers_button.on('click',function(event) {
+					event.preventDefault();
+					layers_modal.modal('toggle');
+				});
+			}
 		},
 		ensureLayersTemplate: function() {
 			if (!$("#template-layer-tree").length){
