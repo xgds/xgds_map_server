@@ -24,11 +24,7 @@
 
 {% if 'xgds_notes2' in settings.INSTALLED_APPS %}
 {% block buttonrowRight %}
-<div id="full_notesDiv">
-	<div id="notes_content" class="notes_content mb-2">
-		{% include 'xgds_notes2/notes_input_include_full.html' %}
- 	</div>
- </div>
+    {% include 'xgds_notes2/notes_input_include_full.html' %}
 {% endblock buttonrowRight %}
 {% endif %}
 
