@@ -53,7 +53,7 @@ class AbstractNode(models.Model):
     """
     name = models.CharField('name', max_length=128, db_index=True)
     description = models.CharField('description', max_length=1024, blank=True)
-    creator = models.CharField('creator', max_length=200)
+    creator = models.CharField('creator', max_length=200) # TODO really??? THIS SHOULD BE A FK TO A USER
     creation_time = models.DateTimeField(null=True, blank=True, db_index=True)
     minLat = models.FloatField(blank=True, null=True, db_index=True)
     minLon = models.FloatField(blank=True, null=True, db_index=True)

@@ -127,44 +127,93 @@ app.views.FancyTreeView = Marionette.View.extend({
     	      $("span#matches").text("(" + n + " matches)");
     	    }).focus();
     },
+    hideContextMenu: function() {
+        $("#layer-tree-menu").removeClass("show").hide();
+    },
     setupContextMenu: function(layertreeNode) {
-    	layertreeNode.contextmenu({
-    	      delegate: "span.fancytree-title",
-    	      menu: [
-    	          {title: "Edit", cmd: "edit", uiIcon: "ui-icon-pencil", disabled: false },
-    	          {title: "Download KML", cmd: "download", uiIcon: "ui-icon-arrowthickstop-1-s", disabled: false }
-    	          ],
-    	      beforeOpen: function(event, ui) {
-    	        var node = $.ui.fancytree.getNode(ui.target);
-    	        if (node !== null){
-    	        		layertreeNode.contextmenu('enableEntry','download', _.contains(['MapLayer', 'KmlMap'], node.data.type))
-    	        		node.setActive();
-    	        }
-    	      },
-    	      select: function(event, ui) {
-    	        var node = $.ui.fancytree.getNode(ui.target);
-    	        if (node !== null){
-    	        		if (ui.cmd == 'edit'){
-    	        			window.open(node.data.href, '_edit');
-    	        		} else if (ui.cmd == 'download') {
-    	        			var url = '';
-    	        			if (node.data.type == 'MapLayer'){
-	    	        			url = '/xgds_map_server/maplayer/kml/';
-	    	        			url += node.key + '.kml';
-    	        			} else if (node.data.type == 'KmlMap'){
-	    	        			url = node.data.kmlFile;
-    	        			}
-    	        			$.fileDownload(url, {
-    	            		 	httpMethod: "GET",
-    	                     failCallback: function (htmlResponse, url) {
-    	                    	 	console.log(htmlResponse);
-    	                    	 	alert('Could not download kml.');
-    	                     }
-    	                 });
-    	        		}
-    	        }
-    	      }
-    	    });
+        var selectedNode = undefined;
+        var context = this;
+        $("#layers_modal").on('hidden.bs.modal', function(){
+            context.hideContextMenu();
+        });
+        $('.fancytree-title').on('contextmenu', function(e) {
+            selectedNode = $.ui.fancytree.getNode(e);
+            var top = e.target.offsetTop + 75;
+              var left = e.target.offsetLeft + 10;
+              $("#layer-tree-menu").css({
+                display: "block",
+                top: top,
+                left: left
+              }).addClass("show");
+              return false; //blocks default right click menu
+        }).on("click", function(event) {
+            context.hideContextMenu();
+        });
+
+        $("#layertree").on("click", function(event) {
+            context.hideContextMenu();
+        });
+
+        $("#layer-tree-menu a").on("click", function(event) {
+            if (event.target.innerHTML == 'Edit') {
+                window.open(selectedNode.data.href, '_edit');
+            } else if (event.target.innerHTML == 'Download'){
+                var url = '';
+                if (selectedNode.data.type == 'MapLayer'){
+                    url = '/xgds_map_server/maplayer/kml/';
+                    url += selectedNode.key + '.kml';
+                } else if (selectedNode.data.type == 'KmlMap'){
+                    url = selectedNode.data.kmlFile;
+                }
+                $.fileDownload(url, {
+                    httpMethod: "GET",
+                 failCallback: function (htmlResponse, url) {
+                        console.log(htmlResponse);
+                        alert('Could not download kml.');
+                 }
+             });
+            }
+            context.hideContextMenu();
+        });
+
+
+    	// layertreeNode.contextmenu({
+    	//       delegate: "span.fancytree-title",
+    	//       menu: [
+    	//           {title: "Edit", cmd: "edit", uiIcon: "ui-icon-pencil", disabled: false },
+    	//           {title: "Download KML", cmd: "download", uiIcon: "ui-icon-arrowthickstop-1-s", disabled: false }
+    	//           ],
+    	//       beforeOpen: function(event, ui) {
+    	//         var node = $.ui.fancytree.getNode(ui.target);
+    	//         if (node !== null){
+    	//         		layertreeNode.contextmenu('enableEntry','download', _.contains(['MapLayer', 'KmlMap'], node.data.type))
+    	//         		node.setActive();
+    	//         }
+    	//       },
+    	//       select: function(event, ui) {
+    	//         var node = $.ui.fancytree.getNode(ui.target);
+    	//         if (node !== null){
+    	//         		if (ui.cmd == 'edit'){
+    	//         			window.open(node.data.href, '_edit');
+    	//         		} else if (ui.cmd == 'download') {
+    	//         			var url = '';
+    	//         			if (node.data.type == 'MapLayer'){
+	    // 	        			url = '/xgds_map_server/maplayer/kml/';
+	    // 	        			url += node.key + '.kml';
+    	//         			} else if (node.data.type == 'KmlMap'){
+	    // 	        			url = node.data.kmlFile;
+    	//         			}
+    	//         			$.fileDownload(url, {
+    	//             		 	httpMethod: "GET",
+    	//                      failCallback: function (htmlResponse, url) {
+    	//                     	 	console.log(htmlResponse);
+    	//                     	 	alert('Could not download kml.');
+    	//                      }
+    	//                  });
+    	//         		}
+    	//         }
+    	//       }
+    	//     });
     },
     createTree: function() {
         if (_.isUndefined(app.tree) && !_.isNull(app.treeData)){
