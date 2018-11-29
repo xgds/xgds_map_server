@@ -2,16 +2,21 @@
 
 {% block contents %}
 {{ block.super }}
+ <div class="btn-toolbar" role="toolbar" >
+  {% include "AddNodeButtons.html" %}
+ </div>
+
 {% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
-<p>
+
+<div class="mw-50">
+<form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
+    <p>
 <label></label>
 <span class="h6">{{ title }}</span>
 </p>
 <p>
 {{ instruction }}
 </p>
-<div class="mw-50">
-<form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
 {{ form.as_p }}
 <p class="form-group">
 <label for="create_button"></label>

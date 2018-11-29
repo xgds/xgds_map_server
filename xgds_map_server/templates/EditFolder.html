@@ -2,6 +2,10 @@
 
 {% block contents %}
 {{ block.super }}
+<div class="btn-toolbar" role="toolbar" >
+  {% include "AddNodeButtons.html" %}
+ </div>
+
 <h3>Edit Folder</h3>
 
 {% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
