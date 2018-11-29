@@ -344,6 +344,9 @@ class AbstractGeotiff(AbstractMap):
     maxLevel = models.IntegerField(null=True, blank=True)
     wmsVersion = models.CharField(default='1.1.1', max_length=16)  # wms version, 1.1.1, or could be 1.3.0
     srs = models.CharField(null=True, blank=True, max_length=32)  # srs or crs if we are wms version 1.3.0 or higher
+    minimumValue = models.FloatField(null=True, blank=True)
+    maximumValue = models.FloatField(null=True, blank=True)
+    colorPalette = models.CharField(null=True, max_length=64, default="red_to_blue")
 
     def getUrl(self):
         return self.wmsUrl
@@ -359,6 +362,7 @@ class AbstractGeotiff(AbstractMap):
         result["data"]["wmsVersion"] = self.wmsVersion
         result["data"]["srs"] = self.srs
         result["data"]["hasTime"] = False
+        result["data"]["styles"] = self.colorPalette
 
         if self.minLevel > 0:
             result["data"]["minLevel"] = self.minLevel

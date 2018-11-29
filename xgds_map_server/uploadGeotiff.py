@@ -18,7 +18,7 @@ from requests import put, post
 from requests.auth import HTTPBasicAuth
 from django.conf import settings
 
-def upload_geotiff(file_handle, workspace_name, store_name):
+def upload_geotiff(file_handle, workspace_name, store_name, minimum_value=None, maximum_value=None):
     """
     Upload a GeoTIFF file to the connected Geoserver
     
@@ -60,3 +60,47 @@ def upload_geotiff(file_handle, workspace_name, store_name):
     )
 
     assert r.status_code < 300
+
+    if minimum_value is not None and maximum_value is not None:
+        modifying_json = {
+            "coverage": {
+                "dimensions": {
+                    "coverageDimension": [
+                        {
+                            "name": "GRAY_INDEX",
+                            "description": "GridSampleDimension[-Infinity,Infinity]",
+                            "range": {
+                                "min": minimum_value,
+                                "max": maximum_value,
+                            },
+                            "nullValues": {
+                                "double": [
+                                    -99999,
+                                ]
+                            },
+                            "dimensionType": {
+                                "name": "REAL_32BITS",
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+
+        url = settings.GEOSERVER_URL + "rest/workspaces/" + workspace_name + \
+          "/coveragestores/" + store_name + "/coverages/" + store_name + ".json"
+
+        r = put(
+            url=url,
+            auth=HTTPBasicAuth(
+                settings.GEOSERVER_USERNAME,
+                settings.GEOSERVER_PASSWORD,
+            ),
+            verify=False,
+            headers={
+                'Content-type': 'application/json',
+            },
+            json=modifying_json,
+        )
+
+        assert r.status_code == 200

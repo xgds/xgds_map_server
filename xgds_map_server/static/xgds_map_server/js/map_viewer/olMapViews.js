@@ -1218,10 +1218,13 @@ $(function() {
             this.tileURL = options.tileURL;
             this.setupOpacity(options);
 		    this.name = options.node.title;
-		    this.params = {LAYERS:options.node.data.layers,
-                           WIDTH:options.node.data.tileWidth,
-                           HEIGHT:options.node.data.tileHeight,
-                           VERSION:options.node.data.wmsVersion};
+		    this.params = {
+                LAYERS:  options.node.data.layers,
+                WIDTH:   options.node.data.tileWidth,
+                HEIGHT:  options.node.data.tileHeight,
+                VERSION: options.node.data.wmsVersion,
+                STYLES:  options.node.data.styles,
+            };
             app.views.TreeMapElement.prototype.initialize.call(this, options);
         },
         constructMapElements: function() {

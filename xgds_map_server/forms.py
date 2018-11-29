@@ -128,7 +128,10 @@ class GeotiffForm(AbstractMapForm):
         store_name = instance.name
 
         try:
-            upload_geotiff(instance.sourceFile, settings.GEOSERVER_DEFAULT_WORKSPACE, store_name)
+            upload_geotiff(
+                instance.sourceFile, settings.GEOSERVER_DEFAULT_WORKSPACE, store_name, 
+                minimum_value=instance.minimumValue, maximum_value=instance.maximumValue,
+            )
         except AssertionError:
             # TODO: properly handle a 500 error by returing a form error
             return
