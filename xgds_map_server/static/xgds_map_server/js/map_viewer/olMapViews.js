@@ -167,7 +167,7 @@ $(function() {
                 this.drawLatestPlan();
             },
             onAttach: function() {
-            	
+
             	app.mapView = new ol.View({
                     // we will center the view later with updateBbox
                     zoom: app.options.DEFAULT_ZOOM,

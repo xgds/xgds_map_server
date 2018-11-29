@@ -21,11 +21,12 @@
 				<ul class="nav justify-content-end">
 					<i class="fa fa-lock pinDiv gray-light"></i>
 				</ul>
-				<div id="overmap" class="mb-1 mt-negative-1rem" >
-        			{% if mapLayerDict.jsonFeatures|length == 0 %}
-        			{% siteframe_form %}
-        			{% endif %}
-        		</div>
+				<div id="overmap" class="mb-1 mt-negative-1rem">
+                    {% if mapLayerDict.jsonFeatures|length == 0 %}{% siteframe_form %}{% endif %}
+                    <button id="layers_button" type="button" class="btn btn-primary" data-backdrop=false data-toggle="modal" data-target="#layers_modal">
+                        Layers
+                    </button>
+                </div>
         		<div id="editingTools" ></div>
     			<div id="map"></div>
     			<div id="postmap" ></div>

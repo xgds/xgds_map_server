@@ -33,7 +33,8 @@
 	        													         viewRegion: true,
 	        													         hideModelChoice: hideModelChoice,
 	        													         selectedModel: app.options.modelName}));
-		}
+		},
+
 	});
 	
 	xGDS.SearchApplication = xGDS.Application.extend( {

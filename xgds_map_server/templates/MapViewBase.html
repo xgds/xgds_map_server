@@ -8,11 +8,10 @@
 {% include "map_subnav.html" %}
 {% endblock %}
 
-{% block layersmodal %}
-{% endblock layersmodal %}
 
-{% block contents %}
+{% block content %}
 <script type="x-template/underscore" id="application_contents">
+    {% block layers %}
     <div id="layers_modal" class="modal hide fade">
             <div class="modal-dialog" role="dialog">
                 <div class="modal-content">
@@ -26,6 +25,7 @@
                 </div>
             </div>
     </div>
+    {% endblock layers %}
 
   <div id="gridstack_buttonrow" class="d-flex justify-content-between mb-1">
 		<div class="d-flex justify-content-start">
@@ -38,9 +38,11 @@
         </div>
 	</div>
  <div  id="container">
-        <div id="overmap" class="mb-1 mt-1"><form>{% siteframe_form %}
-            <button id="layers_button" role="button" class="btn btn-primary ml-1" >Layers</button>
-        </form>
+        <div id="overmap" class="mb-1 mt-negative-1rem">
+            {% if mapLayerDict.jsonFeatures|length == 0 %}{% siteframe_form %}{% endif %}
+            <button id="layers_button" type="button" class="btn btn-primary" data-backdrop=false data-toggle="modal" data-target="#layers_modal">
+                Layers
+            </button>
         </div>
         <div id="map"></div>
         <div id="postmap" ></div>
@@ -51,7 +53,7 @@
 <div id="application">
 </div>
 
-{% endblock %}
+{% endblock content %}
 
 {% block cssExtras %}
 <style scoped>

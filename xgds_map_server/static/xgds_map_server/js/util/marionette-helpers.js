@@ -418,7 +418,7 @@ xGDS.RootView = Marionette.View.extend({
 		$(window).bind('resize', function() {
 			pageContentElement.outerHeight(pageElement.innerHeight() - pageTopHeight);
 		});
-	}
+	},
 });
 
 xGDS.makeExpandable = function(view, expandClass) {

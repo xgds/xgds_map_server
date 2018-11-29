@@ -430,6 +430,10 @@ i.pinDiv {
 	content: "✖";
 }
 
-#layers-gridstack-item-content {
+.modal-body {
 	overflow-x:scroll;
+}
+
+.plot-div {
+	height: 110px;
 }

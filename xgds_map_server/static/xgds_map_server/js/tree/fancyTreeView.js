@@ -19,6 +19,7 @@ app.views = app.views || {};
 app.views.FancyTreeView = Marionette.View.extend({
     template: '#template-layer-tree',
     initialize: function() {
+        this.ensureLayersTemplate();
         this.listenTo(app.vent, 'refreshTree', function() {this.refreshTree()});
         this.listenTo(app.vent, 'treeData:loaded', function() {this.createTree()});
         this.listenTo(app.vent, 'tree:expanded', function(node) {
@@ -28,6 +29,22 @@ app.views.FancyTreeView = Marionette.View.extend({
         });
         
         this.storedParent = null;
+    },
+    ensureLayersTemplate: function() {
+        if (!$("#template-layer-tree").length){
+            var url = '/xgds_core/handlebar_string/xgds_map_server/templates/handlebars/layer-tree.handlebars';
+            var context = this;
+            $.ajax({
+                async: false,
+                url: url,
+                success: function(handlebarSource, status){
+                    context.handlebarSource = handlebarSource;
+                    context.template = Handlebars.compile(handlebarSource);
+                }
+            });
+        } else {
+            this.layersTemplate = '#template-layer-tree';
+        }
     },
     onAttach: function() {
     	app.vent.trigger('layerView:onAttach');
