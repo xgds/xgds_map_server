@@ -13,9 +13,6 @@
 {% if 'xgds_notes2' in settings.INSTALLED_APPS %}
 {% include "xgds_notes2/NoteCSS.html" %}
 {% endif %}
-<link rel="stylesheet" type="text/css" href="{% static 'jquery-ui-timepicker-addon/dist/jquery-ui-timepicker-addon.css' %}" ></link>
-<link href="/static/autocomplete_light/vendor/select2/dist/css/select2.css" type="text/css" media="all" rel="stylesheet" />
-<link href="/static/autocomplete_light/select2.css" type="text/css" media="all" rel="stylesheet" />
 {% endblock cssExtras %}
 
 {% block preMapJS %}
@@ -54,15 +51,8 @@
 	{% endblock notejs %}
 {% endif %}
 	
-	<script type="text/javascript" src="{{ EXTERNAL_URL }}jquery-ui-timepicker-addon/dist/jquery-ui-timepicker-addon.min.js"></script>
-	<script type="text/javascript" src="{% static 'xgds_core/js/datetimepickerUtils.js'%}"></script>
-	<script type="text/javascript" src="/static/autocomplete_light/jquery.init.js"></script>
-	<script type="text/javascript" src="/static/autocomplete_light/autocomplete.init.js"></script>
     <script type="text/javascript" src="{{ EXTERNAL_URL }}bootstrap-tagsinput/dist/bootstrap-tagsinput.min.js"></script>
-	<script type="text/javascript" src="/static/autocomplete_light/vendor/select2/dist/js/select2.full.js"></script>
-	<script type="text/javascript" src="/static/autocomplete_light/autocomplete.init.js"></script> <!-- untested used to be forward.js -->
-	<script type="text/javascript" src="/static/autocomplete_light/select2.js"></script>
-    <script type="text/javascript" src='{{ EXTERNAL_URL }}pure-uuid/uuid.js'></script>
+	<script type="text/javascript" src='{{ EXTERNAL_URL }}pure-uuid/uuid.js'></script>
     {% for template_name, template in templates.items %}
 	<script type="text/handlebars" id="template-{{template_name}}">
 		{{template|safe}}

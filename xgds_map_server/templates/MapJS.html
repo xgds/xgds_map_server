@@ -10,7 +10,19 @@
 	<script type='text/javascript' src='{{ EXTERNAL_URL }}jquery.fancytree/dist/jquery.fancytree-all.min.js'></script>
 <!-- 	<script type='text/javascript' src='{{ EXTERNAL_URL }}fancytree/dist/src/jquery.fancytree.filter.js'></script>
     <script type='text/javascript' src='{{ EXTERNAL_URL }}fancytree/dist/src/jquery.fancytree.persist.js'></script>
- -->    
+ -->
+
+	<script type="text/javascript" src="{% static 'autocomplete_light/jquery.init.js' %}"></script>
+    <script type="text/javascript" src="{% static 'autocomplete_light/vendor/select2/dist/js/select2.full.js' %}"></script>
+	<script type="text/javascript" src="{% static 'autocomplete_light/autocomplete.init.js' %}"></script>
+	<script type="text/javascript" src="{% static 'autocomplete_light/forward.js' %}"></script>
+    <script type="text/javascript" src="{% static 'autocomplete_light/select2.js' %}"></script>
+    <script type="text/javascript" src="{% static 'autocomplete_light/jquery.post-setup.js' %}"></script>
+
+	<script type="text/javascript" src="{{ EXTERNAL_URL }}jquery-ui-timepicker-addon/dist/jquery-ui-timepicker-addon.min.js"></script>
+	<script type="text/javascript" src="{% static 'xgds_core/js/datetimepickerUtils.js'%}"></script>
+
+
     <script type='text/javascript' src='{{ EXTERNAL_URL }}handlebars/dist/handlebars.min.js'></script>
     <script type='text/javascript' src="{% static 'xgds_map_server/js/util/handlebars-helpers.js' %}"></script>
 	<script type='text/javascript' src='{{ EXTERNAL_URL }}backbone/backbone.js'></script>
@@ -33,6 +45,7 @@
     <script type='text/javascript' src='{{EXTERNAL_URL}}openlayers/dist/ol.js' ></script>
     <script type='text/javascript' src='{{ EXTERNAL_URL }}ol3-popup/src/ol3-popup.js'></script>
     <script type='text/javascript' src='{{EXTERNAL_URL}}pngtoy/pngtoy.min.js'></script>
+
     <script type='text/javascript' src="{% static 'xgds_map_server/js/search/searchViews.js' %}"></script>
     <script type='text/javascript' src="{% static 'xgds_map_server/js/map_viewer/olStyles.js' %}"></script>
    	<script type='text/javascript' src="{% static 'xgds_map_server/js/map_viewer/olMapViews.js' %}"></script>
