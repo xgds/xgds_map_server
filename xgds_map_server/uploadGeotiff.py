@@ -18,40 +18,39 @@ from requests import put, post
 from requests.auth import HTTPBasicAuth
 from django.conf import settings
 
-def upload_geotiff(file_handle, workspace_name, store_name, minimum_value=None, maximum_value=None):
+def upload_geotiff(file_handle, workspace_name, store_name, minimum_value=None, maximum_value=None, minimum_color=None, maximum_color=None):
     """
     Upload a GeoTIFF file to the connected Geoserver
-    
+
     file_handle: python file handle object that supports read and write operations
     workspace_name: the geoserver workspace for this geotiff
     store_name: the name of this geotiff inside geoserver
     """
 
+    geoserver_basic_auth = HTTPBasicAuth(
+        settings.GEOSERVER_USERNAME,
+        settings.GEOSERVER_PASSWORD,
+    )
+
     url = settings.GEOSERVER_URL + "rest/workspaces"
 
     r = post(
         url=url,
-        auth=HTTPBasicAuth(
-            settings.GEOSERVER_USERNAME,
-            settings.GEOSERVER_PASSWORD,
-        ),
+        auth=geoserver_basic_auth,
         verify=False,
         headers={
             'Content-type': 'text/xml',
         },
         data="<workspace><name>" + workspace_name + "</name></workspace>",
     )
-    
+
     url = settings.GEOSERVER_URL + "rest/workspaces/" + workspace_name + \
           "/coveragestores/" + store_name + \
           "/file.geotiff?configure=all"
     data = file_handle.read()
     r = put(
         url=url,
-        auth=HTTPBasicAuth(
-            settings.GEOSERVER_USERNAME,
-            settings.GEOSERVER_PASSWORD,
-        ),
+        auth=geoserver_basic_auth,
         verify=False,
         headers={
             'Content-type': 'image/tiff',
@@ -92,10 +91,7 @@ def upload_geotiff(file_handle, workspace_name, store_name, minimum_value=None, 
 
         r = put(
             url=url,
-            auth=HTTPBasicAuth(
-                settings.GEOSERVER_USERNAME,
-                settings.GEOSERVER_PASSWORD,
-            ),
+            auth=geoserver_basic_auth,
             verify=False,
             headers={
                 'Content-type': 'application/json',
@@ -104,3 +100,35 @@ def upload_geotiff(file_handle, workspace_name, store_name, minimum_value=None, 
         )
 
         assert r.status_code == 200
+
+    if minimum_color is not None and maximum_color is not None:
+        url = settings.GEOSERVER_URL + "rest/styles"
+        new_style_name = "%s_%s_style" % (workspace_name, store_name)
+        creation_json = {
+            "style": {
+                "name": new_style_name,
+                "filename": "%s.pal" % new_style_name
+            }
+        }
+        r = post(
+            url=url,
+            auth=geoserver_basic_auth,
+            verify=False,
+            headers={
+                'Content-type': 'application/json',
+            },
+            json=creation_json,
+        )
+        assert r.status_code < 300
+
+        url = settings.GEOSERVER_URL + "rest/styles/" + new_style_name
+        r = put(
+            url=url,
+            auth=geoserver_basic_auth,
+            verify=False,
+            headers={
+                'Content-type': "text/vnd.ncwms.palette",
+            },
+            data="%s\n%s" % (minimum_color, maximum_color),
+        )
+        assert r.status_code < 300

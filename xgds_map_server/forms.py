@@ -131,6 +131,7 @@ class GeotiffForm(AbstractMapForm):
             upload_geotiff(
                 instance.sourceFile, settings.GEOSERVER_DEFAULT_WORKSPACE, store_name, 
                 minimum_value=instance.minimumValue, maximum_value=instance.maximumValue,
+                minimum_color=instance.minimumColor, maximum_color=instance.maximumColor,
             )
         except AssertionError:
             # TODO: properly handle a 500 error by returing a form error
@@ -138,6 +139,7 @@ class GeotiffForm(AbstractMapForm):
 
         instance.wmsUrl = "%sgeoserver/%s/wms" % (settings.SERVER_ROOT_URL, settings.GEOSERVER_DEFAULT_WORKSPACE)
         instance.layers = "%s:%s" % (settings.GEOSERVER_DEFAULT_WORKSPACE, store_name)
+        instance.colorPalette = "%s_%s_style" % (settings.GEOSERVER_DEFAULT_WORKSPACE, store_name)
 
         if commit:
             instance.save()
@@ -145,7 +147,7 @@ class GeotiffForm(AbstractMapForm):
     class Meta(AbstractMapForm.Meta):
         model = Geotiff
         exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'minLat', 'minLon', 'maxLat', 'maxLon', 
-            'tileWidth', 'tileHeight', 'projectionName', 'wmsUrl', 'layers', 'wmsVersion', 'minLevel', 'maxLevel', 'srs', 'format']
+            'tileWidth', 'tileHeight', 'projectionName', 'wmsUrl', 'layers', 'wmsVersion', 'minLevel', 'maxLevel', 'srs', 'format', 'colorPalette']
 
 
 class GeoJSONForm(AbstractMapForm):
