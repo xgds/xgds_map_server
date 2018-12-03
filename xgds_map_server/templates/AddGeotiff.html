@@ -1,29 +1,61 @@
 {% extends "MapBase.html" %}
+{% load static %}
+
+{% block scripts %}
+  <script type="text/javascript" src='{{ EXTERNAL_URL }}resumablejs/resumable.js'></script>
+  <script type="text/javascript" src="{% static 'resumable/js/django-resumable.js' %}"></script>
+{% endblock scripts %}
+
+{% block jsInit %}
+  document.addEventListener("DOMContentLoaded", function () {
+    "use strict";
+    var dj;
+    if (new Resumable().support) {
+      var sourceFileEl = $('input#id_sourceFile');
+      sourceFileEl.attr('data-upload-url', '/xgds_map_server/uploadResumable/');
+      dj = new DjangoResumable({
+        'onFileSuccess':function (r, file, message, el, progress, filePath, fileName) {
+          "use strict";
+          filePath.setAttribute('value', file.size + '_' + file.fileName);
+          if (fileName !== null) {
+            fileName.innerHTML = file.fileName;
+          } else {
+            var sib = sourceFileEl.siblings('.helptext');
+            sib.html(file.fileName);
+          }
+          progress.style.display = 'none';
+          $("#create_button").removeAttr("disabled");
+      }});
+      dj.initField(sourceFileEl[0]);
+    }
+  });
+{% endblock jsInit %}
 
 {% block contents %}
-{{ block.super }}
-<div class="btn-toolbar" role="toolbar" >
-  {% include "AddNodeButtons.html" %}
- </div>
+  {{ block.super }}
 
-{% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
-<form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
-<p>
-<label></label>
-<span class="h6"> Add Geotiff layer</span>
-</p>
-<p>
-<label></label>
-<span>
-Create a new Map Layer. You can add polygons, lines and points to the 
-Map Layer in the Map Layer editor.
-</span>
-</p> 
+  <div class="btn-toolbar" role="toolbar" >
+    {% include "AddNodeButtons.html" %}
+  </div>
 
-{{ mapForm.as_p }}
-<p class="form-group">
-<label></label>
-<input type="submit" value="Create" />
-</p>
-</form>
+  {% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
+  <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
+  <p>
+  <label></label>
+  <span class="h6"> Add Geotiff layer</span>
+  </p>
+  <p>
+  <label></label>
+  <span>
+  Create a new Map Layer. You can add polygons, lines and points to the
+  Map Layer in the Map Layer editor.
+  </span>
+  </p>
+
+  {{ mapForm.as_p }}
+  <p class="form-group">
+  <label></label>
+  <input type="submit" value="Create" />
+  </p>
+  </form>
 {% endblock %}

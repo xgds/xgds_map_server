@@ -115,6 +115,13 @@ class WMSTileForm(AbstractMapForm):
                    'maxLon']
 
 class GeotiffForm(AbstractMapForm):
+    sourceFile = ResumableFileField(
+        allowed_mimes=("image/tiff",),
+        upload_url=lambda: reverse('uploadResumable'),
+        chunks_dir=getattr(settings, 'FILE_UPLOAD_TEMP_DIR'),
+        label="GeoTiff File",
+    )
+
     def save(self, commit=True):
         instance = super(GeotiffForm, self).save(commit=False)
         if not instance.creator:
