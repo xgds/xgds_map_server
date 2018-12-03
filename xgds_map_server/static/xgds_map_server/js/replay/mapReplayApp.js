@@ -47,10 +47,9 @@
 		},
 		onRender: function() {
 			this.listenTo(app.vent, 'layers:loaded', this.renderTracks);
-
+			this.showChildView('layersRegion', new app.views.FancyTreeView());
 			app.map = new app.views.OLMapView();
 			this.showChildView('mapRegion', app.map);
-			this.showChildView('layersRegion', new app.views.FancyTreeView());
 			_.each(appOptions.timeseries_config, function(plotOptions) {
 			    var clean_model_name = plotOptions.model_name.replace(/\./g, "_");
 			    var the_html = xGDS.plot_gridstack_html.replace( new RegExp("\\$KEY","gm"), clean_model_name);

@@ -24,10 +24,10 @@
 			searchRegion: '#searchDiv'
 		},
 		onRender: function() {
+		    this.showChildView('layersRegion', new app.views.FancyTreeView());
 			app.map = new app.views.OLMapView();
 			this.showChildView('mapRegion', app.map);
-			this.showChildView('layersRegion', new app.views.FancyTreeView());
-			var hideModelChoice = (this.options.modelName !== undefined);
+			var hideModelChoice = (app.options.modelName !== undefined);
 	        this.showChildView('searchRegion', new app.views.SearchView({template: '#template-mapViewerSearch',
 	        													         searchResultsRegion: true,
 	        													         viewRegion: true,

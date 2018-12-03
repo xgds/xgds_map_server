@@ -53,12 +53,14 @@
 			'click #btn-submit-layer': function(){ app.vent.trigger('getSelectedFeatures'); }
 		},
 		regions: {
+			layersRegion: '#layers',
 			mapRegion: '#map',
 			toolbar: '#toolbar',
 			tabs: '#tabs',
 			editingTools: '#editingTools'
 		},
 		onRender: function() {
+			this.showChildView('layersRegion', new app.views.FancyTreeView());
 			app.map = new app.views.OLEditMapView();
 			this.showChildView('mapRegion', app.map);
 			this.showChildView('toolbar', new app.views.ToolbarView());

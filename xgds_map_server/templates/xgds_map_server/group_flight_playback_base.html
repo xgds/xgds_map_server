@@ -239,7 +239,9 @@
             timeseries_config: [],
             group_flight: {{ group_flight.toJson|safe }},
             group_flight_links: group_flight_links,
-            conditions: conditions
+            conditions: conditions,
+            search_seconds_before: {{ settings.XGDS_MAP_SERVER_SEARCH_SECONDS_BEFORE }},
+            search_seconds_after: {{ settings.XGDS_MAP_SERVER_SEARCH_SECONDS_AFTER }}
      };
 
         {% if extras %}

@@ -842,7 +842,6 @@ app.views.TabNavView = xGDS.TabNavView.extend({
     viewMap: {
     	'info': app.views.LayerInfoTabView,
     	'features': app.views.FeaturesTabView,
-    	'layers': app.views.FancyTreeView,
         'search': app.views.SearchView,
         'links': app.views.LinksView
     },

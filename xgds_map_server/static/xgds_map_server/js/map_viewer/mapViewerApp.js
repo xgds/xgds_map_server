@@ -23,9 +23,9 @@
 			layersRegion: '#layers'
 		},
 		onRender: function() {
+			this.showChildView('layersRegion', new app.views.FancyTreeView());
 			app.map = new app.views.OLMapView();
 			this.showChildView('mapRegion', app.map);
-			this.showChildView('layersRegion', new app.views.FancyTreeView());
 		}
 
 	});
