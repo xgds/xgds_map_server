@@ -2,8 +2,11 @@
 {% load static %}
 
 {% block scripts %}
+  <script type="text/javascript" src="{% static 'jquery/dist/jquery.js' %}"></script>
   <script type="text/javascript" src='{{ EXTERNAL_URL }}resumablejs/resumable.js'></script>
   <script type="text/javascript" src="{% static 'resumable/js/django-resumable.js' %}"></script>
+  <script type="text/javascript" src="{% static 'spectrum-colorpicker/spectrum.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'spectrum-colorpicker/spectrum.css' %}">
 {% endblock scripts %}
 
 {% block jsInit %}
@@ -29,6 +32,24 @@
       dj.initField(sourceFileEl[0]);
     }
   });
+
+  $("#id_minimumColor").spectrum({
+    preferredFormat: "hex",
+    showPaletteOnly: true,
+    togglePaletteOnly: true,
+    color: "#ff0000"
+  });
+
+
+  $("#id_maximumColor").spectrum({
+    preferredFormat: "hex",
+    showPaletteOnly: true,
+    togglePaletteOnly: true,
+    color: "#0000ff"
+  });
+
+  $("#id_minimumColor").val("#ff0000");
+  $("#id_maximumColor").val("#0000ff");
 {% endblock jsInit %}
 
 {% block contents %}
