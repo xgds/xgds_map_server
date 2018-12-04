@@ -447,7 +447,6 @@ app.views.SearchResultsView = Marionette.View.extend({
 		'keydown [name="search-keyword"]': 'keywordKeydown',
 		'keyup [name="search-keyword"]': 'keywordKeyup',
 		'keydown .ss-container': 'handleEnterSubmit',
-		// 'click #advanced_search_button': 'advancedSearchModal',
 		'click #clear-search-btn-id': 'clearSearch',
 		'click #keyword-dropdown-btn': function(){ this.generateQueryList("keyword") },
 		'click #tags-dropdown-btn': function(){ this.generateQueryList("tag") },
@@ -774,17 +773,6 @@ app.views.SearchResultsView = Marionette.View.extend({
         this.filterMapData(undefined);
         app.vent.trigger("repack");
     },
-	// Open the advanced search modal when the filter button is clicked
-	// advancedSearchModal: function(event){
-	// 	if ($('#myModal').is(':visible')){
-	// 		$('#advancedSearchModal').modal('hide');
-	// 	} else{
-	// 		event.preventDefault();
-	// 	    var searchDiv = $("#searchDiv");
-	// 	    searchDiv.show();
-	// 	    $('#advancedSearchModal').modal('show');
-	// 	}
-	// },
 	// Put the needed data for exporting into a hidden form
 	initializeExportData: function(){
     	var _this = this;
