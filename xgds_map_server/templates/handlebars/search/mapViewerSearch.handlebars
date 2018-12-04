@@ -1,3 +1,68 @@
+    <div id="exportModal" class="modal hide fade" role="dialog">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Export Search Data</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                <form id="exportForm" action="/xgds_map_server/search/exportSearchResults/" method="post" target="_blank">
+
+                    <input type="hidden" id="rowIds" name="rowIds" />
+                    <input type="hidden" id="modelName" name="modelName" />
+                    <input type="hidden" id="simpleSearchData" name="simpleSearchData" />
+                    <input type="hidden" id="advancedSearchData" name="advancedSearchData" />
+                    <input type="hidden" id="filetype" name="filetype" />
+                    <input type="hidden" id="nestTags" name="nestTags" />
+                    <input type="hidden" id="connector" name="connector" />
+                    <div class="form-group">
+                        <p class="export-form-label">File Name:</p>
+                        <input type="text" class="form-control" id="filename" name="filename"/>
+                    </div>
+                    <div class="form-group" id="filetype-buttons" data-toggle="buttons-radio" >
+                        <p class="export-form-label">File Type:</p>
+                        <div class="btn-group" role="group" data-toggle="buttons">
+                            <label class="btn btn-primary active" name="fileType" id="csv-type-btn" data="CSV">
+                                <input type="radio"  autocomplete="off" checked/>CSV
+                            </label>
+                            <label class="btn btn-primary" name="fileType" id="kml-type-btn" data="KML">
+                                <input type="radio"  autocomplete="off"/>KML
+                            </label>
+                            <label class="btn btn-primary" name="fileType" id="zip-type-btn" data="ZIP">
+                                <input type="radio"  autocomplete="off"/>ZIP
+                            </label>
+                        </div>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-secondary export-modal-footer-btn" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary export-csv-btn export-modal-footer-btn" id="export_btn">Export</button>
+                    </div>
+                </form>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="advancedSearchModal" class="modal hide fade" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">Filter</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+              <div class="modal-body">
+                <div id="searchFormDiv" style="display:none;" class="mt-negative-1rem"></div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+              </div>
+            </div>
+        </div>
+    </div>
 
     <div id="searchContainer" style="minHeight:100px">
 		<div id="message" style="color:red;" class='item auto'><br/></div>

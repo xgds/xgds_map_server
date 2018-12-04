@@ -80,12 +80,20 @@ app.views.SearchView = Marionette.View.extend({
         														  viewRegion: this.viewRegion});
         app.searchResultsView = this.searchResultsView;
         this.showChildView('searchResultsRegion', this.searchResultsView);
-    	if (this.preselectModel != undefined && this.preselectModel != 'None') {
-    		this.setupSearchForm(true);
+        var runSearch = this.preselectModel != undefined && this.preselectModel != 'None';
+        if (!runSearch){
+        	var newModel = this.$("#searchModelSelector").val();
+        	if (!_.isUndefined(newModel)) {
+        		runSearch = true;
+			}
+		}
+        this.setupSearchForm(runSearch);
+
+		if (!_.isUndefined(this.selectedModel)) {
+            this.$("#form-" + this.selectedModel).on('submit', function (event) {
+                event.preventDefault();
+            });
         }
-    	this.$("#form-"+this.selectedModel).on('submit', function(event){
-            event.preventDefault();
-        });
     },
     onRender: function() {
         app.vent.trigger("repack");
@@ -97,6 +105,9 @@ app.views.SearchView = Marionette.View.extend({
     	var newModel = app.options.modelName;
     	if (newModel == undefined || newModel == 'None') {
     		newModel = this.$("#searchModelSelector").val();
+    		if (_.isUndefined(newModel)) {
+    			return;
+			}
     	} else {
     		var dropdownModel = this.$("#searchModelSelector").val();
     		if (dropdownModel != undefined && dropdownModel != newModel){
@@ -117,10 +128,23 @@ app.views.SearchView = Marionette.View.extend({
         var templateName = '#template-' + this.selectedModel;
         this.searchFormView = new app.views.SearchFormView({template:templateName});
         var sfRegion = this.getRegion('searchFormRegion');
+        addDateTimePickers();
+        /*
         if (hideForm) {
             sfRegion.$el.hide();
-        }
+        }*/
         sfRegion.show(this.searchFormView);
+        sfRegion.$el.show();
+        var doSearchButton = sfRegion.$el.find("#doSearch");
+        doSearchButton.off('click');
+        var context = this;
+        doSearchButton.on('click', function(event) {
+        	context.doSearch(event)
+        });
+
+        this.$("#form-" + this.selectedModel).on('submit', function (event) {
+			event.preventDefault();
+		});
         
         var theModelMap = app.options.searchModels[newModel];
         if (theModelMap.searchInitMethods != undefined){
@@ -165,7 +189,11 @@ app.views.SearchView = Marionette.View.extend({
         }
     },
     getFilterData: function() {
-    	var theForm = this.$("#form-"+this.selectedModel);
+    	var formName = "#form-" + this.selectedModel;
+    	var theForm = this.$(formName);
+    	if (theForm.length == 0) {
+    		theForm = $(formName);
+		}
     	if (theForm.length == 1){
     		var result = theForm.serializeArray();
     		var newresult = {};
@@ -209,8 +237,6 @@ app.views.SearchView = Marionette.View.extend({
     	if ($('#advancedSearchModal').is(':visible')){
     		$('#advancedSearchModal').modal('hide');
 		}
-    	return;
-    	
     },
     openSaveDialog: function() {
     	this.setupSaveSearchDialog();
@@ -421,7 +447,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 		'keydown [name="search-keyword"]': 'keywordKeydown',
 		'keyup [name="search-keyword"]': 'keywordKeyup',
 		'keydown .ss-container': 'handleEnterSubmit',
-		'click #advanced_search_button': 'advancedSearchModal',
+		// 'click #advanced_search_button': 'advancedSearchModal',
 		'click #clear-search-btn-id': 'clearSearch',
 		'click #keyword-dropdown-btn': function(){ this.generateQueryList("keyword") },
 		'click #tags-dropdown-btn': function(){ this.generateQueryList("tag") },
@@ -749,16 +775,16 @@ app.views.SearchResultsView = Marionette.View.extend({
         app.vent.trigger("repack");
     },
 	// Open the advanced search modal when the filter button is clicked
-	advancedSearchModal: function(event){
-		if ($('#myModal').is(':visible')){
-			$('#advancedSearchModal').modal('hide');
-		} else{
-			event.preventDefault();
-		    var searchDiv = $("#searchDiv");
-		    searchDiv.show();
-		    $('#advancedSearchModal').modal('show');
-		}
-	},
+	// advancedSearchModal: function(event){
+	// 	if ($('#myModal').is(':visible')){
+	// 		$('#advancedSearchModal').modal('hide');
+	// 	} else{
+	// 		event.preventDefault();
+	// 	    var searchDiv = $("#searchDiv");
+	// 	    searchDiv.show();
+	// 	    $('#advancedSearchModal').modal('show');
+	// 	}
+	// },
 	// Put the needed data for exporting into a hidden form
 	initializeExportData: function(){
     	var _this = this;
@@ -1511,17 +1537,3 @@ app.views.SearchResultsView = Marionette.View.extend({
     }
 });
 
-/* var xgds_search = xgds_search || {};
-$.extend(xgds_search,{
-	hookAdvancedSearchButton : function() {
-		// turn off by default
-		var advancedSearchButton = $("#advanced_search_button");
-		advancedSearchButton.off('click');
-		advancedSearchButton.on('click',function(event) {
-		    event.preventDefault();
-		    var searchDiv = $("#searchDiv");
-		    searchDiv.show();
-		    $('#advancedSearchModal').modal('show');
-		});
-	}
-}); */
