@@ -24,15 +24,35 @@ app.views.ReplayDataPlotsView = Marionette.View.extend({
     '        </div>',
     template: '#template-data-plots',
     onRender: function(){
-
+        var parent = this.$el.find("div#data-plots-div");
         _.each(appOptions.timeseries_config, function(plotOptions) {
 			    var clean_model_name = plotOptions.model_name.replace(/\./g, "_");
 			    var the_html = this.data_plot_html.replace( new RegExp("\\$KEY","gm"), clean_model_name);
-			    var parent = this.$el.find("div#data-plots-div");
+
 			    parent.append(the_html);
 			    var regionName = clean_model_name + 'Region';
 			    this.addRegion(regionName, '#' + clean_model_name + '-plot-container');
 				var plotView = new app.views.TimeseriesPlotView(plotOptions);
+				this.showChildView(regionName, plotView);
+			}, this);
+    }
+
+});
+
+app.views.ReplayDataValuesView = Marionette.View.extend({
+    data_values_html:
+    '        <div id="$KEY-value-container" class="ml-1 mr-2">\n' +
+    '        </div>',
+    template: '#template-data-values',
+    onAttach: function(){
+        var parent = this.$el.find("div#data-values-div");
+        _.each(appOptions.timeseries_config, function(plotOptions) {
+			    var clean_model_name = plotOptions.model_name.replace(/\./g, "_");
+			    var the_html = this.data_values_html.replace( new RegExp("\\$KEY","gm"), clean_model_name);
+			    parent.append(the_html);
+			    var regionName = clean_model_name + 'ValueRegion';
+			    this.addRegion(regionName, '#' + clean_model_name + '-value-container');
+				var plotView = new app.views.TimeseriesValueView(plotOptions);
 				this.showChildView(regionName, plotView);
 			}, this);
     }

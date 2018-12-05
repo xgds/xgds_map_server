@@ -23,7 +23,7 @@
 			layersRegion: '#layers',
 			tabsRegion: '#tabs',
 			plotRegion: '#plot-container',
-			// plotDataValuesRegion: '#plot-data-values-container'
+			plotDataValuesRegion: '#plot-data-values-container'
 		},
 
 		onRender: function() {
@@ -31,8 +31,8 @@
 			app.map = new app.views.OLMapView();
 			this.showChildView('mapRegion', app.map);
 			this.showChildView('tabsRegion', new app.views.TabNavView());
-			// this.showChildView('plotDataValuesRegion', new app.views.PlotValuesView());
 			this.showChildView('plotRegion', new app.views.ReplayPlotView());
+			this.showChildView('plotDataValuesRegion', new app.views.ReplayDataValuesView());
 		}
 
 	});
