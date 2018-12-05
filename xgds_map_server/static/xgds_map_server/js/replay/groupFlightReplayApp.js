@@ -22,7 +22,8 @@
 			mapRegion: '#map',
 			layersRegion: '#layers',
 			tabsRegion: '#tabs',
-			plotRegion: '#plot-container'
+			plotRegion: '#plot-container',
+			// plotDataValuesRegion: '#plot-data-values-container'
 		},
 
 		onRender: function() {
@@ -30,12 +31,14 @@
 			app.map = new app.views.OLMapView();
 			this.showChildView('mapRegion', app.map);
 			this.showChildView('tabsRegion', new app.views.TabNavView());
+			// this.showChildView('plotDataValuesRegion', new app.views.PlotValuesView());
 			this.showChildView('plotRegion', new app.views.ReplayPlotView());
 		}
 
 	});
 	
 	xGDS.ReplayApplication = xGDS.Application.extend( {
+		plot_models_initialized: false,
         trackViews: [],
 		mapBottomPadding: 50,
 		getRootView: function() {
@@ -44,10 +47,18 @@
 		onStart: function() {
         	xGDS.Application.prototype.onStart.call(this);
         	this.parseJSON();
+        	this.initializePlotModels();
         },
         initialize: function(options){
             xGDS.Application.prototype.initialize(options);
 			this.listenTo(this.vent, 'layers:loaded', this.renderTracks);
+		},
+		initializePlotModels: function() {
+        	app.plot_models = {};
+			_.each(this.options.timeseries_config, function(options) {
+				app.plot_models[options.model_name] = new app.models.PlotModel(options);
+			});
+			app.plot_models_initialized = true;
 		},
 		parseJSON: function() {
             app.groupFlight = new app.models.GroupFlight(app.options.group_flight);

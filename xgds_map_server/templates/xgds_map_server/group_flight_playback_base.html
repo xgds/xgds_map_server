@@ -36,19 +36,20 @@
     </div>
     <div id="plot-container" class="plot-container">
 	</div>
+    <div id="plot-data-values-container" >
+	</div>
 {% endblock preDashboard %}
 
 
 {% block map %}
     <div id="map-gridstack-item" class="grid-stack-item"
     data-gs-x="0" data-gs-y="0"
-    data-gs-width="2" data-gs-height="4" >
+    data-gs-width="2" data-gs-height="2" >
         <div class="grid-stack-item-content" id="map-gridstack-item-content" >
             <ul class="nav justify-content-end">
                 <i class="fa fa-lock pinDiv gray-light"></i>
             </ul>
             <div id="overmap" class="mb-1 mt-negative-1rem">
-                {% if mapLayerDict.jsonFeatures|length == 0 %}{% siteframe_form %}{% endif %}
                 <button id="layers_button" type="button" class="btn btn-primary" data-backdrop=false data-toggle="modal" data-target="#layers_modal">
                     Layers
                 </button>
@@ -202,6 +203,7 @@
                 url : '/timeseries/classes/metadata/json',
                 type: "POST",
                 data: jsonData,
+                async: false,  // we need to get this before starting the app
                 dataType: "json",
                 success: function(data) {
                     _.each(data, function(d) {
