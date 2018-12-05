@@ -28,13 +28,6 @@
 {% endblock buttonrowRight %}
 {% endif %}
 
-{% block pretemplate %}
-    <script type="x-template/underscore" id="plot_contents">
-		<div id="plotDiv" class="plot-div"></div>
-		<div id="plotLegend" class="row ml-2"></div>
-    </script>
-{% endblock pretemplate %}
-
 {% block preDashboard %}
     <div id="controllers" >
     	{% include "xgds_core/playback_controller.html" %}
