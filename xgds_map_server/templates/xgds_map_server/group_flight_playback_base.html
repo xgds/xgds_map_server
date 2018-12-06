@@ -34,9 +34,9 @@
     </div>
     <div id="masterSlider" class="masterSlider" >
     </div>
-    <div id="plot-container" class="plot-container">
+    <div id="plot-container" class="plot-container" style="margin-top:-10px;">
 	</div>
-    <div id="plot-data-values-container" class="row">
+    <div id="plot-data-values-container" class="row" style="margin-top:-10px;">
 	</div>
 {% endblock preDashboard %}
 
@@ -98,11 +98,16 @@
     <script type="text/javascript" src="{% static 'xgds_map_server/js/replay/mapReplayViews.js' %}"></script>
 
 
-    <script type="x-template/underscore" id="plot_contents">
+    <script type="x-template/underscore" id="timeseries_plot_contents">
         <div id="plotTitle" class="row mt-2"></div>
         <div id="plotDiv" class="plot-div" style="width:100%;height:110px;"></div>
         <div id="plotLegend" class="row ml-2 mb-2"></div>
         <div id="timeseries_message"></div>
+    </script>
+
+    <script type="x-template/underscore" id="plot_contents">
+        <div id="plotDiv" class="plot-div" style="width:100%;height:95px;"></div>
+        <div id="plotLegend" class="row ml-2 mb-2"></div>
     </script>
 
 	{% for template_name, template in templates.items %}
