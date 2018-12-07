@@ -166,7 +166,8 @@
             group_flight_links: group_flight_links,
             conditions: conditions,
             search_seconds_before: {{ settings.XGDS_MAP_SERVER_SEARCH_SECONDS_BEFORE }},
-            search_seconds_after: {{ settings.XGDS_MAP_SERVER_SEARCH_SECONDS_AFTER }}
+            search_seconds_after: {{ settings.XGDS_MAP_SERVER_SEARCH_SECONDS_AFTER }},
+            searchOptions: { fitMap: false },
      };
 
         {% if extras %}
@@ -221,9 +222,6 @@
 
 	$(function(){
 		app.start(appOptions);
-    	app.vent.on("mapSearch:drewFeatures", function(e) {
-        	app.vent.trigger('mapSearch:fit');
-        });
 
         app.vent.on('searchDiv:visible', function(){
 		 	if (!searchDiv_initialized){

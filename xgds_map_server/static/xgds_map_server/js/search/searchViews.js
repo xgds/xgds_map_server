@@ -464,7 +464,13 @@ app.views.SearchResultsView = Marionette.View.extend({
 		this.keywordQuoteMode = false;
 		this.keywordShiftMode = false;
 		this.dropdownTagWidgets = 0;
+		this.fitMap = true;
 		this.setupSearchValues();
+		if (!_.isUndefined(app.options.searchOptions)) {
+			// app.searchOptions override any defaults
+			Object.assign(this, app.options.searchOptions);
+		}
+
 		var context = this;
 		app.on('forceDetail', function(data){
 			var modelMap = context.lookupModelMap(data.type);
@@ -1505,7 +1511,7 @@ app.views.SearchResultsView = Marionette.View.extend({
         });
         if (!_.isEmpty(fulldata)){
         	app.vent.trigger("mapSearch:found", fulldata);
-        	if (this.firstLoad){
+        	if (this.fitMap && this.firstLoad){
         		app.vent.trigger("mapSearch:fit");
         		this.firstLoad = false;
         	}
