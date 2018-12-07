@@ -465,6 +465,8 @@ app.views.SearchResultsView = Marionette.View.extend({
 		this.keywordShiftMode = false;
 		this.dropdownTagWidgets = 0;
 		this.fitMap = true;
+		this.time_control_search = false;
+		this.today = true;
 		this.setupSearchValues();
 		if (!_.isUndefined(app.options.searchOptions)) {
 			// app.searchOptions override any defaults
@@ -548,11 +550,33 @@ app.views.SearchResultsView = Marionette.View.extend({
     	var todayCheckbox = $('#today');
     	if (todayCheckbox.length > 0){
     		todayCheckbox.prop('checked', app.options.settingsLive);
-    		todayCheckbox.click(function() {
-    			context.theDataTable.ajax.reload( null, true );
-    		});
+    		if (! this.today) {
+    			$('#today_div').hide();
+			} else {
+                todayCheckbox.click(function () {
+                    context.theDataTable.ajax.reload(null, true);
+                });
+            }
     	}
+
+    	if (this.time_control_search) {
+    		var time_control_search = $('#time_control_search');
+    		$('#time_control_search_div').css('visibility', 'visible');
+    		time_control_search.click(function () {
+    			var selected = time_control_search[0].checked;
+
+    			if (selected) {
+                    // add a listener for playback controller stop to set the start and end times based on current time and do the search
+                    playback.addStopListener(context.doTimeSearch);
+                } else {
+                    playback.removeStopListener(context.doTimeSearch);
+				}
+			});
+		}
     },
+	doTimeSearch: function(currentTime) {
+		console.log('DO TIME SEARCH ' + currentTime.format())
+	},
     buildEditableEntry: function(entry, index, columnType) {
     	entry['type'] = columnType;
 		entry['data'] = function( row, type, val, meta ){
