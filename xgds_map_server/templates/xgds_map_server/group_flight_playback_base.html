@@ -230,6 +230,14 @@
 		 	}
 		 });
 
+        app.vent.on('selectData', function(data) {
+            if (!playback.playFlag) {
+                if ('timestamp' in data) {
+                    playback.setCurrentTime(data.timestamp);
+                }
+            }
+        });
+
         {% block preLayout %}
 		{% endblock preLayout %}
 

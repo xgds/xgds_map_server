@@ -1289,6 +1289,10 @@ app.views.SearchResultsView = Marionette.View.extend({
 				for (var i=0; i<indexes.length; i++){
         	        var modelMap = context.lookupModelMap(context.selectedModel);
         	    	var data = _.object(modelMap.columns, dt.row(indexes[i]).data());
+        	    	if (!('timestamp' in data)) {
+        	    		data.timestamp = data[modelMap.columns[1]]; // brittle, but the 2nd column is the time.
+					}
+        	    	app.vent.trigger('selectData', data);
         	    	if (app.options.showDetailView){
         	    		if (!_.isUndefined(useOWATracking) && useOWATracking) {
                             owaTrackAction(data.type, 'searchDetail', data.pk + ':' + data.name);
