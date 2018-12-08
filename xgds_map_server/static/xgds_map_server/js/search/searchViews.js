@@ -242,15 +242,16 @@ app.views.SearchView = Marionette.View.extend({
     },
 	doTimeSearch: function(currentTime) {
 		// set the min time and max time in the form
+		var time = moment(currentTime);
 		var theForm = $("#form-"+this.selectedModel);
 		var dtPickers = theForm.find(".datetimepicker");
 		for (var i=0; i<dtPickers.length; i++) {
 			var input = dtPickers[i];
 			if (input.id.indexOf('min') >= 0) {
-				var earliertime = currentTime.subtract(app.options.search_seconds_before, 's');
+				var earliertime = time.subtract(app.options.search_seconds_before, 's');
 				$(input).val(earliertime.format());
 			} else if (input.id.indexOf('max') >= 0) {
-				var latertime = currentTime.add(app.options.search_seconds_after, 's');
+				var latertime = time.add(app.options.search_seconds_after, 's');
 				$(input).val(latertime.format());
 			}
 		}
