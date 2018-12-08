@@ -66,6 +66,15 @@ app.views.SearchView = Marionette.View.extend({
         	return input === modelName ? 'selected' : '';
         });
         xgds_notes.initializeInput();
+        var context = this;
+        app.vent.on('search:doTimeSearch', function(time) {
+        	context.timeSearch = true;
+        	context.doTimeSearch(time);
+        });
+        app.vent.on('search:undoTimeSearch', function(time) {
+        	context.timeSearch = false;
+        	context.undoTimeSearch(time);
+        });
     },
     templateContext: function() {
     	var data = {searchModels: this.searchableModels,
@@ -153,7 +162,11 @@ app.views.SearchView = Marionette.View.extend({
     		}
     	}
         if (runSearch != undefined && runSearch == true){
-        	this.doSearch();
+        	if (this.timeSearch) {
+        		this.doTimeSearch();
+			} else {
+                this.undoTimeSearch();
+            }
         }
     },
     setupSaveSearchDialog: function() {
@@ -227,6 +240,43 @@ app.views.SearchView = Marionette.View.extend({
     	
     	return result;
     },
+	doTimeSearch: function(currentTime) {
+		// set the min time and max time in the form
+		var theForm = $("#form-"+this.selectedModel);
+		var dtPickers = theForm.find(".datetimepicker");
+		for (var i=0; i<dtPickers.length; i++) {
+			var input = dtPickers[i];
+			if (input.id.indexOf('min') >= 0) {
+				var earliertime = currentTime.subtract(app.options.search_seconds_before, 's');
+				$(input).val(earliertime.format());
+			} else if (input.id.indexOf('max') >= 0) {
+				var latertime = currentTime.add(app.options.search_seconds_after, 's');
+				$(input).val(latertime.format());
+			}
+		}
+		var selects = theForm.find('select');
+		for (var j=0; j<selects.length; j++){
+			var select = selects[j];
+			if (select.id.indexOf('timezone') >= 0){
+				$(select).val(getTimeZone());
+			}
+		}
+		this.doSearch();
+	},
+	undoTimeSearch: function() {
+    	// clear the min time and max time in the form
+		var theForm = $("#form-"+this.selectedModel);
+		var dtPickers = theForm.find(".datetimepicker");
+		for (var i=0; i<dtPickers.length; i++) {
+			var input = dtPickers[i];
+			if (input.id.indexOf('min') >= 0) {
+				$(input).val('');
+			} else if (input.id.indexOf('max') >= 0) {
+				$(input).val('');
+			}
+		}
+		this.doSearch();
+	},
     doSearch: function(event) {
     	if (!_.isUndefined(event)){
     		event.preventDefault();
@@ -567,15 +617,16 @@ app.views.SearchResultsView = Marionette.View.extend({
 
     			if (selected) {
                     // add a listener for playback controller stop to set the start and end times based on current time and do the search
-                    playback.addStopListener(context.doTimeSearch);
+                    playback.addStopListener(context.handleTimeSearch);
                 } else {
-                    playback.removeStopListener(context.doTimeSearch);
+                    playback.removeStopListener(context.handleTimeSearch);
+                    app.vent.trigger('search:undoTimeSearch');
 				}
 			});
 		}
     },
-	doTimeSearch: function(currentTime) {
-		console.log('DO TIME SEARCH ' + currentTime.format())
+	handleTimeSearch: function(time) {
+		app.vent.trigger('search:doTimeSearch', time);
 	},
     buildEditableEntry: function(entry, index, columnType) {
     	entry['type'] = columnType;

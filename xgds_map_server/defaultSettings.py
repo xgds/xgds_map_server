@@ -124,7 +124,7 @@ PIPELINE['JAVASCRIPT']['custom_map'] = {'source_filenames': ('xgds_map_server/js
                                         }
 
 # If you are in replay mode how many seconds before and after to bracket your search results
-XGDS_MAP_SERVER_SEARCH_SECONDS_BEFORE = 30
-XGDS_MAP_SERVER_SEARCH_SECONDS_AFTER = 30
+XGDS_MAP_SERVER_SEARCH_SECONDS_BEFORE = 0
+XGDS_MAP_SERVER_SEARCH_SECONDS_AFTER = 300
 
 
