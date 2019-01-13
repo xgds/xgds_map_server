@@ -1132,9 +1132,10 @@ def getMapLayerJSON(request, layerID):
     if mapLayer.parent is not None:
         mapLayer_json['data']['parentId'] = mapLayer.parent.uuid
     json_data = json.dumps(mapLayer_json, indent=4, cls=GeoDjangoEncoder)
-    return HttpResponse(content=json_data,
+    resp = HttpResponse(content=json_data,
                         content_type="application/json")
-
+    resp['Content-Disposition'] = 'attachment; filename=%s.json' % mapLayer.name.replace(" ", "_")
+    return  resp
 
 # def getMapCollectionJSON(request, mapCollectionID):
 #     mapCollection = MapCollection.objects.get(pk=mapCollectionID)
