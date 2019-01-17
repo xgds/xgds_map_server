@@ -132,9 +132,13 @@ def getMapTreePage(request):
     """
     HTML tree of maps using fancytree
     """
-    jsonMapTreeUrl = request.build_absolute_uri(reverse('mapTreeJSON'))
-    moveNodeURL = request.build_absolute_uri(reverse('moveNode'))
-    setVisibilityURL = request.build_absolute_uri(reverse('setNodeVisibility'))
+    # Not sure why these were absolute since they are for browswer not GE.  Trying with just "reverse"
+    #    jsonMapTreeUrl = request.build_absolute_uri(reverse('mapTreeJSON'))
+    #    moveNodeURL = request.build_absolute_uri(reverse('moveNode'))
+    #    setVisibilityURL = request.build_absolute_uri(reverse('setNodeVisibility'))
+    jsonMapTreeUrl = reverse('mapTreeJSON')
+    moveNodeURL = reverse('moveNode')
+    setVisibilityURL = reverse('setNodeVisibility')
     return render(request,
                   "MapTree.html",
                   {'JSONMapTreeURL': jsonMapTreeUrl,
