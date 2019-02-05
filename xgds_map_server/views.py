@@ -132,9 +132,13 @@ def getMapTreePage(request):
     """
     HTML tree of maps using fancytree
     """
-    jsonMapTreeUrl = request.build_absolute_uri(reverse('mapTreeJSON'))
-    moveNodeURL = request.build_absolute_uri(reverse('moveNode'))
-    setVisibilityURL = request.build_absolute_uri(reverse('setNodeVisibility'))
+    # Not sure why these were absolute since they are for browswer not GE.  Trying with just "reverse"
+    #    jsonMapTreeUrl = request.build_absolute_uri(reverse('mapTreeJSON'))
+    #    moveNodeURL = request.build_absolute_uri(reverse('moveNode'))
+    #    setVisibilityURL = request.build_absolute_uri(reverse('setNodeVisibility'))
+    jsonMapTreeUrl = reverse('mapTreeJSON')
+    moveNodeURL = reverse('moveNode')
+    setVisibilityURL = reverse('setNodeVisibility')
     return render(request,
                   "MapTree.html",
                   {'JSONMapTreeURL': jsonMapTreeUrl,
@@ -1132,9 +1136,10 @@ def getMapLayerJSON(request, layerID):
     if mapLayer.parent is not None:
         mapLayer_json['data']['parentId'] = mapLayer.parent.uuid
     json_data = json.dumps(mapLayer_json, indent=4, cls=GeoDjangoEncoder)
-    return HttpResponse(content=json_data,
+    resp = HttpResponse(content=json_data,
                         content_type="application/json")
-
+    resp['Content-Disposition'] = 'attachment; filename=%s.json' % mapLayer.name.replace(" ", "_")
+    return  resp
 
 # def getMapCollectionJSON(request, mapCollectionID):
 #     mapCollection = MapCollection.objects.get(pk=mapCollectionID)

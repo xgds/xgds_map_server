@@ -157,7 +157,7 @@ app.views.FancyTreeView = Marionette.View.extend({
         $("#layer-tree-menu a").on("click", function(event) {
             if (event.target.innerHTML == 'Edit') {
                 window.open(selectedNode.data.href, '_edit');
-            } else if (event.target.innerHTML == 'Download'){
+            } else if (event.target.innerHTML == 'Download KML'){
                 var url = '';
                 if (selectedNode.data.type == 'MapLayer'){
                     url = '/xgds_map_server/maplayer/kml/';
@@ -173,6 +173,19 @@ app.views.FancyTreeView = Marionette.View.extend({
                  }
              });
             }
+            else if ((event.target.innerHTML == 'Download JSON') && (selectedNode.data.type == "MapLayer")) {
+                url = "/xgds_map_server/mapLayerJSON/" + selectedNode.key;
+                $.fileDownload(url, {
+                    httpMethod: "GET",
+                    failCallback: function (htmlResponse, url) {
+                        console.log(htmlResponse);
+                        alert('Could not download kml.');
+                    }
+                });
+            } else {
+                alert("Cannot download JSON for this type of layer.");
+            }
+
             context.hideContextMenu();
         });
 

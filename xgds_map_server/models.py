@@ -675,6 +675,21 @@ class MapLayer(AbstractMap):
         result['uuid'] = self.uuid
         return result
 
+    # A bit hacky, but... toMapDict() returns metadata info on the layer object so getMappedObjectsJson() can be used
+    # to return a summary of the available layers if you pass it (e.g.) xgds_map_server.MapLayer as a param.
+    def toMapDict(self):
+        result = {"maxLat": self.maxLat, "minLat": self.minLat,
+                  "maxLon": self.maxLon, "minLon": self.minLon,
+                  "parent": self.parent.uuid, "creator":self.creator,
+                  "defaultColor": self.defaultColor,
+                  "description": self.description,
+                  "creation_time": self.creation_time,
+                  "uuid": self.uuid, "visible": self.visible,
+                  "modification_time": self.modification_time,
+                  "region": self.region,
+                  "name": self.name}
+        return result
+
     def get_tree_json(self):
         """ Get the json block that the fancy tree needs to render this node """
         result = super(MapLayer, self).get_tree_json()
