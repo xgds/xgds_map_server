@@ -18,6 +18,23 @@
 
 {% block siteSection %}{{ group_flight.name }}{% endblock %}
 
+
+{% block post_layers %}
+    <div id="details_modal" class="modal" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detail View</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body mt-0 pt-0">
+                    <div id="details_modal_body"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+{%  endblock post_layers %}
+
 {% block buttonrowLeft %}
     <h4>{{ group_flight.name }}</h4>
 {% endblock buttonrowLeft %}

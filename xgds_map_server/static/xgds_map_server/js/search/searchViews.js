@@ -435,7 +435,7 @@ app.views.SearchDetailView = Marionette.View.extend({
         		context.detailNotesView.updateContents();
         	}
     	});
-    },
+    }
 });
 
 /*
@@ -847,6 +847,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 
         this.theDataTable = $(this.theTable).DataTable(dataTableObj);
         this.theDataTable.columns.adjust().draw();
+        this.connectDoubleClickCallback();
         this.connectSinglePickCallback();
         this.connectMasterPickCallback();
         this.connectSelectCallback();
@@ -1423,6 +1424,17 @@ app.views.SearchResultsView = Marionette.View.extend({
 			}
 		});
 	},
+	connectDoubleClickCallback: function() {
+    	var _this = this;
+		$(document).on('dblclick', 'tr', function(e) {
+			var row = _this.theDataTable.row( this ).data();
+			var data = _this.getObject(row, _this);
+
+			$("#details_modal").modal('show');
+			_this.forceDetailView(data, _this.lookupModelMap(_this.selectedModel), true);
+			// TODO make sure it is yellow and selected row
+		});
+	},
     updateContents: function(selectedModel, data) {
         if (!_.isUndefined(data) && data.length > 0){
             if (!_.isUndefined(this.theDataTable)) {
@@ -1447,12 +1459,15 @@ app.views.SearchResultsView = Marionette.View.extend({
           columnRow.append("<th>"+ col +"</th>");
       });
     },
-    updateDetailView: function(data, modelMap) {
-    	if (! app.options.showDetailView){
+    updateDetailView: function(data, modelMap, popup) {
+		if (_.isUndefined(popup)){
+			popup = false;
+		}
+    	if (!popup && !app.options.showDetailView){
     		return;
     	}
     	if (this.detailView == undefined){
-    		this.createDetailView(modelMap.handlebarSource, data);
+    		this.createDetailView(modelMap.handlebarSource, data, popup);
         } else {
         	this.detailView.setHandlebars(modelMap.handlebarSource);
         	this.detailView.setData(data);
@@ -1464,7 +1479,14 @@ app.views.SearchResultsView = Marionette.View.extend({
         	}
         }
     },
-    createDetailView: function(handlebarSource, data) {
+    createDetailView: function(handlebarSource, data, popup) {
+		if (_.isUndefined(popup)){
+			popup = false;
+		} else if (popup){
+			if (!('popupDetail' in this.regions)) {
+                this.addRegion('popupDetail', { el: $('#details_modal_body')});
+            }
+		}
     	this.detailView = new app.views.SearchDetailView({
     		handlebarSource:handlebarSource,
     		data:data,
@@ -1478,7 +1500,11 @@ app.views.SearchResultsView = Marionette.View.extend({
     	});
     	try {
     		this.hookPrevNextButtons();
-    		this.showChildView('viewRegion', this.detailView);
+    		if (popup) {
+                this.showChildView('popupDetail', this.detailView);
+            } else {
+                this.showChildView('viewRegion', this.detailView);
+			}
     		this.showChildView('viewNotesRegion', this.detailNotesView);
     	} catch (err){
     	}
@@ -1522,8 +1548,11 @@ app.views.SearchResultsView = Marionette.View.extend({
     	var data = _.object(modelMap.columns, theRow);
     	return data
     },
-    forceDetailView: function(data, modelMap){
-    	if (! app.options.showDetailView){
+    forceDetailView: function(data, modelMap, popup){
+		if (_.isUndefined(popup)) {
+			popup = false;
+		}
+    	if (!popup && !app.options.showDetailView){
     		return;
     	}
     	var context = this;
@@ -1536,22 +1565,22 @@ app.views.SearchResultsView = Marionette.View.extend({
 						$.getManyJS( modelMap.viewJS, function() {
 							if (modelMap.viewCss != undefined){
 								$.getManyCss(modelMap.viewCss, function(){
-									context.updateDetailView(data,modelMap);
+									context.updateDetailView(data, modelMap, popup);
 								});
 							} else {
-								context.updateDetailView(data,modelMap);
+								context.updateDetailView(data, modelMap, popup);
 							}
 						});
 					} else if (modelMap.viewCss != undefined){
 						$.getManyCss(modelMap.viewCss, function(){
-							context.updateDetailView(data,modelMap);
+							context.updateDetailView(data, modelMap, popup);
 						});
 					} else {
-						context.updateDetailView(data,modelMap);
+						context.updateDetailView(data, modelMap, popup);
 					}
 			    });
     		} else {
-    			context.updateDetailView(data,modelMap);
+    			context.updateDetailView(data, modelMap, popup);
     		}
 		} 
     	if (_.isNumber(data.lat)){
