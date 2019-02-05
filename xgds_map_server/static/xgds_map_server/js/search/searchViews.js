@@ -1550,7 +1550,7 @@ app.views.SearchResultsView = Marionette.View.extend({
     },
     forceDetailView: function(data, modelMap, popup){
 		if (_.isUndefined(popup)) {
-			popup = false;
+			popup = 'popupDetail' in this.regions;
 		}
     	if (!popup && !app.options.showDetailView){
     		return;
