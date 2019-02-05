@@ -92,6 +92,9 @@ XGDS_MAP_SERVER_MAP_LOADED_CALLBACK = 'xgds_map.coordinator.init'
 # these models should ideally have a toMapDict method that returns the dict you would want to use to render the model.
 XGDS_MAP_SERVER_JS_MAP = {}
 
+# if these do not match, override them in siteSettings
+XGDS_MAP_SERVER_SEARCH_MODELS = XGDS_MAP_SERVER_JS_MAP
+
 # If you are using spherical mercator this will be the norm.
 # If you are not, override the below values. 
 XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM = 'EPSG:3857'

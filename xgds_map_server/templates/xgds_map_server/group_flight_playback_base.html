@@ -176,7 +176,7 @@
             simulator: '{{ simulator }}',
             siteFrame: {% siteframe settings.XGDS_CURRENT_SITEFRAME_ID %},
             XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: '{{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }}',
-            searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
+            searchModels: {{ settings.XGDS_MAP_SERVER_SEARCH_MODELS|safe }},
             settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:'true,false' }},
             track_urls: [],
             flight_ids: [],

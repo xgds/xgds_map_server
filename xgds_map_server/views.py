@@ -1853,7 +1853,7 @@ def getGroupFlightPlaybackPage(request, group_flight_name, templatePath='xgds_ma
 
 
 def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSearch.html', forceUserSession=False, searchForms=None, filter=None):
-    searchModelDict = settings.XGDS_MAP_SERVER_JS_MAP
+    searchModelDict = settings.XGDS_MAP_SERVER_SEARCH_MODELS
     if modelName and not searchForms:
         searchForms = getSearchForms(modelName, filter)
     
