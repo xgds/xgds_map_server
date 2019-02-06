@@ -51,8 +51,6 @@
     <div id="controllers" >
     	{% include "xgds_core/playback_controller.html" %}
     </div>
-    <div id="masterSlider" class="masterSlider" >
-    </div>
     <div id="plot-container" class="plot-container" style="margin-top:-10px;">
 	</div>
     <div id="plot-data-values-container" class="row" style="margin-top:-10px;">
@@ -267,8 +265,10 @@
         {% block otherJSInit %}
         server_time_url = "{% url 'server_time' %}";
         serverTimezone = "{{TIME_ZONE}}";
+            {% block start_end %}
         group_flight_start = {% if group_flight.start_time %}new moment('{{ group_flight.start_time.isoformat }}'){% else %}null{% endif %};
         group_flight_end = {% if group_flight.end_time %}new moment('{{ group_flight.end_time.isoformat }}'){% else %}null{% endif %};
+            {%  endblock start_end %}
         playback.initialize({getStartTime: function(){return group_flight_start;},
                              getEndTime: function(){return group_flight_end;},
                              displayTZ: getTimeZone(),

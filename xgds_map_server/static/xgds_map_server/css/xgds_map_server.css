@@ -437,3 +437,8 @@ i.pinDiv {
 .plot-div {
 	height: 110px;
 }
+
+.masterSlider {
+	margin-left: 22px !important;
+	margin-right: 22px !important;
+}
