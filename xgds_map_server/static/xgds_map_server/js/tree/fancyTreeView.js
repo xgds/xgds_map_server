@@ -133,9 +133,11 @@ app.views.FancyTreeView = Marionette.View.extend({
     setupContextMenu: function(layertreeNode) {
         var selectedNode = undefined;
         var context = this;
+        $("#layers_modal").off('hidden.bs.modal');
         $("#layers_modal").on('hidden.bs.modal', function(){
             context.hideContextMenu();
         });
+        $('.fancytree-title').off('contextmenu');
         $('.fancytree-title').on('contextmenu', function(e) {
             selectedNode = $.ui.fancytree.getNode(e);
             var top = e.target.offsetTop + 75;
@@ -150,10 +152,12 @@ app.views.FancyTreeView = Marionette.View.extend({
             context.hideContextMenu();
         });
 
+        $("#layertree").off("click");
         $("#layertree").on("click", function(event) {
             context.hideContextMenu();
         });
 
+        $("#layer-tree-menu a").off("click");
         $("#layer-tree-menu a").on("click", function(event) {
             if (event.target.innerHTML == 'Edit') {
                 window.open(selectedNode.data.href, '_edit');
@@ -186,7 +190,6 @@ app.views.FancyTreeView = Marionette.View.extend({
                 alert("Cannot download JSON for this type of layer.");
             }
 
-            context.hideContextMenu();
         });
 
 
@@ -255,6 +258,7 @@ app.views.FancyTreeView = Marionette.View.extend({
                 	},
                 expand: function(event, data){
                 	app.vent.trigger('tree:expanded', data.node);
+                	context.setupContextMenu(context.$el.find("#layertree"));
                 },
                 lazyLoad: function(event, data){
                     data.result = $.ajax({
@@ -301,6 +305,7 @@ app.views.FancyTreeView = Marionette.View.extend({
             });
             app.tree = layertreeNode.fancytree("getTree");
             this.setupContextMenu(layertreeNode);
+            this.hideContextMenu();
             this.storedParent = this.$el.parent();
             app.vent.trigger('tree:loaded');
         }
