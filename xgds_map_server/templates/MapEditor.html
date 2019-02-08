@@ -52,7 +52,7 @@
     	</div>
     	<div id="tabs-gridstack-item" class="grid-stack-item"  data-gs-x="3" data-gs-y="0" data-gs-width="3" data-gs-height="4" >
     		<div id="tabs-gridstack-item-content" class="grid-stack-item-content" >
-    		<i class="fa fa-unlock-alt pinDiv gray-light"></i>
+    		<i class="fa fa-lock pinDiv gray-light"></i>
 		    <div id="tabs" ></div>
 		    </div>
 		</div>
@@ -95,6 +95,7 @@
     <div id="saved-notification">
       <p class="saved-msg"><strong>Your map layer has been successfully saved.</strong></p>
     </div>
+
 </script>
 <style scoped>
   {# stylesheet 'planner_app' #}
@@ -102,7 +103,6 @@
   @import url('{{EXTERNAL_URL}}ol3-popup/src/ol3-popup.css');
   @import url("{% static 'xgds_planner2/css/planner.css' %}");
   @import url('{{EXTERNAL_URL}}jquery-ui-timepicker-addon/dist/jquery-ui-timepicker-addon.css');
-
   /* for some reason compressing this in the css does not work so it's separate in the planner_app */
   @import url('{{ EXTERNAL_URL }}backbone-forms/distribution/templates/old.css');
   @import url('{{ EXTERNAL_URL }}openlayers/dist/ol.css');
@@ -159,10 +159,9 @@
    	{% if 'xgds_notes2' in settings.INSTALLED_APPS %}
 	   	{% include "xgds_notes2/NoteJS.html" %}
 	{% endif %}
-
      <script type="text/javascript" src="{{ EXTERNAL_URL }}jquery-ui-timepicker-addon/dist/jquery-ui-timepicker-addon.min.js"></script>
      <script type="text/javascript" src="{{ EXTERNAL_URL }}moment-duration-format/lib/moment-duration-format.js"></script>
-     <script language="javascript" type="text/javascript" src="{% static 'xgds_core/js/datatablesUtils.js' %}"></script>
+     <script type="text/javascript" src="{% static 'xgds_core/js/datatablesUtils.js' %}"></script>
      <script type="text/javascript" src="{{ EXTERNAL_URL }}datatables.net-plugins/sorting/datetime-moment.js"></script>
      <script type="text/javascript" src='{{ EXTERNAL_URL }}jquery-migrate/dist/jquery-migrate.min.js'></script>
 
@@ -181,7 +180,9 @@
     <script type="text/javascript" src="{% static 'xgds_map_server/js/map_editor/mapEditorViews.js' %}"></script>
     <script type="text/javascript" src="{% static 'xgds_map_server/js/map_editor/olMapEditorViews.js' %}"></script>
     <script type="text/javascript" src='{{ EXTERNAL_URL }}spectrum-colorpicker/spectrum.js'></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.7.1/clipboard.min.js"></script>
+    <script type="text/javascript" src="{% static 'clipboard/dist/clipboard.min.js' %}"></script>
+
+    {% javascript 'custom_map' %}
 
     {% for template_name, template in templates.items %}
 		<script type="text/handlebars" id="template-{{template_name}}">
@@ -191,7 +192,6 @@
     {% include "xgds_map_server/SearchForms.html" with searchForms=searchForms %}
     {% include "xgds_map_server/MapSearchDialog.html" with saveSearchForm=saveSearchForm %}
 
-    {% javascript 'custom_map' %}
 
 {% endblock scripts %}
 

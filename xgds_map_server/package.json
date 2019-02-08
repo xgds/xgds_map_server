@@ -22,7 +22,8 @@
     "resumablejs": "^1.1.0",
     "spectrum-colorpicker": "^1.8.0",
     "sprintf-js": "^1.1.1",
-    "ui-contextmenu": "^1.18.1"
+    "ui-contextmenu": "^1.18.1",
+    "clipboard": "^2.0.4"
   },
   "django": {
     "jquery.fancytree": {

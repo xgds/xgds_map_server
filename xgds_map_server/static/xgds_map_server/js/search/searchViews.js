@@ -65,7 +65,7 @@ app.views.SearchView = Marionette.View.extend({
         Handlebars.registerHelper('modelSelected', function( input, modelName ){
         	return input === modelName ? 'selected' : '';
         });
-        xgds_notes.initializeInput();
+
         var context = this;
         app.vent.on('search:doTimeSearch', function(time) {
         	context.timeSearch = true;
@@ -103,6 +103,7 @@ app.views.SearchView = Marionette.View.extend({
                 event.preventDefault();
             });
         }
+//		xgds_notes.initializeInput();
     },
     onRender: function() {
         app.vent.trigger("repack");
@@ -563,8 +564,12 @@ app.views.SearchResultsView = Marionette.View.extend({
     onAttach: function() {
 		var _this = this;
     	this.setupRegions();
-    	var tagsInput = $("#search-tags-id");
+    	var tagsInput = this.$el.find("#search-tags-id");
+    	if (tagsInput.length == 0) {
+    		tagsInput = $("#search-tags-id");
+		}
 		xgds_notes.initializeInput(tagsInput);
+    	tagsInput.off('itemAdded');
 		tagsInput.on('itemAdded', function(event) {
 			if (event.item.name !== "or" && event.item.name !== "and"){
 				var index = tagsInput.tagsinput('items').length;
@@ -587,6 +592,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 				}
 			}
 		});
+		tagsInput.off('itemRemoved');
 		tagsInput.on('itemRemoved', function(event) {
 			if((event.item.name === "or" || event.item.name === "and") && event.item.index !== tagsInput.tagsinput('items').length){
 				tagsInput.tagsinput('remove', tagsInput.tagsinput('items')[event.item.index-1]);
