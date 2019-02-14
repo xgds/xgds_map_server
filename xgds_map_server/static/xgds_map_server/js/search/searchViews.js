@@ -402,6 +402,15 @@ app.views.SearchDetailView = Marionette.View.extend({
 	    	    	}
 	    	    }
 			});
+	    	$("#details_modal").resize(function() {
+				var found = $('#details_modal_body');
+				if (found.length > 0){
+					if (context.modelMap.viewResizeMethod != undefined){
+						context.handleResizeDetailView(found[0], context);
+					}
+				}
+			});
+
 	    	$("#ajax_prev_button").click(function(event) {
 				context.selectPreviousAjax();
 			});
@@ -638,6 +647,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 				}
 			});
 		}
+
     },
 	handleTimeSearch: function(time) {
 		app.vent.trigger('search:doTimeSearch', time);
@@ -1442,7 +1452,6 @@ app.views.SearchResultsView = Marionette.View.extend({
 		$(document).on('dblclick', 'tr', function(e) {
 			var row = _this.theDataTable.row( this ).data();
 			var data = _this.getObject(row, _this);
-
 			$("#details_modal").modal('show');
 			_this.forceDetailView(data, _this.lookupModelMap(_this.selectedModel), true);
 			// TODO make sure it is yellow and selected row
