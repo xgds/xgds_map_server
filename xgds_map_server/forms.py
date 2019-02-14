@@ -14,6 +14,7 @@
 # specific language governing permissions and limitations under the License.
 #__END_LICENSE__
 
+import traceback
 import datetime
 import pytz
 
@@ -140,8 +141,9 @@ class GeotiffForm(AbstractMapForm):
                 minimum_value=instance.minimumValue, maximum_value=instance.maximumValue,
                 minimum_color=instance.minimumColor, maximum_color=instance.maximumColor,
             )
-        except AssertionError:
+        except AssertionError as e:
             # TODO: properly handle a 500 error by returing a form error
+            traceback.print_exc()
             return
 
         instance.wmsUrl = "%sgeoserver/%s/wms" % (settings.SERVER_ROOT_URL, settings.GEOSERVER_DEFAULT_WORKSPACE)

@@ -18,6 +18,7 @@ from requests import put, post
 from requests.auth import HTTPBasicAuth
 from django.conf import settings
 
+
 def upload_geotiff(file_handle, workspace_name, store_name, minimum_value=None, maximum_value=None, minimum_color=None, maximum_color=None):
     """
     Upload a GeoTIFF file to the connected Geoserver
@@ -58,6 +59,8 @@ def upload_geotiff(file_handle, workspace_name, store_name, minimum_value=None, 
         data=data,
     )
 
+    if r.status_code >= 300:
+        print r.text
     assert r.status_code < 300
 
     if minimum_value is not None and maximum_value is not None:
@@ -99,6 +102,8 @@ def upload_geotiff(file_handle, workspace_name, store_name, minimum_value=None, 
             json=modifying_json,
         )
 
+        if r.status_code >= 200:
+            print r.text
         assert r.status_code == 200
 
     if minimum_color is not None and maximum_color is not None:
@@ -119,6 +124,10 @@ def upload_geotiff(file_handle, workspace_name, store_name, minimum_value=None, 
             },
             json=creation_json,
         )
+
+        if r.status_code >= 300:
+            print r.text
+
         assert r.status_code < 300
 
         url = settings.GEOSERVER_URL + "rest/styles/" + new_style_name
@@ -131,4 +140,8 @@ def upload_geotiff(file_handle, workspace_name, store_name, minimum_value=None, 
             },
             data="%s\n%s" % (minimum_color, maximum_color),
         )
+
+        if r.status_code >= 300:
+            print r.text
+
         assert r.status_code < 300
