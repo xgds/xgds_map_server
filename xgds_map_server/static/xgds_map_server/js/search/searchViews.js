@@ -385,7 +385,7 @@ app.views.SearchDetailView = Marionette.View.extend({
 	    	this.neverShown = false;
 	    	this.updateContents();
 	    	var context = this;
-	    	$('.grid-stack').on('resizestop', function(event, ui) {
+	    	$('.grid-stack-item').on('resizestop', function(event, ui) {
 	    	    var element = event.target;
 	    	    var found = $(event.target).find('#view-gridstack-item-content');
 	    	    if (found.length > 0){
@@ -393,8 +393,15 @@ app.views.SearchDetailView = Marionette.View.extend({
 	    	    		context.handleResizeDetailView(found[0], context);
 	    	    	}
 	    	    }
-	    		
 	    	});
+	    	$( window ).resize(function() {
+	    		var found = $('#view-gridstack-item-content');
+	    	    if (found.length > 0){
+	    	    	if (context.modelMap.viewResizeMethod != undefined){
+	    	    		context.handleResizeDetailView(found[0], context);
+	    	    	}
+	    	    }
+			});
 	    	$("#ajax_prev_button").click(function(event) {
 				context.selectPreviousAjax();
 			});
