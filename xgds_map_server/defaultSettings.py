@@ -134,4 +134,4 @@ XGDS_MAP_SERVER_SEARCH_SECONDS_AFTER = 300
 GEOSERVER_DEFAULT_WORKSPACE = 'xgds'
 GEOSERVER_USERNAME = 'admin'
 GEOSERVER_PASSWORD = 'geoserver'
-GEOSERVER_URL = 'http://geoserver:8080/geoserver'
+GEOSERVER_URL = 'http://geoserver:8080/geoserver/'

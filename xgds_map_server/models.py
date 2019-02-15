@@ -384,6 +384,7 @@ class AbstractGeotiff(AbstractMap):
     class Meta:
         abstract = True
 
+
 class Geotiff(AbstractGeotiff):
     class Meta:
         abstract = False

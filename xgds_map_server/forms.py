@@ -23,6 +23,7 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.forms.fields import IntegerField, ChoiceField
 from django.db.models import Q
+from django.contrib.sites.models import Site
 
 from resumable.fields import ResumableFileField
 
@@ -115,6 +116,7 @@ class WMSTileForm(AbstractMapForm):
         exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'minLat', 'minLon', 'maxLat',
                    'maxLon']
 
+
 class GeotiffForm(AbstractMapForm):
     sourceFile = ResumableFileField(
         allowed_mimes=("image/tiff",),
@@ -146,7 +148,7 @@ class GeotiffForm(AbstractMapForm):
             traceback.print_exc()
             return
 
-        instance.wmsUrl = "%sgeoserver/%s/wms" % (settings.SERVER_ROOT_URL, settings.GEOSERVER_DEFAULT_WORKSPACE)
+        instance.wmsUrl = "https://%s/geoserver/%s/wms" % (Site.objects.get_current().domain, settings.GEOSERVER_DEFAULT_WORKSPACE)
         instance.layers = "%s:%s" % (settings.GEOSERVER_DEFAULT_WORKSPACE, store_name)
         instance.colorPalette = "%s_%s_style" % (settings.GEOSERVER_DEFAULT_WORKSPACE, store_name)
 
