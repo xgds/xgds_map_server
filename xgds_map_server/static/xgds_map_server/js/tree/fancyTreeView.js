@@ -307,6 +307,7 @@ app.views.FancyTreeView = Marionette.View.extend({
             this.setupContextMenu(layertreeNode);
             this.hideContextMenu();
             this.storedParent = this.$el.parent();
+            $('.modal-dialog').draggable().resizable();
             app.vent.trigger('tree:loaded');
         }
     }
