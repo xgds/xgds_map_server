@@ -124,8 +124,11 @@ def getGoogleEarthFeedPage(request):
     filename = settings.XGDS_MAP_SERVER_TOP_LEVEL['filename']
     return render(request,
                   'GoogleEarthFeed.html',
-                  {'feedUrl': feedUrl,
-                   'filename': filename})
+                  {'title': 'Google Earth Feed',
+                   'help_content_path': 'xgds_map_server/help/feedPage.rst',
+                   'feedUrl': feedUrl,
+                   'filename': filename
+                   })
 
 
 def getMapTreePage(request):
@@ -692,6 +695,7 @@ def getAddWMSTilePage(request):
                       "AddNode.html",
                       {'form': tile_form,
                        'error': False,
+                       'help_content_path': 'xgds_map_server/help/addWMSTile.rst',
                        'instructions': instructions,
                        'title': title},
                       )
