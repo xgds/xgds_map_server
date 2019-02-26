@@ -138,13 +138,14 @@ app.views.SearchView = Marionette.View.extend({
         var templateName = '#template-' + this.selectedModel;
         this.searchFormView = new app.views.SearchFormView({template:templateName});
         var sfRegion = this.getRegion('searchFormRegion');
-        addDateTimePickers();
         /*
         if (hideForm) {
             sfRegion.$el.hide();
         }*/
         sfRegion.show(this.searchFormView);
         sfRegion.$el.show();
+        addDateTimePickers();
+
         var doSearchButton = sfRegion.$el.find("#doSearch");
         doSearchButton.off('click');
         var context = this;
