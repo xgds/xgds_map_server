@@ -17,16 +17,23 @@
 from requests import put, post
 from requests.auth import HTTPBasicAuth
 from django.conf import settings
+from django.contrib.sites.models import Site
 
+import time
+import urllib
 
-def upload_geotiff(file_handle, workspace_name, store_name, minimum_value=None, maximum_value=None, minimum_color=None, maximum_color=None):
+def upload_geotiff(instance, workspace_name, store_name, minimum_value=None, maximum_value=None, minimum_color=None, maximum_color=None):
     """
     Upload a GeoTIFF file to the connected Geoserver
 
-    file_handle: python file handle object that supports read and write operations
+    instance: instance of a geotiff form
     workspace_name: the geoserver workspace for this geotiff
     store_name: the name of this geotiff inside geoserver
     """
+
+    file_handle = instance.sourceFile
+    store_name = urllib.quote(store_name, safe='')
+    current_timestamp = str(int(time.time()))
 
     geoserver_basic_auth = HTTPBasicAuth(
         settings.GEOSERVER_USERNAME,
@@ -59,8 +66,6 @@ def upload_geotiff(file_handle, workspace_name, store_name, minimum_value=None, 
         data=data,
     )
 
-    if r.status_code >= 300:
-        print r.text
     assert r.status_code < 300
 
     if minimum_value is not None and maximum_value is not None:
@@ -108,7 +113,9 @@ def upload_geotiff(file_handle, workspace_name, store_name, minimum_value=None, 
 
     if minimum_color is not None and maximum_color is not None:
         url = settings.GEOSERVER_URL + "rest/styles"
-        new_style_name = "%s_%s_style" % (workspace_name, store_name)
+        # since geoserver complains if we have multiple styles with the same name,
+        # we will add the current timestamp to the style name to make it unique
+        new_style_name = "%s_%s_style_%s" % (workspace_name, store_name, current_timestamp)
         creation_json = {
             "style": {
                 "name": new_style_name,
@@ -125,9 +132,6 @@ def upload_geotiff(file_handle, workspace_name, store_name, minimum_value=None, 
             json=creation_json,
         )
 
-        if r.status_code >= 300:
-            print r.text
-
         assert r.status_code < 300
 
         url = settings.GEOSERVER_URL + "rest/styles/" + new_style_name
@@ -141,7 +145,10 @@ def upload_geotiff(file_handle, workspace_name, store_name, minimum_value=None, 
             data="%s\n%s" % (minimum_color, maximum_color),
         )
 
-        if r.status_code >= 300:
-            print r.text
-
         assert r.status_code < 300
+    else:
+        new_style_name = "raster"
+
+    instance.wmsUrl = "https://%s/geoserver/%s/wms" % (Site.objects.get_current().domain, workspace_name)
+    instance.layers = "%s:%s" % (workspace_name, store_name)
+    instance.colorPalette = new_style_name
