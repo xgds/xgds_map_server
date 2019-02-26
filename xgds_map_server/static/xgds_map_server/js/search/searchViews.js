@@ -812,10 +812,10 @@ app.views.SearchResultsView = Marionette.View.extend({
         this.editableColumns = this.getEditableColumnDefs(this.columns, modelMap.columnTitles, modelMap.editableColumns);
         $.fn.dataTable.moment( DEFAULT_TIME_FORMAT);
         $.fn.dataTable.moment( "MM/DD/YY HH:mm:ss");
-        var tableheight = this.calcDataTableHeight();
-        if (app.options.tableHeight != undefined){
-        	tableheight = app.options.tableHeight;
-        }
+        // var tableheight = this.calcDataTableHeight();
+        // if (app.options.tableHeight != undefined){
+        // 	tableheight = app.options.tableHeight;
+        // }
 
         var hasColumnWidth = ('columnWidths' in modelMap);
         var dataTableObj = {
@@ -844,13 +844,17 @@ app.views.SearchResultsView = Marionette.View.extend({
                 rowCallback: function (row, data, index){
                 	$(row).attr('id', data[data.length - 1]);
                 },
-                scrollY:  tableheight,
+                // scrollY:  tableheight,
 				scrollX: true, // Mostly applies to the notes search page. The tags cause some scrolling issues
-                lengthMenu: [[10, 20, 40, 80, -1], [10, 20, 40, 80, "All"]],
+                lengthMenu: [[5, 10, 20, 40, 80, -1], [5, 10, 20, 40, 80, "All"]],
                 language: {
                     lengthMenu: "Display _MENU_"
                 }
         }
+
+        if ('default_table_length' in modelMap) {
+        	dataTableObj.pageLength = modelMap['default_table_length'];
+		}
         
         if (!_.isUndefined(data)){
         	dataTableObj['data'] = data;
