@@ -135,11 +135,11 @@ class GeotiffForm(AbstractMapForm):
             instance.modification_time = self.cleaned_data['username']
         instance.parent = self.getParentGroup()
 
-        store_name = instance.name
-
         try:
             upload_geotiff(
-                instance.sourceFile, settings.GEOSERVER_DEFAULT_WORKSPACE, store_name, 
+                instance,
+                settings.GEOSERVER_DEFAULT_WORKSPACE,
+                instance.name,
                 minimum_value=instance.minimumValue, maximum_value=instance.maximumValue,
                 minimum_color=instance.minimumColor, maximum_color=instance.maximumColor,
             )
@@ -148,16 +148,12 @@ class GeotiffForm(AbstractMapForm):
             traceback.print_exc()
             return
 
-        instance.wmsUrl = "https://%s/geoserver/%s/wms" % (Site.objects.get_current().domain, settings.GEOSERVER_DEFAULT_WORKSPACE)
-        instance.layers = "%s:%s" % (settings.GEOSERVER_DEFAULT_WORKSPACE, store_name)
-        instance.colorPalette = "%s_%s_style" % (settings.GEOSERVER_DEFAULT_WORKSPACE, store_name)
-
         if commit:
             instance.save()
 
     class Meta(AbstractMapForm.Meta):
         model = Geotiff
-        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'minLat', 'minLon', 'maxLat', 'maxLon', 
+        exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'minLat', 'minLon', 'maxLat', 'maxLon',
             'tileWidth', 'tileHeight', 'projectionName', 'wmsUrl', 'layers', 'wmsVersion', 'minLevel', 'maxLevel', 'srs', 'format', 'colorPalette']
 
 
