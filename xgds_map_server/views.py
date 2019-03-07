@@ -75,6 +75,7 @@ from xgds_core.util import insertIntoPath
 if 'xgds_timeseries' in settings.INSTALLED_APPS:
     from xgds_timeseries.views import get_time_series_classes_metadata
 
+
 #from django.http import StreamingHttpResponse
 # pylint: disable=E1101,R0911
 latestRequestG = None
@@ -1844,16 +1845,24 @@ def getGroupFlightPlaybackPage(request, group_flight_name, templatePath='xgds_ma
 
     searchForms = getSearchForms(filter={'flight__group': group_flight})
 
-    return render(request,
-                  templatePath,
-                  {'help_content_path': 'xgds_map_server/help/groupFlightPlayback.rst', # TODO IMPLEMENT
+    context = {'help_content_path': 'xgds_map_server/help/groupFlightPlayback.rst', # TODO IMPLEMENT
                    'title': '%s playback' % settings.XGDS_CORE_GROUP_FLIGHT_MONIKER,
                    'templates': templates,
                    'modelName': None,
                    'searchForms': searchForms,
                    'group_flight': group_flight,
                    'forceUserSession': True,
-                   'app': 'xgds_map_server/js/replay/groupFlightReplayApp.js'},
+                   'app': 'xgds_map_server/js/replay/groupFlightReplayApp.js'}
+
+    if 'xgds_video' in settings.INSTALLED_APPS:
+        context_method = getClassByName('xgds_video.views.getVideoContext')
+        video_context = context_method(request, group_flight_name)
+        video_context.update(context)
+        context = video_context
+
+    return render(request,
+                  templatePath,
+                  context,
                   )
 
 
