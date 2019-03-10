@@ -334,10 +334,17 @@
         group_flight_start = {% if group_flight.start_time %}new moment('{{ group_flight.start_time.isoformat }}'){% else %}null{% endif %};
         group_flight_end = {% if group_flight.end_time %}new moment('{{ group_flight.end_time.isoformat }}'){% else %}null{% endif %};
             {%  endblock start_end %}
+
+            {% if 'xgds_video' in settings.INSTALLED_APPS %}
+            var time_control_path = '/static/xgds_video/js/playbackTimeControl.js'
+            {% else %}
+            var time_control_path = '/static/xgds_core/js/playbackTimeControl.js'
+            {%  endif %}
         playback.initialize({getStartTime: function(){return group_flight_start;},
                              getEndTime: function(){return group_flight_end;},
                              displayTZ: getTimeZone(),
-                             slider: true
+                             slider: true,
+                             time_control_path: time_control_path
                             });
 
             {% block initializeNotes %}
@@ -505,12 +512,16 @@ var indexFileUrl = null;
 		                     };
 	{% endblock xgds_video_options %}
 
+
     {% endif %}
     {% endblock initSegments %}
 
 	{% block hookControls %}
 	{% if segmentsJson %}
 	    xgds_video_instance = xgds_video.initialize(xgds_video_options);
+        playback.min_speed = 0.25;
+        playback.max_speed = 4.0;
+        playback.addSpeedListener(xgds_video.speedCallBack)
         playback.addListener(xgds_video.playbackListener);
         playback.addStopListener(xgds_video.sliderStopListener);
     //set up the slider and the player
