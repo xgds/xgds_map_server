@@ -313,12 +313,20 @@
 		 });
 
         app.vent.on('selectData', function(data) {
-            if (!playback.playFlag) {
                 if ('timestamp' in data) {
                     playback.setCurrentTime(data.timestamp);
+                    {% if 'xgds_video' in settings.INSTALLED_APPS %}
+                        xgds_video.jumpToPosition(data.timestamp);
+                    {% endif %}
                 }
-            }
         });
+
+    {% if 'xgds_video' in settings.INSTALLED_APPS %}
+        app.vent.on('seekTime', function(timeString) {
+                xgds_video.seekHelper(timeString);
+        });
+    {% endif %}
+
 
         {% block preLayout %}
 		{% endblock preLayout %}
