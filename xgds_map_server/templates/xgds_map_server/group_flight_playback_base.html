@@ -321,12 +321,6 @@
                 }
         });
 
-    {% if 'xgds_video' in settings.INSTALLED_APPS %}
-        app.vent.on('seekTime', function(timeString) {
-                xgds_video.seekHelper(timeString);
-        });
-    {% endif %}
-
 
         {% block preLayout %}
 		{% endblock preLayout %}
@@ -344,7 +338,17 @@
             {%  endblock start_end %}
 
             {% if 'xgds_video' in settings.INSTALLED_APPS %}
-            var time_control_path = '/static/xgds_video/js/playbackTimeControl.js'
+            var time_control_path = '/static/xgds_video/js/playbackTimeControl.js';
+            app.vent.on('seekTime', function(timeString) {
+                xgds_video.seekHelper(timeString);
+            });
+                group_flight_start = new moment('{{ episode.startTime.isoformat }}');
+                {% if episode.endTime %}
+                group_flight_end = new moment('{{ episode.endTime.isoformat }}');
+                {% endif %}
+
+
+
             {% else %}
             var time_control_path = '/static/xgds_core/js/playbackTimeControl.js'
             {%  endif %}

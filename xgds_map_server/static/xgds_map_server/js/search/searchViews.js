@@ -578,6 +578,31 @@ app.views.SearchResultsView = Marionette.View.extend({
 		
 		
 	},
+	playbackListener: {
+		lastUpdate: undefined,
+		initialize: function() {
+			//noop
+		},
+		doSetTime: function(currentTime){
+			this.lastUpdate = currentTime;
+		},
+		start: function(currentTime){
+			app.vent.trigger('search:doTimeSearch', currentTime);
+		},
+		update: function(currentTime){
+			if (this.lastUpdate === undefined){
+				this.doSetTime(currentTime);
+				return;
+			}
+			var delta = currentTime.diff(this.lastUpdate);
+			if (Math.abs(delta) >= 5000) {
+				this.doSetTime(currentTime);
+				app.vent.trigger('search:doTimeSearch', currentTime);
+			}
+		},
+		pause: function() {
+		}
+	},
     onAttach: function() {
 		var _this = this;
     	this.setupRegions();
@@ -642,11 +667,28 @@ app.views.SearchResultsView = Marionette.View.extend({
     			if (selected) {
                     // add a listener for playback controller stop to set the start and end times based on current time and do the search
                     playback.addStopListener(context.handleTimeSearch);
+                    playback.addListener(context.playbackListener);
                 } else {
+    				playback.removeListener(context.playbackListener);
                     playback.removeStopListener(context.handleTimeSearch);
                     app.vent.trigger('search:undoTimeSearch');
 				}
 			});
+    		this.listenTo(app.vent, 'setTabRequested', function(tabId) {
+    			var time_control_search = $('#time_control_search');
+    			var selected = time_control_search[0].checked;
+    			if (selected) {
+					if (_.isEqual(tabId, 'search')) {
+						// add a listener for playback controller stop to set the start and end times based on current time and do the search
+						playback.addStopListener(context.handleTimeSearch);
+						playback.addListener(context.playbackListener);
+					} else {
+						playback.removeListener(context.playbackListener);
+						playback.removeStopListener(context.handleTimeSearch);
+						app.vent.trigger('search:undoTimeSearch');
+					}
+				}
+        	});
 		}
 
     },
@@ -829,8 +871,8 @@ app.views.SearchResultsView = Marionette.View.extend({
 							'>' +
 						'>' +
 					 	'<"clear">' +
-					 '>rt' +
-					 '<"bottom"ip' +
+					 '>t' +
+					 '<"bottom"ir' +
 						'<"clear">' +
 					 '>',
                 stateSave: false,
@@ -851,6 +893,7 @@ app.views.SearchResultsView = Marionette.View.extend({
                 language: {
                     lengthMenu: "Display _MENU_"
                 }
+				//dom: '<"top"lp>t<"bottom"ir>'
         }
 
         if ('default_table_length' in modelMap) {
