@@ -71,7 +71,7 @@
                 {% block videoSources %}
                 {% for source in sources %}
                 <div id="source{{forloop.counter}}-gridstack-item" class="grid-stack-item"
-                    data-gs-x="{% if forloop.counter|modulo:2 == 0 %}0{% else %}2{% endif %}" data-gs-y="{% if forloop.counter == 0 %}0{% else %}3{% endif %}"
+                    data-gs-x="{% if forloop.counter|modulo:2 == 0 %}0{% else %}1{% endif %}" data-gs-y="{% if forloop.counter == 0 %}0{% else %}3{% endif %}"
                     data-gs-width="2" data-gs-height="2" >
                     <div class="grid-stack-item-content video-div" id="item{{forloop.counter}}" style="background-color:{{ source.displayColor }};">
                         <div class="d-flex justify-content-between video-head">
@@ -118,7 +118,7 @@
 {% block map %}
     <div id="map-gridstack-item" class="grid-stack-item"
     data-gs-x="0" data-gs-y="0"
-    data-gs-width="2" data-gs-height="2" >
+    data-gs-width="1" data-gs-height="2" >
         <div class="grid-stack-item-content" id="map-gridstack-item-content" >
             <ul class="nav justify-content-end">
                 <i class="fa fa-lock pinDiv gray-light"></i>
@@ -134,7 +134,7 @@
     {% endblock map %}
 
 {% block postMap %}
-    <div id="tabs-gridstack-item" class="grid-stack-item"  data-gs-x="5" data-gs-y="0" data-gs-width="{% if 'xgds_video' in settings.INSTALLED_APPS %}2{% else %}4{% endif %}" data-gs-height="4" >
+    <div id="tabs-gridstack-item" class="grid-stack-item"  data-gs-x="4" data-gs-y="0" data-gs-width="{% if 'xgds_video' in settings.INSTALLED_APPS %}3{% else %}5{% endif %}" data-gs-height="4" >
     		<div id="tabs-gridstack-item-content" class="grid-stack-item-content" >
 			<ul class="nav justify-content-end">
 				<i class="fa fa-lock pinDiv gray-light"></i>
