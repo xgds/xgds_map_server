@@ -2232,17 +2232,16 @@ class ExportOrderListJson(OrderListJson):
         k.append(d)
 
         # Create a Placemark with a simple polygon geometry and add it to the folder
+
         for obj in data:
-            if ((obj.lat is not None) and (obj.lon is not None)):
-                if (selectedModel == "Sample"):
-                    placemark = obj.to_kml(str(obj.name), obj.name, obj.description, obj.lat, obj.lon)
-                elif (selectedModel == "Note"):
-                    try:
-                        placemark = obj.to_kml(str(obj.name), obj.name, obj.content, obj.lat, obj.lon)
-                    except:
-                        pass
-                else:
-                    placemark = obj.to_kml(str(obj.id), obj.name, obj.description, obj.lat, obj.lon)
+            if (obj.lat is not None) and (obj.lon is not None):
+                description = ''
+                if hasattr(obj, 'content'):
+                    description = obj.content
+                elif hasattr(obj, 'description'):
+                    description = obj.description
+                placemark = obj.to_kml()
+                #str(obj.id), obj.name, description, obj.lat, obj.lon)
                 d.append(placemark)
 
         response = HttpResponse(k.to_string(prettyprint=True), content_type='application/vnd.google-earth.kml+xml')
