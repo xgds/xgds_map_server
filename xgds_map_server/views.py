@@ -2241,7 +2241,6 @@ class ExportOrderListJson(OrderListJson):
                 elif hasattr(obj, 'description'):
                     description = obj.description
                 placemark = obj.to_kml()
-                #str(obj.id), obj.name, description, obj.lat, obj.lon)
                 d.append(placemark)
 
         response = HttpResponse(k.to_string(prettyprint=True), content_type='application/vnd.google-earth.kml+xml')
