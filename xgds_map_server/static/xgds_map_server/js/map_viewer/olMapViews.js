@@ -892,7 +892,7 @@ $(function() {
                         if (feature.getGeometry().getType() == "Point"){
                         	var coords = feature.getGeometry().getCoordinates();
                             var xcoords = inverseTransform(coords);
-                            location = "<br/>lat: " + xcoords[1] + "<br/>lon:" + xcoords[0];
+                            location = "<br/>(Lon, Lat)<br/> " + xcoords[0] + ", " + xcoords[1];
                         }
                         var popupContents = "<div>";
                         if ('geometry' in feature.N && feature.get('popup-content') !== undefined) {
