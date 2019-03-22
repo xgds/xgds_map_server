@@ -1,16 +1,16 @@
 
-**Google Earth Feed Page** lets you add TODO.
+**Google Earth Feed Page** lets you view most of the map layers in Google Earth.  We recommend instead using xGDS internal map pages.
 
 Open in Google Earth:
 ---------------------
 
-TODO write help
+Click the *Open in Google Earth* button to download a kml file which contains the network link for xGDS.  You only have to do this once; once you have downloaded it you can just reopen that file.
+You will have to enter your username and password from Google Earth.
 
 Get Google Earth:
 -----------------
 
-TODO write more help
-
+If you don't have the Google Earth application installed you can get it by clicking the *Get Google Earth* button.
 
 
 
