@@ -405,6 +405,7 @@ def getAddGeotiffPage(request):
                        },
                       )
 
+
 def getAddGeoJSONPage(request):
     """
     HTML view to create new map
@@ -425,7 +426,7 @@ def getAddGeoJSONPage(request):
                           "AddGeoJSON.html",
                           {'mapForm': map_form,
                            'error': True,
-                           'help_content_path': 'xgds_map_server/help/addKML.rst',
+                           'help_content_path': 'xgds_map_server/help/addGeoJson.rst',
                            'title': 'Add GeoJSON',
                            'errorText': 'Invalid form entries'})
 
@@ -435,7 +436,7 @@ def getAddGeoJSONPage(request):
         return render(request,
                       "AddGeoJSON.html",
                       {'mapForm': map_form,
-                       'help_content_path': 'xgds_map_server/help/addKML.rst',
+                       'help_content_path': 'xgds_map_server/help/addGeoJson.rst',
                        'title': 'Add GeoJSON',
                        },
                       )
