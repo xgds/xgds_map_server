@@ -1873,12 +1873,15 @@ def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSear
     searchModelDict = settings.XGDS_MAP_SERVER_SEARCH_MODELS
     if modelName and not searchForms:
         searchForms = getSearchForms(modelName, filter)
-    
+
+    help_title = 'Map Search'
+    if modelName:
+        help_title += ' ' + modelName
     return render(request,
                   templatePath, 
                   {'modelName': modelName,
                    'help_content_path': 'xgds_map_server/help/mapSearch.rst',
-                   'title': 'Map Search',
+                   'title': help_title,
                    'templates': get_handlebars_templates(list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_HANDLEBARS_DIRS'),
                    'searchForms': searchForms,
                    'searchModelDict': searchModelDict, 
