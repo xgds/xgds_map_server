@@ -10,7 +10,10 @@ Name
 Description
 	The description of the Folder, seen on hovering in the map tree.
 
-Parent
+Region
+	The region on the map which contains this Folder.
+
+Folder
 	The containing Folder in the map tree.
  
 

@@ -1,19 +1,32 @@
 
-**Add WMS Tile** lets you add TODO.
+**Add WMS Layer** lets you include an external WMS layer in the map tree.
 
-Add WMS Tile:
--------------
+Options:
+--------
 
-TODO write help
+Name
+	The name of the WMS Layer in the map tree.
 
+Description
+	The description of the WMS Layer, seen on hovering in the map tree.
 
-Section 2:
-----------
+Region
+	The region on the map which contains this WMS Layer.
 
-TODO write more help
+Locked
+	If nobody should be able to modify this WMS Layer, check locked.
 
+Visible
+	If this WMS Layer should be turned on (visible) by default, check visible.
 
+Transparency
+	Percentage transparency by default; 100% is fully transparent.  You can control
+	transparency later while viewing; this setting is a default.
 
+Folder
+	The containing Folder in the map tree.
+
+All of the remaining fields you should get from the WMS provider you are using.
 
 .. o __BEGIN_LICENSE__
 .. o  Copyright (c) 2015, United States Government, as represented by the

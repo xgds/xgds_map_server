@@ -42,6 +42,9 @@ Transparent
 Folder
 	The containing Folder in the map tree.
 
+Region
+	The region on the map which contains this KML Layer.
+
 
 .. _KML_Tutorial: https://developers.google.com/kml/documentation/kml_tut
 

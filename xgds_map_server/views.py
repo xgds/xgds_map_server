@@ -372,6 +372,7 @@ def getAddKmlPage(request):
                        },
                       )
 
+
 def getAddGeotiffPage(request):
     """
     HTML view to create new map
@@ -379,7 +380,7 @@ def getAddGeotiffPage(request):
     if request.method == 'POST':
         map_form = GeotiffForm(request.POST, request.FILES)
 
-        print(map_form)
+        # print(map_form)
 
         if map_form.is_valid():
             map_form.save()
@@ -388,8 +389,8 @@ def getAddGeotiffPage(request):
                           "AddGeotiff.html",
                           {'mapForm': map_form,
                            'error': True,
-                           'help_content_path': 'xgds_map_server/help/addKML.rst',
-                           'title': 'Add Geotiff',
+                           'help_content_path': 'xgds_map_server/help/addGeoTiff.rst',
+                           'title': 'Add GeoTiff',
                            'errorText': 'Invalid form entries'})
 
         return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
@@ -398,8 +399,9 @@ def getAddGeotiffPage(request):
         return render(request,
                       "AddGeotiff.html",
                       {'mapForm': map_form,
-                       'help_content_path': 'xgds_map_server/help/addKML.rst',
-                       'title': 'Add Geotiff',
+                       'error': False,
+                       'help_content_path': 'xgds_map_server/help/addGeoTiff.rst',
+                       'title': 'Add GeoTiff',
                        },
                       )
 
@@ -674,7 +676,7 @@ def getAddWMSTilePage(request):
     """
     HTML view to create a new wms tile
     """
-    title = "Add WMS Tile"
+    title = "Add WMS Layer"
     instructions = "Reference a WMS layer on a remote server"
 
     if request.method == 'POST':
@@ -715,7 +717,7 @@ def getEditWMSTilePage(request, tileID):
     except WMSTile.MultipleObjectsReturned:
         # this really shouldn't happen, ever
         return HttpResponseServerError()
-    title = "Edit WMS Tile"
+    title = "Edit WMS Layer"
     instructions = "You may modify anything."
 
     if request.method == 'POST':

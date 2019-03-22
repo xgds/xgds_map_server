@@ -10,6 +10,9 @@ Name
 Description
 	The description of the Map Layer, seen on hovering in the map tree.
 
+Region
+	The region on the map which contains this Map Layer.
+
 Locked
 	If nobody should be able to modify this Map Layer, check locked.
 

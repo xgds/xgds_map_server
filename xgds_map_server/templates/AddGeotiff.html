@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block scripts %}
+    {{ block.super }}
   <script type="text/javascript" src="{% static 'jquery/dist/jquery.js' %}"></script>
   <script type="text/javascript" src='{{ EXTERNAL_URL }}resumablejs/resumable.js'></script>
   <script type="text/javascript" src="{% static 'resumable/js/django-resumable.js' %}"></script>
@@ -10,6 +11,7 @@
 {% endblock scripts %}
 
 {% block jsInit %}
+    {{ block.super }}
   document.addEventListener("DOMContentLoaded", function () {
     "use strict";
     var dj;
@@ -54,7 +56,6 @@
 
 {% block contents %}
   {{ block.super }}
-
   <div class="btn-toolbar" role="toolbar" >
     {% include "AddNodeButtons.html" %}
   </div>
@@ -63,7 +64,7 @@
   <form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
   <p>
   <label></label>
-  <span class="h6"> Add Geotiff layer</span>
+  <span class="h6"> Add GeoTiff Layer</span>
   </p>
   <p>
   <label></label>
