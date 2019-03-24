@@ -372,6 +372,7 @@ def getAddKmlPage(request):
                        },
                       )
 
+
 def getAddGeotiffPage(request):
     """
     HTML view to create new map
@@ -379,7 +380,7 @@ def getAddGeotiffPage(request):
     if request.method == 'POST':
         map_form = GeotiffForm(request.POST, request.FILES)
 
-        print(map_form)
+        # print(map_form)
 
         if map_form.is_valid():
             map_form.save()
@@ -388,8 +389,8 @@ def getAddGeotiffPage(request):
                           "AddGeotiff.html",
                           {'mapForm': map_form,
                            'error': True,
-                           'help_content_path': 'xgds_map_server/help/addKML.rst',
-                           'title': 'Add Geotiff',
+                           'help_content_path': 'xgds_map_server/help/addGeoTiff.rst',
+                           'title': 'Add GeoTiff',
                            'errorText': 'Invalid form entries'})
 
         return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
@@ -398,10 +399,12 @@ def getAddGeotiffPage(request):
         return render(request,
                       "AddGeotiff.html",
                       {'mapForm': map_form,
-                       'help_content_path': 'xgds_map_server/help/addKML.rst',
-                       'title': 'Add Geotiff',
+                       'error': False,
+                       'help_content_path': 'xgds_map_server/help/addGeoTiff.rst',
+                       'title': 'Add GeoTiff',
                        },
                       )
+
 
 def getAddGeoJSONPage(request):
     """
@@ -423,7 +426,7 @@ def getAddGeoJSONPage(request):
                           "AddGeoJSON.html",
                           {'mapForm': map_form,
                            'error': True,
-                           'help_content_path': 'xgds_map_server/help/addKML.rst',
+                           'help_content_path': 'xgds_map_server/help/addGeoJson.rst',
                            'title': 'Add GeoJSON',
                            'errorText': 'Invalid form entries'})
 
@@ -433,7 +436,7 @@ def getAddGeoJSONPage(request):
         return render(request,
                       "AddGeoJSON.html",
                       {'mapForm': map_form,
-                       'help_content_path': 'xgds_map_server/help/addKML.rst',
+                       'help_content_path': 'xgds_map_server/help/addGeoJson.rst',
                        'title': 'Add GeoJSON',
                        },
                       )
@@ -674,7 +677,7 @@ def getAddWMSTilePage(request):
     """
     HTML view to create a new wms tile
     """
-    title = "Add WMS Tile"
+    title = "Add WMS Layer"
     instructions = "Reference a WMS layer on a remote server"
 
     if request.method == 'POST':
@@ -715,7 +718,7 @@ def getEditWMSTilePage(request, tileID):
     except WMSTile.MultipleObjectsReturned:
         # this really shouldn't happen, ever
         return HttpResponseServerError()
-    title = "Edit WMS Tile"
+    title = "Edit WMS Layer"
     instructions = "You may modify anything."
 
     if request.method == 'POST':
@@ -1870,12 +1873,15 @@ def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSear
     searchModelDict = settings.XGDS_MAP_SERVER_SEARCH_MODELS
     if modelName and not searchForms:
         searchForms = getSearchForms(modelName, filter)
-    
+
+    help_title = 'Map Search'
+    if modelName:
+        help_title += ' ' + modelName
     return render(request,
                   templatePath, 
                   {'modelName': modelName,
                    'help_content_path': 'xgds_map_server/help/mapSearch.rst',
-                   'title': 'Map Search',
+                   'title': help_title,
                    'templates': get_handlebars_templates(list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_HANDLEBARS_DIRS'),
                    'searchForms': searchForms,
                    'searchModelDict': searchModelDict, 
