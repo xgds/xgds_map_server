@@ -37,7 +37,8 @@
 		{% block extraAppOptions %}
 		{% endblock extraAppOptions %}
 		settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }},
-		showDetailView: true
+		showDetailView: true,
+		sseChannelName: "{{sseChannelName}}",
 	};
 	</script>
 {% endblock preMapJS %}
@@ -50,7 +51,7 @@
 	{% include "xgds_notes2/NoteJS.html" with forceUserSession=forceUserSession%}
 	{% endblock notejs %}
 {% endif %}
-	
+	<script type="text/javascript" src="{% static 'xgds_map_server/js/util/mapSearchSseUtils.js' %}"></script>
     <script type="text/javascript" src="{{ EXTERNAL_URL }}bootstrap-tagsinput/dist/bootstrap-tagsinput.min.js"></script>
 	<script type="text/javascript" src='{{ EXTERNAL_URL }}pure-uuid/uuid.js'></script>
     {% for template_name, template in templates.items %}
