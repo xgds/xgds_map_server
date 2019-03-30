@@ -20,6 +20,7 @@ app.views.SearchView = Marionette.View.extend({
     events: {
         'click #getSearchFormButton': function() {this.setupSearchForm(true, true)},
         'click #doSearch': 'doSearch',
+        'click #clearFilter': 'clearFilter',
         'click #doSaveSearch': 'openSaveDialog',
     },
     regions: {
@@ -146,17 +147,21 @@ app.views.SearchView = Marionette.View.extend({
         sfRegion.$el.show();
         addDateTimePickers();
 
-        var doSearchButton = sfRegion.$el.find("#doSearch");
-        doSearchButton.off('click');
-        var context = this;
-        doSearchButton.on('click', function(event) {
-        	context.doSearch(event)
-        });
-
-        this.$("#form-" + this.selectedModel).on('submit', function (event) {
+        var theForm = this.$("#form-" + this.selectedModel);
+        theForm.on('submit', function (event) {
 			event.preventDefault();
 		});
-        
+
+        theForm.on('reset', function (event) {
+			// TODO clear out weird fields
+			// var theFields = theForm.find("input");
+			// debugger;
+			// $('.typeahead').typeahead('val','');  does not work for tags
+			// $(':input[name=' + prefix + 'birth_country]').val(null).trigger('change'); does not work for dal fields
+
+
+		});
+
         var theModelMap = app.options.searchModels[newModel];
         if (theModelMap.searchInitMethods != undefined){
     		for (var i=0; i < theModelMap.searchInitMethods.length; i++){
@@ -286,6 +291,20 @@ app.views.SearchView = Marionette.View.extend({
     	}
     	this.searchResultsView.setupDatatable(this.selectedModel, undefined, this.getFilterData());
     	this.setupSaveSearchDialog();
+
+    	if ($('#advancedSearchModal').is(':visible')){
+    		$('#advancedSearchModal').modal('hide');
+		}
+    },
+	clearFilter: function(event) {
+    	if (!_.isUndefined(event)){
+    		event.preventDefault();
+    	}
+    	var theForm = $("#form-"+this.selectedModel);
+    	if (theForm.length == 1){
+    		theForm.trigger("reset");
+    	}
+    	this.searchResultsView.setupDatatable(this.selectedModel, undefined, this.getFilterData());
 
     	if ($('#advancedSearchModal').is(':visible')){
     		$('#advancedSearchModal').modal('hide');

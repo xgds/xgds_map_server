@@ -5,13 +5,13 @@
 		{% csrf_token %}
 		<table class="table-striped">
 		{{ value.0.as_table }}
+
 		<tr>
 		<td colspan="2">
+		<button id="clearFilter" class="btn btn-primary">Clear</button>
 		<button id="doSearch" class="btn btn-primary">Filter</button>
 		</td>
 		</tr>
-
-
 		</table>
 		<!--<button id="doSaveSearch" class="btn btn-primary">Save Search</button> -->
 	</form>
