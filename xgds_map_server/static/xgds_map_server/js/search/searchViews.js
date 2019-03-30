@@ -944,7 +944,10 @@ app.views.SearchResultsView = Marionette.View.extend({
         this.connectDeselectCallback();
         this.listenToTableChanges();
         this.filterMapData(undefined);
-        app.vent.trigger("repack");
+		app.vent.trigger("repack");
+		
+		// make the DataTable accessible as a global variable
+		window.theDataTable = this.theDataTable;
     },
 	// Put the needed data for exporting into a hidden form
 	initializeExportData: function(){
