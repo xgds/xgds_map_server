@@ -667,7 +667,6 @@ app.views.SearchResultsView = Marionette.View.extend({
     	});
     	var todayCheckbox = $('#today');
     	if (todayCheckbox.length > 0){
-    		todayCheckbox.prop('checked', app.options.settingsLive);
     		if (! this.today) {
     			$('#today_div').hide();
 			} else {
@@ -944,10 +943,7 @@ app.views.SearchResultsView = Marionette.View.extend({
         this.connectDeselectCallback();
         this.listenToTableChanges();
         this.filterMapData(undefined);
-		app.vent.trigger("repack");
-		
-		// make the DataTable accessible as a global variable
-		window.theDataTable = this.theDataTable;
+        app.vent.trigger("repack");
     },
 	// Put the needed data for exporting into a hidden form
 	initializeExportData: function(){
