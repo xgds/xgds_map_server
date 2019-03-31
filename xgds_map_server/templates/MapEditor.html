@@ -150,8 +150,9 @@
 	        mapLayerDict: {{ mapLayerDict|safe }},
 	        siteFrame: {% siteframe settings.XGDS_CURRENT_SITEFRAME_ID %},
 	        saveMaplayerUrl: '{{ saveMaplayerUrl }}',
-	        searchModels: {{ settings.XGDS_MAP_SERVER_SEARCH_MODELS|safe }},
-	        settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:'true,false' }},
+            searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
+            searchModelsKeys: {{ settings.XGDS_MAP_SERVER_SEARCH_MODELS|safe }},
+            settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:'true,false' }},
             searchOptions: { fitMap: false },
 	    };
 	</script>

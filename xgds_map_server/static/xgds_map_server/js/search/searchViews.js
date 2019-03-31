@@ -45,13 +45,15 @@ app.views.SearchView = Marionette.View.extend({
     },
     initialize: function(options) {
     	this.options = options || {};
-    	var theKeys = Object.keys(app.options.searchModels);
     	this.searchableModels = [];
-    	for (var i=0; i<theKeys.length; i++){
-    		if (!_.isUndefined(app.options.searchModels[theKeys[i]].search_form_class)){
-    			this.searchableModels.push(theKeys[i]);
-    		}
-    	}
+    	var theKeys = app.options.searchModelsKeys;
+    	if (!_.isUndefined(theKeys)) {
+			for (var i = 0; i < theKeys.length; i++) {
+				if (!_.isUndefined(app.options.searchModels[theKeys[i]].search_form_class)) {
+					this.searchableModels.push(theKeys[i]);
+				}
+			}
+		}
     	this.viewRegionDef = false;
     	if (options.template !== undefined){
     		this.template = options.template;
