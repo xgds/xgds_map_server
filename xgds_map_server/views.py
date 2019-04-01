@@ -46,7 +46,6 @@ from django.http import HttpResponseRedirect
 from django.http import HttpResponseServerError, HttpResponseNotAllowed
 from django.shortcuts import render, redirect
 from django.http import StreamingHttpResponse
-from django.shortcuts import render
 from django.template import RequestContext
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
@@ -1841,17 +1840,27 @@ def getFlightPlaybackPage(request, flight_name, templatePath='xgds_map_server/fl
                   )
 
 
-def getGroupFlightPlaybackPage(request, group_flight_name, templatePath='xgds_map_server/group_flight_playback.html', forceUserSession=True):
+def getGroupFlightPlaybackPage(request, group_flight_name, templatePath='xgds_map_server/group_flight_playback.html',
+                               video=True):
+    """
+    :param request:
+    :param group_flight_name: the group flight name
+    :param templatePath: the path to where the template for this page is
+    :param video: true to include video if it is available, false to skip it
+    :return: render the request
+    """
     group_flight = GROUP_FLIGHT_MODEL.get().objects.get(name=group_flight_name)
 
-    templates = get_handlebars_templates(list(settings.XGDS_MAP_SERVER_REPLAY_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_MAP_REPLAY')
+    templates = get_handlebars_templates(list(settings.XGDS_MAP_SERVER_REPLAY_HANDLEBARS_DIRS),
+                                         'XGDS_MAP_SERVER_MAP_REPLAY')
 
     searchForms = getSearchForms(filter={'flight__group': group_flight})
 
     live = False
     if not group_flight.end_time:
         live = True
-        templatePath = 'xgds_map_server/live_group_flight_playback.html'
+        if templatePath == 'xgds_map_server/group_flight_playback.html':
+            templatePath = 'xgds_map_server/live_group_flight_playback.html'
     context = {'help_content_path': 'xgds_map_server/help/groupFlightPlayback.rst', # TODO IMPLEMENT
                    'title': '%s playback' % settings.XGDS_CORE_GROUP_FLIGHT_MONIKER,
                    'templates': templates,
@@ -1861,7 +1870,7 @@ def getGroupFlightPlaybackPage(request, group_flight_name, templatePath='xgds_ma
                    'forceUserSession': True,
                    'app': 'xgds_map_server/js/replay/groupFlightReplayApp.js'}
 
-    if 'xgds_video' in settings.INSTALLED_APPS:
+    if video and 'xgds_video' in settings.INSTALLED_APPS:
         context_method = getClassByName('xgds_video.views.getVideoContext')
         video_context = context_method(request, group_flight_name)
         video_context.update(context)

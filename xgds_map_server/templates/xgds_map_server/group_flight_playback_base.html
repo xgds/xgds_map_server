@@ -118,7 +118,7 @@
 {% block map %}
     <div id="map-gridstack-item" class="grid-stack-item"
     data-gs-x="0" data-gs-y="0"
-    data-gs-width="1" data-gs-height="2" >
+    data-gs-width="1" data-gs-height="{% if 'xgds_video' in settings.INSTALLED_APPS and segmentsJson %}2{% else %}3{% endif %}" >
         <div class="grid-stack-item-content" id="map-gridstack-item-content" >
             <ul class="nav justify-content-end">
                 <i class="fa fa-lock pinDiv gray-light"></i>
@@ -531,23 +531,22 @@ var indexFileUrl = null;
     {% endblock initSegments %}
 
 	{% block hookControls %}
-	{% if segmentsJson %}
-	    xgds_video_instance = xgds_video.initialize(xgds_video_options);
-        playback.min_speed = 0.25;
-        playback.max_speed = 4.0;
-        playback.addSpeedListener(xgds_video.speedCallBack)
-        playback.addListener(xgds_video.playbackListener);
-        playback.addStopListener(xgds_video.sliderStopListener);
-    //set up the slider and the player
-//    if (xgds_video.options.hasMasterSlider){
-//    	xgds_video.setupSlider();
-//    }
-    xgds_video.setupJWplayer({}, "95%");
-    {% endif %}
+        {% if segmentsJson %}
+            xgds_video_instance = xgds_video.initialize(xgds_video_options);
+            playback.min_speed = 0.25;
+            playback.max_speed = 4.0;
+            playback.addSpeedListener(xgds_video.speedCallBack)
+            playback.addListener(xgds_video.playbackListener);
+            playback.addStopListener(xgds_video.sliderStopListener);
+            xgds_video.setupJWplayer({}, "95%");
+        {% endif %}
     {% endblock hookControls %}
-            {% endif %}
+    {% endif %}
 
-		{% endblock otherJSInit %}
+	{% endblock otherJSInit %}
+
+    {% block postOtherJSInit %}
+    {% endblock postOtherJSInit %}
 
 	});
 

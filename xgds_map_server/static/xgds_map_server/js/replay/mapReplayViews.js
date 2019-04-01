@@ -35,6 +35,11 @@ app.views.TabNavView = xGDS.TabNavView.extend({
         this.listenTo(app.vent, 'onGroupFlightLoaded', function() {
         	 this.setTab('info');
         }, this);
+        this.listenTo(app.vent, 'tab:set', function(tab_id) {
+            if (Object.keys(this.viewMap).indexOf(tab_id) >= 0){
+                this.setTab(tab_id);
+            }
+        }, this);
     },
     getModel: function() {
         return app.groupFlight;
