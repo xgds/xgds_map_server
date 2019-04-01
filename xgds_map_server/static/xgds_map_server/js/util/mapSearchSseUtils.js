@@ -18,10 +18,10 @@ $(document).ready(function () {
 	// automatically update the datatable with new notes
 	// that arrive from the SSE note channels
 	sse.subscribe(
-		appOptions.modelName,
+		appOptions.modelName.toLowerCase(),
 		function () {
 			window.theDataTable.ajax.reload();
 		},
-		[appOptions.sseChannelName],
+		appOptions.sseChannelNames,
 	);
 });
