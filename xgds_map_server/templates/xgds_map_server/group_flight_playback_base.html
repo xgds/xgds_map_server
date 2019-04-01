@@ -72,7 +72,7 @@
                 {% for source in sources %}
                 <div id="source{{forloop.counter}}-gridstack-item" class="grid-stack-item"
                     data-gs-x="{% if forloop.counter|modulo:2 == 0 %}0{% else %}1{% endif %}" data-gs-y="{% if forloop.counter == 0 %}0{% else %}3{% endif %}"
-                    data-gs-width="2" data-gs-height="2" >
+                    data-gs-width="{% if forloop.last %}3{% else %}2{%endif %}" data-gs-height="2" >
                     <div class="grid-stack-item-content video-div" id="item{{forloop.counter}}" style="background-color:{{ source.displayColor }};">
                         <div class="d-flex justify-content-between video-head">
                              <div class="nav justify-content-lg-start">
@@ -134,7 +134,7 @@
     {% endblock map %}
 
 {% block postMap %}
-    <div id="tabs-gridstack-item" class="grid-stack-item"  data-gs-x="4" data-gs-y="0" data-gs-width="{% if 'xgds_video' in settings.INSTALLED_APPS %}3{% else %}5{% endif %}" data-gs-height="4" >
+    <div id="tabs-gridstack-item" class="grid-stack-item"  data-gs-x="4" data-gs-y="0" data-gs-width="{% if 'xgds_video' in settings.INSTALLED_APPS and segmentsJson %}3{% else %}5{% endif %}" data-gs-height="4" >
     		<div id="tabs-gridstack-item-content" class="grid-stack-item-content" >
 			<ul class="nav justify-content-end">
 				<i class="fa fa-lock pinDiv gray-light"></i>
@@ -158,7 +158,7 @@
     <script type="text/javascript" src="{{ EXTERNAL_URL }}datatables.net-plugins/sorting/datetime-moment.js"></script>
 {% endif %}
 
-    {% if 'xgds_video' in settings.INSTALLED_APPS %}
+    {% if 'xgds_video' in settings.INSTALLED_APPS and segmentsJson%}
         {% include "xgds_video/VideoJS.html" %}
         <script type="text/javascript" src="{% static 'xgds_video/js/videoPlaybackListener.js' %}"></script>
 
@@ -239,8 +239,10 @@
             simulator: '{{ simulator }}',
             siteFrame: {% siteframe settings.XGDS_CURRENT_SITEFRAME_ID %},
             XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: '{{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }}',
-            searchModels: {{ settings.XGDS_MAP_SERVER_SEARCH_MODELS|safe }},
+            searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
+            searchModelsKeys: {{ settings.XGDS_MAP_SERVER_SEARCH_MODELS|safe }},
             settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:'true,false' }},
+            live: {{ live|yesno:'true,false' }},
             track_urls: [],
             flight_ids: [],
             timeseries_config: [],
@@ -315,7 +317,7 @@
         app.vent.on('selectData', function(data) {
                 if ('timestamp' in data) {
                     playback.setCurrentTime(data.timestamp);
-                    {% if 'xgds_video' in settings.INSTALLED_APPS %}
+                    {% if 'xgds_video' in settings.INSTALLED_APPS and segmentsJson%}
                         xgds_video.jumpToPosition(data.timestamp);
                     {% endif %}
                 }
@@ -337,7 +339,7 @@
         group_flight_end = {% if group_flight.end_time %}new moment('{{ group_flight.end_time.isoformat }}'){% else %}null{% endif %};
             {%  endblock start_end %}
 
-            {% if 'xgds_video' in settings.INSTALLED_APPS %}
+            {% if 'xgds_video' in settings.INSTALLED_APPS and segmentsJson%}
             var time_control_path = '/static/xgds_video/js/playbackTimeControl.js';
             app.vent.on('seekTime', function(timeString) {
                 xgds_video.seekHelper(timeString);
@@ -491,7 +493,7 @@ xgds_notes.updateRole();
         input_initialized = true;
                 timePlaybackListener.doSetTime(playback.getCurrentTime());
 
-            {% if 'xgds_video' in settings.INSTALLED_APPS %}
+            {% if 'xgds_video' in settings.INSTALLED_APPS and segmentsJson%}
                 {% block setupIndexUrl %}
 
 var indexFileUrl = null;

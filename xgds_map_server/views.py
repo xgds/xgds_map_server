@@ -1848,6 +1848,10 @@ def getGroupFlightPlaybackPage(request, group_flight_name, templatePath='xgds_ma
 
     searchForms = getSearchForms(filter={'flight__group': group_flight})
 
+    live = False
+    if not group_flight.end_time:
+        live = True
+        templatePath = 'xgds_map_server/live_group_flight_playback.html'
     context = {'help_content_path': 'xgds_map_server/help/groupFlightPlayback.rst', # TODO IMPLEMENT
                    'title': '%s playback' % settings.XGDS_CORE_GROUP_FLIGHT_MONIKER,
                    'templates': templates,
@@ -1870,7 +1874,7 @@ def getGroupFlightPlaybackPage(request, group_flight_name, templatePath='xgds_ma
 
 
 def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSearch.html', forceUserSession=False, searchForms=None, filter=None):
-    searchModelDict = settings.XGDS_MAP_SERVER_SEARCH_MODELS
+    searchModelDict = settings.XGDS_MAP_SERVER_JS_MAP
     if modelName and not searchForms:
         searchForms = getSearchForms(modelName, filter)
 

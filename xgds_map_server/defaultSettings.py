@@ -93,7 +93,7 @@ XGDS_MAP_SERVER_MAP_LOADED_CALLBACK = 'xgds_map.coordinator.init'
 XGDS_MAP_SERVER_JS_MAP = {}
 
 # if these do not match, override them in siteSettings
-XGDS_MAP_SERVER_SEARCH_MODELS = XGDS_MAP_SERVER_JS_MAP
+XGDS_MAP_SERVER_SEARCH_MODELS = XGDS_MAP_SERVER_JS_MAP.keys()
 
 # If you are using spherical mercator this will be the norm.
 # If you are not, override the below values. 

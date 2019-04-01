@@ -81,10 +81,29 @@
 
 		},
 	});
+
+	xGDS.LiveReplayApplication = xGDS.ReplayApplication.extend( {
+		plot_models_initialized: false,
+        trackViews: [],
+		mapBottomPadding: 50,
+		getRootView: function() {
+			return new xGDS.ReplayRootView();
+		},
+		onStart: function() {
+        	xGDS.ReplayApplication.prototype.onStart.call(this);
+        },
+        initialize: function(options){
+            xGDS.ReplayApplication.prototype.initialize(options);
+		},
+
+	});
 	
 	xGDS.Factory = {
         construct: function(options){
-            return new xGDS.ReplayApplication(options);
+        	if (options.live) {
+				return new xGDS.LiveReplayApplication(options);
+			}
+        	return new xGDS.ReplayApplication(options);
         }
 	};
 
