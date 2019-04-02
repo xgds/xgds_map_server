@@ -19,8 +19,11 @@ app.models = app.models || {};
 (function(models) {
 
 	models.GroupFlight = Backbone.Model.extend({
-		initialize: function(plain_object) {
+		initialize: function(plain_object, end_time) {
 			Object.assign(this, plain_object);
+			if (_.isNull(this.end_time)) {
+				this.end_time = end_time;
+			}
 			this.updateTimes();
 		},
 		updateTimes: function() {

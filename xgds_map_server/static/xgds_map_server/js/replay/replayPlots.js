@@ -374,7 +374,7 @@ app.views.ReplayPlotView = Marionette.View.extend({
 			});
 		}
 	},
-	togglePlot(key, visible){
+	togglePlot: function(key, visible){
 		var dataPlot = this.dataPlots[key];
 		if (dataPlot.get('visible') != visible){
 			dataPlot.set('visible', visible);
@@ -468,6 +468,10 @@ app.views.ReplayPlotView = Marionette.View.extend({
 				conditionData.push([conditionEndTime, 0]);
 			}
 			conditionData.push(null);
+		}
+		if (app.options.fake_end){
+			// add a fake condition to the end
+			conditionData.push([app.options.end_time.toDate().getTime()]);
 		}
 		return [conditionData];
 	},

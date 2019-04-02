@@ -50,6 +50,7 @@ from django.template import RequestContext
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import condition
+from django.utils import timezone
 
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
 from geocamUtil.geoEncoder import GeoDjangoEncoder
@@ -1861,14 +1862,25 @@ def getGroupFlightPlaybackPage(request, group_flight_name, templatePath='xgds_ma
         live = True
         if templatePath == 'xgds_map_server/group_flight_playback.html':
             templatePath = 'xgds_map_server/live_group_flight_playback.html'
+
+        # one assumes there is a start time?
+        end_time = group_flight.start_time
+        if not end_time:
+            end_time = timezone.now()
+        end_time = end_time + datetime.timedelta(hours=settings.XGDS_CORE_DEFAULT_GROUP_FLIGHT_DURATION_HOURS)
+
+    else:
+        end_time = group_flight.end_time
     context = {'help_content_path': 'xgds_map_server/help/groupFlightPlayback.rst', # TODO IMPLEMENT
-                   'title': '%s playback' % settings.XGDS_CORE_GROUP_FLIGHT_MONIKER,
-                   'templates': templates,
-                   'modelName': None,
-                   'searchForms': searchForms,
-                   'group_flight': group_flight,
-                   'forceUserSession': True,
-                   'app': 'xgds_map_server/js/replay/groupFlightReplayApp.js'}
+               'title': '%s playback' % settings.XGDS_CORE_GROUP_FLIGHT_MONIKER,
+               'templates': templates,
+               'modelName': None,
+               'searchForms': searchForms,
+               'group_flight': group_flight,
+               'live': live,
+               'end_time': end_time.isoformat(),
+               'forceUserSession': True,
+               'app': 'xgds_map_server/js/replay/groupFlightReplayApp.js'}
 
     if video and 'xgds_video' in settings.INSTALLED_APPS:
         context_method = getClassByName('xgds_video.views.getVideoContext')

@@ -61,7 +61,7 @@
 			app.plot_models_initialized = true;
 		},
 		parseJSON: function() {
-            app.groupFlight = new app.models.GroupFlight(app.options.group_flight);
+            app.groupFlight = new app.models.GroupFlight(app.options.group_flight, app.options.end_time);
             app.conditions = app.options.conditions;
     		this.vent.trigger('onGroupFlightLoaded');
         },
@@ -70,6 +70,11 @@
 			_.each(app.conditions, function(condition, i, conditions) {
 			    result.push({start:moment(condition.start_time), end:moment(condition.end_time)});
 			});
+			
+			// if we are in live mode add a fake condition to get the timeline to draw correctly
+			if (app.options.fake_end){
+				result.push({start:moment(app.options.end_time), end:moment(app.options.end_time)})
+			}
 			return result;
 		},
         renderTracks: function() {

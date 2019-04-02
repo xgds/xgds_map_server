@@ -223,7 +223,7 @@
     {% for u in group_flight.links.all %}
         group_flight_links['{{ u.name }}'] ='{{ u.url }}';
     {% endfor %}
-
+    //premapjs
     var appOptions = {
         	BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
         	DEFAULT_COORD_SYSTEM: '{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}',
@@ -248,11 +248,13 @@
             timeseries_config: [],
             group_flight: {{ group_flight.toJson|safe }},
             group_flight_links: group_flight_links,
+            end_time: moment('{{ end_time }}'),
             conditions: conditions,
             search_seconds_before: {{ settings.XGDS_MAP_SERVER_SEARCH_SECONDS_BEFORE }},
             search_seconds_after: {{ settings.XGDS_MAP_SERVER_SEARCH_SECONDS_AFTER }},
-            searchOptions: { fitMap: false, today: false, time_control_search: true },
+            searchOptions: { fitMap: false, today: false, time_control_search: true }
      };
+
 
         {% if extras %}
             var extras = {{ extras|safe }};
@@ -260,6 +262,9 @@
             	appOptions[key] = extras[key];
             }
         {% endif %}
+
+        appOptions['fake_end'] = appOptions.group_flight.end_time != appOptions.end_time;
+
     </script>
 {% endblock preMapJS %}
 
@@ -336,30 +341,31 @@
         serverTimezone = "{{TIME_ZONE}}";
             {% block start_end %}
         group_flight_start = {% if group_flight.start_time %}new moment('{{ group_flight.start_time.isoformat }}'){% else %}null{% endif %};
-        group_flight_end = {% if group_flight.end_time %}new moment('{{ group_flight.end_time.isoformat }}'){% else %}null{% endif %};
+                //{{ end_time }}
+        group_flight_end = {% if end_time %}new moment('{{ end_time }}'){% else %}null{% endif %};
             {%  endblock start_end %}
 
             {% if 'xgds_video' in settings.INSTALLED_APPS and segmentsJson%}
-            var time_control_path = '/static/xgds_video/js/playbackTimeControl.js';
-            app.vent.on('seekTime', function(timeString) {
-                xgds_video.seekHelper(timeString);
-            });
-                group_flight_start = new moment('{{ episode.startTime.isoformat }}');
-                {% if episode.endTime %}
-                group_flight_end = new moment('{{ episode.endTime.isoformat }}');
-                {% endif %}
+                var time_control_path = '/static/xgds_video/js/playbackTimeControl.js';
+                app.vent.on('seekTime', function(timeString) {
+                    xgds_video.seekHelper(timeString);
+                });
+                    group_flight_start = new moment('{{ episode.startTime.isoformat }}');
+                    {% if episode.endTime %}
+                    group_flight_end = new moment('{{ episode.endTime.isoformat }}');
+                    {% endif %}
 
 
 
-            {% else %}
-            var time_control_path = '/static/xgds_core/js/playbackTimeControl.js'
+                {% else %}
+                var time_control_path = '/static/xgds_core/js/playbackTimeControl.js'
             {%  endif %}
-        playback.initialize({getStartTime: function(){return group_flight_start;},
-                             getEndTime: function(){return group_flight_end;},
-                             displayTZ: getTimeZone(),
-                             slider: true,
-                             time_control_path: time_control_path
-                            });
+            playback.initialize({getStartTime: function(){return group_flight_start;},
+                                 getEndTime: function(){return group_flight_end;},
+                                 displayTZ: getTimeZone(),
+                                 slider: true,
+                                 time_control_path: time_control_path
+                                });
 
             {% block initializeNotes %}
             var container = $("#full_notes_input");
