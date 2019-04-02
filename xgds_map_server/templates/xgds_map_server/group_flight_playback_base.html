@@ -169,7 +169,6 @@
     <script type="text/javascript">
    		DEFAULT_PLOT_TIME_FORMAT = '%H:%M';
    	</script>
-    {% include "xgds_core/playbackJS.html" %}
     <script type="text/javascript" src="{% static 'xgds_timeseries/js/timeseriesUtils.js' %}"></script>
     <script type="text/javascript" src="{% static 'geocamTrack/js/trackBackbone.js' %}"></script>
     <script type="text/javascript" src="{% static 'xgds_map_server/js/replay/mapReplayModels.js' %}"></script>
@@ -204,6 +203,8 @@
 
 
 {% block preMapJS %}
+    {% include "xgds_core/playbackJS.html" %}
+
     <script type="text/javascript">
 	var siteFrames = {% siteframes_dict %};
 
@@ -264,6 +265,10 @@
         {% endif %}
 
         appOptions['fake_end'] = appOptions.group_flight.end_time != appOptions.end_time;
+        appOptions['max_end_time'] = appOptions.end_time;
+
+    {% block postAppOptions %}
+    {% endblock postAppOptions %}
 
     </script>
 {% endblock preMapJS %}
