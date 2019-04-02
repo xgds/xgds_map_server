@@ -936,7 +936,8 @@ app.views.SearchResultsView = Marionette.View.extend({
         	dataTableObj['ajax']= this.ajaxConfig;
         }
 
-        this.theDataTable = $(this.theTable).DataTable(dataTableObj);
+		this.theDataTable = $(this.theTable).DataTable(dataTableObj);
+		window.theDataTable = this.theDataTable;
         this.theDataTable.columns.adjust().draw();
         this.connectDoubleClickCallback();
         this.connectSinglePickCallback();
