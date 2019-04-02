@@ -38,6 +38,7 @@
 	});
 	
 	xGDS.ReplayApplication = xGDS.Application.extend( {
+		max_end_time: undefined,
 		plot_models_initialized: false,
         trackViews: [],
 		mapBottomPadding: 50,
@@ -51,6 +52,9 @@
         },
         initialize: function(options){
             xGDS.Application.prototype.initialize(options);
+            if ('max_end_time' in options) {
+				self.max_end_time = moment(options.max_end_time);
+			}
 			this.listenTo(this.vent, 'layers:loaded', this.renderTracks);
 		},
 		initializePlotModels: function() {
@@ -88,19 +92,53 @@
 	});
 
 	xGDS.LiveReplayApplication = xGDS.ReplayApplication.extend( {
-		plot_models_initialized: false,
-        trackViews: [],
-		mapBottomPadding: 50,
+		play_sse_list: [],
+		pause_sse_list: [],
+		play_callback: function(play_time) {
+			// In this case we always want to set time to now and resubscribe
+			app.vent.trigger('now');
+			//TODO Khaled iterate through the play sse list and subscribe IF the time is the max time
+		},
+		pause_callback: function(pause_time) {
+			// TODO Khaled iterate through the pause sse list and unsubscribe
+		},
+
 		getRootView: function() {
 			return new xGDS.ReplayRootView();
 		},
 		onStart: function() {
         	xGDS.ReplayApplication.prototype.onStart.call(this);
+        	var context = this;
+        	app.vent.on('now', context.set_now_time(context))
         },
+		set_now_time: function(context) {
+			console.log('NOW PRESSED');
+			if (!_.isUndefined(context.max_end_time)){
+				playback.setCurrentTime(context.max_end_time);
+					//app.vent.trigger('playback:setCurrentTime', context.max_end_time);
+			}
+			else {
+				console.log('MAX END TIME NOT SET')
+			}
+		},
         initialize: function(options){
             xGDS.ReplayApplication.prototype.initialize(options);
-		},
 
+            // Make sure the options contain play_sse_list and pause_sse_list
+			if ('play_sse_list' in options) {
+				self.play_sse_list = options.play_sse_list;
+			}
+			if ('pause_sse_list' in options) {
+				self.pause_sse_list = options.pause_sse_list;
+			}
+
+			this.set_now_time(this);
+			playback.addStopListener(this.pause_callback);
+			playback.addPlayListener(this.play_callback)
+
+			// remove other listeners
+			playback.removeListener(playback.plot);
+		}
 	});
 	
 	xGDS.Factory = {
