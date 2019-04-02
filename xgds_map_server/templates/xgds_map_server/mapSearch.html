@@ -38,7 +38,7 @@
 		{% endblock extraAppOptions %}
 		settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }},
 		showDetailView: true,
-		sseChannelName: "{{sseChannelName}}",
+		sseChannelNames: {{ sseChannelNames|safe }},
 	};
 	</script>
 {% endblock preMapJS %}
