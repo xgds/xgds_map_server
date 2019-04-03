@@ -677,6 +677,13 @@ app.views.SearchResultsView = Marionette.View.extend({
                 });
             }
     	}
+    	$('#subscription').change(function () {
+			if (this.checked) {
+				app.vent.trigger('subscriptionChecked');
+			} else {
+				app.vent.trigger('subscriptionUnchecked');
+			}
+		});
 
     	if (this.time_control_search) {
     		var time_control_search = $('#time_control_search');

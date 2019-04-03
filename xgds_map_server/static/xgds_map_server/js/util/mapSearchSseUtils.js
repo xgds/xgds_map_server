@@ -15,13 +15,22 @@
 // __END_LICENSE__
 
 $(document).ready(function () {
-	// automatically update the datatable with new notes
-	// that arrive from the SSE note channels
-	sse.subscribe(
-		appOptions.modelName.toLowerCase(),
-		function () {
-			window.theDataTable.ajax.reload(null, false);
-		},
-		appOptions.sseChannelNames,
-	);
+	this.subscribeToModel = function() {
+		// automatically update the datatable with new notes
+		// that arrive from the SSE note channels
+		sse.subscribe(
+			appOptions.modelName.toLowerCase(),
+			function () {
+				window.theDataTable.ajax.reload(null, false);
+			},
+			appOptions.sseChannelNames,
+		);
+	};
+	app.vent.on("subscriptionChecked", function() {
+		this.subscribeToModel();
+	}.bind(this));
+	app.vent.on("subscriptionUnchecked", function() {
+		sse.unsubscribe(appOptions.modelName.toLowerCase(), appOptions.sseChannelNames);
+	});
+	this.subscribeToModel();
 });
