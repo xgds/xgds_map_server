@@ -1,6 +1,7 @@
 {% load static %}
 	<script type='text/javascript'>
 		var map_api_key = '{{settings.XGDS_MAP_SERVER_MAP_API_KEY}}';
+        HEADING_UNITS = '{{ settings.GEOCAM_TRACK_HEADING_UNITS }}';
 	</script>
 	<script type='text/javascript' src='{{ EXTERNAL_URL }}sprintf-js/dist/sprintf.min.js'></script>
 	<script type='text/javascript' src='{{ EXTERNAL_URL }}jquery-ui-dist/jquery-ui.min.js'></script>

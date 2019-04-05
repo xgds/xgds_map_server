@@ -93,6 +93,9 @@ $(function() {
         setRotation: function(newRotation) {
         	// in radians
         	var image = this.vectorLayer.getStyle()[0].getImage();
+        	if (HEADING_UNITS === 'degrees') {
+                newRotation = newRotation * (Math.PI / 180);
+            }
         	image.setRotation(newRotation);
         	this.vectorLayer.changed();
         },
