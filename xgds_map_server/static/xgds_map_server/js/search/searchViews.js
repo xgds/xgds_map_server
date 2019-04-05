@@ -944,7 +944,6 @@ app.views.SearchResultsView = Marionette.View.extend({
         }
 
 		this.theDataTable = $(this.theTable).DataTable(dataTableObj);
-		window.theDataTable = this.theDataTable;
         this.theDataTable.columns.adjust().draw();
         this.connectDoubleClickCallback();
         this.connectSinglePickCallback();
@@ -953,7 +952,11 @@ app.views.SearchResultsView = Marionette.View.extend({
         this.connectDeselectCallback();
         this.listenToTableChanges();
         this.filterMapData(undefined);
-        app.vent.trigger("repack");
+		app.vent.trigger("repack");
+		
+		app.vent.on("reloadDataTableAjax", function() {
+        	this.theDataTable.ajax.reload(null, false);
+        }.bind(this));
     },
 	// Put the needed data for exporting into a hidden form
 	initializeExportData: function(){

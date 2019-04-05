@@ -21,7 +21,7 @@ $(document).ready(function () {
 		sse.subscribe(
 			appOptions.modelName.toLowerCase(),
 			function () {
-				window.theDataTable.ajax.reload(null, false);
+				app.vent.trigger("reloadDataTableAjax");
 			},
 			appOptions.sseChannelNames,
 		);
