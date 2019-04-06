@@ -341,6 +341,7 @@
     		xgds_gridstack.initializeGridstack();
     		{% endblock initGridstack %}
 
+            {% block sse %}
     		{% if settings.XGDS_SSE and settings.GEOCAM_UTIL_LIVE_MODE%}
                 if (appOptions.live) {
                     trackSse.initialize();
@@ -350,6 +351,7 @@
                     //notesSse.olInitialize();
                 }
     		{% endif %}
+            {% endblock sse %}
 
         // right here the map is the right height and when we exit this method it is not.
 
