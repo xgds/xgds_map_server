@@ -53,3 +53,8 @@
    	{% for key, value in settings.XGDS_MAP_SERVER_JS_MAP.items %}
    		{% if value.ol %}<script type='text/javascript' src='{{STATIC_URL}}{{ value.ol|safe }}'></script> {% endif %}
    	{% endfor %}
+
+   {% if settings.XGDS_SSE and settings.GEOCAM_UTIL_LIVE_MODE%}
+    <script type='text/javascript' src="{% static 'xgds_map_server/js/util/mapSearchSseUtils.js' %}"></script>
+   {% endif %}
+

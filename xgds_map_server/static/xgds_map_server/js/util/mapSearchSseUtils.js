@@ -18,13 +18,15 @@ $(document).ready(function () {
 	this.subscribeToModel = function() {
 		// automatically update the datatable with new notes
 		// that arrive from the SSE note channels
-		sse.subscribe(
-			appOptions.modelName.toLowerCase(),
-			function () {
-				app.vent.trigger("reloadDataTableAjax");
-			},
-			appOptions.sseChannelNames,
-		);
+		if ('live' in app.options && app.options.live) {
+			sse.subscribe(
+				appOptions.modelName.toLowerCase(),
+				function () {
+					app.vent.trigger("reloadDataTableAjax");
+				},
+				appOptions.sseChannelNames
+			);
+		}
 	};
 	app.vent.on("subscriptionChecked", function() {
 		this.subscribeToModel();
@@ -32,5 +34,10 @@ $(document).ready(function () {
 	app.vent.on("subscriptionUnchecked", function() {
 		sse.unsubscribe(appOptions.modelName.toLowerCase(), appOptions.sseChannelNames);
 	});
-	this.subscribeToModel();
+	var subscription = $("#subscription");
+	if (subscription.length > 0) {
+		if (subscription.is(':checked')) {
+			this.subscribeToModel();
+		}
+	}
 });
