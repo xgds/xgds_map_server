@@ -337,7 +337,19 @@
         {% block preLayout %}
 		{% endblock preLayout %}
 
-    	xgds_gridstack.initializeGridstack();
+    	{% block initGridstack %}
+    		xgds_gridstack.initializeGridstack();
+    		{% endblock initGridstack %}
+
+    		{% if settings.XGDS_SSE and settings.GEOCAM_UTIL_LIVE_MODE%}
+                if (appOptions.live) {
+                    trackSse.initialize();
+                    // this relies on notes, but we generally always include notes
+                    //TODO Khaled fix
+                    //notesSse.initialize();
+                    //notesSse.olInitialize();
+                }
+    		{% endif %}
 
         // right here the map is the right height and when we exit this method it is not.
 
