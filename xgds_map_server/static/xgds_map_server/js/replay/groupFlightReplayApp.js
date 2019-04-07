@@ -132,6 +132,7 @@
 		play_sse_list: [],
 		pause_sse_list: [],
 		playing: true,
+		end_time_initialized: false,
 		play_callback: function(play_time) {
 			// In this case we always want to set time to now and resubscribe
 			this.playing = true;
@@ -170,12 +171,12 @@
 		hook_playback: function() {
 			xGDS.ReplayApplication.prototype.hook_playback();
 			var context = this;
+			playback.playFlag = true;
 			playback.addStopListener(function() {context.pause_callback();});
 			playback.addPlayListener(function() {context.play_callback();});
 
 			// remove other listeners
 			playback.removeListener(playback.plot);
-			playback.playFlag = true;
 		},
 		onStart: function() {
         	xGDS.ReplayApplication.prototype.onStart.call(this);
@@ -187,9 +188,18 @@
 		update_max_time: function(latest_time) {
 			if (!_.isUndefined(latest_time)) {
 				if (app.options.fake_end) {
-					this.max_end_time = latest_time;
-					if (this.playing) {
-						this.set_now_time();
+					var update = false
+					if (!this.end_time_initialized) {
+						this.end_time_initialized = true;
+						update = true;
+					} else if (latest_time.isAfter(this.max_end_time)) {
+						update = true;
+					}
+					if (update) {
+						this.max_end_time = latest_time;
+						if (this.playing) {
+							this.set_now_time();
+						}
 					}
 				}
 			}
