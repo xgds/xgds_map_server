@@ -315,7 +315,35 @@
     });
 
 	$(function(){
+
+        {% if 'xgds_video' in settings.INSTALLED_APPS and segmentsJson%}
+                var time_control_path = '/static/xgds_video/js/playbackTimeControl.js';
+                app.vent.on('seekTime', function(timeString) {
+                    xgds_video.seekHelper(timeString);
+                });
+
+                var group_flight_start = new moment('{{ episode.startTime.isoformat }}');
+{#                    {% if episode.endTime %}#}
+{#                        var group_flight_end = new moment('{{ episode.endTime.isoformat }}');#}
+{#                    {% endif %}#}
+{##}
+
+
+            {% else %}
+                var time_control_path = '/static/xgds_core/js/playbackTimeControl.js';
+                var group_flight_start = new moment(appOptions.group_flight.start_time);
+            {%  endif %}
 		app.start(appOptions);
+
+        playback.initialize({getStartTime: function(){return group_flight_start;},
+                         getEndTime: function(){return app.get_end_time();},
+                         displayTZ: getTimeZone(),
+                         slider: true,
+                         time_control_path: time_control_path,
+                         useTimerWorker: !appOptions.live
+                        });
+
+        app.hook_playback();
 
         app.vent.on('searchDiv:visible', function(){
 		 	if (!searchDiv_initialized){
@@ -364,64 +392,12 @@
         group_flight_end = {% if end_time %}new moment('{{ end_time }}'){% else %}null{% endif %};
             {%  endblock start_end %}
 
-            {% if 'xgds_video' in settings.INSTALLED_APPS and segmentsJson%}
-                var time_control_path = '/static/xgds_video/js/playbackTimeControl.js';
-                app.vent.on('seekTime', function(timeString) {
-                    xgds_video.seekHelper(timeString);
-                });
-                    group_flight_start = new moment('{{ episode.startTime.isoformat }}');
-                    {% if episode.endTime %}
-                    group_flight_end = new moment('{{ episode.endTime.isoformat }}');
-                    {% endif %}
-
-
-
-                {% else %}
-                var time_control_path = '/static/xgds_core/js/playbackTimeControl.js'
-            {%  endif %}
-            playback.initialize({getStartTime: function(){return group_flight_start;},
-                                 getEndTime: function(){return group_flight_end;},
-                                 displayTZ: getTimeZone(),
-                                 slider: true,
-                                 time_control_path: time_control_path
-                                });
-
             {% block initializeNotes %}
             var container = $("#full_notes_input");
             xgds_notes.setupNotesUI(container);
             xgds_notes.initializeNotesForm(false);
 
-            // add a playback listener to set the time
-            timePlaybackListener =  {
-		        lastUpdate: undefined,
-		        invalid: false,
-		        initialize: function() {
-                    this.event_time_input = $("#id_event_time");
-		        },
-		        doSetTime: function(currentTime){
-			        if (currentTime === undefined){
-				        return;
-			        }
-			        this.lastUpdate = moment(currentTime);
-                    this.event_time_input.val(this.lastUpdate.format('MM/DD/YY HH:mm:ss zz'));
-		        },
-		        start: function(currentTime){
-			        this.doSetTime(currentTime);
-		        },
-		        update: function(currentTime){
-			        if (this.lastUpdate === undefined){
-				        this.doSetTime(currentTime);
-				        return;
-			        }
-			        var delta = currentTime.diff(this.lastUpdate);
-			        if (Math.abs(delta) >= 100) {
-				        this.doSetTime(currentTime);
-			        }
-		        },
-		        pause: function() {
-		        }
-            };
-                playback.addListener(timePlaybackListener);
+
 
             {% endblock initializeNotes %}
 
@@ -491,11 +467,11 @@
 }
 
     xgds_notes.set_event_time = function() {
-            timePlaybackListener.doSetTime(playback.getCurrentTime());
+            app.timePlaybackListener.doSetTime(playback.getCurrentTime());
 
 	};
     xgds_notes.postSubmit = function(data) {
-            timePlaybackListener.doSetTime(playback.getCurrentTime());
+            app.timePlaybackListener.doSetTime(playback.getCurrentTime());
 
 	};
 
@@ -508,15 +484,14 @@ xgds_notes.updateRole();
 
             $("#nowButton").hide();
             var input_initialized = false;
- 		var formNote = $("#form-Note");
- 		var input = formNote.find('.taginput');
-        xgds_notes.initializeInput(input);
-        var role = formNote.find("#id_role");
-        role.val(role.find("option:first").val());
-        var location = formNote.find("#id_location");
-        location.val(location.find("option:first").val());
-        input_initialized = true;
-                timePlaybackListener.doSetTime(playback.getCurrentTime());
+ 		    var formNote = $("#form-Note");
+ 		    var input = formNote.find('.taginput');
+            xgds_notes.initializeInput(input);
+            var role = formNote.find("#id_role");
+            role.val(role.find("option:first").val());
+            var location = formNote.find("#id_location");
+            location.val(location.find("option:first").val());
+            input_initialized = true;
 
             {% if 'xgds_video' in settings.INSTALLED_APPS and segmentsJson%}
                 {% block setupIndexUrl %}

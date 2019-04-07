@@ -38,7 +38,6 @@
 	});
 	
 	xGDS.ReplayApplication = xGDS.Application.extend( {
-		max_end_time: undefined,
 		plot_models_initialized: false,
         trackViews: [],
 		mapBottomPadding: 50,
@@ -53,7 +52,7 @@
         initialize: function(options){
             xGDS.Application.prototype.initialize(options);
             if ('max_end_time' in options) {
-				self.max_end_time = moment(options.max_end_time);
+				this.max_end_time = moment(options.max_end_time);
 			}
 			this.listenTo(this.vent, 'layers:loaded', this.renderTracks);
 		},
@@ -89,56 +88,141 @@
 			});
 
 		},
+		get_end_time: function() {
+			return this.groupFlight.end_moment;
+		},
+		// add a playback listener to set the time
+		timePlaybackListener :  {
+			lastUpdate: undefined,
+			invalid: false,
+			initialize: function() {
+				this.event_time_input = $("#id_event_time");
+			},
+			doSetTime: function(currentTime){
+				if (currentTime === undefined){
+					return;
+				}
+				this.lastUpdate = moment(currentTime);
+				this.event_time_input.val(this.lastUpdate.format('MM/DD/YY HH:mm:ss zz'));
+			},
+			start: function(currentTime){
+				this.doSetTime(currentTime);
+			},
+			update: function(currentTime){
+				if (this.lastUpdate === undefined){
+					this.doSetTime(currentTime);
+					return;
+				}
+				var delta = currentTime.diff(this.lastUpdate);
+				if (Math.abs(delta) >= 100) {
+					this.doSetTime(currentTime);
+				}
+			},
+			pause: function() {
+			}
+		},
+		hook_playback: function() {
+			playback.addListener(this.timePlaybackListener);
+			this.timePlaybackListener.doSetTime(playback.getCurrentTime());
+		}
+
 	});
 
 	xGDS.LiveReplayApplication = xGDS.ReplayApplication.extend( {
 		play_sse_list: [],
 		pause_sse_list: [],
+		playing: true,
 		play_callback: function(play_time) {
 			// In this case we always want to set time to now and resubscribe
+			this.playing = true;
 			app.vent.trigger('now');
-			//TODO Khaled iterate through the play sse list and subscribe IF the time is the max time
+			//TODO iterate through the play sse list and subscribe IF the time is the max time
+			// we need to extend olTrackSseUtils to do what it does except not render updates to the track
+			// or the vehicles when paused.  when playing it should update
+			// conditions should draw all the time
+			// timeseries values should be added to the prior cache of data and only draw when playing is true
 		},
 		pause_callback: function(pause_time) {
 			// TODO Khaled iterate through the pause sse list and unsubscribe
+			this.playing = false;
 		},
 
 		getRootView: function() {
 			return new xGDS.ReplayRootView();
 		},
+		initialize: function(options){
+            xGDS.ReplayApplication.prototype.initialize(options);
+
+			var context = this;
+        	this.listenTo(this.vent, 'now', function() {context.set_now_time()});
+        	this.listenTo(this.vent, 'position:latest', function(latest_time) {
+        		context.update_max_time(latest_time);
+			});
+
+			if ('play_sse_list' in options) {
+				this.play_sse_list = options.play_sse_list;
+			}
+			if ('pause_sse_list' in options) {
+				this.pause_sse_list = options.pause_sse_list;
+			}
+
+		},
+		hook_playback: function() {
+			xGDS.ReplayApplication.prototype.hook_playback();
+			var context = this;
+			playback.addStopListener(function() {context.pause_callback();});
+			playback.addPlayListener(function() {context.play_callback();});
+
+			// remove other listeners
+			playback.removeListener(playback.plot);
+			playback.playFlag = true;
+		},
 		onStart: function() {
         	xGDS.ReplayApplication.prototype.onStart.call(this);
-        	var context = this;
-        	app.vent.on('now', context.set_now_time(context))
+        	this.subscribe();
         },
-		set_now_time: function(context) {
-			console.log('NOW PRESSED');
-			if (!_.isUndefined(context.max_end_time)){
-				playback.setCurrentTime(context.max_end_time);
+		get_end_time: function() {
+			return this.max_end_time;
+		},
+		update_max_time: function(latest_time) {
+			if (!_.isUndefined(latest_time)) {
+				if (app.options.fake_end) {
+					this.max_end_time = latest_time;
+					if (this.playing) {
+						this.set_now_time();
+					}
+				}
+			}
+		},
+		set_now_time: function() {
+			if (!_.isUndefined(this.max_end_time)){
+				// console.log('SETTING NOW TIME ' + this.max_end_time.format());
+
+				playback.setCurrentTime(this.max_end_time);
 					//app.vent.trigger('playback:setCurrentTime', context.max_end_time);
 			}
 			else {
 				console.log('MAX END TIME NOT SET')
 			}
 		},
-        initialize: function(options){
-            xGDS.ReplayApplication.prototype.initialize(options);
-
-            // Make sure the options contain play_sse_list and pause_sse_list
-			if ('play_sse_list' in options) {
-				self.play_sse_list = options.play_sse_list;
+		subscribe: function() {
+			var context = this;
+			sse.subscribe('position', context.handlePositionEvent,  trackSse.getChannels());
+			sse.subscribe('condition', context.handleConditionEvent,  ['sse']);
+		},
+		handlePositionEvent: function(event) {
+			var data = JSON.parse(event.data);
+			if ('timestamp' in data && !_.isUndefined(data.timestamp)) {
+				app.vent.trigger('position:latest', moment(data.timestamp) );
 			}
-			if ('pause_sse_list' in options) {
-				self.pause_sse_list = options.pause_sse_list;
-			}
-
-			this.set_now_time(this);
-			playback.addStopListener(this.pause_callback);
-			playback.addPlayListener(this.play_callback)
-
-			// remove other listeners
-			playback.removeListener(playback.plot);
+		},
+		handleConditionEvent: function(event) {
+			var data = JSON.parse(event.data);
+			console.log('CONDITION');
+			console.log(data);
+			app.vent.trigger('condition:new', data);
 		}
+
 	});
 	
 	xGDS.Factory = {
