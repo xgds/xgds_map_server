@@ -115,23 +115,11 @@
         {% endblock videodivs %}
     {% endblock preMap %}
 
-{% block map %}
-    <div id="map-gridstack-item" class="grid-stack-item"
+{% block mapdiv %}
+		<div id="map-gridstack-item" class="grid-stack-item"
     data-gs-x="0" data-gs-y="0"
     data-gs-width="1" data-gs-height="{% if 'xgds_video' in settings.INSTALLED_APPS and segmentsJson %}2{% else %}3{% endif %}" >
-        <div class="grid-stack-item-content" id="map-gridstack-item-content" >
-            <ul class="nav justify-content-end">
-                <i class="fa fa-lock pinDiv gray-light"></i>
-            </ul>
-            <div id="overmap" class="mb-1 mt-negative-1rem">
-                <button id="layers_button" type="button" class="btn btn-primary" data-backdrop=false data-toggle="modal" data-target="#layers_modal">
-                    Layers
-                </button>
-            </div>
-            <div id="map"></div>
-        </div>
-    </div>
-    {% endblock map %}
+{% endblock mapdiv %}
 
 {% block postMap %}
     <div id="tabs-gridstack-item" class="grid-stack-item"  data-gs-x="4" data-gs-y="0" data-gs-width="{% if 'xgds_video' in settings.INSTALLED_APPS and segmentsJson %}3{% else %}5{% endif %}" data-gs-height="4" >
