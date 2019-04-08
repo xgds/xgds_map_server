@@ -686,6 +686,9 @@ app.views.SearchResultsView = Marionette.View.extend({
 				app.vent.trigger('subscriptionUnchecked');
 			}
 		});
+		if ($('#subscription').length > 0) {
+			app.vent.trigger("subscriptionButtonInit", $('#subscription'));
+		}
 
     	if (this.time_control_search) {
     		var time_control_search = $('#time_control_search');
