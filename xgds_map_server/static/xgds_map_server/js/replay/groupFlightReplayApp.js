@@ -217,8 +217,8 @@
 		},
 		subscribe: function() {
 			var context = this;
-			sse.subscribe('position', context.handlePositionEvent,  trackSse.getChannels());
-			sse.subscribe('condition', context.handleConditionEvent,  ['sse']);
+			sse.subscribe('position', context.handlePositionEvent,   "handlePositionEvent",  trackSse.getChannels());
+			sse.subscribe('condition', context.handleConditionEvent, "handleConditionEvent", ['sse']);
 		},
 		handlePositionEvent: function(event) {
 			var data = JSON.parse(event.data);
