@@ -23,33 +23,43 @@ $(document).ready(function () {
 			sse.subscribe(
 				appOptions.modelName.toLowerCase(),
 				function () {
+					if (sse.DEBUG) {
+						console.log("[SSE Message] got a message of type", appOptions.modelName.toLowerCase());
+					}
 					app.vent.trigger("reloadDataTableAjax");
 				},
 				appOptions.sseChannelNames
 			);
 		}
 	};
+	
 	app.vent.on("subscriptionChecked", function() {
 		this.subscribeToModel();
 	}.bind(this));
 	app.vent.on("subscriptionUnchecked", function() {
 		sse.unsubscribe(appOptions.modelName.toLowerCase(), appOptions.sseChannelNames);
 	});
+
 	app.vent.on("searchModelInitSSE", function(v) {
+		// only init sse in live mode, otherwise exit
 		if (!('live' in app.options && app.options.live)) return;
+
+		// fetch a list of channels if they aren't defined
 		if (!(appOptions.sseChannelNames)) appOptions.sseChannelNames = sse.getChannels();
-		appOptions.modelName = v;
+
+		// unsubscribe to the previously subscribed model, if we were subscribed
+		if (appOptions.modelName) sse.unsubscribe(appOptions.modelName.toLowerCase(), appOptions.sseChannelNames);
+
+		// persist the current model name so we can unsubscribe from it later
+		appOptions.modelName = v.toLowerCase();
+
+		// subscribe to the current model
 		this.subscribeToModel();
-		console.log("[SSE Init] Subscribing to a new model:", appOptions.modelName);
+
+		// debugging
+		if (sse.DEBUG) console.log("[SSE Init] Subscribing to a new model:", appOptions.modelName);
 	}.bind(this));
-	app.vent.on("searchModelChange", function(v) {
-		if (!('live' in app.options && app.options.live)) return;
-		sse.unsubscribe(appOptions.modelName.toLowerCase(), appOptions.sseChannelNames);
-		console.log("[SSE Info] Unsubscribing from old model:", appOptions.modelName);
-		appOptions.modelName = v;
-		this.subscribeToModel();
-		console.log("[SSE Info] Subscribing to a new model:", appOptions.modelName);		
-	}.bind(this));
+
 	var subscription = $("#subscription");
 	if (subscription.length > 0) {
 		if (subscription.is(':checked')) {
