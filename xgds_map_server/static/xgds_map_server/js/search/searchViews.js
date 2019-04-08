@@ -968,7 +968,11 @@ app.views.SearchResultsView = Marionette.View.extend({
     	var _this = this;
     	var simpleSearchData = {};
     	$('.export-err').hide();
-    	if ($('#pick_master').is(":checked")) this.selectedIds.push("All");
+    	if ($('#pick_master').is(":checked")) {
+    		if (this.selectedIds.indexOf("All") < 0)
+				this.selectedIds.push("All");
+    		$('#exportWarning').innerText = "You may be exporting a LOT of data, are you sure you want to do this?";
+		}
 
     	simpleSearchData["search"] = $('#search-keyword-id').val();
     	simpleSearchData["tags"] = $('#search-tags-id').val();

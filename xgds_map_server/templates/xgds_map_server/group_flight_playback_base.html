@@ -122,7 +122,9 @@
 {% endblock mapdiv %}
 
 {% block postMap %}
+    {% block tabsdiv %}
     <div id="tabs-gridstack-item" class="grid-stack-item"  data-gs-x="4" data-gs-y="0" data-gs-width="{% if 'xgds_video' in settings.INSTALLED_APPS and segmentsJson %}3{% else %}5{% endif %}" data-gs-height="4" >
+    {% endblock tabsdiv %}
     		<div id="tabs-gridstack-item-content" class="grid-stack-item-content" >
 			<ul class="nav justify-content-end">
 				<i class="fa fa-lock pinDiv gray-light"></i>
@@ -384,7 +386,6 @@
             var container = $("#full_notes_input");
             xgds_notes.setupNotesUI(container);
             xgds_notes.initializeNotesForm(false);
-
 
 
             {% endblock initializeNotes %}

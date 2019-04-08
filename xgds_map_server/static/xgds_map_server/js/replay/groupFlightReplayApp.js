@@ -103,6 +103,8 @@
 					return;
 				}
 				this.lastUpdate = moment(currentTime);
+				// todo the time is always changing, do we want this just when we push the button?
+				// maybe add back the now button?
 				this.event_time_input.val(this.lastUpdate.format('MM/DD/YY HH:mm:ss zz'));
 			},
 			start: function(currentTime){
@@ -134,7 +136,9 @@
 		end_time_initialized: false,
 		play_callback: function(play_time) {
 			// In this case we always want to set time to now and resubscribe
-			app.vent.trigger('now');
+			if (this.end_time_initialized) {
+				app.vent.trigger('now');
+			}
 			app.vent.trigger('live:play');
 			//TODO iterate through the play sse list and subscribe IF the time is the max time
 			// we need to extend olTrackSseUtils to do what it does except not render updates to the track
