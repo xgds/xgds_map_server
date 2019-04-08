@@ -2212,7 +2212,7 @@ class ExportOrderListJson(OrderListJson):
         return data
 
     def exportCSV(self, data, modelDict, filename):
-        if isinstance(data[0], HasDataFrame):
+        if data and isinstance(data[0], HasDataFrame):
             dataframe = data[0].mergeDataFrames([d.getDataFrame() for d in data])
             response = HttpResponse(content_type='text/csv')
             dataframe.to_csv(response)
