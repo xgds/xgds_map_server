@@ -179,13 +179,6 @@ app.views.SearchView = Marionette.View.extend({
 		}
 
 		app.vent.trigger('searchModelInitSSE', this.$("#searchModelSelector").val());
-		
-		this.$("#searchModelSelector").change(
-			function () {
-				let value = this.$("#searchModelSelector").val();
-				app.vent.trigger('searchModelChange', value);
-			}.bind(this)
-		);
     },
     setupSaveSearchDialog: function() {
 	//FOR NOW this is commented out, problem with latest jquery
