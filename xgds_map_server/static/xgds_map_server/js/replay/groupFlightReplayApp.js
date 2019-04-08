@@ -103,6 +103,8 @@
 					return;
 				}
 				this.lastUpdate = moment(currentTime);
+				// todo the time is always changing, do we want this just when we push the button?
+				// maybe add back the now button?
 				this.event_time_input.val(this.lastUpdate.format('MM/DD/YY HH:mm:ss zz'));
 			},
 			start: function(currentTime){
@@ -131,12 +133,13 @@
 	xGDS.LiveReplayApplication = xGDS.ReplayApplication.extend( {
 		play_sse_list: [],
 		pause_sse_list: [],
-		playing: true,
 		end_time_initialized: false,
 		play_callback: function(play_time) {
 			// In this case we always want to set time to now and resubscribe
-			this.playing = true;
-			app.vent.trigger('now');
+			if (this.end_time_initialized) {
+				app.vent.trigger('now');
+			}
+			app.vent.trigger('live:play');
 			//TODO iterate through the play sse list and subscribe IF the time is the max time
 			// we need to extend olTrackSseUtils to do what it does except not render updates to the track
 			// or the vehicles when paused.  when playing it should update
@@ -145,7 +148,7 @@
 		},
 		pause_callback: function(pause_time) {
 			// TODO Khaled iterate through the pause sse list and unsubscribe
-			this.playing = false;
+			app.vent.trigger('live:pause');
 		},
 
 		getRootView: function() {
@@ -197,7 +200,7 @@
 					}
 					if (update) {
 						this.max_end_time = latest_time;
-						if (this.playing) {
+						if (playback.playFlag) {
 							this.set_now_time();
 						}
 					}
@@ -217,8 +220,8 @@
 		},
 		subscribe: function() {
 			var context = this;
-			sse.subscribe('position', context.handlePositionEvent,  trackSse.getChannels());
-			sse.subscribe('condition', context.handleConditionEvent,  ['sse']);
+			sse.subscribe('position', context.handlePositionEvent,   "handlePositionEvent",  trackSse.getChannels());
+			sse.subscribe('condition', context.handleConditionEvent, "handleConditionEvent", ['sse']);
 		},
 		handlePositionEvent: function(event) {
 			var data = JSON.parse(event.data);
