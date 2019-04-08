@@ -131,12 +131,11 @@
 	xGDS.LiveReplayApplication = xGDS.ReplayApplication.extend( {
 		play_sse_list: [],
 		pause_sse_list: [],
-		playing: true,
 		end_time_initialized: false,
 		play_callback: function(play_time) {
 			// In this case we always want to set time to now and resubscribe
-			this.playing = true;
 			app.vent.trigger('now');
+			app.vent.trigger('live:play');
 			//TODO iterate through the play sse list and subscribe IF the time is the max time
 			// we need to extend olTrackSseUtils to do what it does except not render updates to the track
 			// or the vehicles when paused.  when playing it should update
@@ -145,7 +144,7 @@
 		},
 		pause_callback: function(pause_time) {
 			// TODO Khaled iterate through the pause sse list and unsubscribe
-			this.playing = false;
+			app.vent.trigger('live:pause');
 		},
 
 		getRootView: function() {
@@ -197,7 +196,7 @@
 					}
 					if (update) {
 						this.max_end_time = latest_time;
-						if (this.playing) {
+						if (playback.playFlag) {
 							this.set_now_time();
 						}
 					}
@@ -228,9 +227,8 @@
 		},
 		handleConditionEvent: function(event) {
 			var data = JSON.parse(event.data);
-			console.log('CONDITION');
-			console.log(data);
-			app.vent.trigger('condition:new', data);
+			app.conditions.push(data[0]);
+			app.vent.trigger('updateDuration');
 		}
 
 	});

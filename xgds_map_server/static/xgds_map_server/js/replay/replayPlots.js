@@ -217,7 +217,7 @@ app.views.ReplayPlotView = Marionette.View.extend({
 		}
 		if (newOptions != null){
 			Object.assign(this.plotOptions['xaxis'], newOptions);
-			this.cacheAllPlotData(eventType);
+			this.cacheAllPlotData();
 			this.onRender();
 			return true;
 		}
@@ -315,6 +315,7 @@ app.views.ReplayPlotView = Marionette.View.extend({
 		this.plotOptions['xaxis'] = this.getXAxisOptions(); 
 		this.getStartEndMoments(true);
 		this.listenTo(app.vent, 'updateDuration', function(model) {this.updatePlots(true)});
+		this.listenTo(app.vent, 'update:top_plots', function(flag) {if (_.isUndefined(flag)) flag=false;this.updatePlots(flag)});
 		this.initialized = true;
 		this.onRender();
 		playback.addListener(playback.plot);
@@ -475,7 +476,7 @@ app.views.ReplayPlotView = Marionette.View.extend({
 		}
 		return [conditionData];
 	},
-	cacheAllPlotData: function(eventType){
+	cacheAllPlotData: function(){
 		var startEnd = this.getStartEndMoments(true);
 		if (startEnd === undefined){
 			return;
@@ -488,7 +489,9 @@ app.views.ReplayPlotView = Marionette.View.extend({
 		var context = this;
 
 		$.each( this.dataPlots, function(key, plotModel){
-			if (eventType >= plotModel.get('update') || !(key in context.plotDataCache)) {
+			// whatchoo talking about willis?
+//			if (eventType >= plotModel.get('update') || !(key in context.plotDataCache)) {
+			if (!(key in context.plotDataCache)) {
 				context.updatePlot(key, coordinates, plotModel);
 			}
 		});
@@ -554,10 +557,10 @@ app.views.ReplayPlotView = Marionette.View.extend({
 		}
 		var updated = false;
 		if (updateDuration) {
-			updated = this.updatePlotDuration(true, eventType);
+			updated = this.updatePlotDuration(true);
 		}
 		if (!updated){
-			this.cacheAllPlotData( eventType);
+			this.cacheAllPlotData();
 			this.onRender();
 		}
 	},
@@ -644,7 +647,7 @@ app.views.ReplayPlotView = Marionette.View.extend({
 			this.plot.setupGrid();
 			this.plot.setData(this.buildPlotDataArray());
 			this.plot.draw();
-			plots.drawPlotMarkingLabels();
+			this.drawConditionLabels();
 		}
 		this.rendering = false;
 	}
