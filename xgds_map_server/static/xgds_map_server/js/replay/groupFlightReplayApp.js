@@ -228,9 +228,8 @@
 		},
 		handleConditionEvent: function(event) {
 			var data = JSON.parse(event.data);
-			console.log('CONDITION');
-			console.log(data);
-			app.vent.trigger('condition:new', data);
+			app.conditions.push(data[0]);
+			app.vent.trigger('updateDuration');
 		}
 
 	});
