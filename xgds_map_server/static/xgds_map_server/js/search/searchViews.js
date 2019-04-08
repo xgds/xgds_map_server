@@ -968,7 +968,7 @@ app.views.SearchResultsView = Marionette.View.extend({
     	if ($('#pick_master').is(":checked")) {
     		if (this.selectedIds.indexOf("All") < 0)
 				this.selectedIds.push("All");
-    		$('#exportWarning').innerText = "You may be exporting a LOT of data, are you sure you want to do this?";
+    		$('#exportWarning').text("You may be exporting a LOT of data, are you sure you want to do this?");
 		}
 
     	simpleSearchData["search"] = $('#search-keyword-id').val();
