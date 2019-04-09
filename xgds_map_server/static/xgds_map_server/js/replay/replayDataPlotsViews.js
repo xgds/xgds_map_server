@@ -53,7 +53,19 @@ app.views.ReplayDataValuesView = Marionette.View.extend({
 			    var regionName = clean_model_name + 'ValueRegion';
 			    this.addRegion(regionName, '#' + clean_model_name + '-value-container');
 				var plotView = new app.views.TimeseriesValueView(plotOptions);
-				this.showChildView(regionName, plotView);
+                this.showChildView(regionName, plotView);
+                if ('live' in app.options && app.options.live) {
+                    sse.subscribe(
+                        plotOptions.sse_type,
+                        function (e) {
+                            let data = JSON.parse(e.data);
+                            data.model_name = plotOptions.model_name;
+                            app.vent.trigger('timeSeriesSSE', data);
+                        },
+                        plotOptions.sse_type + "_timeSeriesSSE",
+                        sse.getChannels(),
+                    );
+                }
 			}, this);
     }
 
