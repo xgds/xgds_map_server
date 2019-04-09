@@ -686,6 +686,9 @@ app.views.SearchResultsView = Marionette.View.extend({
 				app.vent.trigger('subscriptionUnchecked');
 			}
 		});
+		if ($('#subscription').length > 0) {
+			app.vent.trigger("subscriptionButtonInit", $('#subscription'));
+		}
 
     	if (this.time_control_search) {
     		var time_control_search = $('#time_control_search');
@@ -968,7 +971,6 @@ app.views.SearchResultsView = Marionette.View.extend({
     	if ($('#pick_master').is(":checked")) {
     		if (this.selectedIds.indexOf("All") < 0)
 				this.selectedIds.push("All");
-    		$('#exportWarning').innerText = "You may be exporting a LOT of data, are you sure you want to do this?";
 		}
 
     	simpleSearchData["search"] = $('#search-keyword-id').val();

@@ -20,20 +20,20 @@ $(document).ready(function () {
 	this.subscribeToModel = function() {
 		// automatically update the datatable with new notes
 		// that arrive from the SSE note channels
-		if ('live' in app.options && app.options.live) {
-			if (!(appOptions.sseChannelNames)) appOptions.sseChannelNames = sse.getChannels();
-			sse.subscribe(
-				appOptions.modelName.toLowerCase(),
-				function () {
-					if (sse.DEBUG) {
-						console.log("[SSE Message] got a message of type", appOptions.modelName.toLowerCase());
-					}
-					app.vent.trigger(this.callback_key);
-				},
-				this.callback_key,
-				appOptions.sseChannelNames
-			);
-		}
+		if (!appOptions.sseChannelNames) appOptions.sseChannelNames = sse.getChannels();
+		// abort if there is no model name defined
+		if (!appOptions.modelName) return;
+		sse.subscribe(
+			appOptions.modelName.toLowerCase(),
+			function () {
+				if (sse.DEBUG) {
+					console.log("[SSE Message] got a message of type", appOptions.modelName.toLowerCase());
+				}
+				app.vent.trigger(this.callback_key);
+			},
+			this.callback_key,
+			appOptions.sseChannelNames
+		);
 	}.bind(this);
 	
 	app.vent.on("subscriptionChecked", function() {
@@ -63,10 +63,9 @@ $(document).ready(function () {
 		if (sse.DEBUG) console.log("[SSE Init] Subscribing to a new model:", appOptions.modelName);
 	}.bind(this));
 
-	var subscription = $("#subscription");
-	if (subscription.length > 0) {
-		if (subscription.is(':checked')) {
+	app.vent.on("subscriptionButtonInit", function(container) {
+		if (container.is(':checked')) {
 			this.subscribeToModel();
 		}
-	}
+	}.bind(this));
 });
