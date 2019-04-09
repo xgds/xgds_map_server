@@ -58,8 +58,11 @@ app.views.ReplayDataValuesView = Marionette.View.extend({
                     sse.subscribe(
                         plotOptions.sse_type,
                         function (e) {
+                            // e is the sse message, e.data will contain a dict of the model
                             let data = JSON.parse(e.data);
+                            // we add the model name to the dict
                             data.model_name = plotOptions.model_name;
+                            // trigger an event that can be picked up by a TimeseriesValueView
                             app.vent.trigger('timeSeriesSSE', data);
                         },
                         plotOptions.sse_type + "_timeSeriesSSE",
