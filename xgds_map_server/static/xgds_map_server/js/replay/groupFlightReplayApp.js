@@ -39,8 +39,9 @@
 	
 	xGDS.ReplayApplication = xGDS.Application.extend( {
 		plot_models_initialized: false,
-        trackViews: [],
+        trackViews: {},
 		mapBottomPadding: 50,
+		hide_track: false,
 		getRootView: function() {
 			return new xGDS.ReplayRootView();
 		},
@@ -53,6 +54,9 @@
             xGDS.Application.prototype.initialize(options);
             if ('max_end_time' in options) {
 				this.max_end_time = moment(options.max_end_time);
+			}
+            if ('hide_track' in options) {
+				this.hide_track = options.hide_track;
 			}
 			this.listenTo(this.vent, 'layers:loaded', this.renderTracks);
 		},
@@ -83,8 +87,13 @@
         renderTracks: function() {
             var context = this;
 			_.each(appOptions.track_metadata, function(track_metadata){
+				track_metadata.hide_track = context.hide_track;
 				var trackView = new app.views.TrackView(track_metadata);
-				context.trackViews.push(trackView);
+				var track_key = Object.keys(context.trackViews).length;
+				if ('vehicle' in track_metadata.data && !_.isEmpty(track_metadata.data.vehicle)) {
+					track_key = track_metadata.data.vehicle.toLowerCase();
+				}
+				context.trackViews[track_key] = trackView;
 			});
 
 		},
@@ -228,6 +237,11 @@
 			if ('timestamp' in data && !_.isUndefined(data.timestamp)) {
 				app.vent.trigger('position:latest', moment(data.timestamp) );
 			}
+			// update the track
+			var channel = event.target.url.split('=')[1];
+			var topic = channel + ':position';
+			data.update = playback.playFlag;
+			app.vent.trigger(topic, data);
 		},
 		handleConditionEvent: function(event) {
 			var data = JSON.parse(event.data);
