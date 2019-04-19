@@ -123,3 +123,9 @@ Handlebars.registerHelper('prettyHHMM', function (sourceTime, timeZone) {
 Handlebars.registerHelper('prettyHHMMSS', function (sourceTime, timeZone) {
     return getLocalTimeString(sourceTime, timeZone, 'HH:mm:ss');
 });
+
+Handlebars.registerHelper('breaklines', function(text) {
+    text = Handlebars.Utils.escapeExpression(text);
+    text = text.replace(/(\r\n|\n|\r)/gm, '<br>');
+    return new Handlebars.SafeString(text);
+});

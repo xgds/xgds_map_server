@@ -46,11 +46,16 @@
     <h4>{{ group_flight.name }}</h4>
 {% endblock buttonrowLeft %}
 
-{% if 'xgds_notes2' in settings.INSTALLED_APPS %}
 {% block buttonrowRight %}
-    {% include 'xgds_notes2/notes_input_include_full.html' %}
+    {% if 'xgds_notes2' in settings.INSTALLED_APPS %}
+        {% include 'xgds_notes2/notes_input_include_full.html' %}
+    {% endif %}
+    {% if 'xgds_video' in settings.INSTALLED_APPS %}
+        {%  if live %}
+        <button id="group_flight_video" class='btn btn-primary my-1' role='button' style="color:white; max-height:1.8rem; margin-left: 2px;" onclick="window.open('{% url 'map_replay_group_flight' group_flight.name %}')">Video</button>
+        {% endif %}
+    {% endif %}
 {% endblock buttonrowRight %}
-{% endif %}
 
 {% block preDashboard %}
     <div id="controllers" >
