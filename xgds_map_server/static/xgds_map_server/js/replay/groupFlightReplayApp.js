@@ -42,6 +42,7 @@
         trackViews: {},
 		mapBottomPadding: 50,
 		hide_track: false,
+		freeze_time: false, // true to not auto update time
 		getRootView: function() {
 			return new xGDS.ReplayRootView();
 		},
@@ -111,10 +112,12 @@
 				if (currentTime === undefined){
 					return;
 				}
-				this.lastUpdate = moment(currentTime);
-				// todo the time is always changing, do we want this just when we push the button?
-				// maybe add back the now button?
-				this.event_time_input.val(this.lastUpdate.format('MM/DD/YY HH:mm:ss zz'));
+				if (!app.freeze_time) {
+					this.lastUpdate = moment(currentTime);
+					// todo the time is always changing, do we want this just when we push the button?
+					// maybe add back the now button?
+					this.event_time_input.val(this.lastUpdate.format('MM/DD/YY HH:mm:ss zz'));
+				}
 			},
 			start: function(currentTime){
 				this.doSetTime(currentTime);
