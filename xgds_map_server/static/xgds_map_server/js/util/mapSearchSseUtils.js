@@ -30,7 +30,7 @@ $(document).ready(function () {
 					console.log("[SSE Message] got a message of type", appOptions.modelName.toLowerCase());
 				}
 				app.vent.trigger(this.callback_key);
-			},
+			}.bind(this),
 			this.callback_key,
 			appOptions.sseChannelNames
 		);
