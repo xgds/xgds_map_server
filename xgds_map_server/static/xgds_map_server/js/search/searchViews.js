@@ -293,7 +293,17 @@ app.views.SearchView = Marionette.View.extend({
     	if (!_.isUndefined(event)){
     		event.preventDefault();
     	}
-    	this.searchResultsView.setupDatatable(this.selectedModel, undefined, this.getFilterData());
+
+    	var filter_data = this.getFilterData();
+    	var analytics_obj = {};
+    	_.each(filter_data, function(value, key){
+    		if (!(['csrfmiddlewaretoken', 'draw', 'columns'].includes(key))){
+    			analytics_obj[key] = value;
+			}
+		})
+    	analytics.trackAction(this.selectedModel, 'load_filter', analytics_obj);
+
+    	this.searchResultsView.setupDatatable(this.selectedModel, undefined, filter_data);
     	this.setupSaveSearchDialog();
 
     	if ($('#advancedSearchModal').is(':visible')){
@@ -1004,7 +1014,11 @@ app.views.SearchResultsView = Marionette.View.extend({
 		this.postData['simpleSearch'] = true;
 		this.postData['nestTags'] = this.nestTags;
 		this.postData['connector'] = $("#search-select-id").val();
-		this.theDataTable.search($('#search-keyword-id').val()).draw();
+
+		var keyword = $('#search-keyword-id').val();
+		analytics.trackAction(this.selectedModel, 'search_simple', {'tags': tags, 'keyword': keyword});
+
+		this.theDataTable.search(keyword).draw();
 	},
 	// Clears the search values and returns the table back to normal
 	clearSearch: function(){
@@ -1423,13 +1437,13 @@ app.views.SearchResultsView = Marionette.View.extend({
     	var theForm = $("#form-"+this.selectedModel);
     	if (theForm.length == 1){
     		var result = theForm.serializeArray();
-    		var newresult = {};
+    		var new_result = {};
     		for (var i=1; i<result.length; i++){
     			if (result[i].value != ""){
-    				newresult[result[i].name] = result[i].value;
+    				new_result[result[i].name] = result[i].value;
     			}
     		}
-    		return newresult;
+    		return new_result;
     	}
     	return {};
     },
@@ -1481,11 +1495,11 @@ app.views.SearchResultsView = Marionette.View.extend({
 					}
         	    	app.vent.trigger('selectData', data);
         	    	if (app.options.showDetailView){
-        	    		if (!_.isUndefined(useOWATracking) && useOWATracking) {
-                            owaTrackAction(data.type, 'searchDetail', data.pk + ':' + data.name);
-                        }
+
+        	    		analytics.trackAction(data.type, 'detail_view', {'pk': data.pk, 'name': data.name});
 						context.forceDetailView(data,modelMap);
         	    	} else {
+        	    		analytics.trackAction(data.type, 'select', {'pk': data.pk, 'name': data.name});
         	    		if (_.isNumber(data.lat)){
         	        		highlightOnMap([data]);
         	    		}
