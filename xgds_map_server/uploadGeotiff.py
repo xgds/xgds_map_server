@@ -32,6 +32,7 @@ def upload_geotiff(instance, workspace_name, store_name, minimum_value=None, max
     """
 
     file_handle = instance.sourceFile
+    colorized = instance.colorized
     store_name = urllib.quote(store_name, safe='')
     current_timestamp = str(int(time.time()))
 
@@ -68,7 +69,7 @@ def upload_geotiff(instance, workspace_name, store_name, minimum_value=None, max
 
     assert r.status_code < 300
 
-    if minimum_value is not None and maximum_value is not None:
+    if not colorized and minimum_value is not None and maximum_value is not None:
         modifying_json = {
             "coverage": {
                 "dimensions": {
@@ -111,7 +112,7 @@ def upload_geotiff(instance, workspace_name, store_name, minimum_value=None, max
             print r.text
         assert r.status_code == 200
 
-    if minimum_color is not None and maximum_color is not None:
+    if not colorized and minimum_color is not None and maximum_color is not None:
         url = settings.GEOSERVER_URL + "rest/styles"
         # since geoserver complains if we have multiple styles with the same name,
         # we will add the current timestamp to the style name to make it unique
@@ -151,4 +152,7 @@ def upload_geotiff(instance, workspace_name, store_name, minimum_value=None, max
 
     instance.wmsUrl = "https://%s/geoserver/%s/wms" % (Site.objects.get_current().domain, workspace_name)
     instance.layers = "%s:%s" % (workspace_name, store_name)
-    instance.colorPalette = new_style_name
+    if not colorized:
+        instance.colorPalette = new_style_name
+    else:
+        instance.colorPalette = ""
