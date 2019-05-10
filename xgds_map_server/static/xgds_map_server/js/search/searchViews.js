@@ -295,13 +295,22 @@ app.views.SearchView = Marionette.View.extend({
     	}
 
     	var filter_data = this.getFilterData();
-    	var analytics_obj = {};
+    	var analytics_obj = {'page': document.title};
     	_.each(filter_data, function(value, key){
     		if (!(['csrfmiddlewaretoken', 'draw', 'columns'].includes(key))){
     			analytics_obj[key] = value;
 			}
 		})
-    	analytics.trackAction(this.selectedModel, 'load_filter', analytics_obj);
+
+		var analytics_source = 'search_load';
+    	try {
+			if (!_.isUndefined(event) && event.target.innerHTML == 'Filter') {
+				analytics_source = 'search_filter';
+			}
+		} catch (e) {
+			//pass
+		}
+    	analytics.trackAction(analytics_source, this.selectedModel, analytics_obj);
 
     	this.searchResultsView.setupDatatable(this.selectedModel, undefined, filter_data);
     	this.setupSaveSearchDialog();
@@ -1000,6 +1009,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 
     	if (this.selectedIds.length === 0) $('.export-err').show();
 		else $('#exportModal').modal('show');
+		analytics.trackAction('export_dialog', this.selectedModel, document.title);
 	},
 	// Filters the datatable when the search button is clicked
 	filterDatatable: function(){
@@ -1016,7 +1026,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 		this.postData['connector'] = $("#search-select-id").val();
 
 		var keyword = $('#search-keyword-id').val();
-		analytics.trackAction(this.selectedModel, 'search_simple', {'tags': tags, 'keyword': keyword});
+		analytics.trackAction('search_keyword_tag', this.selectedModel, {'tags': tags, 'keyword': keyword, 'page': document.title});
 
 		this.theDataTable.search(keyword).draw();
 	},
@@ -1495,11 +1505,10 @@ app.views.SearchResultsView = Marionette.View.extend({
 					}
         	    	app.vent.trigger('selectData', data);
         	    	if (app.options.showDetailView){
-
-        	    		analytics.trackAction(data.type, 'detail_view', {'pk': data.pk, 'name': data.name});
+        	    		analytics.trackAction('search_detail', data.type,  {'pk': data.pk, 'name': data.name, 'page': document.title});
 						context.forceDetailView(data,modelMap);
         	    	} else {
-        	    		analytics.trackAction(data.type, 'select', {'pk': data.pk, 'name': data.name});
+        	    		analytics.trackAction('search_select', data.type,  {'pk': data.pk, 'name': data.name, 'page': document.title});
         	    		if (_.isNumber(data.lat)){
         	        		highlightOnMap([data]);
         	    		}
@@ -1554,6 +1563,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 			var row = _this.theDataTable.row( this ).data();
 			var data = _this.getObject(row, _this);
 			$("#details_modal").modal('show');
+			analytics.trackAction('search_dblclick', data.type,  {'pk': data.pk, 'name': data.name, 'page': document.title});
 			_this.forceDetailView(data, _this.lookupModelMap(_this.selectedModel), true);
 			// TODO make sure it is yellow and selected row
 		});

@@ -349,8 +349,9 @@ xGDS.TabNavView = Marionette.View.extend({
     
 
     clickSelectTab: function(event) {
-        var newmode = $(event.target).parents('li').data('target');
-        this.trigger('tabSelected', newmode);
+        var new_mode = $(event.target).parents('li').data('target');
+        this.trigger('tabSelected', new_mode);
+        analytics.trackAction('tab', new_mode, document.title);
     },
 
     setTab: function(tabId) {
