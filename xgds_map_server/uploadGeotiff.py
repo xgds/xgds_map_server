@@ -21,20 +21,28 @@ from django.contrib.sites.models import Site
 
 import time
 import urllib
+import string
 
-def upload_geotiff(instance, workspace_name, store_name, minimum_value=None, maximum_value=None, minimum_color=None, maximum_color=None):
+def upload_geotiff(instance):
     """
     Upload a GeoTIFF file to the connected Geoserver
 
     instance: instance of a geotiff form
-    workspace_name: the geoserver workspace for this geotiff
-    store_name: the name of this geotiff inside geoserver
     """
+
+    workspace_name = settings.GEOSERVER_DEFAULT_WORKSPACE
 
     file_handle = instance.sourceFile
     colorized = instance.colorized
-    store_name = urllib.quote(store_name, safe='')
     current_timestamp = str(int(time.time()))
+
+    store_name = instance.name.replace(" ", "_")
+    acceptable_characters = string.ascii_letters + string.digits + "_"
+    for c in store_name:
+        assert c in acceptable_characters
+
+    minimum_value, maximum_value = instance.minimumValue, instance.maximumValue
+    minimum_color, maximum_color = instance.minimumColor, instance.maximumColor
 
     geoserver_basic_auth = HTTPBasicAuth(
         settings.GEOSERVER_USERNAME,
@@ -150,7 +158,7 @@ def upload_geotiff(instance, workspace_name, store_name, minimum_value=None, max
     else:
         new_style_name = "raster"
 
-    instance.wmsUrl = "https://%s/geoserver/%s/wms" % (Site.objects.get_current().domain, workspace_name)
+    instance.wmsUrl = "/geoserver/%s/wms" % (workspace_name)
     instance.layers = "%s:%s" % (workspace_name, store_name)
     if not colorized:
         instance.colorPalette = new_style_name
