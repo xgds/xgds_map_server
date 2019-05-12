@@ -49,7 +49,8 @@ handleTransparencySliderChange = function(event, ui) {
 	var transparencyValueID = '#' + node_id + '_transparencyValue';
 	var transparencyValueSpan = $(ui.handle.parentElement.parentElement).find(transparencyValueID);
 	$(transparencyValueSpan).html(newValue);
-	
+	analytics.trackAction('map', 'transparency', {'type': node.data.type, 'href': node.data.href, 'page': document.title});
+
 	if (!persistTransparency) {
 		// set the cookie
 		Cookies.set(node_id, {transparency:newValue});
