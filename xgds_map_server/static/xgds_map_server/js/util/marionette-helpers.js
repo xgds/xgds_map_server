@@ -289,6 +289,7 @@ Marionette.TemplateCollectionView = Marionette.CollectionView.extend({
 			}
 			this._exitAction();
 			this.enable();
+			analytics.trackAction('undo', window.location.href);
 		},
 		redo: function() {
 			if (this._inAction)
@@ -311,6 +312,7 @@ Marionette.TemplateCollectionView = Marionette.CollectionView.extend({
 			}
 			this._exitAction();
 			this.enable();
+			analytics.trackAction('redo', window.location.href);
 		}
 	}
 }( window.xGDS = window.xGDS || {}, jQuery, _, Backbone, Marionette ));
