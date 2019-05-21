@@ -136,15 +136,9 @@ class GeotiffForm(AbstractMapForm):
         instance.parent = self.getParentGroup()
 
         try:
-            upload_geotiff(
-                instance,
-                settings.GEOSERVER_DEFAULT_WORKSPACE,
-                instance.name,
-                minimum_value=instance.minimumValue, maximum_value=instance.maximumValue,
-                minimum_color=instance.minimumColor, maximum_color=instance.maximumColor,
-            )
+            upload_geotiff(instance)
         except AssertionError as e:
-            # TODO: properly handle a 500 error by returing a form error
+            # TODO: properly handle an assertion error by returing a form error
             traceback.print_exc()
             return
 

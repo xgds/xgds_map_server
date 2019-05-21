@@ -21,19 +21,28 @@ from django.contrib.sites.models import Site
 
 import time
 import urllib
+import string
 
-def upload_geotiff(instance, workspace_name, store_name, minimum_value=None, maximum_value=None, minimum_color=None, maximum_color=None):
+def upload_geotiff(instance):
     """
     Upload a GeoTIFF file to the connected Geoserver
 
     instance: instance of a geotiff form
-    workspace_name: the geoserver workspace for this geotiff
-    store_name: the name of this geotiff inside geoserver
     """
 
+    workspace_name = settings.GEOSERVER_DEFAULT_WORKSPACE
+
     file_handle = instance.sourceFile
-    store_name = urllib.quote(store_name, safe='')
+    colorized = instance.colorized
     current_timestamp = str(int(time.time()))
+
+    store_name = instance.name.replace(" ", "_")
+    acceptable_characters = string.ascii_letters + string.digits + "_"
+    for c in store_name:
+        assert c in acceptable_characters
+
+    minimum_value, maximum_value = instance.minimumValue, instance.maximumValue
+    minimum_color, maximum_color = instance.minimumColor, instance.maximumColor
 
     geoserver_basic_auth = HTTPBasicAuth(
         settings.GEOSERVER_USERNAME,
@@ -68,7 +77,7 @@ def upload_geotiff(instance, workspace_name, store_name, minimum_value=None, max
 
     assert r.status_code < 300
 
-    if minimum_value is not None and maximum_value is not None:
+    if not colorized and minimum_value is not None and maximum_value is not None:
         modifying_json = {
             "coverage": {
                 "dimensions": {
@@ -111,7 +120,7 @@ def upload_geotiff(instance, workspace_name, store_name, minimum_value=None, max
             print r.text
         assert r.status_code == 200
 
-    if minimum_color is not None and maximum_color is not None:
+    if not colorized and minimum_color is not None and maximum_color is not None:
         url = settings.GEOSERVER_URL + "rest/styles"
         # since geoserver complains if we have multiple styles with the same name,
         # we will add the current timestamp to the style name to make it unique
@@ -149,6 +158,9 @@ def upload_geotiff(instance, workspace_name, store_name, minimum_value=None, max
     else:
         new_style_name = "raster"
 
-    instance.wmsUrl = "https://%s/geoserver/%s/wms" % (Site.objects.get_current().domain, workspace_name)
+    instance.wmsUrl = "/geoserver/%s/wms" % (workspace_name)
     instance.layers = "%s:%s" % (workspace_name, store_name)
-    instance.colorPalette = new_style_name
+    if not colorized:
+        instance.colorPalette = new_style_name
+    else:
+        instance.colorPalette = ""

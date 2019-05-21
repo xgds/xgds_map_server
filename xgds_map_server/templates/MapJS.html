@@ -1,6 +1,7 @@
 {% load static %}
 	<script type='text/javascript'>
 		var map_api_key = '{{settings.XGDS_MAP_SERVER_MAP_API_KEY}}';
+        HEADING_UNITS = '{{ settings.GEOCAM_TRACK_HEADING_UNITS }}';
 	</script>
 	<script type='text/javascript' src='{{ EXTERNAL_URL }}sprintf-js/dist/sprintf.min.js'></script>
 	<script type='text/javascript' src='{{ EXTERNAL_URL }}jquery-ui-dist/jquery-ui.min.js'></script>
@@ -41,7 +42,7 @@
     <script type='text/javascript' src="{% static 'xgds_map_server/js/tree/fancyTreeSlider.js' %}"></script>
     <script type='text/javascript' src="{% static 'xgds_map_server/js/tree/fancyTreeView.js' %}"></script>
     <script type='text/javascript' src='{{EXTERNAL_URL}}proj4/dist/proj4.js'></script>
-    <script type='text/javascript' src='{{EXTERNAL_URL}}openlayers/dist/ol.js' ></script>
+    <script type='text/javascript' src='{{EXTERNAL_URL}}openlayers/dist/ol-debug.js' ></script>
     <script type='text/javascript' src='{{ EXTERNAL_URL }}ol3-popup/src/ol3-popup.js'></script>
     <script type='text/javascript' src='{{EXTERNAL_URL}}pngtoy/pngtoy.min.js'></script>
 
@@ -52,3 +53,8 @@
    	{% for key, value in settings.XGDS_MAP_SERVER_JS_MAP.items %}
    		{% if value.ol %}<script type='text/javascript' src='{{STATIC_URL}}{{ value.ol|safe }}'></script> {% endif %}
    	{% endfor %}
+
+   {% if settings.XGDS_SSE and settings.GEOCAM_UTIL_LIVE_MODE%}
+    <script type='text/javascript' src="{% static 'xgds_map_server/js/util/mapSearchSseUtils.js' %}"></script>
+   {% endif %}
+

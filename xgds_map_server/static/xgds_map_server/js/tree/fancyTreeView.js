@@ -169,6 +169,8 @@ app.views.FancyTreeView = Marionette.View.extend({
                 } else if (selectedNode.data.type == 'KmlMap'){
                     url = selectedNode.data.kmlFile;
                 }
+                analytics.trackAction('map', 'download_kml', {'type': selectedNode.data.type, 'href': url, 'page': document.title});
+
                 $.fileDownload(url, {
                     httpMethod: "GET",
                  failCallback: function (htmlResponse, url) {
@@ -178,7 +180,10 @@ app.views.FancyTreeView = Marionette.View.extend({
              });
             }
             else if ((event.target.innerHTML == 'Download JSON') && (selectedNode.data.type == "MapLayer")) {
+
                 url = "/xgds_map_server/mapLayerJSON/" + selectedNode.key;
+                analytics.trackAction('map', 'download_json', {'type': selectedNode.data.type, 'href': url, 'page': document.title});
+
                 $.fileDownload(url, {
                     httpMethod: "GET",
                     failCallback: function (htmlResponse, url) {
@@ -280,7 +285,8 @@ app.views.FancyTreeView = Marionette.View.extend({
                     });
                 },
                 select: function(event, data) {
-                    // new simpler way
+                    analytics.trackAction('map', 'layer_show', {'type': data.node.data.type, 'href': data.node.data.href, 'page': document.title});
+
                     if (_.isUndefined(data.node.mapView)){
                         app.vent.trigger('mapNode:create', data.node);
                     } else {

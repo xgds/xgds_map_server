@@ -46,11 +46,16 @@
     <h4>{{ group_flight.name }}</h4>
 {% endblock buttonrowLeft %}
 
-{% if 'xgds_notes2' in settings.INSTALLED_APPS %}
 {% block buttonrowRight %}
-    {% include 'xgds_notes2/notes_input_include_full.html' %}
+    {% if 'xgds_notes2' in settings.INSTALLED_APPS %}
+        {% include 'xgds_notes2/notes_input_include_full.html' %}
+    {% endif %}
+    {% if 'xgds_video' in settings.INSTALLED_APPS %}
+        {%  if live %}
+        <button id="group_flight_video" class='btn btn-primary my-1' role='button' style="color:white; max-height:1.8rem; margin-left: 2px;" onclick="window.open('{% url 'map_replay_group_flight' group_flight.name %}')">Video</button>
+        {% endif %}
+    {% endif %}
 {% endblock buttonrowRight %}
-{% endif %}
 
 {% block preDashboard %}
     <div id="controllers" >
@@ -115,26 +120,16 @@
         {% endblock videodivs %}
     {% endblock preMap %}
 
-{% block map %}
-    <div id="map-gridstack-item" class="grid-stack-item"
+{% block mapdiv %}
+		<div id="map-gridstack-item" class="grid-stack-item"
     data-gs-x="0" data-gs-y="0"
     data-gs-width="1" data-gs-height="{% if 'xgds_video' in settings.INSTALLED_APPS and segmentsJson %}2{% else %}3{% endif %}" >
-        <div class="grid-stack-item-content" id="map-gridstack-item-content" >
-            <ul class="nav justify-content-end">
-                <i class="fa fa-lock pinDiv gray-light"></i>
-            </ul>
-            <div id="overmap" class="mb-1 mt-negative-1rem">
-                <button id="layers_button" type="button" class="btn btn-primary" data-backdrop=false data-toggle="modal" data-target="#layers_modal">
-                    Layers
-                </button>
-            </div>
-            <div id="map"></div>
-        </div>
-    </div>
-    {% endblock map %}
+{% endblock mapdiv %}
 
 {% block postMap %}
+    {% block tabsdiv %}
     <div id="tabs-gridstack-item" class="grid-stack-item"  data-gs-x="4" data-gs-y="0" data-gs-width="{% if 'xgds_video' in settings.INSTALLED_APPS and segmentsJson %}3{% else %}5{% endif %}" data-gs-height="4" >
+    {% endblock tabsdiv %}
     		<div id="tabs-gridstack-item-content" class="grid-stack-item-content" >
 			<ul class="nav justify-content-end">
 				<i class="fa fa-lock pinDiv gray-light"></i>
@@ -254,6 +249,7 @@
             search_seconds_before: {{ settings.XGDS_MAP_SERVER_SEARCH_SECONDS_BEFORE }},
             search_seconds_after: {{ settings.XGDS_MAP_SERVER_SEARCH_SECONDS_AFTER }},
             searchOptions: { fitMap: false, today: false, time_control_search: true }
+            // hide_track: true // this is not yet implemented
      };
 
 
@@ -315,7 +311,35 @@
     });
 
 	$(function(){
+
+        {% if 'xgds_video' in settings.INSTALLED_APPS and segmentsJson%}
+                var time_control_path = '/static/xgds_video/js/playbackTimeControl.js';
+                app.vent.on('seekTime', function(timeString) {
+                    xgds_video.seekHelper(timeString);
+                });
+
+                var group_flight_start = new moment('{{ episode.startTime.isoformat }}');
+{#                    {% if episode.endTime %}#}
+{#                        var group_flight_end = new moment('{{ episode.endTime.isoformat }}');#}
+{#                    {% endif %}#}
+{##}
+
+
+            {% else %}
+                var time_control_path = '/static/xgds_core/js/playbackTimeControl.js';
+                var group_flight_start = new moment(appOptions.group_flight.start_time);
+            {%  endif %}
 		app.start(appOptions);
+
+        playback.initialize({getStartTime: function(){return group_flight_start;},
+                         getEndTime: function(){return app.get_end_time();},
+                         displayTZ: getTimeZone(),
+                         slider: true,
+                         time_control_path: time_control_path,
+                         useTimerWorker: !appOptions.live
+                        });
+
+        app.hook_playback();
 
         app.vent.on('searchDiv:visible', function(){
 		 	if (!searchDiv_initialized){
@@ -337,7 +361,21 @@
         {% block preLayout %}
 		{% endblock preLayout %}
 
-    	xgds_gridstack.initializeGridstack();
+    	{% block initGridstack %}
+    		xgds_gridstack.initializeGridstack();
+    		{% endblock initGridstack %}
+
+            {% block sse %}
+    		{% if settings.XGDS_SSE and settings.GEOCAM_UTIL_LIVE_MODE%}
+                if (appOptions.live) {
+                    trackSse.initialize();
+                    // this relies on notes, but we generally always include notes
+                    //TODO Khaled fix
+                    //notesSse.initialize();
+                    //notesSse.olInitialize();
+                }
+    		{% endif %}
+            {% endblock sse %}
 
         // right here the map is the right height and when we exit this method it is not.
 
@@ -350,64 +388,11 @@
         group_flight_end = {% if end_time %}new moment('{{ end_time }}'){% else %}null{% endif %};
             {%  endblock start_end %}
 
-            {% if 'xgds_video' in settings.INSTALLED_APPS and segmentsJson%}
-                var time_control_path = '/static/xgds_video/js/playbackTimeControl.js';
-                app.vent.on('seekTime', function(timeString) {
-                    xgds_video.seekHelper(timeString);
-                });
-                    group_flight_start = new moment('{{ episode.startTime.isoformat }}');
-                    {% if episode.endTime %}
-                    group_flight_end = new moment('{{ episode.endTime.isoformat }}');
-                    {% endif %}
-
-
-
-                {% else %}
-                var time_control_path = '/static/xgds_core/js/playbackTimeControl.js'
-            {%  endif %}
-            playback.initialize({getStartTime: function(){return group_flight_start;},
-                                 getEndTime: function(){return group_flight_end;},
-                                 displayTZ: getTimeZone(),
-                                 slider: true,
-                                 time_control_path: time_control_path
-                                });
-
             {% block initializeNotes %}
             var container = $("#full_notes_input");
             xgds_notes.setupNotesUI(container);
             xgds_notes.initializeNotesForm(false);
 
-            // add a playback listener to set the time
-            timePlaybackListener =  {
-		        lastUpdate: undefined,
-		        invalid: false,
-		        initialize: function() {
-                    this.event_time_input = $("#id_event_time");
-		        },
-		        doSetTime: function(currentTime){
-			        if (currentTime === undefined){
-				        return;
-			        }
-			        this.lastUpdate = moment(currentTime);
-                    this.event_time_input.val(this.lastUpdate.format('MM/DD/YY HH:mm:ss zz'));
-		        },
-		        start: function(currentTime){
-			        this.doSetTime(currentTime);
-		        },
-		        update: function(currentTime){
-			        if (this.lastUpdate === undefined){
-				        this.doSetTime(currentTime);
-				        return;
-			        }
-			        var delta = currentTime.diff(this.lastUpdate);
-			        if (Math.abs(delta) >= 100) {
-				        this.doSetTime(currentTime);
-			        }
-		        },
-		        pause: function() {
-		        }
-            };
-                playback.addListener(timePlaybackListener);
 
             {% endblock initializeNotes %}
 
@@ -477,11 +462,10 @@
 }
 
     xgds_notes.set_event_time = function() {
-            timePlaybackListener.doSetTime(playback.getCurrentTime());
-
+        app.timePlaybackListener.doSetTime(playback.getCurrentTime());
 	};
     xgds_notes.postSubmit = function(data) {
-            timePlaybackListener.doSetTime(playback.getCurrentTime());
+        app.timePlaybackListener.doSetTime(playback.getCurrentTime());
 
 	};
 
@@ -490,19 +474,16 @@ $("#changeRole").click(function(e){
 	xgds_notes.editUserSession('xgds_notes.updateRole');
 });
 
-xgds_notes.updateRole();
-
-            $("#nowButton").hide();
+            xgds_notes.updateRole();
             var input_initialized = false;
- 		var formNote = $("#form-Note");
- 		var input = formNote.find('.taginput');
-        xgds_notes.initializeInput(input);
-        var role = formNote.find("#id_role");
-        role.val(role.find("option:first").val());
-        var location = formNote.find("#id_location");
-        location.val(location.find("option:first").val());
-        input_initialized = true;
-                timePlaybackListener.doSetTime(playback.getCurrentTime());
+ 		    var formNote = $("#form-Note");
+ 		    var input = formNote.find('.taginput');
+            xgds_notes.initializeInput(input);
+            var role = formNote.find("#id_role");
+            role.val(role.find("option:first").val());
+            var location = formNote.find("#id_location");
+            location.val(location.find("option:first").val());
+            input_initialized = true;
 
             {% if 'xgds_video' in settings.INSTALLED_APPS and segmentsJson%}
                 {% block setupIndexUrl %}

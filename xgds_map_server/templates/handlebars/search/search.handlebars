@@ -8,7 +8,9 @@
                     </button>
                 </div>
                 <div class="modal-body">
+                    <div class="mb-3"><strong>Checking "All" will export ALL data.</strong></div>
                 <form id="exportForm" action="/xgds_map_server/search/exportSearchResults/" method="post" target="_blank">
+                    <span id="exportWarning"></span>
 
                     <input type="hidden" id="rowIds" name="rowIds" />
                     <input type="hidden" id="modelName" name="modelName" />

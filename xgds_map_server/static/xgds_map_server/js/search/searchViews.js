@@ -176,7 +176,9 @@ app.views.SearchView = Marionette.View.extend({
 			} else {
                 this.undoTimeSearch();
             }
-        }
+		}
+
+		app.vent.trigger('searchModelInitSSE', this.$("#searchModelSelector").val());
     },
     setupSaveSearchDialog: function() {
 	//FOR NOW this is commented out, problem with latest jquery
@@ -291,7 +293,26 @@ app.views.SearchView = Marionette.View.extend({
     	if (!_.isUndefined(event)){
     		event.preventDefault();
     	}
-    	this.searchResultsView.setupDatatable(this.selectedModel, undefined, this.getFilterData());
+
+    	var filter_data = this.getFilterData();
+    	var analytics_obj = {'page': document.title};
+    	_.each(filter_data, function(value, key){
+    		if (!(['csrfmiddlewaretoken', 'draw', 'columns'].includes(key))){
+    			analytics_obj[key] = value;
+			}
+		})
+
+		var analytics_source = 'search_load';
+    	try {
+			if (!_.isUndefined(event) && event.target.innerHTML == 'Filter') {
+				analytics_source = 'search_filter';
+			}
+		} catch (e) {
+			//pass
+		}
+    	analytics.trackAction(analytics_source, this.selectedModel, analytics_obj);
+
+    	this.searchResultsView.setupDatatable(this.selectedModel, undefined, filter_data);
     	this.setupSaveSearchDialog();
 
     	if ($('#advancedSearchModal').is(':visible')){
@@ -684,6 +705,9 @@ app.views.SearchResultsView = Marionette.View.extend({
 				app.vent.trigger('subscriptionUnchecked');
 			}
 		});
+		if ($('#subscription').length > 0) {
+			app.vent.trigger("subscriptionButtonInit", $('#subscription'));
+		}
 
     	if (this.time_control_search) {
     		var time_control_search = $('#time_control_search');
@@ -944,7 +968,6 @@ app.views.SearchResultsView = Marionette.View.extend({
         }
 
 		this.theDataTable = $(this.theTable).DataTable(dataTableObj);
-		window.theDataTable = this.theDataTable;
         this.theDataTable.columns.adjust().draw();
         this.connectDoubleClickCallback();
         this.connectSinglePickCallback();
@@ -953,14 +976,21 @@ app.views.SearchResultsView = Marionette.View.extend({
         this.connectDeselectCallback();
         this.listenToTableChanges();
         this.filterMapData(undefined);
-        app.vent.trigger("repack");
+		app.vent.trigger("repack");
+		
+		app.vent.on("reloadDataTableAjax", function() {
+        	this.theDataTable.ajax.reload(null, false);
+        }.bind(this));
     },
 	// Put the needed data for exporting into a hidden form
 	initializeExportData: function(){
     	var _this = this;
     	var simpleSearchData = {};
     	$('.export-err').hide();
-    	if ($('#pick_master').is(":checked")) this.selectedIds.push("All");
+    	if ($('#pick_master').is(":checked")) {
+    		if (this.selectedIds.indexOf("All") < 0)
+				this.selectedIds.push("All");
+		}
 
     	simpleSearchData["search"] = $('#search-keyword-id').val();
     	simpleSearchData["tags"] = $('#search-tags-id').val();
@@ -979,6 +1009,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 
     	if (this.selectedIds.length === 0) $('.export-err').show();
 		else $('#exportModal').modal('show');
+		analytics.trackAction('export_dialog', this.selectedModel, document.title);
 	},
 	// Filters the datatable when the search button is clicked
 	filterDatatable: function(){
@@ -993,7 +1024,11 @@ app.views.SearchResultsView = Marionette.View.extend({
 		this.postData['simpleSearch'] = true;
 		this.postData['nestTags'] = this.nestTags;
 		this.postData['connector'] = $("#search-select-id").val();
-		this.theDataTable.search($('#search-keyword-id').val()).draw();
+
+		var keyword = $('#search-keyword-id').val();
+		analytics.trackAction('search_keyword_tag', this.selectedModel, {'tags': tags, 'keyword': keyword, 'page': document.title});
+
+		this.theDataTable.search(keyword).draw();
 	},
 	// Clears the search values and returns the table back to normal
 	clearSearch: function(){
@@ -1412,13 +1447,13 @@ app.views.SearchResultsView = Marionette.View.extend({
     	var theForm = $("#form-"+this.selectedModel);
     	if (theForm.length == 1){
     		var result = theForm.serializeArray();
-    		var newresult = {};
+    		var new_result = {};
     		for (var i=1; i<result.length; i++){
     			if (result[i].value != ""){
-    				newresult[result[i].name] = result[i].value;
+    				new_result[result[i].name] = result[i].value;
     			}
     		}
-    		return newresult;
+    		return new_result;
     	}
     	return {};
     },
@@ -1470,11 +1505,10 @@ app.views.SearchResultsView = Marionette.View.extend({
 					}
         	    	app.vent.trigger('selectData', data);
         	    	if (app.options.showDetailView){
-        	    		if (!_.isUndefined(useOWATracking) && useOWATracking) {
-                            owaTrackAction(data.type, 'searchDetail', data.pk + ':' + data.name);
-                        }
+        	    		analytics.trackAction('search_detail', data.type,  {'pk': data.pk, 'name': data.name, 'page': document.title});
 						context.forceDetailView(data,modelMap);
         	    	} else {
+        	    		analytics.trackAction('search_select', data.type,  {'pk': data.pk, 'name': data.name, 'page': document.title});
         	    		if (_.isNumber(data.lat)){
         	        		highlightOnMap([data]);
         	    		}
@@ -1529,6 +1563,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 			var row = _this.theDataTable.row( this ).data();
 			var data = _this.getObject(row, _this);
 			$("#details_modal").modal('show');
+			analytics.trackAction('search_dblclick', data.type,  {'pk': data.pk, 'name': data.name, 'page': document.title});
 			_this.forceDetailView(data, _this.lookupModelMap(_this.selectedModel), true);
 			// TODO make sure it is yellow and selected row
 		});

@@ -352,6 +352,11 @@ $(function() {
 
                         _this.measureTooltipElement.innerHTML = measurementFormatted + html + bearing;
                         _this.measureTooltip.setPosition(tooltipCoord);
+                        var measurement_type = 'Distance';
+                        if (drawType != 'LineString') {
+                            measurement_type = 'Area';
+                        }
+                        analytics.trackAction('map', 'measure', {'type': measurement_type, 'page': document.title});
                     });
 
                     app.map.map.addInteraction(this.rulerTool);
@@ -895,7 +900,7 @@ $(function() {
                             location = "<br/>(Lon, Lat)<br/> " + xcoords[0] + ", " + xcoords[1];
                         }
                         var popupContents = "<div>";
-                        if ('geometry' in feature.N && feature.get('popup-content') !== undefined) {
+                        if ('geometry' in feature && feature.get('popup-content') !== undefined) {
                             for (var name in feature.get('popup-content')) {
                                 var popupSubContent = feature.get('popup-content')[name];
                                 popupContents += '<b>' + name + '</b><br/>' + popupSubContent + '<br/>';
@@ -910,6 +915,8 @@ $(function() {
                         }
                         popupContents += '<p>' + popup + location +  '</p></div>'
                         this.popup.show(evt.coordinate, popupContents);
+                        analytics.trackAction('map', 'popup', {'type': feature.get('type'), 'pk': feature.get('pk'), 'name': feature.get('name'), 'page': document.title});
+
                     } else {
                         this.popup.hide();
                     }
