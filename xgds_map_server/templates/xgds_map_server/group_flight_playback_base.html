@@ -496,31 +496,30 @@ var indexFileUrl = null;
 {% endblock setupIndexUrl %}
 
 {% block initSegments %}
-{% if segmentsJson %}
-	{% block xgds_video_options %}
-    xgds_video_options = { playFlag: false,
-                       		   seekFlag: false,
-		                       initialState: false,
-		                       seekOffsetList: {},
-		                       episode: {{ episodeJson|safe }},
-		                       displaySegments: {{ segmentsJson|safe }},
-		                       firstSegment: null,
-		                       lastSegment: null,
-		                       onTimePlayer: "{{ sources.0.shortName }}",
-		                       movingSlider: false, //if slider is moving, turn off onTime call
-		                       seekOffsetList: {}, //needed for seeking vid in flash mode,
-		                       indexFileUrl: indexFileUrl,
-			                   noteTimeStamp: '{{ noteTimeStamp|safe }}',
-			                   flightName: {% if flightName %} "{{ flightName }}" {% else %} null {% endif %},
-			                   sourceVehicle: {{ sourceVehicle|safe }},
-			                   timeZone: '{{ flightTZ }}',
-        					   hasMasterSlider:true
-		                     };
-	{% endblock xgds_video_options %}
-
-
+    {% if segmentsJson %}
+	    {% block xgds_video_options %}
+        xgds_video_options = {  playFlag: false,
+                                seekFlag: false,
+                                initialState: false,
+                                seekOffsetList: {},
+                                episode: {{ episodeJson|safe }},
+                                displaySegments: {{ segmentsJson|safe }},
+                                firstSegment: null,
+                                lastSegment: null,
+                                onTimePlayer: "{{ sources.0.shortName }}",
+                                movingSlider: false, //if slider is moving, turn off onTime call
+                                seekOffsetList: {}, //needed for seeking vid in flash mode,
+                                indexFileUrl: indexFileUrl,
+                                noteTimeStamp: '{{ noteTimeStamp|safe }}',
+                                flightName: {% if flightName %} "{{ flightName }}" {% else %} null {% endif %},
+                                sourceVehicle: {{ sourceVehicle|safe }},
+                                timeZone: '{{ flightTZ }}',
+                                hasMasterSlider:true,
+                                video_lag_seconds: {{ settings.XGDS_VIDEO_RECORDING_LAG_SECONDS }}
+                            };
+	    {% endblock xgds_video_options %}
     {% endif %}
-    {% endblock initSegments %}
+{% endblock initSegments %}
 
 	{% block hookControls %}
         {% if segmentsJson %}

@@ -221,10 +221,7 @@
 		},
 		set_now_time: function() {
 			if (!_.isUndefined(this.max_end_time)){
-				// console.log('SETTING NOW TIME ' + this.max_end_time.format());
-
 				playback.setCurrentTime(this.max_end_time);
-					//app.vent.trigger('playback:setCurrentTime', context.max_end_time);
 			}
 			else {
 				console.log('MAX END TIME NOT SET')
