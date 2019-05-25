@@ -36,7 +36,8 @@
 		}
 
 	});
-	
+
+	// non live replay application
 	xGDS.ReplayApplication = xGDS.Application.extend( {
 		plot_models_initialized: false,
         trackViews: {},
@@ -142,6 +143,46 @@
 
 	});
 
+	// for when we are in delayed live mode, like watching video on a live group flight
+	xGDS.DelayedLiveReplayApplication = xGDS.ReplayApplication.extend( {
+		end_time_initialized: false,
+		initialize: function(options){
+            xGDS.ReplayApplication.prototype.initialize(options);
+
+			var context = this;
+			// the live button sends a 'now' event but it really wants to use the
+        	this.listenTo(this.vent, 'now', function() {
+				analytics.trackAction('playback', 'delayed_live', document.title);
+				//TODO set the player to play at the latest time and remove the below line
+				//context.set_now_time();
+
+				// for now hardcode video
+				xgds_video.jumpToLive();
+			});
+		},
+		set_now_time: function() {
+			if (!_.isUndefined(this.max_end_time)){
+				var the_time = this.max_end_time;
+				if ('now_time_lag' in app.options && !_.isUndefined(app.options.now_time_lag) && app.options.now_time_lag > 0) {
+					the_time = this.max_end_time.subtract(app.options.now_time_lag, 'seconds');
+				}
+				playback.setCurrentTime(the_time);
+			}
+			else {
+				console.log('MAX END TIME NOT SET')
+			}
+		},
+		subscribe: function() {
+			var context = this;
+			sse.subscribe('condition', context.handleConditionEvent, "handleConditionEvent", ['sse']);
+		},
+		handleConditionEvent: function(event) {
+			var data = JSON.parse(event.data);
+			app.conditions.push(data[0]);
+			app.vent.trigger('updateDuration');
+		}
+	});
+
 	xGDS.LiveReplayApplication = xGDS.ReplayApplication.extend( {
 		play_sse_list: [],
 		pause_sse_list: [],
@@ -152,20 +193,14 @@
 				app.vent.trigger('now');
 			}
 			app.vent.trigger('live:play');
-			//TODO iterate through the play sse list and subscribe IF the time is the max time
-			// we need to extend olTrackSseUtils to do what it does except not render updates to the track
-			// or the vehicles when paused.  when playing it should update
-			// conditions should draw all the time
-			// timeseries values should be added to the prior cache of data and only draw when playing is true
 		},
 		pause_callback: function(pause_time) {
-			// TODO Khaled iterate through the pause sse list and unsubscribe
 			app.vent.trigger('live:pause');
 		},
 
-		getRootView: function() {
-			return new xGDS.ReplayRootView();
-		},
+		// getRootView: function() {
+		// 	return new xGDS.ReplayRootView();
+		// },
 		initialize: function(options){
             xGDS.ReplayApplication.prototype.initialize(options);
 
@@ -221,10 +256,7 @@
 		},
 		set_now_time: function() {
 			if (!_.isUndefined(this.max_end_time)){
-				// console.log('SETTING NOW TIME ' + this.max_end_time.format());
-
 				playback.setCurrentTime(this.max_end_time);
-					//app.vent.trigger('playback:setCurrentTime', context.max_end_time);
 			}
 			else {
 				console.log('MAX END TIME NOT SET')
@@ -257,8 +289,15 @@
 	xGDS.Factory = {
         construct: function(options){
         	if (options.live) {
-				return new xGDS.LiveReplayApplication(options);
+        		if (options.delayed_live) {
+        			// live page but we are not running from current latest time, we are playing in the past probably because of video
+					return new xGDS.DelayedLiveReplayApplication(options);
+				} else {
+        			// super live page no video or reason to delay
+					return new xGDS.LiveReplayApplication(options);
+				}
 			}
+        	// group flight is completed and not live, do not subscribe to anything
         	return new xGDS.ReplayApplication(options);
         }
 	};
