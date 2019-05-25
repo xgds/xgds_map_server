@@ -54,21 +54,19 @@ app.views.ReplayDataValuesView = Marionette.View.extend({
 			    this.addRegion(regionName, '#' + clean_model_name + '-value-container');
 				var plotView = new app.views.TimeseriesValueView(plotOptions);
                 this.showChildView(regionName, plotView);
-                if ('live' in app.options && app.options.live) {
-                    sse.subscribe(
-                        plotOptions.sse_type,
-                        function (e) {
-                            // e is the sse message, e.data will contain a dict of the model
-                            let data = JSON.parse(e.data);
-                            // we add the model name to the dict
-                            data.model_name = plotOptions.model_name;
-                            // trigger an event that can be picked up by a TimeseriesValueView
-                            app.vent.trigger('timeSeriesSSE', data);
-                        },
-                        plotOptions.sse_type + "_timeSeriesSSE",
-                        sse.getChannels(),
-                    );
-                }
+                sse.subscribe(
+                    plotOptions.sse_type,
+                    function (e) {
+                        // e is the sse message, e.data will contain a dict of the model
+                        let data = JSON.parse(e.data);
+                        // we add the model name to the dict
+                        data.model_name = plotOptions.model_name;
+                        // trigger an event that can be picked up by a TimeseriesValueView
+                        app.vent.trigger('timeSeriesSSE', data);
+                    },
+                    plotOptions.sse_type + "_timeSeriesSSE",
+                    sse.getChannels(),
+                );
 			}, this);
     }
 
