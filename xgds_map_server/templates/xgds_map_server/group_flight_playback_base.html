@@ -248,7 +248,10 @@
             conditions: conditions,
             search_seconds_before: {{ settings.XGDS_MAP_SERVER_SEARCH_SECONDS_BEFORE }},
             search_seconds_after: {{ settings.XGDS_MAP_SERVER_SEARCH_SECONDS_AFTER }},
-            searchOptions: { fitMap: false, today: false, time_control_search: true }
+            searchOptions: { fitMap: false, today: false, time_control_search: true },
+            now_time_lag: {% if live and segmentsJson %}{{ settings.XGDS_VIDEO_RECORDING_LAG_SECONDS }}{% else %}0{% endif %},
+            delayed_live: {% if live and segmentsJson %}true{% else %}false{% endif %}
+
             // hide_track: true // this is not yet implemented
      };
 
