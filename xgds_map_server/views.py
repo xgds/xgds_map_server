@@ -617,7 +617,7 @@ def getEditGeotiffPage(request, geotiffID):
             return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
         else:
             return render(request,
-                          "EditNode.html",
+                          "EditGeotiff.html",
                           {"form": geotiff_form,
                            "fromSave": False,
                            'help_content_path' : 'xgds_map_server/help/addMapTile.rst',
@@ -629,7 +629,7 @@ def getEditGeotiffPage(request, geotiffID):
     # return form page with current form data
     geotiff_form = EditGeotiffForm(instance=geotiff, initial={'username': request.user.username})
     return render(request,
-                  "EditNode.html",
+                  "EditGeotiff.html",
                   {"form": geotiff_form,
                    "title": "Edit Geotiff",
                    'help_content_path' : 'xgds_map_server/help/addMapTile.rst', # TODO change me!

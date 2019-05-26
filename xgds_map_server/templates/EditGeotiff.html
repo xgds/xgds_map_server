@@ -1,0 +1,91 @@
+{% extends "MapBase.html" %}
+{% load static %}
+
+{% block scripts %}
+    {{ block.super }}
+  <script type="text/javascript" src="{% static 'jquery/dist/jquery.js' %}"></script>
+  <script type="text/javascript" src='{{ EXTERNAL_URL }}resumablejs/resumable.js'></script>
+  <script type="text/javascript" src="{% static 'resumable/js/django-resumable.js' %}"></script>
+  <script type="text/javascript" src="{% static 'spectrum-colorpicker/spectrum.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'spectrum-colorpicker/spectrum.css' %}">
+{% endblock scripts %}
+
+{% block jsInit %}
+    {{ block.super }}
+  document.addEventListener("DOMContentLoaded", function () {
+    "use strict";
+    var dj;
+    if (new Resumable().support) {
+      var sourceFileEl = $('input#id_sourceFile');
+      sourceFileEl.attr('data-upload-url', '/xgds_map_server/uploadResumable/');
+      dj = new DjangoResumable({
+        'onFileSuccess':function (r, file, message, el, progress, filePath, fileName) {
+          "use strict";
+          filePath.setAttribute('value', file.size + '_' + file.fileName);
+          if (fileName !== null) {
+            fileName.innerHTML = file.fileName;
+          } else {
+            var sib = sourceFileEl.siblings('.helptext');
+            sib.html(file.fileName);
+          }
+          progress.style.display = 'none';
+          $("#create_button").removeAttr("disabled");
+      }});
+      dj.initField(sourceFileEl[0]);
+    }
+  });
+
+  $("#id_minimumColor").spectrum({
+    preferredFormat: "hex",
+    showPaletteOnly: true,
+    togglePaletteOnly: true,
+    color: "#ff0000"
+  });
+
+
+  $("#id_maximumColor").spectrum({
+    preferredFormat: "hex",
+    showPaletteOnly: true,
+    togglePaletteOnly: true,
+    color: "#0000ff"
+  });
+
+  $("#id_minimumColor").val("#ff0000");
+  $("#id_maximumColor").val("#0000ff");
+{% endblock jsInit %}
+
+{% block contents %}
+{{ block.super }}
+
+<div class="btn-toolbar" role="toolbar" >
+  {% include "AddNodeButtons.html" %}
+ </div>
+
+{% if error %}<h4 style="color:red">Error: {{ errorText }}</h4>{% endif %}
+<h6>{{ title }}</h6>
+{% if extras %}
+{{ extras|safe }}
+{% endif %}
+<form action="#" enctype="multipart/form-data" method="post">{% csrf_token %}
+<p>
+<label></label>
+<span class="h6">{{ title }}</span>
+</p>
+{{ form.as_p }}
+<p class="form-group">
+<label for="save_button"></label>
+<div>
+<input type="submit" value="Save" id="save_button"/>
+<a href="{% url 'nodeDelete' form.instance.uuid %}" class="btn btn-primary">{% if form.instance.deleted %}Undelete{% else %}Delete{% endif %}</a>
+</div>
+</p>
+</form>
+{% endblock %}
+
+{{ block.super }}
+{% if fromSave %}
+$(document).ready(function(){setTimeout(function(){$("#saveButton")[0].value="Save";},1500);});
+{% endif %}
+
+{% block footer %}
+{% endblock footer %}
