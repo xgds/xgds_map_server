@@ -62,7 +62,7 @@ from xgds_core.models import HasDataFrame
 from xgds_core.views import get_handlebars_templates, OrderListJson
 from xgds_core.util import addPort
 from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapLayerFromSelectedForm, MapTileForm, \
-    MapDataTileForm, EditMapTileForm, EditMapDataTileForm, WMSTileForm, GeoJSONForm, GeotiffForm
+    MapDataTileForm, EditMapTileForm, EditGeotiffForm, EditMapDataTileForm, WMSTileForm, GeoJSONForm, GeotiffForm
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapDataTile, MapLink, MAP_NODE_MANAGER, \
     MAP_MANAGER, GroundOverlayTime, WMSTile, GeoJSON, Geotiff
 from xgds_map_server.kmlLayerExporter import exportMapLayer
@@ -584,6 +584,55 @@ def getEditTilePage(request, tileID):
                    "title": "Edit Map Tile",
                    'help_content_path' : 'xgds_map_server/help/addMapTile.rst',
                    "extras": mapTile.sourceFileLink,
+                   "fromSave": fromSave,
+                   },
+                  )
+
+
+def getEditGeotiffPage(request, geotiffID):
+    fromSave = False
+    try:
+        geotiff = Geotiff.objects.get(pk=geotiffID)
+    except Geotiff.DoesNotExist:
+        raise Http404
+    except Geotiff.MultipleObjectsReturned:
+        # this really shouldn't happen, ever
+        return HttpResponseServerError()
+
+    # handle post data before loading everything
+    if request.method == 'POST':
+        geotiff_form = EditGeotiffForm(request.POST, request.FILES)
+        if geotiff_form.is_valid():
+            newname = geotiff_form.cleaned_data['name']
+            if geotiff.name != newname:
+                geotiff.rename(newname)
+            geotiff.modifier = request.user.username
+            geotiff.modification_time = datetime.datetime.now(pytz.utc)
+            geotiff.description = geotiff_form.cleaned_data['description']
+            geotiff.locked = geotiff_form.cleaned_data['locked']
+            geotiff.visible = geotiff_form.cleaned_data['visible']
+            geotiff.parent = geotiff_form.cleaned_data['parent']
+            geotiff.transparency = geotiff_form.cleaned_data['transparency']
+            geotiff.save()
+            return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
+        else:
+            return render(request,
+                          "EditNode.html",
+                          {"form": geotiff_form,
+                           "fromSave": False,
+                           'help_content_path' : 'xgds_map_server/help/addMapTile.rst',
+                           "title": "Edit Geotiff",
+                           "error": True,
+                           "errorText": "Invalid form entries"},
+                          )
+
+    # return form page with current form data
+    geotiff_form = EditGeotiffForm(instance=geotiff, initial={'username': request.user.username})
+    return render(request,
+                  "EditNode.html",
+                  {"form": geotiff_form,
+                   "title": "Edit Geotiff",
+                   'help_content_path' : 'xgds_map_server/help/addMapTile.rst', # TODO change me!
                    "fromSave": fromSave,
                    },
                   )

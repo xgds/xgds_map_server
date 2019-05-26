@@ -351,6 +351,9 @@ class AbstractGeotiff(AbstractMap):
     minimumColor = models.CharField(null=True, max_length=64, blank=True)
     maximumColor = models.CharField(null=True, max_length=64, blank=True)
 
+    def rename(self, new_name):
+        self.name = new_name
+
     def getUrl(self):
         return self.wmsUrl
 
@@ -366,6 +369,8 @@ class AbstractGeotiff(AbstractMap):
         result["data"]["srs"] = self.srs
         result["data"]["hasTime"] = False
         result["data"]["styles"] = self.colorPalette
+
+        result["data"]["href"] = reverse('mapEditGeotiff', kwargs={'geotiffID': self.uuid})
 
         if self.minLevel > 0:
             result["data"]["minLevel"] = self.minLevel
