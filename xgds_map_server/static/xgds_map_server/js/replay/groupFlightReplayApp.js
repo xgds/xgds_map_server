@@ -205,7 +205,7 @@
             xGDS.ReplayApplication.prototype.initialize(options);
 
 			var context = this;
-        	this.listenTo(this.vent, 'now', function() {analytics.trackAction('playback', 'live', document.title);context.set_now_time()});
+        	this.listenTo(this.vent, 'now', function() {playback.playButtonCallback();analytics.trackAction('playback', 'live', document.title);context.set_now_time()});
         	this.listenTo(this.vent, 'position:latest', function(latest_time) {
         		context.update_max_time(latest_time);
 			});

@@ -518,7 +518,8 @@ var indexFileUrl = null;
                                 sourceVehicle: {{ sourceVehicle|safe }},
                                 timeZone: '{{ flightTZ }}',
                                 hasMasterSlider:true,
-                                video_lag_seconds: {{ settings.XGDS_VIDEO_RECORDING_LAG_SECONDS }}
+                                video_lag_seconds: {{ settings.XGDS_VIDEO_RECORDING_LAG_SECONDS }},
+                                delayed_live: {% if live %}true{% else %}false{% endif %}
                             };
 	    {% endblock xgds_video_options %}
     {% endif %}
