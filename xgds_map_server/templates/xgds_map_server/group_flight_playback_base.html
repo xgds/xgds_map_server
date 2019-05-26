@@ -518,7 +518,8 @@ var indexFileUrl = null;
                                 sourceVehicle: {{ sourceVehicle|safe }},
                                 timeZone: '{{ flightTZ }}',
                                 hasMasterSlider:true,
-                                video_lag_seconds: {{ settings.XGDS_VIDEO_RECORDING_LAG_SECONDS }}
+                                video_lag_seconds: {{ settings.XGDS_VIDEO_RECORDING_LAG_SECONDS }},
+                                delayed_live: {% if live %}true{% else %}false{% endif %}
                             };
 	    {% endblock xgds_video_options %}
     {% endif %}
@@ -533,9 +534,6 @@ var indexFileUrl = null;
             playback.addListener(xgds_video.playbackListener);
             playback.addStopListener(xgds_video.sliderStopListener);
             xgds_video.setupJWplayer({}, "95%");
-            if (appOptions.delayed_live) {
-                xgds_video.jumpToLive(true);
-            }
         {% endif %}
     {% endblock hookControls %}
     {% endif %}
