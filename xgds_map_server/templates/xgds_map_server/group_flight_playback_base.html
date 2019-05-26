@@ -534,7 +534,7 @@ var indexFileUrl = null;
             playback.addStopListener(xgds_video.sliderStopListener);
             xgds_video.setupJWplayer({}, "95%");
             if (appOptions.delayed_live) {
-                xgds_video.playLive();
+                xgds_video.jumpToLive(true);
             }
         {% endif %}
     {% endblock hookControls %}
