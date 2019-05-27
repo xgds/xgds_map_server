@@ -534,6 +534,7 @@ var indexFileUrl = null;
             playback.addListener(xgds_video.playbackListener);
             playback.addStopListener(xgds_video.sliderStopListener);
             xgds_video.setupJWplayer({}, "95%");
+            xgds_video.setupSlider();
         {% endif %}
     {% endblock hookControls %}
     {% endif %}
