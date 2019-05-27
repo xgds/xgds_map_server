@@ -153,11 +153,7 @@
 			// the live button sends a 'now' event but it really wants to use the
         	this.listenTo(this.vent, 'now', function() {
 				analytics.trackAction('playback', 'delayed_live', document.title);
-				//TODO set the player to play at the latest time and remove the below line
-				//context.set_now_time();
-
-				// for now hardcode video
-				xgds_video.jumpToLive();
+				xgds_video.nowButtonCallback();
 			});
 		},
 		set_now_time: function() {
