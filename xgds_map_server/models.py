@@ -351,9 +351,6 @@ class AbstractGeotiff(AbstractMap):
     minimumColor = models.CharField(null=True, max_length=64, blank=True)
     maximumColor = models.CharField(null=True, max_length=64, blank=True)
 
-    def rename(self, new_name):
-        self.name = new_name
-
     def getUrl(self):
         return self.wmsUrl
 

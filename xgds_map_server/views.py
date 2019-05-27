@@ -72,6 +72,8 @@ from shapely.geometry import Point, LineString, Polygon
 from xgds_core.views import buildFilterDict
 from xgds_core.util import insertIntoPath
 
+from xgds_map_server.uploadGeotiff import update_geotiff_values
+
 if 'xgds_timeseries' in settings.INSTALLED_APPS:
     from xgds_timeseries.views import get_time_series_classes_metadata
 
@@ -603,9 +605,21 @@ def getEditGeotiffPage(request, geotiffID):
     if request.method == 'POST':
         geotiff_form = EditGeotiffForm(request.POST, request.FILES)
         if geotiff_form.is_valid():
-            newname = geotiff_form.cleaned_data['name']
-            if geotiff.name != newname:
-                geotiff.rename(newname)
+            # handle a name change
+            geotiff.name = geotiff_form.cleaned_data['name']
+            
+            # handle a minimum color change
+            geotiff.minimumColor = geotiff_form.cleaned_data['minimumColor']
+            
+            # handle a maximum color change
+            geotiff.maximumColor = geotiff_form.cleaned_data['maximumColor']
+            
+            # handle a minimum value change
+            geotiff.minimumValue = geotiff_form.cleaned_data['minimumValue']
+            
+            # handle a maximum value change
+            geotiff.maximumValue = geotiff_form.cleaned_data['maximumValue']
+            
             geotiff.modifier = request.user.username
             geotiff.modification_time = datetime.datetime.now(pytz.utc)
             geotiff.description = geotiff_form.cleaned_data['description']
@@ -613,29 +627,39 @@ def getEditGeotiffPage(request, geotiffID):
             geotiff.visible = geotiff_form.cleaned_data['visible']
             geotiff.parent = geotiff_form.cleaned_data['parent']
             geotiff.transparency = geotiff_form.cleaned_data['transparency']
+
             geotiff.save()
+
+            # persist the changes to geoserver
+            update_geotiff_values(geotiff)
+
             return HttpResponseRedirect(request.build_absolute_uri(reverse('mapTree')))
         else:
-            return render(request,
-                          "EditGeotiff.html",
-                          {"form": geotiff_form,
-                           "fromSave": False,
-                           'help_content_path' : 'xgds_map_server/help/addMapTile.rst',
-                           "title": "Edit Geotiff",
-                           "error": True,
-                           "errorText": "Invalid form entries"},
-                          )
+            return render(
+                request,
+                "EditGeotiff.html",
+                {
+                    "form": geotiff_form,
+                    "fromSave": False,
+                    'help_content_path': 'xgds_map_server/help/addMapTile.rst', # TODO change me!
+                    "title": "Edit Geotiff",
+                    "error": True,
+                    "errorText": "Invalid form entries",
+                },
+            )
 
     # return form page with current form data
     geotiff_form = EditGeotiffForm(instance=geotiff, initial={'username': request.user.username})
-    return render(request,
-                  "EditGeotiff.html",
-                  {"form": geotiff_form,
-                   "title": "Edit Geotiff",
-                   'help_content_path' : 'xgds_map_server/help/addMapTile.rst', # TODO change me!
-                   "fromSave": fromSave,
-                   },
-                  )
+    return render(
+        request,
+        "EditGeotiff.html",
+        {
+            "form": geotiff_form,
+            "title": "Edit Geotiff",
+            'help_content_path': 'xgds_map_server/help/addMapTile.rst', # TODO change me!
+            "fromSave": fromSave,
+        },
+    )
 
 @csrf_protect
 @condition(etag_func=None)

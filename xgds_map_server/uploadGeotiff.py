@@ -1,4 +1,4 @@
-#__BEGIN_LICENSE__
+# __BEGIN_LICENSE__
 # Copyright (c) 2015, United States Government, as represented by the
 # Administrator of the National Aeronautics and Space Administration.
 # All rights reserved.
@@ -12,7 +12,7 @@
 # under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 # CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
-#__END_LICENSE__
+# __END_LICENSE__
 
 from requests import put, post
 from requests.auth import HTTPBasicAuth
@@ -22,6 +22,22 @@ from django.contrib.sites.models import Site
 import time
 import urllib
 import string
+
+
+def get_store_name(instance):
+    store_name = instance.name.replace(" ", "_")
+    acceptable_characters = string.ascii_letters + string.digits + "_"
+    for c in store_name:
+        assert c in acceptable_characters
+    return store_name
+
+
+def get_geoserver_basic_auth():
+    return HTTPBasicAuth(
+        settings.GEOSERVER_USERNAME,
+        settings.GEOSERVER_PASSWORD,
+    )
+
 
 def upload_geotiff(instance):
     """
@@ -36,18 +52,12 @@ def upload_geotiff(instance):
     colorized = instance.colorized
     current_timestamp = str(int(time.time()))
 
-    store_name = instance.name.replace(" ", "_")
-    acceptable_characters = string.ascii_letters + string.digits + "_"
-    for c in store_name:
-        assert c in acceptable_characters
+    store_name = get_store_name(instance)
 
     minimum_value, maximum_value = instance.minimumValue, instance.maximumValue
     minimum_color, maximum_color = instance.minimumColor, instance.maximumColor
 
-    geoserver_basic_auth = HTTPBasicAuth(
-        settings.GEOSERVER_USERNAME,
-        settings.GEOSERVER_PASSWORD,
-    )
+    geoserver_basic_auth = get_geoserver_basic_auth()
 
     url = settings.GEOSERVER_URL + "rest/workspaces"
 
@@ -62,8 +72,8 @@ def upload_geotiff(instance):
     )
 
     url = settings.GEOSERVER_URL + "rest/workspaces/" + workspace_name + \
-          "/coveragestores/" + store_name + \
-          "/file.geotiff?configure=all"
+        "/coveragestores/" + store_name + \
+        "/file.geotiff?configure=all"
     data = file_handle.read()
     r = put(
         url=url,
@@ -104,7 +114,7 @@ def upload_geotiff(instance):
         }
 
         url = settings.GEOSERVER_URL + "rest/workspaces/" + workspace_name + \
-          "/coveragestores/" + store_name + "/coverages/" + store_name + ".json"
+            "/coveragestores/" + store_name + "/coverages/" + store_name + ".json"
 
         r = put(
             url=url,
@@ -124,7 +134,8 @@ def upload_geotiff(instance):
         url = settings.GEOSERVER_URL + "rest/styles"
         # since geoserver complains if we have multiple styles with the same name,
         # we will add the current timestamp to the style name to make it unique
-        new_style_name = "%s_%s_style_%s" % (workspace_name, store_name, current_timestamp)
+        new_style_name = "%s_%s_style_%s" % (
+            workspace_name, store_name, current_timestamp)
         creation_json = {
             "style": {
                 "name": new_style_name,
@@ -164,3 +175,74 @@ def upload_geotiff(instance):
         instance.colorPalette = new_style_name
     else:
         instance.colorPalette = ""
+
+
+def update_geotiff_values(instance):
+    minimum_value, maximum_value = instance.minimumValue, instance.maximumValue
+    minimum_color, maximum_color = instance.minimumColor, instance.maximumColor
+    colorized = instance.colorized
+    style_name = instance.colorPalette
+
+    if colorized or minimum_color is None or maximum_color is None or minimum_value is None or maximum_value is None:
+        return
+
+    workspace_name = settings.GEOSERVER_DEFAULT_WORKSPACE
+    store_name = get_store_name(instance)
+
+    geoserver_basic_auth = get_geoserver_basic_auth()
+
+    modifying_json = {
+        "coverage": {
+            "dimensions": {
+                "coverageDimension": [
+                    {
+                        "name": "GRAY_INDEX",
+                        "description": "GridSampleDimension[-Infinity,Infinity]",
+                        "range": {
+                            "min": minimum_value,
+                            "max": maximum_value,
+                        },
+                        "nullValues": {
+                            "double": [
+                                -99999,
+                            ]
+                        },
+                        "dimensionType": {
+                            "name": "REAL_32BITS",
+                        }
+                    }
+                ]
+            }
+        }
+    }
+
+    url = settings.GEOSERVER_URL + "rest/workspaces/" + workspace_name + \
+        "/coveragestores/" + store_name + "/coverages/" + store_name + ".json"
+
+    r = put(
+        url=url,
+        auth=geoserver_basic_auth,
+        verify=False,
+        headers={
+            'Content-type': 'application/json',
+        },
+        json=modifying_json,
+    )
+
+    if r.status_code >= 200:
+        print r.text
+
+    assert r.status_code == 200
+
+    url = settings.GEOSERVER_URL + "rest/styles/" + style_name
+    r = put(
+        url=url,
+        auth=geoserver_basic_auth,
+        verify=False,
+        headers={
+            'Content-type': "text/vnd.ncwms.palette",
+        },
+        data="%s\n%s" % (minimum_color, maximum_color),
+    )
+
+    assert r.status_code < 300

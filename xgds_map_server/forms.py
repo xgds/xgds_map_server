@@ -225,7 +225,7 @@ class EditGeotiffForm(AbstractMapForm):
     class Meta(AbstractMapForm.Meta):
         model = Geotiff
         exclude = ['creator', 'modifier', 'creation_time', 'modification_time', 'deleted', 'minLat', 'minLon', 'maxLat', 'maxLon',
-            'tileWidth', 'tileHeight', 'projectionName', 'wmsUrl', 'layers', 'wmsVersion', 'minLevel', 'maxLevel', 'srs', 'format', 'colorPalette']
+            'tileWidth', 'tileHeight', 'projectionName', 'wmsUrl', 'layers', 'wmsVersion', 'minLevel', 'maxLevel', 'srs', 'format', 'colorPalette', 'sourceFile']
 
 
 
