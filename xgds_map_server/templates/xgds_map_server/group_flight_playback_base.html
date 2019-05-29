@@ -46,6 +46,10 @@
     <h4>{{ group_flight.name }}</h4>
 {% endblock buttonrowLeft %}
 
+{% block buttonrowCenter %}
+    <div id="vehicle-info"></div>
+{% endblock buttonrowCenter %}
+
 {% block buttonrowRight %}
     {% if 'xgds_notes2' in settings.INSTALLED_APPS %}
         {% include 'xgds_notes2/notes_input_include_full.html' %}
@@ -250,9 +254,10 @@
             search_seconds_after: {{ settings.XGDS_MAP_SERVER_SEARCH_SECONDS_AFTER }},
             searchOptions: { fitMap: false, today: false, time_control_search: true },
             now_time_lag: {% if live and segmentsJson %}{{ settings.XGDS_VIDEO_RECORDING_LAG_SECONDS }}{% else %}0{% endif %},
-            delayed_live: {% if live and segmentsJson %}true{% else %}false{% endif %}
+            delayed_live: {% if live and segmentsJson %}true{% else %}false{% endif %},
+            default_vehicle: '{{settings.XGDS_SSE_TRACK_CHANNELS.0}}',
+            hide_tracks: false //{{ settings.GEOCAM_TRACK_HIDE_TRACKS|yesno:'true,false'}}
 
-            // hide_track: true // this is not yet implemented
      };
 
 
