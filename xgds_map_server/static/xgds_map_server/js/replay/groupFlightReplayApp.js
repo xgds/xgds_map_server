@@ -171,12 +171,25 @@
 		subscribe: function() {
 			var context = this;
 			sse.subscribe('condition', context.handleConditionEvent, "handleConditionEvent", ['sse']);
+			sse.subscribe('position', context.handlePositionEvent,   "handlePositionEvent",  trackSse.getChannels());
 		},
+		onStart: function() {
+			xGDS.ReplayApplication.prototype.onStart.call(this);
+			this.subscribe();
+        },
 		handleConditionEvent: function(event) {
 			var data = JSON.parse(event.data);
 			app.conditions.push(data[0]);
 			app.vent.trigger('updateDuration');
-		}
+		},
+		handlePositionEvent: function(event) {
+			var data = JSON.parse(event.data);
+			// update the track
+			var channel = event.target.url.split('=')[1];
+			var topic = channel + ':position';
+			data.update = false;
+			app.vent.trigger(topic, data);
+		},
 	});
 
 	xGDS.LiveReplayApplication = xGDS.ReplayApplication.extend( {
