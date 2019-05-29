@@ -40,7 +40,18 @@ app.views.VehicleInfoView = Marionette.View.extend({
 	        return input
         }
     },
+    showNothing: function() {
+	    $("#vehicle_latitude").html(UNKNOWN);
+	    $("#vehicle_longitude").html(UNKNOWN);
+        $("#vehicle_altitude").html(UNKNOWN);
+        $("#vehicle_heading").html(UNKNOWN);
+        $("#vehicle_depth").html(UNKNOWN);
+    },
     updateVehicle: function(data) {
+	    if (_.isUndefined(data)){
+	        this.showNothing();
+	        return;
+        }
         $("#vehicle_latitude").html(this.clean("%.6f",  data.latitude));
         $("#vehicle_longitude").html(this.clean("%.6f",  data.longitude));
         $("#vehicle_altitude").html(this.clean("%.3f", data.altitude));
