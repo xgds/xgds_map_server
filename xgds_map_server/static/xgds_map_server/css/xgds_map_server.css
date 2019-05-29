@@ -442,3 +442,12 @@ i.pinDiv {
 	margin-left: 22px !important;
 	margin-right: 22px !important;
 }
+
+.vehicle-info {
+	margin-bottom: -40px;
+	font-weight: bold;
+}
+.vehicle-info-data {
+	font-family: monospace;
+	font-size: 1.0rem;
+}

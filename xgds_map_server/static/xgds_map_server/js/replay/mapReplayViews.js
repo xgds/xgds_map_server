@@ -20,6 +20,38 @@ app.views.FlightInfoTabView = Marionette.View.extend({
 	template: '#template-group-flight-info',
 });
 
+var UNKNOWN = '-';
+
+app.views.VehicleInfoView = Marionette.View.extend({
+	template: '#template-vehicle-info',
+    initialize: function(options) {
+        this.options = options || {};
+        var capitalized_vehicle = options.vehicle[0].toUpperCase() + options.vehicle.slice(1);
+        var context = this;
+        app.vent.on(capitalized_vehicle + ':position_data', function(params) {context.updateVehicle(params)});
+    },
+    clean: function(format, input) {
+	    if (_.isUndefined(input)){
+	        return UNKNOWN;
+        }
+	    try {
+	        return sprintf(format, input);
+        } catch (e){
+	        return input
+        }
+    },
+    updateVehicle: function(data) {
+        $("#vehicle_latitude").html(this.clean("%.6f",  data.latitude));
+        $("#vehicle_longitude").html(this.clean("%.6f",  data.longitude));
+        $("#vehicle_altitude").html(this.clean("%.3f", data.altitude));
+        var heading = data.heading;
+        if ('yaw' in data){
+            heading = data.yaw;
+        }
+        $("#vehicle_heading").html(this.clean("%.3f", heading));
+        $("#vehicle_depth").html(this.clean("%.3f", data.depth));
+    }
+});
 
 app.views.TabNavView = xGDS.TabNavView.extend({
     viewMap: {
@@ -46,3 +78,4 @@ app.views.TabNavView = xGDS.TabNavView.extend({
     }
 
 });
+

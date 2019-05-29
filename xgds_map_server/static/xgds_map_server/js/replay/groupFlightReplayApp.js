@@ -23,7 +23,8 @@
 			layersRegion: '#layers',
 			tabsRegion: '#tabs',
 			plotRegion: '#plot-container',
-			plotDataValuesRegion: '#plot-data-values-container'
+			plotDataValuesRegion: '#plot-data-values-container',
+			vehicleRegion: '#vehicle-info'
 		},
 
 		onRender: function() {
@@ -33,6 +34,7 @@
 			this.showChildView('tabsRegion', new app.views.TabNavView());
 			this.showChildView('plotRegion', new app.views.ReplayPlotView());
 			this.showChildView('plotDataValuesRegion', new app.views.ReplayDataValuesView());
+			this.showChildView('vehicleRegion', new app.views.VehicleInfoView({vehicle:app.options.default_vehicle}));
 		}
 
 	});
@@ -89,7 +91,7 @@
         renderTracks: function() {
             var context = this;
 			_.each(appOptions.track_metadata, function(track_metadata){
-				track_metadata.hide_track = context.hide_track;
+				track_metadata.hide_tracks = context.options.hide_tracks;
 				var trackView = new app.views.TrackView(track_metadata);
 				var track_key = Object.keys(context.trackViews).length;
 				if ('vehicle' in track_metadata.data && !_.isEmpty(track_metadata.data.vehicle)) {
