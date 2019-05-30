@@ -54,7 +54,7 @@ app.views.VehicleInfoView = Marionette.View.extend({
         }
 	    var t = moment(timestamp);
 	    if (t.isValid()){
-	        return timestamp.format('MM/DD/YY HH:mm:ss');
+	        return t.format('MM/DD/YY HH:mm:ss');
         }
 	    return UNKNOWN;
     },
