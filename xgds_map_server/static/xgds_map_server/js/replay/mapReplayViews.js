@@ -28,7 +28,7 @@ app.views.VehicleInfoView = Marionette.View.extend({
         this.options = options || {};
         var capitalized_vehicle = options.vehicle[0].toUpperCase() + options.vehicle.slice(1);
         var context = this;
-        app.vent.on(capitalized_vehicle + ':position_data', function(params) {context.updateVehicle(params)});
+        app.vent.on(capitalized_vehicle + ':position_data', function(params) {context.update_vehicle(params)});
     },
     clean: function(format, input) {
 	    if (_.isUndefined(input)){
@@ -40,16 +40,23 @@ app.views.VehicleInfoView = Marionette.View.extend({
 	        return input
         }
     },
-    showNothing: function() {
+    show_nothing: function() {
 	    $("#vehicle_latitude").html(UNKNOWN);
 	    $("#vehicle_longitude").html(UNKNOWN);
         $("#vehicle_altitude").html(UNKNOWN);
         $("#vehicle_heading").html(UNKNOWN);
         $("#vehicle_depth").html(UNKNOWN);
+        $("#vehicle_timestamp").html(UNKNOWN);
     },
-    updateVehicle: function(data) {
+    clean_time: function(timestamp){
+	    if (!_.isUndefined(timestamp) && timestamp.isValid()){
+	        return timestamp.format('MM/DD/YY HH:mm:ss');
+        }
+	    return UNKNOWN;
+    },
+    update_vehicle: function(data) {
 	    if (_.isUndefined(data)){
-	        this.showNothing();
+	        this.show_nothing();
 	        return;
         }
         $("#vehicle_latitude").html(this.clean("%.6f",  data.latitude));
@@ -61,6 +68,8 @@ app.views.VehicleInfoView = Marionette.View.extend({
         }
         $("#vehicle_heading").html(this.clean("%.3f", heading));
         $("#vehicle_depth").html(this.clean("%.3f", data.depth));
+        $("#vehicle_timestamp").html(this.clean_time(data.timestamp));
+        
     }
 });
 
