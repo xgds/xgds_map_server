@@ -63,15 +63,15 @@ app.views.VehicleInfoView = Marionette.View.extend({
 	        this.show_nothing();
 	        return;
         }
-        $("#vehicle_latitude").html(this.clean("%.6f",  data.latitude));
-        $("#vehicle_longitude").html(this.clean("%.6f",  data.longitude));
-        $("#vehicle_altitude").html(this.clean("%.3f", data.altitude));
+        $("#vehicle_latitude").html(this.clean("%9.6f",  data.latitude));
+        $("#vehicle_longitude").html(this.clean("%11.6f",  data.longitude));
+        $("#vehicle_altitude").html(this.clean("%8.3f", data.altitude));
         var heading = data.heading;
         if ('yaw' in data){
             heading = data.yaw;
         }
-        $("#vehicle_heading").html(this.clean("%.3f", heading));
-        $("#vehicle_depth").html(this.clean("%.3f", data.depth));
+        $("#vehicle_heading").html(this.clean("%7.3f", heading));
+        $("#vehicle_depth").html(this.clean("%8.3f", data.depth));
         $("#vehicle_timestamp").html(this.clean_time(data.timestamp));
         
     }
