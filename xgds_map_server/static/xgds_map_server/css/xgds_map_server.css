@@ -446,6 +446,7 @@ i.pinDiv {
 .vehicle-info {
 	margin-bottom: -40px;
 	font-weight: bold;
+	border: 1px solid dimgray;
 }
 .vehicle-info-data {
 	font-family: monospace;
