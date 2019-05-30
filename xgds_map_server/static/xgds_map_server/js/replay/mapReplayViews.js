@@ -49,7 +49,11 @@ app.views.VehicleInfoView = Marionette.View.extend({
         $("#vehicle_timestamp").html(UNKNOWN);
     },
     clean_time: function(timestamp){
-	    if (!_.isUndefined(timestamp) && timestamp.isValid()){
+	    if (_.isUndefined(timestamp)){
+	        return UNKNOWN;
+        }
+	    var t = moment(timestamp);
+	    if (t.isValid()){
 	        return timestamp.format('MM/DD/YY HH:mm:ss');
         }
 	    return UNKNOWN;
