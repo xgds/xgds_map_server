@@ -198,6 +198,22 @@ $(function() {
               this.buildStyles();
               this.setupPopups();
               this.buildRulerControls();
+
+              this.map.on("moveend", function(e) {
+                let extent = this.map.getView().calculateExtent(this.map.getSize());
+                extent = ol.proj.transformExtent(extent, 'EPSG:3857', 'EPSG:4326');
+                extent = {
+                    longitude: {
+                        'min': Math.min(extent[0], extent[2]),
+                        'max': Math.max(extent[0], extent[2])
+                    },
+                    latitude: {
+                        'min': Math.min(extent[1], extent[3]),
+                        'max': Math.max(extent[1], extent[3])
+                    }
+                };
+                app.vent.trigger("map:moveend", extent);
+              }.bind(this));
               
            // bind location dropdown change to zoom
               $("select[id=id_siteFrame]").bind("change", {
