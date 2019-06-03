@@ -36,6 +36,9 @@ urlpatterns = [url(r'^treejson/', views.getFancyTreeJSON, {}, 'mapTreeJSON'),
                url(r'^view/(?P<mapName>\w+)/$', views.MapOrderListJson.as_view(), {}, 'map_view_json'),
                url(r'^view/(?P<mapName>\w+)/(?P<filter>(([\w]+|[a-zA-Z0-9:._\-\s]+),*)+)$', views.MapOrderListJson.as_view(), {}, 'map_view_json_filter'),
 
+               url(r'^mapBoundedSearch/$', views.mapBoundedSearch, {}, 'map_bounded_search'),
+               url(r'^jsMap/$', views.getMapServerJSMap, {}, 'js_map'),
+
                url(r'^json/(?P<mapName>\w+)/(?P<currentPK>[\d]+)$', views.getObject, {}, 'xgds_map_server_object'),
                url(r'^lastJson2/(?P<mapName>\w+)/$', views.getLastObject, {}, 'xgds_map_server_lastJson2'),
                url(r'^prevJson/(?P<mapName>\w+)/(?P<currentPK>[\d]+)$', views.getPrevNextObject, {'which':'previous'}, 'xgds_map_server_prevJson'),

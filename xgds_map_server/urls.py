@@ -87,6 +87,8 @@ urlpatterns = [url(r'^$', views.getMapServerIndexPage,{},'xgds_map_server_index'
                # By default if you just load the app you should see the list
                url(r'^uploadResumable/$', ResumableUploadView.as_view(), name='uploadResumable'),
                
+               url(r'^search/mapBounded/$', views.getMapBoundedSearchPage, {}, 'search_map_bounded_page'),
+
                url(r'^search/$', views.getSearchPage, {}, 'search_map'),
                url(r'^search/(?P<modelName>[\w]+)$', views.getSearchPage, {}, 'search_map_object'),
                url(r'^search/(?P<modelName>\w+)/(?P<filter>(([\w]+|[a-zA-Z0-9:._\-\s]+),*)+)$', views.getSearchPage, {}, 'search_map_object_filter'),

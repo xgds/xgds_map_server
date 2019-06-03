@@ -1826,9 +1826,9 @@ $(function() {
         initialize: function(options) {
             this.options = options || {};
             this.group = this.options.group;
-            this.listenTo(app.vent, 'mapSearch:found', function(data) {
+            this.listenTo(app.vent, 'mapSearch:found', function(data, disableRefit) {
         	if (data != undefined && data.length > 0){
-        	    this.constructMapFeatures(data);
+        	    this.constructMapFeatures(data, disableRefit);
         	}
             });
             this.listenTo(app.vent, 'mapSearch:clear', function(e) {
@@ -1937,7 +1937,7 @@ $(function() {
         	},this);
         	return foundFeatures;
         },
-        constructMapFeatures: function(data) {
+        constructMapFeatures: function(data, disableRefit) {
         	if (_.isUndefined(this.mapElement)){
         	    this.mapElement = new ol.layer.Group({name:"liveSearch"});
         	    this.map = {};
@@ -1965,9 +1965,9 @@ $(function() {
                 }
             }
             this.show();
-            app.vent.trigger('mapSearch:drewFeatures', data);
-//            var _this = this;
-//            app.map.map.on("moveend",  _this.mapMoveHandler, _this);
+
+            if (_.isUndefined(disableRefit) || !disableRefit)
+                app.vent.trigger('mapSearch:drewFeatures', data);
         },
         mapMoveHandler: function(e) {
             var extens = app.map.getMapExtent();

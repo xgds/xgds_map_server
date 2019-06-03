@@ -2401,3 +2401,64 @@ class PsuedoBuffer:
     def write(self, value):
         """Write the value by returning it, instead of storing in a buffer."""
         return value
+
+def getMapServerJSMap(request):
+    return JsonResponse(settings.XGDS_MAP_SERVER_JS_MAP)
+
+def mapBoundedSearch(request):
+    json_data = json.loads(request.body)
+
+    models = []
+    for model_name in json_data['models']:
+        models.append(
+            LazyGetModelByName(settings.XGDS_MAP_SERVER_JS_MAP[model_name]['model']).get()
+        )
+
+    geospatial_constraints = json_data['geography']
+
+    min_lat, max_lat = geospatial_constraints['latitude']['min'],  geospatial_constraints['latitude']['max']
+    min_lon, max_lon = geospatial_constraints['longitude']['min'], geospatial_constraints['longitude']['max']
+
+    result = {}
+
+    results_array = []
+
+    for i, m in enumerate(models):
+        model_name = str(json_data['models'][i])
+
+        if hasattr(m, 'position'):
+            result[model_name] = m.objects.filter(
+                position__latitude__gte=min_lat,
+                position__latitude__lte=max_lat,
+                position__longitude__gte=min_lon,
+                position__longitude__lte=max_lon,
+            )
+        elif hasattr(m, 'track_position'):
+            result[model_name] = m.objects.filter(
+                track_position__latitude__gte=min_lat,
+                track_position__latitude__lte=max_lat,
+                track_position__longitude__gte=min_lon,
+                track_position__longitude__lte=max_lon,
+            )
+        else:
+            assert False, dir(m)
+
+        result[model_name] = [r.getBroadcastData() for r in result[model_name]]
+
+        for j, instance in enumerate(result[model_name]):
+            results_array.append(
+                {
+                    "type": model_name,
+                    "time": instance['event_time'],
+                    "content": instance['content'],
+                    "lat": instance['lat'],
+                    "lon": instance['lon'],
+                    "tags": "",
+                    "depth": instance['depth'],
+                }
+            )
+
+    return JsonResponse({
+            'results': results_array,
+            'columns': [{'title':'time'}, {'title': 'type'}, {'title':'content'}]
+        })

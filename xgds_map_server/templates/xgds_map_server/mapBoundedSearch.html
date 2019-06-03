@@ -1,0 +1,128 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block sitemenu-content-secondary %}
+	{% include "xgds_map_server/mapSearch_subnav.html" %}
+{% endblock %}
+{% block siteSection %}{{modelName}} Search{% endblock %}
+
+{% load siteFrames %}
+
+{% block cssExtras %}
+{{ block.super }}
+{% if 'xgds_notes2' in settings.INSTALLED_APPS %}
+{% include "xgds_notes2/NoteCSS.html" %}
+{% endif %}
+{% endblock cssExtras %}
+
+{% block preMapJS %}
+<script type="text/javascript">
+	var siteFrames = {% siteframes_dict %};
+	var appOptions = {
+		BODY_RADIUS_METERS: {{ settings.XGDS_MAP_SERVER_BODY_RADIUS_METERS }},
+		DEFAULT_COORD_SYSTEM: "{{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM }}",
+		SETUP_COORD_SYSTEM: {{ settings.XGDS_MAP_SERVER_MAP_SETUP_COORD_SYSTEM }},
+		DEFAULT_COORD_SYSTEM_CENTER: {{ settings.XGDS_MAP_SERVER_DEFAULT_COORD_SYSTEM_CENTER }},
+		DEFAULT_ZOOM: {{ settings.XGDS_MAP_SERVER_DEFAULT_ZOOM }},
+		DEFAULT_ROTATION: {{ settings.XGDS_MAP_SERVER_DEFAULT_ROTATION }},
+		SHOW_COMPASS: {{ settings.XGDS_MAP_SERVER_SHOW_COMPASS}},
+		selectedLayerUrl: "{{ settings.XGDS_MAP_SERVER_SELECTED_LAYER_URL }}",
+		layerFeedUrl: "{{ settings.XGDS_MAP_SERVER_LAYER_FEED_URL }}",
+		siteFrame: {% siteframe settings.XGDS_CURRENT_SITEFRAME_ID %},
+		XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: '{{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }}',
+		dataUrl: "{{ settings.DATA_URL }}",
+		searchModels: {{ searchModelDict|safe }},
+		modelName: '{{modelName}}',
+		tableHeight: Math.floor($(window).height()*.7) + 'px',
+		{% block extraAppOptions %}
+		{% endblock extraAppOptions %}
+		settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }},
+		showDetailView: true,
+		sseChannelNames: {{settings.XGDS_SSE_CHANNELS|safe}}
+	};
+	</script>
+{% endblock preMapJS %}
+
+{% block scripts %}
+	{{block.super}}
+	
+{% if 'xgds_notes2' in settings.INSTALLED_APPS %}
+	{% block notejs %}
+	{% include "xgds_notes2/NoteJS.html" with forceUserSession=forceUserSession%}
+	{% endblock notejs %}
+{% endif %}
+	<script type="text/javascript" src="{% static 'xgds_map_server/js/util/mapSearchSseUtils.js' %}"></script>
+    <script type="text/javascript" src="{{ EXTERNAL_URL }}bootstrap-tagsinput/dist/bootstrap-tagsinput.min.js"></script>
+	<script type="text/javascript" src='{{ EXTERNAL_URL }}pure-uuid/uuid.js'></script>
+    <script type='text/javascript' src="{% static 'xgds_map_server/js/search/mapBoundedSearchViews.js' %}"></script>
+
+    {% for template_name, template in templates.items %}
+	<script type="text/handlebars" id="template-{{template_name}}">
+		{{template|safe}}
+	</script>
+    {% endfor %}
+    {% include "xgds_map_server/SearchForms.html" with searchForms=searchForms %}
+{% endblock scripts %}
+
+	
+	{% block jsInitPreApp %}
+	 app.vent.on('onMapSetup', function() {
+        	xgds_gridstack.initializeGridstack();
+        });
+        
+	{% endblock jsInitPreApp %}
+	
+	{% block initGridstack %}
+	{% endblock initGridstack %}
+
+{% block preDashboard %}
+    {% block preSearchDiv %}
+    {% endblock preSearchDiv %}
+
+    {% block searchDiv %}
+    <div id="searchDiv"></div>
+    {% endblock searchDiv %}
+
+{% endblock preDashboard %}
+
+{% block preMap %}
+
+{% block searchResultsDiv %}
+<div id="search-results-gridstack-item" class="grid-stack-item" 
+		data-gs-x="0" data-gs-y="0"
+        data-gs-width="3" data-gs-height="3" >
+        <div class="grid-stack-item-content" id="search-results-gridstack-item-content" >
+        <ul class="nav justify-content-end">
+			<i class="fa fa-refresh gray-light mr-1" title="Reload Latest" id="reloadSearchResults"></i>
+        	<i class="fa fa-lock pinDiv gray-light mr-1"></i>
+			<i class="fa fa-window-close gray-light fa-lg"></i>
+		</ul>
+		<div id="searchResultsDiv" class="mt-negative-1rem"></div>
+		</div>
+</div>
+{% endblock searchResultsDiv %}
+
+{% endblock preMap %}
+
+{% block map %}
+<div id="map-gridstack-item" class="grid-stack-item" 
+	  data-gs-x="0" data-gs-y="4"
+      data-gs-width="3" data-gs-height="2" >
+	<div class="grid-stack-item-content" id="map-gridstack-item-content" >
+        <ul class="nav justify-content-end">
+            <i class="fa fa-lock pinDiv gray-light"></i>
+        </ul>
+        <div id="overmap" class="mb-1 mt-negative-1rem">
+            {% if mapLayerDict.jsonFeatures|length == 0 %}{% siteframe_form %}{% endif %}
+            <button id="layers_button" type="button" class="btn btn-primary" data-backdrop=false data-toggle="modal" data-target="#layers_modal">
+                Layers
+            </button>
+        </div>
+		<div id="map"></div>
+	</div>
+</div>
+{% endblock map %}
+
+
+		
+
