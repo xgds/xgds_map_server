@@ -1984,19 +1984,39 @@ def getSearchPage(request, modelName=None, templatePath='xgds_map_server/mapSear
                    'title': help_title,
                    'templates': get_handlebars_templates(list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_HANDLEBARS_DIRS'),
                    'searchForms': searchForms,
-                   'searchModelDict': searchModelDict, 
+                   'searchModelDict': searchModelDict,
                    'forceUserSession': forceUserSession,
                    #'saveSearchForm': MapSearchForm(),
                    'app': 'xgds_map_server/js/search/mapViewerSearchApp.js'},
                   )
 
 
+
+def getMapBoundedSearchPage(request, templatePath='xgds_map_server/mapBoundedSearch.html', forceUserSession=False, searchForms=None, filter=None):
+    searchModelDict = settings.XGDS_MAP_SERVER_JS_MAP
+    help_title = 'Map Bounded Search'
+    return render(
+        request,
+        templatePath,
+        {
+            'sseChannelNames': settings.XGDS_SSE_CHANNELS,
+            'help_content_path': 'xgds_map_server/help/mapSearch.rst',
+            'title': help_title,
+            'templates': get_handlebars_templates(list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS), 'XGDS_MAP_SERVER_HANDLEBARS_DIRS'),
+            'searchForms': searchForms,
+            'searchModelDict': searchModelDict,
+            'forceUserSession': forceUserSession,
+            'app': 'xgds_map_server/js/search/mapBoundedViewerSearchApp.js',
+        },
+    )
+
+
 def getViewSingleModelPage(request, modelName, modelPK):
     fullTemplateList = list(settings.XGDS_MAP_SERVER_HANDLEBARS_DIRS)
     templates = get_handlebars_templates(fullTemplateList, 'XGDS_MAP_SERVER_HANDLEBARS_DIRS')
-    
+
     return render(request,
-                  "xgds_map_server/mapViewSingleModel.html", 
+                  "xgds_map_server/mapViewSingleModel.html",
                   {'modelName': modelName,
                    'modelPK': modelPK,
                    'templates': templates,
