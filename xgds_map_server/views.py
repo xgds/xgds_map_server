@@ -2480,7 +2480,7 @@ def mapBoundedSearch(request):
         result[model_name] = [r.getBroadcastData() for r in result[model_name]]
 
         for j, instance in enumerate(result[model_name]):
-            if 'event_time' in instance:
+            if model_name == 'Event':
                 results_array.append(
                     {
                         "type": model_name,
@@ -2492,11 +2492,23 @@ def mapBoundedSearch(request):
                         "depth": instance['depth'],
                     }
                 )
-            elif 'acquisition_time' in instance:
+            elif model_name == 'Image':
                 results_array.append(
                     {
                         "type": model_name,
                         "time": instance['acquisition_time'],
+                        "content": instance['thumbnail_image_url'],
+                        "lat": instance['lat'],
+                        "lon": instance['lon'],
+                        "tags": "",
+                        "depth": instance['depth'],
+                    }
+                )
+            elif model_name == 'Message':
+                results_array.append(
+                    {
+                        "type": model_name,
+                        "time": instance['collection_time'],
                         "content": instance['content'],
                         "lat": instance['lat'],
                         "lon": instance['lon'],
@@ -2504,12 +2516,12 @@ def mapBoundedSearch(request):
                         "depth": instance['depth'],
                     }
                 )
-            elif 'collection_time' in instance:
+            elif model_name == 'Sample':
                 results_array.append(
                     {
                         "type": model_name,
                         "time": instance['collection_time'],
-                        "content": instance['content'],
+                        "content": instance['thumbnail_image_url'],
                         "lat": instance['lat'],
                         "lon": instance['lon'],
                         "tags": "",
