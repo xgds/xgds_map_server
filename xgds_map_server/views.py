@@ -2446,37 +2446,79 @@ def mapBoundedSearch(request):
     for i, m in enumerate(models):
         model_name = str(json_data['models'][i])
 
-        if hasattr(m, 'position'):
+        if hasattr(m, 'event_time') and hasattr(m, 'position'):
             result[model_name] = m.objects.filter(
                 position__latitude__gte=min_lat,
                 position__latitude__lte=max_lat,
                 position__longitude__gte=min_lon,
                 position__longitude__lte=max_lon,
-            )
-        elif hasattr(m, 'track_position'):
+            ).order_by('-event_time')[:100]
+        elif hasattr(m, 'creation_time') and hasattr(m, 'track_position'):
             result[model_name] = m.objects.filter(
                 track_position__latitude__gte=min_lat,
                 track_position__latitude__lte=max_lat,
                 track_position__longitude__gte=min_lon,
                 track_position__longitude__lte=max_lon,
-            )
+            ).order_by('-creation_time')[:100]
+        elif hasattr(m, 'acquisition_time') and hasattr(m, 'track_position'):
+            result[model_name] = m.objects.filter(
+                track_position__latitude__gte=min_lat,
+                track_position__latitude__lte=max_lat,
+                track_position__longitude__gte=min_lon,
+                track_position__longitude__lte=max_lon,
+            ).order_by('-acquisition_time')[:100]
+        elif hasattr(m, 'collection_time') and hasattr(m, 'track_position'):
+            result[model_name] = m.objects.filter(
+                track_position__latitude__gte=min_lat,
+                track_position__latitude__lte=max_lat,
+                track_position__longitude__gte=min_lon,
+                track_position__longitude__lte=max_lon,
+            ).order_by('-collection_time')[:100]
         else:
             assert False, dir(m)
 
         result[model_name] = [r.getBroadcastData() for r in result[model_name]]
 
         for j, instance in enumerate(result[model_name]):
-            results_array.append(
-                {
-                    "type": model_name,
-                    "time": instance['event_time'],
-                    "content": instance['content'],
-                    "lat": instance['lat'],
-                    "lon": instance['lon'],
-                    "tags": "",
-                    "depth": instance['depth'],
-                }
-            )
+            if 'event_time' in instance:
+                results_array.append(
+                    {
+                        "type": model_name,
+                        "time": instance['event_time'],
+                        "content": instance['content'],
+                        "lat": instance['lat'],
+                        "lon": instance['lon'],
+                        "tags": "",
+                        "depth": instance['depth'],
+                    }
+                )
+            elif 'acquisition_time' in instance:
+                results_array.append(
+                    {
+                        "type": model_name,
+                        "time": instance['acquisition_time'],
+                        "content": instance['content'],
+                        "lat": instance['lat'],
+                        "lon": instance['lon'],
+                        "tags": "",
+                        "depth": instance['depth'],
+                    }
+                )
+            elif 'collection_time' in instance:
+                results_array.append(
+                    {
+                        "type": model_name,
+                        "time": instance['collection_time'],
+                        "content": instance['content'],
+                        "lat": instance['lat'],
+                        "lon": instance['lon'],
+                        "tags": "",
+                        "depth": instance['depth'],
+                    }
+                )
+            else:
+                # skip this instance
+                pass
 
     return JsonResponse({
             'results': results_array,
