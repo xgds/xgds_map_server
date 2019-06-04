@@ -926,8 +926,9 @@ app.views.SearchResultsView = Marionette.View.extend({
 				data: this.convertResultsArray(this.data),
 				columns: this.columnHeaders,
 				columnDefs: [
-					{width: "24%", targets: 0},
-					{width: "12%", targets: 1}
+					{width: "25%", targets: 0},
+					{width: "15%", targets: 1},
+					{width: "60%", targets: 2},
 				],
                 autoWidth: false,
                 stateSave: false,
