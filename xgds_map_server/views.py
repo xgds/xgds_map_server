@@ -2508,7 +2508,7 @@ def mapBoundedSearch(request):
                 results_array.append(
                     {
                         "type": model_name,
-                        "time": instance['creation_time'],
+                        "time": instance['event_time'],
                         "content": instance['content'],
                         "lat": instance['lat'],
                         "lon": instance['lon'],
