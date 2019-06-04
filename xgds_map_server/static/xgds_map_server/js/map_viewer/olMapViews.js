@@ -128,6 +128,18 @@ function calculateOpacity(transparency){
 	return 1.0 - t;
 }
 
+function get_window_class(the_type){
+    var theClass = window[the_type];
+    if (! ('constructElements' in theClass)) {
+        // sometimes the type name does not match the js class name, for example
+        // XGDS_MAP_SERVER_JS_MAP['Image'] needs to use class Photo
+        // in this case use this lookup method.
+        theClass = type_class_map[the_type];
+        return window[theClass];
+    }
+    return theClass;
+}
+
 $(function() {
     app.views = app.views || {};
 
@@ -1183,7 +1195,7 @@ $(function() {
             }
             for (i = 0; i < this.data.length; i++){
                 var object = this.data[i];
-                var theClass = window[object.type];
+                var theClass = get_window_class(object.type);
                 if (!_.isUndefined(theClass) && !_.isUndefined(theClass.constructElements)) {
                 	if (_.isUndefined(this.map[object.type])){
                 		this.map[object.type] = [];
@@ -1191,7 +1203,7 @@ $(function() {
                 	this.map[object.type].push(object);
                 }
                 for (var key in this.map){
-                    var theClass = window[key];
+                    var theClass = get_window_class(key);
                     var newLayer = theClass.constructElements(this.map[key]);
                     if (newLayer !== null){
                         this.mapElement.getLayers().push(newLayer);
@@ -1759,7 +1771,7 @@ $(function() {
             }
             for (i = 0; i < this.objectsJson.length; i++){
                 var object = this.objectsJson[i];
-                var theClass = window[object.type];
+                var theClass = get_window_class(object.type);
                 if (!_.isUndefined(theClass) && !_.isUndefined(theClass.constructElements)) {
                     if (_.isUndefined(this.map[object.type])){
                         this.map[object.type] = [];
@@ -1768,7 +1780,7 @@ $(function() {
                 }
             }
             for (var key in this.map){
-                var theClass = window[key];
+                var theClass = get_window_class(key);
                 var newLayer = theClass.constructElements(this.map[key]);
                 if (newLayer !== null){
                     this.mapElement.getLayers().push(newLayer);
@@ -1797,7 +1809,7 @@ $(function() {
             this.map = {};
             for (let i = 0; i < this.objectsJson.length; i++){
                 var object = this.objectsJson[i];
-                var theClass = window[object.type];
+                var theClass = get_window_class(object.type);
                 if (!_.isUndefined(theClass) && !_.isUndefined(theClass.constructElements)) {
                     if (_.isUndefined(this.map[object.type])){
                         this.map[object.type] = [];
@@ -1807,7 +1819,7 @@ $(function() {
             }
             for (var key in this.map){
                 // we construct one layer that has all the elements in it
-                var theClass = window[key];
+                var theClass = get_window_class(key);
                 var newLayer = theClass.constructElements(this.map[key]);
                 if (newLayer !== null){
                     this.mapElement.getLayers().push(newLayer);
@@ -1957,7 +1969,7 @@ $(function() {
         		return;
         	}
         	_.each(foundFeatures, function(feature){
-        		var theClass = window[feature.get('type')];
+        		var theClass = get_window_class(feature.get('type'));
         		if (!_.isUndefined(theClass) && !_.isUndefined(theClass.deselectMapElement)) {
         			theClass.deselectMapElement(feature);
         		}
@@ -1969,7 +1981,7 @@ $(function() {
         		return;
         	}
         	_.each(foundFeatures, function(feature){
-        		var theClass = window[feature.get('type')];
+        		var theClass = get_window_class(feature.get('type'));
         		if (!_.isUndefined(theClass) && !_.isUndefined(theClass.selectMapElement)) {
         			theClass.selectMapElement(feature);
         		}
@@ -2005,7 +2017,7 @@ $(function() {
             for (let i = 0; i < this.objectsJson.length; i++){
                 var theObject = this.objectsJson[i];
                 if ((!_.isNull(theObject)) && (_.isNumber(theObject.lat))){
-	                var theClass = window[theObject.type];
+                    var theClass = get_window_class(theObject.type);
 	                if (!_.isUndefined(theClass) && !_.isUndefined(theClass.constructElements)) {
 	                    if (_.isUndefined(this.map[theObject.type])){
 	                        this.map[theObject.type] = [];
@@ -2017,7 +2029,7 @@ $(function() {
             }
             for (var key in this.map){
                 // we construct one layer that has all the elements in it
-                var theClass = window[key];
+                var theClass = get_window_class(key);
                 var newLayer = theClass.constructElements(this.map[key]);
                 if (newLayer !== null){
                     this.mapElement.getLayers().push(newLayer);
