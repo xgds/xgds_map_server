@@ -903,13 +903,14 @@ app.views.SearchResultsView = Marionette.View.extend({
 		let newData = [];
 		for (var i = 0; i < data.length; i++) {
 			let segment = data[i];
-			newData.push(
-				[
-					segment.time,
-					segment.type,
-					segment.content,
-				]
-			);
+			if (segment.type == "Image" || segment.type == "Sample") {
+				segment.content = '<img src="' + segment.content + '" />';
+			}
+			newData.push([
+				segment.time,
+				segment.type,
+				segment.content,
+			]);
 		}
 		return newData;
 	},
