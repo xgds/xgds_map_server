@@ -923,8 +923,12 @@ app.views.SearchResultsView = Marionette.View.extend({
 		// TODO: set column widths
         var dataTableObj = {
 				data: this.convertResultsArray(this.data),
-                columns: this.columnHeaders,
-                autoWidth: true,
+				columns: this.columnHeaders,
+				columnDefs: [
+					{width: "24%", targets: 0},
+					{width: "12%", targets: 1}
+				],
+                autoWidth: false,
                 stateSave: false,
                 paging: true,
                 pageLength: 10, 
