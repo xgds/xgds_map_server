@@ -128,6 +128,18 @@ function calculateOpacity(transparency){
 	return 1.0 - t;
 }
 
+function get_window_class(the_type){
+    var theClass = window[the_type];
+    if (! ('constructElements' in theClass)) {
+        // sometimes the type name does not match the js class name, for example
+        // XGDS_MAP_SERVER_JS_MAP['Image'] needs to use class Photo
+        // in this case use this lookup method.
+        theClass = type_class_map[the_type];
+        return window[theClass];
+    }
+    return theClass;
+}
+
 $(function() {
     app.views = app.views || {};
 
@@ -526,6 +538,8 @@ $(function() {
                 this.liveSearchGroup.set('name','LiveSearch');
                 this.mapNotesGroup = new ol.layer.Group();
                 this.mapNotesGroup.set('name','Notes');
+                this.pinLayer = new ol.layer.Vector({name: 'Pinned',
+                                                     source: new ol.source.Vector()});
 
                 this.layersForMap = getInitialLayers();
                 
@@ -540,6 +554,7 @@ $(function() {
                 this.layersForMap.push(this.searchGroup);
                 this.layersForMap.push(this.liveSearchGroup);
                 this.layersForMap.push(this.mapNotesGroup);
+                this.layersForMap.push(this.pinLayer);
             },
 
             createRulerLayer: function(){
@@ -844,7 +859,9 @@ $(function() {
             createLiveSearchView: function(node){
                 // This one is different, it listens for events telling it to show or hide json data retrieved from live searching.
                 var liveSearchView = new app.views.LiveSearchView({
-                    group: this.liveSearchGroup
+                    group: this.liveSearchGroup,
+                    pinLayer: this.pinLayer
+
                 });
                 return liveSearchView;
             },
@@ -1178,7 +1195,7 @@ $(function() {
             }
             for (i = 0; i < this.data.length; i++){
                 var object = this.data[i];
-                var theClass = window[object.type];
+                var theClass = get_window_class(object.type);
                 if (!_.isUndefined(theClass) && !_.isUndefined(theClass.constructElements)) {
                 	if (_.isUndefined(this.map[object.type])){
                 		this.map[object.type] = [];
@@ -1186,7 +1203,7 @@ $(function() {
                 	this.map[object.type].push(object);
                 }
                 for (var key in this.map){
-                    var theClass = window[key];
+                    var theClass = get_window_class(key);
                     var newLayer = theClass.constructElements(this.map[key]);
                     if (newLayer !== null){
                         this.mapElement.getLayers().push(newLayer);
@@ -1754,7 +1771,7 @@ $(function() {
             }
             for (i = 0; i < this.objectsJson.length; i++){
                 var object = this.objectsJson[i];
-                var theClass = window[object.type];
+                var theClass = get_window_class(object.type);
                 if (!_.isUndefined(theClass) && !_.isUndefined(theClass.constructElements)) {
                     if (_.isUndefined(this.map[object.type])){
                         this.map[object.type] = [];
@@ -1763,7 +1780,7 @@ $(function() {
                 }
             }
             for (var key in this.map){
-                var theClass = window[key];
+                var theClass = get_window_class(key);
                 var newLayer = theClass.constructElements(this.map[key]);
                 if (newLayer !== null){
                     this.mapElement.getLayers().push(newLayer);
@@ -1790,9 +1807,9 @@ $(function() {
         constructMapFeatures: function() {
             this.mapElement = new ol.layer.Group({name:this.options.name});
             this.map = {};
-            for (i = 0; i < this.objectsJson.length; i++){
+            for (let i = 0; i < this.objectsJson.length; i++){
                 var object = this.objectsJson[i];
-                var theClass = window[object.type];
+                var theClass = get_window_class(object.type);
                 if (!_.isUndefined(theClass) && !_.isUndefined(theClass.constructElements)) {
                     if (_.isUndefined(this.map[object.type])){
                         this.map[object.type] = [];
@@ -1801,7 +1818,8 @@ $(function() {
                 }
             }
             for (var key in this.map){
-                var theClass = window[key];
+                // we construct one layer that has all the elements in it
+                var theClass = get_window_class(key);
                 var newLayer = theClass.constructElements(this.map[key]);
                 if (newLayer !== null){
                     this.mapElement.getLayers().push(newLayer);
@@ -1826,10 +1844,18 @@ $(function() {
         initialize: function(options) {
             this.options = options || {};
             this.group = this.options.group;
+            this.pinLayer = this.options.pinLayer;
+            this.pinned  = {}; // stored objects that are pinned, keys are type_id
+            this.listenTo(app.vent, 'pin', function(pin_object) {
+                this.pin(pin_object);
+            });
+            this.listenTo(app.vent, 'unpin', function(pin_object) {
+                this.unpin(pin_object);
+            });
             this.listenTo(app.vent, 'mapSearch:found', function(data, disableRefit) {
-        	if (data != undefined && data.length > 0){
-        	    this.constructMapFeatures(data, disableRefit);
-        	}
+                if (data != undefined && data.length > 0){
+                    this.constructMapFeatures(data, disableRefit);
+                }
             });
             this.listenTo(app.vent, 'mapSearch:clear', function(e) {
                 this.clearDataAndFeatures();
@@ -1848,6 +1874,53 @@ $(function() {
             this.listenTo(app.vent, 'mapSearch:unhighlight', function(data) {
                 this.deselectFeatures(data);
             });
+        },
+        get_by_pk: function(pk, the_type){
+    	    if (the_type in this.map) {
+                for (let i = 0; i < this.map[the_type].length; i++) {
+                    let the_object = this.map[the_type][i];
+                    if (the_object.pk == pk) {
+                        return {
+                            'index': i,
+                            'object': the_object
+                        };
+                    }
+                }
+            }
+    	    return {'index': -1,
+                    'object': null}
+
+        },
+        pin: function(pin_object){
+    	    let object_index = this.get_by_pk(pin_object.pk, pin_object.type);
+    	    if (object_index.index != -1) {
+                this.pinned[pin_object.type + "_" + pin_object.pk] = object_index.object;
+                if (!_.isUndefined(object_index.object.map_feature)) {
+                    //this.mapElement.getLayers().getArray()[0].getSource().removeFeature(object_index.index.map_feature);
+                    this.pinLayer.getSource().addFeature(object_index.object.map_feature);
+                }
+            }
+
+        },
+        unpin: function(unpin_object){
+    	    if (_.isUndefined(unpin_object)){
+                // unpin all
+                this.pinned = {};
+                this.pinLayer.getSource().clear();
+            } else {
+    	        let key = unpin_object.type + "_" + unpin_object.pk;
+    	        if (key in this.pinned) {
+    	            let found_object = this.pinned[key];
+    	            if (!_.isUndefined(found_object)) {
+                        delete this.pinned[key];
+                        if (!_.isUndefined(found_object.map_feature)) {
+                            //this.mapElement.getLayers().getArray()[0].getSource().addFeature(ofound_object.map_feature);
+                            this.pinLayer.getSource().removeFeature(found_object.map_feature);
+                        }
+                    }
+                }
+            }
+
         },
         getExtent: function() {
             if (this.mapElement != undefined && this.mapElement.getLayers().getLength() > 0){
@@ -1888,8 +1961,6 @@ $(function() {
                 }
                 this.mapElement.getLayers().clear();
                 delete this.objectsJson;
-//            var _this = this;
-//            app.map.map.un("moveend",  _this.mapMoveHandler, _this);
             }
         },
         deselectFeatures: function(data) {
@@ -1898,7 +1969,7 @@ $(function() {
         		return;
         	}
         	_.each(foundFeatures, function(feature){
-        		var theClass = window[feature.get('type')];
+        		var theClass = get_window_class(feature.get('type'));
         		if (!_.isUndefined(theClass) && !_.isUndefined(theClass.deselectMapElement)) {
         			theClass.deselectMapElement(feature);
         		}
@@ -1907,12 +1978,10 @@ $(function() {
         selectFeatures: function(data){
         	var foundFeatures = this.findFeaturesByPK(data);
         	if (_.isEmpty(foundFeatures)){
-//        		app.vent.trigger("mapSearch:found", data);
-//        		app.vent.trigger("mapSearch:highlight", data);
         		return;
         	}
         	_.each(foundFeatures, function(feature){
-        		var theClass = window[feature.get('type')];
+        		var theClass = get_window_class(feature.get('type'));
         		if (!_.isUndefined(theClass) && !_.isUndefined(theClass.selectMapElement)) {
         			theClass.selectMapElement(feature);
         		}
@@ -1944,28 +2013,47 @@ $(function() {
         	}
 
             this.clearDataAndFeatures();
-            this.objectsJson = data
-            for (i = 0; i < this.objectsJson.length; i++){
+            this.objectsJson = data;
+            for (let i = 0; i < this.objectsJson.length; i++){
                 var theObject = this.objectsJson[i];
                 if ((!_.isNull(theObject)) && (_.isNumber(theObject.lat))){
-	                var theClass = window[theObject.type];
+                    var theClass = get_window_class(theObject.type);
 	                if (!_.isUndefined(theClass) && !_.isUndefined(theClass.constructElements)) {
 	                    if (_.isUndefined(this.map[theObject.type])){
 	                        this.map[theObject.type] = [];
 	                    }
 	                    this.map[theObject.type].push(theObject);
+
 	                }
                 }
             }
             for (var key in this.map){
-                var theClass = window[key];
+                // we construct one layer that has all the elements in it
+                var theClass = get_window_class(key);
                 var newLayer = theClass.constructElements(this.map[key]);
                 if (newLayer !== null){
                     this.mapElement.getLayers().push(newLayer);
+                    // now we associate the specific element with the object
+
+                    //TODO this assumes that the result of the new layer has a vector with source and features
+                    _.each(this.objectsJson, function(theObject) {
+                        let found_feature = newLayer.getSource().getFeatureById(theObject.type + theObject.pk);
+                        if (!_.isNull(found_feature)){
+                            theObject.map_feature = found_feature;
+                        }
+                    })
+
+                    // for (let i = 0; i < this.objectsJson.length; i++){
+                    //     let theObject = this.objectsJson[i];
+                    //     let found_feature = newLayer.getSource().getFeatureById(theObject.type + theObject.pk);
+                    //     if (!_.isUndefined(found_feature)){
+                    //         theObject.map_feature = found_feature;
+                    //     }
+                    // }
+
                 }
             }
             this.show();
-
             if (_.isUndefined(disableRefit) || !disableRefit)
                 app.vent.trigger('mapSearch:drewFeatures', data);
         },
