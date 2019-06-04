@@ -553,6 +553,8 @@ app.views.SearchNotesView = Marionette.View.extend({
 
 app.views.SearchResultsView = Marionette.View.extend({
 	events: {
+		'click #clear-selection-btn': 'clear_selection',
+		'click #save-selection-btn': 'save_selection',
 		'click #export-modal-btn': 'initializeExportData',
 		'click #simple-search-btn': 'filterDatatable',
 		'keydown [name="search-keyword"]': 'keywordKeydown',
@@ -874,7 +876,9 @@ app.views.SearchResultsView = Marionette.View.extend({
 
 					var id = row[row.length - 1];  // used to be data.toString()
 					if ((context.selectedIds.indexOf(id) > -1) || $('#pick_master').is(":checked")){
-						if ($('#pick_master').is(":checked")) context.selectedIds.push(data);
+						if ($('#pick_master').is(":checked")) {
+							context.select_check_changed(data, true);
+						}
 						checkbox.setAttribute("checked", true);
 					}
 
@@ -1534,27 +1538,19 @@ app.views.SearchResultsView = Marionette.View.extend({
 	connectMasterPickCallback: function() {
     	var _this = this;
 		$('#pick_master').on('change', function() {
-			var masterChecked = $(this).is(":checked");
+			var master_is_checked = $(this).is(":checked");
 			$('.check').each(function(i, obj) {
 				var targetId = obj.id.substring(9);
-				if (masterChecked) _this.selectedIds.push(targetId);
-				else _this.selectedIds = [];
-				$(this).prop("checked", masterChecked);
+				_this.select_check_changed(targetId, master_is_checked);
+				$(this).prop("checked", master_is_checked);
 			});
         });
 	},
 	connectSinglePickCallback: function() {
     	var _this = this;
 		$(document).on('change', '.check', function(e) {
-			var targetId = e.target.id.substring(9);
-			if (e.target.checked) {
-                _this.selectedIds.push(targetId);
-            }
-			else {
-				var targetIndex = _this.selectedIds.indexOf(targetId);
-				if (targetIndex > -1) _this.selectedIds.splice(targetIndex, 1);
-				if ($('#pick_master').is(":checked")) $('#pick_master').prop("checked", false);
-			}
+			var targetId = e.target.id.substring(9); //we know the id is checkbox_pk
+			_this.select_check_changed(targetId, e.target.checked);
 		});
 	},
 	connectDoubleClickCallback: function() {
@@ -1677,10 +1673,20 @@ app.views.SearchResultsView = Marionette.View.extend({
     	
     },
     getObject: function(theRow, context){
+		if (_.isUndefined(context)){
+			context = this;
+		}
     	var modelMap = context.lookupModelMap(context.selectedModel);
     	var data = _.object(modelMap.columns, theRow);
     	return data
     },
+	getObjectForId: function(id) {
+		var row = this.theDataTable.row('#' + id);
+		if (_.isUndefined(row)){
+			return; // error?
+		}
+		return this.getObject(row.data());
+	},
     forceDetailView: function(data, modelMap, popup){
 		if (_.isUndefined(popup)) {
 			popup = 'popupDetail' in this.regions;
@@ -1770,6 +1776,45 @@ app.views.SearchResultsView = Marionette.View.extend({
             this.theDataTable = undefined;
             this.$('#searchResultsTable').empty();
         }
-    }
+    },
+	select_check_changed: function(id, checked) {
+		var row_object = this.getObjectForId(id);
+		if (_.isUndefined(row_object)) {
+			return;
+		}
+		if (checked) {
+			// select it
+			if (this.selectedIds.indexOf(row_object.pk) == -1) {
+				this.selectedIds.push(row_object.pk);
+				app.vent.trigger('pin', row_object);
+			}
+		} else {
+			// deselect it
+			var found_index = this.selectedIds.indexOf(row_object.pk);
+			if (found_index > -1) {
+				this.selectedIds.splice(found_index, 1);
+				app.vent.trigger('unpin', row_object);
+			}
+			if ($('#pick_master').is(":checked")) {
+				$('#pick_master').prop("checked", false);
+			}
+		}
+	},
+	clear_selection: function() {
+		// clear all checked/selected items from the table and map
+		app.vent.trigger('unpin');
+		let selected_ids_copy = this.selectedIds.slice(0);
+		_.each(selected_ids_copy, function(id){
+			let cb = $("#checkbox_" + id);
+			if (cb.length > 0) {
+				cb.prop("checked", false);
+			}
+			this.select_check_changed(id, false);
+		}, this);
+
+	},
+	save_selection: function() {
+		// save checked/selected items as a map layer
+	}
 });
 
