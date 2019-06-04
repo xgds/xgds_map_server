@@ -903,13 +903,14 @@ app.views.SearchResultsView = Marionette.View.extend({
 		let newData = [];
 		for (var i = 0; i < data.length; i++) {
 			let segment = data[i];
-			newData.push(
-				[
-					segment.time,
-					segment.type,
-					segment.content,
-				]
-			);
+			if (segment.type == "Image" || segment.type == "Sample") {
+				segment.content = '<img src="' + segment.content + '" />';
+			}
+			newData.push([
+				segment.time,
+				segment.type,
+				segment.content,
+			]);
 		}
 		return newData;
 	},
@@ -923,8 +924,12 @@ app.views.SearchResultsView = Marionette.View.extend({
 		// TODO: set column widths
         var dataTableObj = {
 				data: this.convertResultsArray(this.data),
-                columns: this.columnHeaders,
-                autoWidth: true,
+				columns: this.columnHeaders,
+				columnDefs: [
+					{width: "24%", targets: 0},
+					{width: "12%", targets: 1}
+				],
+                autoWidth: false,
                 stateSave: false,
                 paging: true,
                 pageLength: 10, 
