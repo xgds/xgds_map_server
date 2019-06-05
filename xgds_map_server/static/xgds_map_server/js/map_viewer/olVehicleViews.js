@@ -46,6 +46,7 @@ $(function() {
             if (!_.isNull(this.featureJson.startPoint.rotation)) {
                 this.setRotation(this.featureJson.startPoint.rotation);
             }
+            app.vent.trigger('vehicle:constructed', this.vectorLayer);
         },
     	constructFeature: function() {
             if (this.olFeature == undefined){

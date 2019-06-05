@@ -235,7 +235,7 @@ $(function() {
 	            	var sel=$("#id_siteFrame").val();
 	            	var projectionKey = event.data.thisview.getSiteFrameProjection(siteFrames[sel]);
 	            	coords = transformFromProjection([siteFrames[sel].east0, siteFrames[sel].north0], projectionKey);
-	            	event.data.mapview.setCenter(coords, 5);  // TOD0 hardcoding zoom level 5 for now ... would be good to fix
+	            	event.data.mapview.setCenter(coords);
                 });
                 
                 // we should have a good $el by now
@@ -1935,7 +1935,13 @@ $(function() {
         },
         fitLayer: function(layer) {
     	    var extent = ol.extent.createEmpty();
-            var layers = layer.getLayers();
+
+    	    var layers = undefined;
+    	    try {
+                layers = layer.getLayers();
+            } catch (e) {
+    	        // pass
+            }
             if (!_.isUndefined(layers)) {
                 layers.forEach(function (l) {
                     ol.extent.extend(extent, l.getSource().getExtent());
