@@ -2480,33 +2480,23 @@ def mapBoundedSearch(request):
         result[model_name] = [r.getBroadcastData() for r in result[model_name]]
 
         for j, instance in enumerate(result[model_name]):
-            obj = {
-                "type": model_name,
-                "lat": instance['lat'],
-                "lon": instance['lon'],
-                "depth": instance['depth'],
-                "show_on_map": True,
-                "content": "",
-                "time": "",
-                "tags": "",
-            }
+            instance["type"] = model_name
+            instance["show_on_map"] = True
 
-            if 'content' in instance:
-                obj['content'] = instance['content']
-            elif 'thumbnail_image_url' in instance:
-                obj['content'] = instance['thumbnail_image_url']
+            if 'thumbnail_image_url' in instance:
+                instance['content'] = instance['thumbnail_image_url']
 
             if 'event_time' in instance:
-                obj['time'] = instance['event_time']
+                instance['time'] = instance['event_time']
             elif 'acquisition_time' in instance:
-                obj['time'] = instance['acquisition_time']
+                instance['time'] = instance['acquisition_time']
             elif 'collection_time' in instance:
-                obj['time'] = instance['collection_time']
+                instance['time'] = instance['collection_time']
 
             if 'tag_names' in instance:
-                obj['tags'] = instance['tag_names']
+                instance['tags'] = instance['tag_names']
 
-            results_array.append(obj)
+            results_array.append(instance)
 
 
     return JsonResponse({
