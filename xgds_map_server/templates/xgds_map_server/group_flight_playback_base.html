@@ -256,7 +256,7 @@
             now_time_lag: {% if live and segmentsJson %}{{ settings.XGDS_VIDEO_RECORDING_LAG_SECONDS }}{% else %}0{% endif %},
             delayed_live: {% if live and segmentsJson %}true{% else %}false{% endif %},
             default_vehicle: '{{settings.XGDS_SSE_TRACK_CHANNELS.0}}',
-            hide_tracks: false //{{ settings.GEOCAM_TRACK_HIDE_TRACKS|yesno:'true,false'}}
+            hide_tracks: {{ settings.GEOCAM_TRACK_HIDE_TRACKS|safe }}
 
      };
 
