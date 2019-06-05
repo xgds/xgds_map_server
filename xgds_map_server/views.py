@@ -2536,5 +2536,5 @@ def mapBoundedSearch(request):
 
     return JsonResponse({
             'results': results_array,
-            'columns': [{'title':'Time'}, {'title': 'Type'}, {'title':'Content'}]
+            'columns': [{'title':'Time'}, {'title': 'Type'}, {'title':'Content'}, {'title':'Tags'}]
         })
