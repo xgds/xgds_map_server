@@ -2488,8 +2488,9 @@ def mapBoundedSearch(request):
                         "content": instance['content'],
                         "lat": instance['lat'],
                         "lon": instance['lon'],
-                        "tags": "",
+                        "tags": instance['tag_names'],
                         "depth": instance['depth'],
+                        "show_on_map": True,
                     }
                 )
             elif model_name == 'Image':
@@ -2500,7 +2501,7 @@ def mapBoundedSearch(request):
                         "content": instance['thumbnail_image_url'],
                         "lat": instance['lat'],
                         "lon": instance['lon'],
-                        "tags": "",
+                        "tags": instance['tag_names'],
                         "depth": instance['depth'],
                     }
                 )
@@ -2514,6 +2515,7 @@ def mapBoundedSearch(request):
                         "lon": instance['lon'],
                         "tags": "",
                         "depth": instance['depth'],
+                        "show_on_map": True,
                     }
                 )
             elif model_name == 'Sample':
@@ -2524,7 +2526,7 @@ def mapBoundedSearch(request):
                         "content": instance['thumbnail_image_url'],
                         "lat": instance['lat'],
                         "lon": instance['lon'],
-                        "tags": "",
+                        "tags": instance['tag_names'],
                         "depth": instance['depth'],
                     }
                 )
@@ -2534,5 +2536,5 @@ def mapBoundedSearch(request):
 
     return JsonResponse({
             'results': results_array,
-            'columns': [{'title':'time'}, {'title': 'type'}, {'title':'content'}]
+            'columns': [{'title':'Time'}, {'title': 'Type'}, {'title':'Content'}, {'title':'Tags'}]
         })

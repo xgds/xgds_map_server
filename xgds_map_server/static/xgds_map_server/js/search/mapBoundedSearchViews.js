@@ -910,6 +910,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 				segment.time,
 				segment.type,
 				segment.content,
+				segment.tags,
 			]);
 		}
 		return newData;
@@ -926,10 +927,12 @@ app.views.SearchResultsView = Marionette.View.extend({
 				data: this.convertResultsArray(this.data),
 				columns: this.columnHeaders,
 				columnDefs: [
-					{width: "24%", targets: 0},
-					{width: "12%", targets: 1}
+					{width: "25%", targets: 0},
+					{width: "15%", targets: 1},
+					{width: "40%", targets: 2},
+					{width: "20%", targets: 3},
 				],
-                autoWidth: false,
+                autoWidth: true,
                 stateSave: false,
                 paging: true,
                 pageLength: 10, 
@@ -937,7 +940,8 @@ app.views.SearchResultsView = Marionette.View.extend({
                 ordering: true,
                 select:true,
                 jQueryUI: false,
-				scrollX: true,
+				scrollX: false,
+				scrollY: false,
         };
 
 		this.theDataTable = $(this.theTable).DataTable(dataTableObj);
@@ -1434,6 +1438,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 			this.theDataTable.rows.add(this.convertResultsArray(data.results)).draw();
 			this.data = data.results;
 			this.filterMapData();
+			this.theDataTable.columns.adjust().draw();
 			return;
     	}
     	this.constructDatatable(data);
