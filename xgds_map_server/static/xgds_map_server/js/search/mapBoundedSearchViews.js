@@ -96,7 +96,9 @@ app.views.MapBoundedSearchView = Marionette.View.extend({
 				"models": ["Event", "Sample", "Image", "Message"]
 			}),
             success: function (data) {
-                this.searchResultsView.setupDatatable(data);
+				this.searchResultsView.data = data.results;
+				this.searchResultsView.columnHeaders = data.columns;
+                this.searchResultsView.setupDatatable(data.results);
 			}.bind(this),
 		});
 	},
@@ -906,12 +908,12 @@ app.views.SearchResultsView = Marionette.View.extend({
 			if (segment.type == "Image" || segment.type == "Sample") {
 				segment.content = '<img src="' + segment.content + '" />';
 			}
-			segment.time = moment.utc(segment.time).format("MM/DD/YY HH:mm:ss");
+			// segment.time = moment.utc(segment.time).format("MM/DD/YY HH:mm:ss");
 			if (_.isUndefined(segment.tags))
 				segment.tags = "";
 			newData.push([
-				segment.time,
 				segment.type,
+				segment.time,
 				segment.content,
 				segment.tags,
 			]);
@@ -919,9 +921,6 @@ app.views.SearchResultsView = Marionette.View.extend({
 		return newData;
 	},
     constructDatatable: function(data) {
-		this.data = data["results"]
-		this.columnHeaders = data["columns"];
-		
         $.fn.dataTable.moment(DEFAULT_TIME_FORMAT);
 		$.fn.dataTable.moment("MM/DD/YY HH:mm:ss");
 		
@@ -930,8 +929,8 @@ app.views.SearchResultsView = Marionette.View.extend({
 				data: this.convertResultsArray(this.data),
 				columns: this.columnHeaders,
 				columnDefs: [
-					{width: "25%", targets: 0},
-					{width: "15%", targets: 1},
+					{width: "15%", targets: 0},
+					{width: "25%", targets: 1},
 					{width: "40%", targets: 2},
 					{width: "20%", targets: 3},
 				],
@@ -941,7 +940,7 @@ app.views.SearchResultsView = Marionette.View.extend({
                 pageLength: 10, 
                 lengthChange: true,
                 ordering: true,
-                select:true,
+                select: true,
                 jQueryUI: false,
 				scrollX: false,
 				scrollY: false,
@@ -960,7 +959,7 @@ app.views.SearchResultsView = Marionette.View.extend({
         // this.connectDeselectCallback();
         // this.listenToTableChanges();
 		
-		this.filterMapData();
+		this.filterMapData(this.data);
     },
 	// Put the needed data for exporting into a hidden form
 	initializeExportData: function(){
@@ -995,18 +994,23 @@ app.views.SearchResultsView = Marionette.View.extend({
 	filterDatatable: function() {
 		// TODO: also search by tags!
 		var keyword = $('#search-keyword-id').val();
-		this.theDataTable.search(keyword).draw();
+		let new_data = [];
+		for (let i = 0; i < this.data.length; i++) {
+			if (this.data[i].content.search(keyword)) {
+				new_data.push(this.data[i]);
+			}
+		}
+		this.setupDatatable(new_data);
 	},
 	// Clears the search values and returns the table back to normal
 	clearSearch: function(){
 		var keywordSearchId = $('#search-keyword-id');
 		var tagSearchId = $('#search-tags-id');
 		var searchSelectId = $('#search-select-id');
-
 		keywordSearchId.val("");
 		searchSelectId.val("or");
 		tagSearchId.tagsinput('removeAll');
-		this.filterDatatable();
+		this.setupDatatable(this.data);
 	},
 	// Checks that the last tag is not an and/or that is automatically added (if found, removes it)
 	checkLastTag: function(){
@@ -1438,14 +1442,12 @@ app.views.SearchResultsView = Marionette.View.extend({
     	if (this.theDataTable != undefined) {
 			// if we have data, set it.  Not sure when this would be called
 			this.theDataTable.clear().draw();
-			this.theDataTable.rows.add(this.convertResultsArray(data.results)).draw();
-			this.data = data.results;
-			this.filterMapData();
+			this.theDataTable.rows.add(this.convertResultsArray(data)).draw();
+			this.filterMapData(data);
 			this.theDataTable.columns.adjust().draw();
 			return;
     	}
     	this.constructDatatable(data);
-    	
     },
     connectSelectCallback: function(table){
     	var context = this;
@@ -1672,8 +1674,8 @@ app.views.SearchResultsView = Marionette.View.extend({
     unListenToTableChanges: function() {
 		
     },
-    filterMapData: function() {
-		app.vent.trigger("mapSearch:found", this.data, true);
+    filterMapData: function(data) {
+		app.vent.trigger("mapSearch:found", data, true);
     },
     calcDataTableHeight : function() {
         var h =  Math.floor($(window).height()*.4);

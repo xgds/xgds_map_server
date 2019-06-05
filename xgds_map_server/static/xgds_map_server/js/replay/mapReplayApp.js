@@ -41,8 +41,9 @@
 		renderTracks: function() {
 
 			_.each(appOptions.track_metadata, function(track_metadata){
+				track_metadata.hide_tracks = this.options.hide_tracks;
 				var trackView = new app.views.TrackView(track_metadata);
-			});
+			}.bind(this));
 
 		},
 		onRender: function() {
