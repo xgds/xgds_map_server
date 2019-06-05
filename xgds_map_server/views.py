@@ -2480,59 +2480,24 @@ def mapBoundedSearch(request):
         result[model_name] = [r.getBroadcastData() for r in result[model_name]]
 
         for j, instance in enumerate(result[model_name]):
-            if model_name == 'Event':
-                results_array.append(
-                    {
-                        "type": model_name,
-                        "time": instance['event_time'],
-                        "content": instance['content'],
-                        "lat": instance['lat'],
-                        "lon": instance['lon'],
-                        "tags": instance['tag_names'],
-                        "depth": instance['depth'],
-                        "show_on_map": True,
-                    }
-                )
-            elif model_name == 'Image':
-                results_array.append(
-                    {
-                        "type": model_name,
-                        "time": instance['acquisition_time'],
-                        "content": instance['thumbnail_image_url'],
-                        "lat": instance['lat'],
-                        "lon": instance['lon'],
-                        "tags": instance['tag_names'],
-                        "depth": instance['depth'],
-                    }
-                )
-            elif model_name == 'Message':
-                results_array.append(
-                    {
-                        "type": model_name,
-                        "time": instance['event_time'],
-                        "content": instance['content'],
-                        "lat": instance['lat'],
-                        "lon": instance['lon'],
-                        "tags": "",
-                        "depth": instance['depth'],
-                        "show_on_map": True,
-                    }
-                )
-            elif model_name == 'Sample':
-                results_array.append(
-                    {
-                        "type": model_name,
-                        "time": instance['collection_time'],
-                        "content": instance['thumbnail_image_url'],
-                        "lat": instance['lat'],
-                        "lon": instance['lon'],
-                        "tags": instance['tag_names'],
-                        "depth": instance['depth'],
-                    }
-                )
-            else:
-                # skip this instance
-                pass
+            instance["type"] = model_name
+            instance["show_on_map"] = True
+
+            if 'thumbnail_image_url' in instance:
+                instance['content'] = instance['thumbnail_image_url']
+
+            if 'event_time' in instance:
+                instance['time'] = instance['event_time']
+            elif 'acquisition_time' in instance:
+                instance['time'] = instance['acquisition_time']
+            elif 'collection_time' in instance:
+                instance['time'] = instance['collection_time']
+
+            if 'tag_names' in instance:
+                instance['tags'] = instance['tag_names']
+
+            results_array.append(instance)
+
 
     return JsonResponse({
             'results': results_array,

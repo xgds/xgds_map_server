@@ -906,6 +906,9 @@ app.views.SearchResultsView = Marionette.View.extend({
 			if (segment.type == "Image" || segment.type == "Sample") {
 				segment.content = '<img src="' + segment.content + '" />';
 			}
+			segment.time = moment.utc(segment.time).format("MM/DD/YY HH:mm:ss");
+			if (_.isUndefined(segment.tags))
+				segment.tags = "";
 			newData.push([
 				segment.time,
 				segment.type,
