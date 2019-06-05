@@ -98,7 +98,8 @@ app.views.MapBoundedSearchView = Marionette.View.extend({
             success: function (data) {
 				this.searchResultsView.data = data.results;
 				this.searchResultsView.columnHeaders = data.columns;
-                this.searchResultsView.setupDatatable(data.results);
+				this.searchResultsView.setupDatatable(data.results);
+				this.searchResultsView.filterDatatable();
 			}.bind(this),
 		});
 	},
@@ -993,14 +994,18 @@ app.views.SearchResultsView = Marionette.View.extend({
 	// Filters the datatable when the search button is clicked
 	filterDatatable: function() {
 		// TODO: also search by tags!
-		var keyword = $('#search-keyword-id').val();
-		let new_data = [];
-		for (let i = 0; i < this.data.length; i++) {
-			if (this.data[i].content.search(keyword)) {
-				new_data.push(this.data[i]);
+		var keyword = $('#search-keyword-id').val().toLowerCase();
+		if (keyword.length == 0) {
+			// pass
+		} else {
+			let new_data = [];
+			for (let i = 0; i < this.data.length; i++) {
+				if (this.data[i].content.toLowerCase().search(keyword) !== -1) {
+					new_data.push(this.data[i]);
+				}
 			}
+			this.setupDatatable(new_data);
 		}
-		this.setupDatatable(new_data);
 	},
 	// Clears the search values and returns the table back to normal
 	clearSearch: function(){
