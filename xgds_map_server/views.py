@@ -51,6 +51,8 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.http import condition
 from django.utils import timezone
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
 
 from geocamUtil.datetimeJsonEncoder import DatetimeJsonEncoder
 from geocamUtil.geoEncoder import GeoDjangoEncoder
@@ -64,7 +66,7 @@ from xgds_core.util import addPort
 from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapLayerFromSelectedForm, MapTileForm, \
     MapDataTileForm, EditMapTileForm, EditGeotiffForm, EditMapDataTileForm, WMSTileForm, GeoJSONForm, GeotiffForm
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapDataTile, MapLink, MAP_NODE_MANAGER, \
-    MAP_MANAGER, GroundOverlayTime, WMSTile, GeoJSON, Geotiff
+    MAP_MANAGER, GroundOverlayTime, WMSTile, GeoJSON, Geotiff, MapCollection, MapCollectionItem
 from xgds_map_server.kmlLayerExporter import exportMapLayer
 from geocamUtil.KmlUtil import wrapKmlForDownload
 from fastkml import kml
@@ -1223,24 +1225,68 @@ def getMapLayerJSON(request, layerID):
     resp['Content-Disposition'] = 'attachment; filename=%s.json' % mapLayer.name.replace(" ", "_")
     return  resp
 
-# def getMapCollectionJSON(request, mapCollectionID):
-#     mapCollection = MapCollection.objects.get(pk=mapCollectionID)
-#     collection = mapCollection.collection
-#     json_data = None
-#     if collection:
-#         contents = collection.resolvedContents()
-#         dict_data = []
-#         for content in contents:
-#             if inspect.isroutine(content.toMapDict):
-#                 resultDict = content.toMapDict()
-#             else:
-#                 resultDict = modelToDict(content)
-#             if resultDict:
-#                 dict_data.append(resultDict)
-#         json_data = json.dumps(dict_data, indent=4, cls=DatetimeJsonEncoder)
-#
-#     return HttpResponse(content=json_data,
-#                         content_type="application/json")
+
+def getContentType(the_type):
+    """
+    Get the content type based on the type name which is in settings
+    :param the_type:
+    :return:
+    """
+    if the_type not in settings.XGDS_MAP_SERVER_JS_MAP:
+        return None
+
+    the_model_name = settings.XGDS_MAP_SERVER_JS_MAP[the_type]['model']
+    splits = the_model_name.split('.')
+    content_type = ContentType.objects.get(app_label=splits[0], model=splits[1])
+    return content_type
+
+
+def createMapCollection(request):
+    """
+    Create and store a map collection record (typically over ajax)
+    :param request:
+    :return: json response of the collection or error
+    """
+    if request.POST:
+        selected_items = request.POST.getlist(u'selected[]', None)
+        if not selected_items:
+            return JsonResponse({'error': 'Nothing Selected'}, status=400);
+        name = request.POST.get(u'name', None)
+        description = request.POST.get(u'description', None)
+        # region = # todo get region from map dropdown
+        parent_id = request.POST.get(u'parent', 'saved_selections')  # for now we are not asking but just hardcoding, todo fix
+        try:
+            parent = MapGroup.objects.get(uuid=parent_id)
+        except ObjectDoesNotExist:
+            print ' could not find map group with uuid %s ' % parent_id
+            parent = MapGroup.objects.first()
+
+        mc = MapCollection(name=name,
+                           description=description,
+                           creation_time=timezone.now(),
+                           creator=request.user.username,
+                           parent=parent)
+        mc.save()
+
+        for i in selected_items:
+            # selected_items are type_pk
+            splits = i.split('_')
+            content_type = getContentType(splits[0])
+            if content_type:
+                mci = MapCollectionItem(content_type=content_type, object_id=int(splits[1]), container=mc)
+                mci.save()
+        return JsonResponse(mc.get_tree_json(), encoder=DatetimeJsonEncoder)
+    return JsonResponse({'error': 'needs to be POST'}, status=400)
+
+
+def getMapCollectionJSON(request, mapCollectionID):
+    map_collection = MapCollection.objects.get(uuid=mapCollectionID)
+    collection = map_collection.mapcollectionitem_set.all()
+    map_dict_list = []
+    if collection:
+        for c in collection:
+            map_dict_list.append(c.content_object.toMapDict())
+    return JsonResponse(map_dict_list, encoder=DatetimeJsonEncoder, safe=False)  # heretamar
 
 
 def getMapJsonDict(contents):
@@ -1336,6 +1382,7 @@ def getSelectedNodesJSON(request):
     return HttpResponse(content=json_data,
                         content_type="application/json")
 
+
 def getNodesByUuidJSON(request):
     if request.POST:
         uuids = request.POST['uuids'].split('~')
@@ -1377,8 +1424,6 @@ def addGroupToFancyJSON(group, map_tree_json):
 
     nodes = MAP_NODE_MANAGER.filter(parent=group, deleted=False).order_by('name')
     for node in nodes:
-#         if node.deleted:
-#             continue
         if node.__class__.__name__ == MapGroup.__name__:  # @UndefinedVariable
             sub_nodes.append(addGroupToFancyJSON(node, [])[0])
         else:

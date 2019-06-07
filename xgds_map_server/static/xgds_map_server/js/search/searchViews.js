@@ -554,7 +554,6 @@ app.views.SearchNotesView = Marionette.View.extend({
 app.views.SearchResultsView = Marionette.View.extend({
 	events: {
 		'click #clear-selection-btn': 'clear_selection',
-		'click #save-selection-btn': 'save_selection',
 		'click #export-modal-btn': 'initializeExportData',
 		'click #simple-search-btn': 'filterDatatable',
 		'keydown [name="search-keyword"]': 'keywordKeydown',
@@ -572,6 +571,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 	initialize: function() {
 		this.modelMap = {};
 		this.selectedIds = [];
+		this.pinned = [];
 		this.firstLoad = true;
 		this.fileType = 'CSV';
 		this.keywordQuoteMode = false;
@@ -591,6 +591,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 			var modelMap = context.lookupModelMap(data.type);
 			context.forceDetailView(data, modelMap);
 		});
+		$("#save_selection_save_button").click(function() {context.save_selection();});
 	},
 	setupSearchValues: function(){
 		var defaultKeywordConnector = Cookies.get('defaultKeywordConnector');
@@ -1786,6 +1787,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 			// select it
 			if (this.selectedIds.indexOf(row_object.pk) == -1) {
 				this.selectedIds.push(row_object.pk);
+				this.pinned.push(row_object.type + '_' + row_object.pk);
 				app.vent.trigger('pin', row_object);
 			}
 		} else {
@@ -1793,6 +1795,7 @@ app.views.SearchResultsView = Marionette.View.extend({
 			var found_index = this.selectedIds.indexOf(row_object.pk);
 			if (found_index > -1) {
 				this.selectedIds.splice(found_index, 1);
+				this.pinned.splice(row_object.type + '_' + row_object.pk, 1);
 				app.vent.trigger('unpin', row_object);
 			}
 			if ($('#pick_master').is(":checked")) {
@@ -1815,6 +1818,30 @@ app.views.SearchResultsView = Marionette.View.extend({
 	},
 	save_selection: function() {
 		// save checked/selected items as a map layer
+		let post_dict = {};
+		let name = $("#save_selection_name").val();
+		let description = $("#save_selection_description").val();
+		post_dict.name = name;
+		post_dict.description = description;
+		post_dict.selected = this.pinned;
+
+		$.ajax({
+                url: "/xgds_map_server/mapCollection",
+                type: "POST",
+                data: post_dict,
+                dataType: 'json',
+                success: function(data)
+                {
+                	$("#save_selection_error").text("");
+                	$("#save_selection_modal").modal('toggle');
+                },
+                error: $.proxy(function(data){
+                	$("#save_selection_error").text(data.error);
+                }, this)
+            });
+
+
+
 	}
 });
 

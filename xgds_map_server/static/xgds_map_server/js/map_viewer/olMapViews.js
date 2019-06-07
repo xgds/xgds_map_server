@@ -1052,6 +1052,9 @@ $(function() {
             } else {
                 this.visible = this.options.visible;
             }
+            if (_.isUndefined(this.options.name) && !_.isUndefined(this.options.node)) {
+                this.options.name = this.options.node.title;
+            }
 
             this.checkRequired();
             this.on( "readyToDraw", this.finishInitialization, this);

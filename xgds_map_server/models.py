@@ -25,12 +25,12 @@ import copy
 
 from treebeard.mp_tree import MP_Node
 
-from dateutil.parser import parse as dateparser
-
-
 from django.core.urlresolvers import reverse
 from django.core.validators import MaxValueValidator
-from django.db import models
+from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
+from django.contrib.contenttypes.models import ContentType
+
+# from django.db import models
 from django.contrib.gis.db import models
 from django.conf import settings
 
@@ -529,6 +529,7 @@ class AbstractMapTile(AbstractMap):
     class Meta:
         abstract = True
 
+
 class MapTile(AbstractMapTile):
     
     def getEditHref(self):
@@ -713,24 +714,43 @@ class MapLayer(AbstractMap):
         return reverse('mapLayerKML', kwargs={'layerID': self.uuid})
 
 
-# class MapCollection(AbstractMap):
-# TODO overhaul because this depended on xgds_data
-#     """
-#     A layer that encapsulates a collection of found objects.
-#     """
-#     collection = models.ForeignKey(Collection)
-#
-#     def getUrl(self):
-#         return reverse('mapCollectionJSON', kwargs={'mapCollectionID': self.uuid})
-#
-#     def getEditHref(self):
-#         return reverse('mapEditMapCollection', kwargs={'mapCollectionID': self.uuid})
-#
-#     def get_tree_json(self):
-#         """ Get the json block that the fancy tree needs to render this node """
-#         result = super(MapCollection, self).get_tree_json()
-#         result["data"]["collectionJSON"] = self.getUrl()
-#         return result
+class MapCollection(AbstractMap):
+    """
+    A layer that encapsulates a collection of found objects.
+    """
+
+    collection = GenericRelation('MapCollectionItem', related_name='collection_set')
+
+    def get_collection_as_dicts(self):
+        result = []
+        for o in self.collection:
+            bd = o.getBroadcastData()
+            if bd:
+                result.append(bd)
+        return result
+
+    def getUrl(self):
+        return reverse('mapCollectionJSON', kwargs={'mapCollectionID': self.uuid})
+    #
+    # def getEditHref(self):
+    #     return reverse('mapEditMapCollection', kwargs={'mapCollectionID': self.uuid})
+
+    def get_tree_json(self):
+        """ Get the json block that the fancy tree needs to render this node """
+        result = super(MapCollection, self).get_tree_json()
+        result["data"]["collectionJSON"] = self.getUrl()
+        return result
+
+
+class MapCollectionItem(models.Model):
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField(db_index=True)
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    container = models.ForeignKey(MapCollection)
+
+    def __unicode__(self):
+        return ' %s contains %s:%s' % (self.content_object.type, str(self.content_object), self.container.name)
 
 
 # class MapSearch(AbstractMap):
@@ -810,7 +830,7 @@ class GeoJSON(AbstractMap):
 
 
 """ IMPORTANT These have to be defined after the models they refer to are defined."""
-MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile, MapDataTile, MapLink, GroundOverlayTime, WMSTile, WMTSTile, GeoJSON, Geotiff])
+MAP_NODE_MANAGER = ModelCollectionManager(AbstractMapNode, [MapGroup, MapLayer, KmlMap, MapTile, MapDataTile, MapLink, GroundOverlayTime, WMSTile, WMTSTile, GeoJSON, Geotiff, MapCollection])
 
 # this manager does not include groups
-MAP_MANAGER = ModelCollectionManager(AbstractMap, [MapLayer, KmlMap, MapTile, MapDataTile, MapLink, GroundOverlayTime, WMSTile, WMTSTile, GeoJSON, Geotiff])
+MAP_MANAGER = ModelCollectionManager(AbstractMap, [MapLayer, KmlMap, MapTile, MapDataTile, MapLink, GroundOverlayTime, WMSTile, WMTSTile, GeoJSON, Geotiff, MapCollection])
