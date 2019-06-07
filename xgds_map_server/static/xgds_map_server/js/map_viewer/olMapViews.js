@@ -1267,6 +1267,7 @@ $(function() {
                 HEIGHT:  options.node.data.tileHeight,
                 VERSION: options.node.data.wmsVersion,
                 STYLES:  options.node.data.styles,
+                TILED: true
             };
             app.views.TreeMapElement.prototype.initialize.call(this, options);
         },
