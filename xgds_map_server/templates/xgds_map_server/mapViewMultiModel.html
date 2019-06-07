@@ -50,7 +50,8 @@
         searchModelsKeys: {{ settings.XGDS_MAP_SERVER_SEARCH_MODELS|safe }},
         modelNames: {{model_names|safe}},
 		modelUrls: {{model_urls|safe}},
-		settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }}
+		settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }},
+        hide_tracks: {{ settings.GEOCAM_TRACK_HIDE_TRACKS|safe }}
 	};
 	{% block jsInitPreApp %}
 	{% endblock jsInitPreApp %}

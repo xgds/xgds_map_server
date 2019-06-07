@@ -38,7 +38,8 @@
 		{% endblock extraAppOptions %}
 		settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }},
 		showDetailView: true,
-		sseChannelNames: {{settings.XGDS_SSE_CHANNELS|safe}}
+		sseChannelNames: {{settings.XGDS_SSE_CHANNELS|safe}},
+        hide_tracks: {{ settings.GEOCAM_TRACK_HIDE_TRACKS|safe }}
 	};
 	</script>
 {% endblock preMapJS %}

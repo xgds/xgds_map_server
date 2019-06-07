@@ -146,7 +146,8 @@
             searchModelsKeys: {{ settings.XGDS_MAP_SERVER_SEARCH_MODELS|safe }},
             settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:'true,false' }},
             flight_ids: [{{ flight.pk }}],
-            track_urls: []
+            track_urls: [],
+            hide_tracks: {{ settings.GEOCAM_TRACK_HIDE_TRACKS|safe }}
      };
 
         {% if extras %}

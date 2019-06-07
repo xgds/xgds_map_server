@@ -94,7 +94,8 @@
 				XGDS_MAP_SERVER_MAP_LOADED_CALLBACK: '{{ settings.XGDS_MAP_SERVER_MAP_LOADED_CALLBACK }}',
 				dataUrl: '{{ settings.DATA_URL }}',
                 searchModels: {{ settings.XGDS_MAP_SERVER_JS_MAP|safe }},
-				settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:'true,false' }}
+				settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:'true,false' }},
+                hide_tracks: {{ settings.GEOCAM_TRACK_HIDE_TRACKS|safe }}
 			};
 	</script>
    	<script type="text/javascript" src="{{ EXTERNAL_URL }}gridstack/dist/gridstack.min.js" ></script>

@@ -46,7 +46,8 @@
         modelName: '{{modelName}}',
 		modelPK: '{{modelPK}}',
 		settingsLive: {{ settings.GEOCAM_UTIL_LIVE_MODE|yesno:"true,false" }},
-		showDetailView: true
+		showDetailView: true,
+        hide_tracks: {{ settings.GEOCAM_TRACK_HIDE_TRACKS|safe }}
 	};
 	</script>
 {% endblock preMapJS %}
