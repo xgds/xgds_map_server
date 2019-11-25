@@ -23,6 +23,7 @@ import logging
 import os
 import pytz
 import re
+import requests
 import string
 from subprocess import Popen, PIPE
 import threading
@@ -40,6 +41,7 @@ from django.core import mail
 from django.core.urlresolvers import resolve
 from django.core.urlresolvers import reverse
 from django.db import transaction
+from django.db.models import Q
 from django.forms.formsets import formset_factory
 from django.http import HttpResponse, Http404, JsonResponse
 from django.http import HttpResponseRedirect
@@ -58,7 +60,7 @@ from geocamUtil import TimeUtil
 from geocamUtil.loader import LazyGetModelByName, getClassByName, getModelByName, getFormByName
 from geocamUtil.modelJson import modelToJson, modelsToJson, modelToDict, dictToJson
 from geocamUtil.models import SiteFrame
-from xgds_core.models import HasDataFrame
+from xgds_core.models import HasDataFrame, RemoteRestService
 from xgds_core.views import get_handlebars_templates, OrderListJson
 from xgds_core.util import addPort
 from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapLayerFromSelectedForm, MapTileForm, \
@@ -66,7 +68,7 @@ from xgds_map_server.forms import MapForm, MapGroupForm, MapLayerForm, MapLayerF
 from xgds_map_server.models import KmlMap, MapGroup, MapLayer, MapTile, MapDataTile, MapLink, MAP_NODE_MANAGER, \
     MAP_MANAGER, GroundOverlayTime, WMSTile, GeoJSON, Geotiff
 from xgds_map_server.kmlLayerExporter import exportMapLayer
-from geocamUtil.KmlUtil import wrapKmlForDownload
+from geocamUtil.KmlUtil import wrapKmlForDownload, wrapKmlDocument
 from fastkml import kml
 from shapely.geometry import Point, LineString, Polygon
 from xgds_core.views import buildFilterDict
@@ -248,6 +250,30 @@ def createFeatureObject(typeName):
     return feature
 
 
+def map_layer_notify_save(request, layer, notifyFlag):
+        restService = RemoteRestService.objects.get(name="notifyMapLayerSave")
+        print "Send layer save/notify for", layer.name, " to", restService.display_name, restService.serviceUrl
+        notifyEvent = {
+            "eventType": "save",
+            "eventTimestamp": datetime.datetime.now(pytz.utc).isoformat(),
+            "userNotification": notifyFlag,
+            "mapLayerId": layer.uuid,
+            "layerName": layer.name,
+            "layerJson": getMapLayerJSONString(request, layer.pk)[0],
+            "layerKml": getMapLayerKMLString(request, layer.pk)
+        }
+
+        headers = {"replyurl": "",
+                   "replyids": str(layer.uuid),
+                   "content-type": "application/json"}
+        try:
+            resp = requests.post(restService.serviceUrl, data=json.dumps(notifyEvent), headers=headers)
+            requestStatus = resp.status_code
+        except Exception as e:
+            print e
+            requestStatus = 500
+
+            
 def saveMaplayer(request):
     """
     Update map layer properties: this also saves feature properties that belong to this map layer.
@@ -270,6 +296,9 @@ def saveMaplayer(request):
         mapLayer.maxLon = data.get('maxLon', "")
         mapLayer.maxLat = data.get('maxLat', "")
         mapLayer.jsonFeatures = data.get('jsonFeatures', '{}')
+        notifySave = data.get('notifySave', False)
+        if notifySave:
+            map_layer_notify_save(request, mapLayer, notifySave)
         mapLayer.save()
 
         #TODO have to return 
@@ -1122,13 +1151,14 @@ def getMapDetailPage(request, mapID):
                   )
 
 
-def getMapLayerJSON(request, layerID):
+def getMapLayerJSONString(request, layerID):
     mapLayer = MapLayer.objects.get(pk=layerID)
     mapLayer_json = {"title": mapLayer.name,
                      "key": mapLayer.uuid,
                      "selected": mapLayer.visible,
                      "tooltip": mapLayer.description,
-                     "data": {"href": request.build_absolute_uri(reverse('mapEditLayer', kwargs={'layerID': mapLayer.uuid})),
+                     "data": {"href": request.build_absolute_uri(reverse('mapEditLayer',
+                                                                         kwargs={'layerID': mapLayer.uuid})),
                               "parentId": None,
                               "layerData": mapLayer.toDict()
                               },
@@ -1136,10 +1166,17 @@ def getMapLayerJSON(request, layerID):
     if mapLayer.parent is not None:
         mapLayer_json['data']['parentId'] = mapLayer.parent.uuid
     json_data = json.dumps(mapLayer_json, indent=4, cls=GeoDjangoEncoder)
+    cleanedName = mapLayer.name.replace(" ", "_")
+    return (json_data, cleanedName)
+
+
+def getMapLayerJSON(request, layerID):
+    json_data, cleanedName = getMapLayerJSONString(request, layerID)
     resp = HttpResponse(content=json_data,
                         content_type="application/json")
-    resp['Content-Disposition'] = 'attachment; filename=%s.json' % mapLayer.name.replace(" ", "_")
+    resp['Content-Disposition'] = 'attachment; filename=%s.json' % cleanedName
     return  resp
+
 
 # def getMapCollectionJSON(request, mapCollectionID):
 #     mapCollection = MapCollection.objects.get(pk=mapCollectionID)
@@ -1677,6 +1714,16 @@ def processTiles(request, uuid, minZoom, maxZoom, resampleMethod, mapTile):
 #             mapTile.processed = True
 #             p.terminate()
 #             os.system(tileCmd)
+
+
+def getMapLayerKMLString(request, layerID):
+    if layerID:
+        mapLayer = MapLayer.objects.get(pk=layerID)
+        result = exportMapLayer(request, mapLayer)
+        return wrapKmlDocument(result, mapLayer.name)
+    else:
+        return ""
+
 
 def getMapLayerKML(request, layerID):
     if layerID:

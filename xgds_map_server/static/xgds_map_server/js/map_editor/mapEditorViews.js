@@ -41,6 +41,7 @@ app.views.ToolbarView = Marionette.View.extend({
         'click #btn-undo': function() { app.Actions.undo(); },
         'click #btn-redo': function() { app.Actions.redo(); },
         'click #btn-save': function() { app.util.saveLayer();},
+        'click #btn-save-notify': function() { app.util.saveLayer(true);},
     },
 
     initialize: function() {

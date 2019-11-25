@@ -150,12 +150,13 @@
 		},
 
         util: {
-			saveLayer: function(){
+			saveLayer: function(notifySave=false){
 				var jsonFeaturesFormatter = {};
 				jsonFeaturesFormatter['features'] = app.mapLayer.get('feature');
 
 				app.vent.trigger('setMapBounds'); //Sets minLat, minLon, maxLat, maxLon
-				app.mapLayer.set('jsonFeatures', JSON.stringify(jsonFeaturesFormatter));
+			        app.mapLayer.set('jsonFeatures', JSON.stringify(jsonFeaturesFormatter));
+			        app.mapLayer.set('notifySave', notifySave);
 				app.mapLayer.save();
 
 				var notifier = document.getElementById("unsaved-notification");
